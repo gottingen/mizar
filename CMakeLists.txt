@@ -100,7 +100,7 @@ option(WITH_WINDOWS_UTF8_FILENAMES "use UTF8 as characterset for opening files, 
 if (WITH_WINDOWS_UTF8_FILENAMES)
     add_definitions(-DROCKSDB_WINDOWS_UTF8_FILENAMES)
 endif ()
-option(ROCKSDB_BUILD_SHARED "Build shared versions of the RocksDB libraries" ON)
+option(ROCKSDB_BUILD_SHARED "Build shared versions of the RocksDB libraries" OFF)
 
 if (NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -147,6 +147,7 @@ else ()
             message(FATAL_ERROR "GFlags not found")
         endif ()
         include_directories(${GFLAGS_INCLUDE_DIR})
+        set(GFLAGS_LIB ${GFLAGS_STATIC_LIB})
         list(APPEND THIRDPARTY_LIBS ${GFLAGS_STATIC_LIB})
         add_definitions(-DGFLAGS=1)
     endif ()
@@ -207,6 +208,9 @@ else ()
         add_definitions(-DZSTD)
     endif ()
 endif ()
+find_package(turbo REQUIRED)
+get_target_property(TURBO_STATIC_LIB turbo::turbo_static LOCATION)
+list(APPEND THIRDPARTY_LIBS ${TURBO_STATIC_LIB})
 message(STATUS "Thirdparty libraries: ${THIRDPARTY_LIBS}")
 
 option(WITH_MD_LIBRARY "build with MD" ON)
@@ -1183,15 +1187,12 @@ endif ()
 
 option(WITH_JNI "build with JNI" OFF)
 # Tests are excluded from Release builds
-CMAKE_DEPENDENT_OPTION(WITH_TESTS "build with tests" OFF
+CMAKE_DEPENDENT_OPTION(WITH_TESTS "build with tests" ON
         "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)
-option(WITH_BENCHMARK_TOOLS "build with benchmarks" OFF)
+option(WITH_BENCHMARK_TOOLS "build with benchmarks" ON)
 option(WITH_CORE_TOOLS "build with ldb and sst_dump" OFF)
 option(WITH_TOOLS "build with tools" ON)
 
-if (WITH_TESTS OR WITH_BENCHMARK_TOOLS OR WITH_TOOLS OR WITH_JNI OR JNI)
-    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/third-party/gtest-1.8.1/fused-src)
-endif ()
 if (WITH_JNI OR JNI)
     message(STATUS "JNI library is enabled")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/java)
@@ -1289,12 +1290,12 @@ endif ()
 option(WITH_ALL_TESTS "Build all test, rather than a small subset" ON)
 
 if (WITH_TESTS OR WITH_BENCHMARK_TOOLS)
-    add_subdirectory(third-party/gtest-1.8.1/fused-src/gtest)
+    find_package(GTest REQUIRED)
     add_library(testharness STATIC
             test_util/mock_time_env.cc
             test_util/secondary_cache_test_util.cc
             test_util/testharness.cc)
-    target_link_libraries(testharness gtest)
+    target_link_libraries(testharness GTest::gtest)
 endif ()
 
 if (WITH_TESTS)
@@ -1542,7 +1543,7 @@ if (WITH_TESTS)
                 EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
                 OUTPUT_NAME ${exename}${ARTIFACT_SUFFIX}
         )
-        target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness gtest ${THIRDPARTY_LIBS} ${ROCKSDB_LIB})
+        target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness GTest::gtest ${THIRDPARTY_LIBS} ${ROCKSDB_LIB})
         if (NOT "${exename}" MATCHES "db_sanity_test")
             gtest_discover_tests(${exename} DISCOVERY_TIMEOUT 120)
             add_dependencies(rocksdb_check ${exename}${ARTIFACT_SUFFIX})

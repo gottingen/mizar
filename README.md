@@ -1,3 +1,59 @@
+# mizar
+
+Mizar is a fork of [RocksDB v9.2.0](https://github.com/facebook/rocksdb/releases) with the following changes:
+- promote containers performance by using turbo
+- built with EA(Elastic Architecture) environment
+- to avoid conflict with RocksDB, the library name is changed to `mizar`
+- change license to GAPL-3.0(GNU AFFERO GENERAL PUBLIC LICENSE)
+
+note that mizar may not run on windows, we focus on server-side performance and stability on linux.
+although it may run on windows, we do not test it on windows.
+
+## Build
+
+requirements:
+- cmake >= 3.24
+- gcc >= 9.3.0
+
+### install gottingen/essential
+
+the dependencies of mizar are installed to /opt/EA/inf, such as zlib, snappy, zstd, they are all static libraries. 
+so the program executable file is independent of the system environment.
+
+```bash
+git clone https://github.com/goettingen/essential.git
+cd essential
+./install.sh
+```
+### install gottingen/turbo
+
+```bash
+git clone https://github.com/goettingen/turbo.git
+cd turbo
+git checkout v0.5.6
+mkdir build
+cd build
+cmake ..
+make -j 6
+make pacakge
+sudo dpkg -i package/turbo-*.deb # or rpm -ivh package/turbo*.rpm
+```
+using pacakge to install is convenient for uninstalling.
+
+### build mizar
+
+```bash
+git clone https://github.com/goettingen/mizar.git
+cd mizar
+mkdir build
+cd build
+cmake ..
+make -j 6
+```
+
+
+# below is rocksdb's original README.md
+
 ## RocksDB: A Persistent Key-Value Store for Flash and RAM Storage
 
 [![CircleCI Status](https://circleci.com/gh/facebook/rocksdb.svg?style=svg)](https://circleci.com/gh/facebook/rocksdb)
