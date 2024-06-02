@@ -10,8 +10,8 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/block_based/partitioned_index_iterator.h"
@@ -20,7 +20,7 @@
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBasedTableReaderTest
     : public testing::Test,
@@ -322,7 +322,7 @@ TEST_P(BlockBasedTableReaderTestVerifyChecksum, ChecksumMismatch) {
 // Param 2: whether to use direct reads
 // Param 3: Block Based Table Index type
 // Param 4: BBTO no_block_cache option
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
 // Skip direct I/O tests in lite mode since direct I/O is unsupported.
 INSTANTIATE_TEST_CASE_P(
     MultiGet, BlockBasedTableReaderTest,
@@ -331,14 +331,14 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(false),
         ::testing::Values(BlockBasedTableOptions::IndexType::kBinarySearch),
         ::testing::Values(false)));
-#else   // ROCKSDB_LITE
+#else   // MIZAR_LITE
 INSTANTIATE_TEST_CASE_P(
     MultiGet, BlockBasedTableReaderTest,
     ::testing::Combine(
         ::testing::ValuesIn(GetSupportedCompressions()), ::testing::Bool(),
         ::testing::Values(BlockBasedTableOptions::IndexType::kBinarySearch),
         ::testing::Values(false)));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 INSTANTIATE_TEST_CASE_P(
     VerifyChecksum, BlockBasedTableReaderTestVerifyChecksum,
     ::testing::Combine(
@@ -348,10 +348,10 @@ INSTANTIATE_TEST_CASE_P(
             BlockBasedTableOptions::IndexType::kTwoLevelIndexSearch),
         ::testing::Values(true)));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

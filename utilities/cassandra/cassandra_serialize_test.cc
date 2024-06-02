@@ -7,7 +7,7 @@
 #include "utilities/cassandra/serialize.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 
 TEST(SerializeTest, SerializeI64) {
@@ -179,7 +179,7 @@ TEST(SerializeTest, DeserializeI8) {
 }
 
 } // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

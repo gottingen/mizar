@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifdef ROCKSDB_LIB_IO_POSIX
+#ifdef MIZAR_LIB_IO_POSIX
 #include "env/io_posix.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -32,7 +32,7 @@
 #include "monitoring/iostats_context_imp.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "test_util/sync_point.h"
 #include "util/autovector.h"
 #include "util/coding.h"
@@ -43,7 +43,7 @@
 #define F_SET_RW_HINT (F_LINUX_SPECIFIC_BASE + 12)
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::string IOErrorMsg(const std::string& context,
                        const std::string& file_name) {
@@ -141,7 +141,7 @@ bool PosixPositionedWrite(int fd, const char* buf, size_t nbyte, off_t offset) {
   return true;
 }
 
-#ifdef ROCKSDB_RANGESYNC_PRESENT
+#ifdef MIZAR_RANGESYNC_PRESENT
 
 #if !defined(ZFS_SUPER_MAGIC)
 // The magic number for ZFS was not exposed until recently. It should be fixed
@@ -152,7 +152,7 @@ bool PosixPositionedWrite(int fd, const char* buf, size_t nbyte, off_t offset) {
 bool IsSyncFileRangeSupported(int fd) {
   // This function tracks and checks for cases where we know `sync_file_range`
   // definitely will not work properly despite passing the compile-time check
-  // (`ROCKSDB_RANGESYNC_PRESENT`). If we are unsure, or if any of the checks
+  // (`MIZAR_RANGESYNC_PRESENT`). If we are unsure, or if any of the checks
   // fail in unexpected ways, we allow `sync_file_range` to be used. This way
   // should minimize risk of impacting existing use cases.
   struct statfs buf;
@@ -182,7 +182,7 @@ bool IsSyncFileRangeSupported(int fd) {
 
 #undef ZFS_SUPER_MAGIC
 
-#endif  // ROCKSDB_RANGESYNC_PRESENT
+#endif  // MIZAR_RANGESYNC_PRESENT
 
 }  // anonymous namespace
 
@@ -543,7 +543,7 @@ size_t PosixHelper::GetLogicalBlockSizeOfFd(int fd) {
 PosixRandomAccessFile::PosixRandomAccessFile(
     const std::string& fname, int fd, size_t logical_block_size,
     const EnvOptions& options
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
     ,
     ThreadLocalPtr* thread_local_io_urings
 #endif
@@ -552,7 +552,7 @@ PosixRandomAccessFile::PosixRandomAccessFile(
       fd_(fd),
       use_direct_io_(options.use_direct_reads),
       logical_sector_size_(logical_block_size)
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
       ,
       thread_local_io_urings_(thread_local_io_urings)
 #endif
@@ -616,7 +616,7 @@ IOStatus PosixRandomAccessFile::MultiRead(FSReadRequest* reqs,
     }
   }
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
   struct io_uring* iu = nullptr;
   if (thread_local_io_urings_) {
     iu = static_cast<struct io_uring*>(thread_local_io_urings_->Get());
@@ -964,7 +964,7 @@ IOStatus PosixMmapFile::UnmapCurrentRegion() {
 }
 
 IOStatus PosixMmapFile::MapNewRegion() {
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   assert(base_ == nullptr);
   TEST_KILL_RANDOM("PosixMmapFile::UnmapCurrentRegion:0");
   // we can't fallocate with FALLOC_FL_KEEP_SIZE here
@@ -1026,7 +1026,7 @@ PosixMmapFile::PosixMmapFile(const std::string& fname, int fd, size_t page_size,
       dst_(nullptr),
       last_sync_(nullptr),
       file_offset_(0) {
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   allow_fallocate_ = options.allow_fallocate;
   fallocate_with_keep_size_ = options.fallocate_with_keep_size;
 #else
@@ -1165,7 +1165,7 @@ IOStatus PosixMmapFile::InvalidateCache(size_t offset, size_t length) {
 #endif
 }
 
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
 IOStatus PosixMmapFile::Allocate(uint64_t offset, uint64_t len,
                                  const IOOptions& /*opts*/,
                                  IODebugContext* /*dbg*/) {
@@ -1202,13 +1202,13 @@ PosixWritableFile::PosixWritableFile(const std::string& fname, int fd,
       fd_(fd),
       filesize_(0),
       logical_sector_size_(logical_block_size) {
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   allow_fallocate_ = options.allow_fallocate;
   fallocate_with_keep_size_ = options.fallocate_with_keep_size;
 #endif
-#ifdef ROCKSDB_RANGESYNC_PRESENT
+#ifdef MIZAR_RANGESYNC_PRESENT
   sync_file_range_supported_ = IsSyncFileRangeSupported(fd_);
-#endif  // ROCKSDB_RANGESYNC_PRESENT
+#endif  // MIZAR_RANGESYNC_PRESENT
   assert(!options.use_mmap_writes);
 }
 
@@ -1282,7 +1282,7 @@ IOStatus PosixWritableFile::Close(const IOOptions& /*opts*/,
     // but it will be nice to log these errors.
     int dummy __attribute__((__unused__));
     dummy = ftruncate(fd_, filesize_);
-#if defined(ROCKSDB_FALLOCATE_PRESENT) && defined(FALLOC_FL_PUNCH_HOLE) && \
+#if defined(MIZAR_FALLOCATE_PRESENT) && defined(FALLOC_FL_PUNCH_HOLE) && \
     !defined(TRAVIS)
     // in some file systems, ftruncate only trims trailing space if the
     // new file size is smaller than the current size. Calling fallocate
@@ -1401,7 +1401,7 @@ IOStatus PosixWritableFile::InvalidateCache(size_t offset, size_t length) {
 #endif
 }
 
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
 IOStatus PosixWritableFile::Allocate(uint64_t offset, uint64_t len,
                                      const IOOptions& /*opts*/,
                                      IODebugContext* /*dbg*/) {
@@ -1428,7 +1428,7 @@ IOStatus PosixWritableFile::Allocate(uint64_t offset, uint64_t len,
 IOStatus PosixWritableFile::RangeSync(uint64_t offset, uint64_t nbytes,
                                       const IOOptions& opts,
                                       IODebugContext* dbg) {
-#ifdef ROCKSDB_RANGESYNC_PRESENT
+#ifdef MIZAR_RANGESYNC_PRESENT
   assert(offset <= static_cast<uint64_t>(std::numeric_limits<off_t>::max()));
   assert(nbytes <= static_cast<uint64_t>(std::numeric_limits<off_t>::max()));
   if (sync_file_range_supported_) {
@@ -1450,7 +1450,7 @@ IOStatus PosixWritableFile::RangeSync(uint64_t offset, uint64_t nbytes,
     }
     return IOStatus::OK();
   }
-#endif  // ROCKSDB_RANGESYNC_PRESENT
+#endif  // MIZAR_RANGESYNC_PRESENT
   return FSWritableFile::RangeSync(offset, nbytes, opts, dbg);
 }
 
@@ -1636,5 +1636,5 @@ IOStatus PosixDirectory::FsyncWithDirOptions(
 #endif  // OS_AIX
   return s;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif

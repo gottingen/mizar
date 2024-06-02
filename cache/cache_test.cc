@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
 #include <forward_list>
 #include <functional>
@@ -20,7 +20,7 @@
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Conversions between numeric keys/values and the types expected by Cache.
 static std::string EncodeKey(int k) {
@@ -844,7 +844,7 @@ INSTANTIATE_TEST_CASE_P(CacheTestInstance, CacheTest, testing::Values(kLRU));
 #endif  // SUPPORT_CLOCK_CACHE
 INSTANTIATE_TEST_CASE_P(CacheTestInstance, LRUCacheTest, testing::Values(kLRU));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

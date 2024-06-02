@@ -3,16 +3,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <map>
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/db_ttl.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/db_ttl.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/testharness.h"
 #include "util/string_util.h"
 #include "utilities/merge_operators/bytesxor.h"
@@ -21,7 +21,7 @@
 #include <unistd.h>
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -890,7 +890,7 @@ TEST_F(TtlOptionsTest, LoadTtlMergeOperator) {
   ASSERT_OK(MergeOperator::CreateFromString(config_options_, opts_str, &copy));
   ASSERT_TRUE(mo->AreEquivalent(config_options_, copy.get(), &mismatch));
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 // A black-box test for the ttl wrapper around rocksdb
 int main(int argc, char** argv) {
@@ -902,8 +902,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as DBWithTTL is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as DBWithTTL is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

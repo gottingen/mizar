@@ -2,11 +2,11 @@
 // Generic definitions for a Range-based Lock Manager
 //
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/lock/lock_manager.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 /*
   A base class for all Range-based lock managers
@@ -26,5 +26,5 @@ class RangeLockManagerBase : public LockManager {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

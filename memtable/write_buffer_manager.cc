@@ -7,15 +7,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 
 #include "cache/cache_entry_roles.h"
 #include "cache/cache_reservation_manager.h"
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 WriteBufferManager::WriteBufferManager(size_t _buffer_size,
                                        std::shared_ptr<Cache> cache,
                                        bool allow_stall)
@@ -26,7 +26,7 @@ WriteBufferManager::WriteBufferManager(size_t _buffer_size,
       cache_res_mgr_(nullptr),
       allow_stall_(allow_stall),
       stall_active_(false) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (cache) {
     // Memtable's memory usage tends to fluctuate frequently
     // therefore we set delayed_decrease = true to save some dummy entry
@@ -36,7 +36,7 @@ WriteBufferManager::WriteBufferManager(size_t _buffer_size,
   }
 #else
   (void)cache;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 WriteBufferManager::~WriteBufferManager() {
@@ -67,7 +67,7 @@ void WriteBufferManager::ReserveMem(size_t mem) {
 
 // Should only be called from write thread
 void WriteBufferManager::ReserveMemWithCache(size_t mem) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   assert(cache_res_mgr_ != nullptr);
   // Use a mutex to protect various data structures. Can be optimized to a
   // lock-free solution if it ends up with a performance bottleneck.
@@ -87,7 +87,7 @@ void WriteBufferManager::ReserveMemWithCache(size_t mem) {
   s.PermitUncheckedError();
 #else
   (void)mem;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 void WriteBufferManager::ScheduleFreeMem(size_t mem) {
@@ -107,7 +107,7 @@ void WriteBufferManager::FreeMem(size_t mem) {
 }
 
 void WriteBufferManager::FreeMemWithCache(size_t mem) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   assert(cache_res_mgr_ != nullptr);
   // Use a mutex to protect various data structures. Can be optimized to a
   // lock-free solution if it ends up with a performance bottleneck.
@@ -125,7 +125,7 @@ void WriteBufferManager::FreeMemWithCache(size_t mem) {
   s.PermitUncheckedError();
 #else
   (void)mem;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 void WriteBufferManager::BeginWriteStall(StallInterface* wbm_stall) {
@@ -200,4 +200,4 @@ void WriteBufferManager::RemoveDBFromQueue(StallInterface* wbm_stall) {
   wbm_stall->Signal();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

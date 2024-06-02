@@ -10,12 +10,12 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/compression_type.h"
-#include "rocksdb/env.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/types.h"
+#include "mizar/compression_type.h"
+#include "mizar/env.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class VersionSet;
 class FileSystem;
@@ -100,4 +100,4 @@ class BlobFileBuilder {
   uint64_t blob_bytes_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

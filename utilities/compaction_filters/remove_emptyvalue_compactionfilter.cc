@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "utilities/compaction_filters/remove_emptyvalue_compactionfilter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool RemoveEmptyValueCompactionFilter::Filter(int /*level*/,
                                               const Slice& /*key*/,
@@ -21,5 +21,5 @@ bool RemoveEmptyValueCompactionFilter::Filter(int /*level*/,
   return existing_value.empty();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

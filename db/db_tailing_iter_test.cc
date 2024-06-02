@@ -10,13 +10,13 @@
 // Introduction of SyncPoint effectively disabled building and running this test
 // in Release build.
 // which is a pity, it is a good test
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 
 #include "db/db_test_util.h"
 #include "db/forward_iterator.h"
 #include "port/stack_trace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBTestTailingIterator : public DBTestBase {
  public:
@@ -103,8 +103,8 @@ TEST_F(DBTestTailingIterator, TailingIteratorSeekToNext) {
     ASSERT_TRUE(itern->Valid());
     ASSERT_EQ(itern->key().compare(key), 0);
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   for (int i = 2 * num_records; i > 0; --i) {
     char buf1[32];
     char buf2[32];
@@ -151,25 +151,25 @@ TEST_F(DBTestTailingIterator, TailingIteratorTrimSeekToNext) {
   bool file_iters_deleted = false;
   bool file_iters_renewed_null = false;
   bool file_iters_renewed_copy = false;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ForwardIterator::SeekInternal:Return", [&](void* arg) {
         ForwardIterator* fiter = reinterpret_cast<ForwardIterator*>(arg);
         ASSERT_TRUE(!file_iters_deleted ||
                     fiter->TEST_CheckDeletedIters(&deleted_iters, &num_iters));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ForwardIterator::Next:Return", [&](void* arg) {
         ForwardIterator* fiter = reinterpret_cast<ForwardIterator*>(arg);
         ASSERT_TRUE(!file_iters_deleted ||
                     fiter->TEST_CheckDeletedIters(&deleted_iters, &num_iters));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ForwardIterator::RenewIterators:Null",
       [&](void* /*arg*/) { file_iters_renewed_null = true; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ForwardIterator::RenewIterators:Copy",
       [&](void* /*arg*/) { file_iters_renewed_copy = true; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   const int num_records = 1000;
   for (int i = 1; i < num_records; ++i) {
     char buf1[32];
@@ -428,14 +428,14 @@ TEST_F(DBTestTailingIterator, TailingIteratorUpperBound) {
   ASSERT_OK(it->status());
   // This keeps track of the number of times NeedToSeekImmutable() was true.
   int immutable_seeks = 0;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ForwardIterator::SeekInternal:Immutable",
       [&](void* /*arg*/) { ++immutable_seeks; });
 
   // Seek to 13. This should not require any immutable seeks.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   it->Seek("13");
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   ASSERT_FALSE(it->Valid());
   ASSERT_OK(it->status());
@@ -550,13 +550,13 @@ TEST_F(DBTestTailingIterator, SeekToFirstWithUpperBoundBug) {
   ASSERT_EQ(iter->key().ToString(), "aa");
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !defined(ROCKSDB_LITE)
+#endif  // !defined(MIZAR_LITE)
 
 int main(int argc, char** argv) {
-#if !defined(ROCKSDB_LITE)
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+#if !defined(MIZAR_LITE)
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 #else

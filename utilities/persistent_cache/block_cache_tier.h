@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #ifndef  OS_WIN
 #include <unistd.h>
@@ -23,10 +23,10 @@
 #include "memtable/skiplist.h"
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/persistent_cache.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/cache.h"
+#include "mizar/comparator.h"
+#include "mizar/persistent_cache.h"
+#include "mizar/system_clock.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 #include "util/mutexlock.h"
@@ -34,7 +34,7 @@
 #include "utilities/persistent_cache/block_cache_tier_metadata.h"
 #include "utilities/persistent_cache/persistent_cache_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 //
 // Block cache tier implementation
@@ -140,7 +140,7 @@ class BlockCacheTier : public PersistentCacheTier {
   port::RWMutex lock_;                          // Synchronization
   const PersistentCacheConfig opt_;             // BlockCache options
   BoundedQueue<InsertOp> insert_ops_;           // Ops waiting for insert
-  ROCKSDB_NAMESPACE::port::Thread insert_th_;   // Insert thread
+  MIZAR_NAMESPACE::port::Thread insert_th_;   // Insert thread
   uint32_t writer_cache_id_ = 0;                // Current cache file identifier
   WriteableCacheFile* cache_file_ = nullptr;    // Current cache file reference
   CacheWriteBufferAllocator buffer_allocator_;  // Buffer provider
@@ -150,6 +150,6 @@ class BlockCacheTier : public PersistentCacheTier {
   Statistics stats_;                                 // Statistics
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

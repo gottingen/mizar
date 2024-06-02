@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ and enables
-// calling C++ ROCKSDB_NAMESPACE::RestoreOptions methods
+// calling C++ MIZAR_NAMESPACE::RestoreOptions methods
 // from Java side.
 
 #include <jni.h>
@@ -13,7 +13,7 @@
 #include <string>
 
 #include "include/org_rocksdb_RestoreOptions.h"
-#include "rocksdb/utilities/backupable_db.h"
+#include "mizar/utilities/backupable_db.h"
 #include "rocksjni/portal.h"
 /*
  * Class:     org_rocksdb_RestoreOptions
@@ -22,7 +22,7 @@
  */
 jlong Java_org_rocksdb_RestoreOptions_newRestoreOptions(
     JNIEnv* /*env*/, jclass /*jcls*/, jboolean keep_log_files) {
-  auto* ropt = new ROCKSDB_NAMESPACE::RestoreOptions(keep_log_files);
+  auto* ropt = new MIZAR_NAMESPACE::RestoreOptions(keep_log_files);
   return reinterpret_cast<jlong>(ropt);
 }
 
@@ -34,7 +34,7 @@ jlong Java_org_rocksdb_RestoreOptions_newRestoreOptions(
 void Java_org_rocksdb_RestoreOptions_disposeInternal(JNIEnv* /*env*/,
                                                      jobject /*jobj*/,
                                                      jlong jhandle) {
-  auto* ropt = reinterpret_cast<ROCKSDB_NAMESPACE::RestoreOptions*>(jhandle);
+  auto* ropt = reinterpret_cast<MIZAR_NAMESPACE::RestoreOptions*>(jhandle);
   assert(ropt);
   delete ropt;
 }

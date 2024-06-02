@@ -10,16 +10,16 @@
 #include <string>
 #include <unordered_map>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "table/block_based/block.h"
 #include "table/block_based/filter_block_reader_common.h"
 #include "table/block_based/full_filter_block.h"
 #include "table/block_based/index_builder.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class InternalKeyComparator;
 
 class PartitionedFilterBlockBuilder : public FullFilterBlockBuilder {
@@ -153,4 +153,4 @@ class PartitionedFilterBlockReader : public FilterBlockReaderCommon<Block> {
       filter_map_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

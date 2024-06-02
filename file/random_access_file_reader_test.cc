@@ -10,13 +10,13 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class RandomAccessFileReaderTest : public testing::Test {
  public:
@@ -66,7 +66,7 @@ class RandomAccessFileReaderTest : public testing::Test {
 };
 
 // Skip the following tests in lite mode since direct I/O is unsupported.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 TEST_F(RandomAccessFileReaderTest, ReadDirectIO) {
   std::string fname = "read-direct-io";
@@ -94,13 +94,13 @@ TEST_F(RandomAccessFileReaderTest, ReadDirectIO) {
 
 TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
   std::vector<FSReadRequest> aligned_reqs;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "RandomAccessFileReader::MultiRead:AlignedReqs", [&](void* reqs) {
         // Copy reqs, since it's allocated on stack inside MultiRead, which will
         // be deallocated after MultiRead returns.
         aligned_reqs = *reinterpret_cast<std::vector<FSReadRequest>*>(reqs);
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Creates a file with 3 pages.
   std::string fname = "multi-read-direct-io";
@@ -282,11 +282,11 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     ASSERT_EQ(aligned_r1.len, page_size);
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST(FSReadRequest, Align) {
   FSReadRequest r;
@@ -474,10 +474,10 @@ TEST(FSReadRequest, TryMerge) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

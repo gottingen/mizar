@@ -11,14 +11,14 @@
 #include "db/log_writer.h"
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace log {
 
 // Construct a string of the specified length made out of the supplied
@@ -893,7 +893,7 @@ TEST_P(RetriableLogTest, NonBlockingReadFullRecord) {
 INSTANTIATE_TEST_CASE_P(bool, RetriableLogTest, ::testing::Values(0, 2));
 
 }  // namespace log
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

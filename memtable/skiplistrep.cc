@@ -8,11 +8,11 @@
 #include "db/memtable.h"
 #include "memory/arena.h"
 #include "memtable/inlineskiplist.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/memtablerep.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 class SkipListRep : public MemTableRep {
   InlineSkipList<const MemTableRep::KeyComparator&> skip_list_;
@@ -338,7 +338,7 @@ public:
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> skiplist_factory_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"lookahead",
      {0, OptionType::kSizeT, OptionVerificationType::kNormal,
       OptionTypeFlags::kDontSerialize /*Since it is part of the ID*/}},
@@ -353,7 +353,7 @@ SkipListFactory::SkipListFactory(size_t lookahead) : lookahead_(lookahead) {
 std::string SkipListFactory::GetId() const {
   std::string id = Name();
   if (lookahead_ > 0) {
-    id.append(":").append(ROCKSDB_NAMESPACE::ToString(lookahead_));
+    id.append(":").append(MIZAR_NAMESPACE::ToString(lookahead_));
   }
   return id;
 }
@@ -364,4 +364,4 @@ MemTableRep* SkipListFactory::CreateMemTableRep(
   return new SkipListRep(compare, allocator, transform, lookahead_);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

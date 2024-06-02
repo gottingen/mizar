@@ -13,17 +13,17 @@
 
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // SequentialFileReader is a wrapper on top of Env::SequentialFile. It handles
 // Buffered (i.e when page cache is enabled) and Direct (with O_DIRECT / page
 // cache disabled) reads appropriately, and also updates the IO stats.
 class SequentialFileReader {
  private:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void NotifyOnFileReadFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
@@ -49,7 +49,7 @@ class SequentialFileReader {
                     }
                   });
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
 
@@ -66,7 +66,7 @@ class SequentialFileReader {
       : file_name_(_file_name),
         file_(std::move(_file), io_tracer, _file_name),
         listeners_() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     AddFileIOListeners(listeners);
 #else
     (void)listeners;
@@ -82,7 +82,7 @@ class SequentialFileReader {
         file_(NewReadaheadSequentialFile(std::move(_file), _readahead_size),
               io_tracer, _file_name),
         listeners_() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     AddFileIOListeners(listeners);
 #else
     (void)listeners;
@@ -112,4 +112,4 @@ class SequentialFileReader {
   static std::unique_ptr<FSSequentialFile> NewReadaheadSequentialFile(
       std::unique_ptr<FSSequentialFile>&& file, size_t readahead_size);
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

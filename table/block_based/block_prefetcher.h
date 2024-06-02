@@ -9,7 +9,7 @@
 #pragma once
 #include "table/block_based/block_based_table_reader.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class BlockPrefetcher {
  public:
   explicit BlockPrefetcher(size_t compaction_readahead_size)
@@ -63,4 +63,4 @@ class BlockPrefetcher {
   size_t prev_len_ = 0;
   std::unique_ptr<FilePrefetchBuffer> prefetch_buffer_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

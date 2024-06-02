@@ -14,10 +14,10 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/table.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/table.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct ColumnFamilyOptions;
 struct ConfigOptions;
 struct DBOptions;
@@ -79,7 +79,7 @@ class BlockBasedTableFactory : public TableFactory {
 
  protected:
   const void* GetOptionsPtr(const std::string& name) const override;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status ParseOption(const ConfigOptions& config_options,
                      const OptionTypeInfo& opt_info,
                      const std::string& opt_name, const std::string& opt_value,
@@ -96,4 +96,4 @@ extern const std::string kHashIndexPrefixesBlock;
 extern const std::string kHashIndexPrefixesMetadataBlock;
 extern const std::string kPropTrue;
 extern const std::string kPropFalse;
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -9,15 +9,15 @@
 #include "db/version_edit.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/sst_file_writer.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class ExternalSSTFileBasicTest
     : public DBTestBase,
       public ::testing::WithParamInterface<std::tuple<bool, bool>> {
@@ -187,7 +187,7 @@ class ExternalSSTFileBasicTest
   std::string sst_files_dir_;
   std::unique_ptr<FaultInjectionTestEnv> fault_injection_test_env_;
   bool random_rwfile_supported_;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   uint64_t GetSstSizeHelper(Temperature temperature) {
     std::string prop;
     EXPECT_TRUE(
@@ -196,7 +196,7 @@ class ExternalSSTFileBasicTest
                               &prop));
     return static_cast<uint64_t>(std::atoi(prop.c_str()));
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 TEST_F(ExternalSSTFileBasicTest, Basic) {
@@ -1098,12 +1098,12 @@ TEST_F(ExternalSSTFileBasicTest, FadviseTrigger) {
   const int kNumKeys = 10000;
 
   size_t total_fadvised_bytes = 0;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "SstFileWriter::Rep::InvalidatePageCache", [&](void* arg) {
         size_t fadvise_size = *(reinterpret_cast<size_t*>(arg));
         total_fadvised_bytes += fadvise_size;
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::unique_ptr<SstFileWriter> sst_file_writer;
 
@@ -1130,7 +1130,7 @@ TEST_F(ExternalSSTFileBasicTest, FadviseTrigger) {
   ASSERT_EQ(total_fadvised_bytes, sst_file_writer->FileSize());
   ASSERT_GT(total_fadvised_bytes, 0);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(ExternalSSTFileBasicTest, SyncFailure) {
@@ -1802,12 +1802,12 @@ INSTANTIATE_TEST_CASE_P(ExternalSSTFileBasicTest, ExternalSSTFileBasicTest,
                                         std::make_tuple(false, true),
                                         std::make_tuple(false, false)));
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

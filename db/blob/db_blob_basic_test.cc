@@ -13,7 +13,7 @@
 #include "test_util/sync_point.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBBlobBasicTest : public DBTestBase {
  protected:
@@ -127,7 +127,7 @@ TEST_F(DBBlobBasicTest, MultiGetBlobs) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBlobBasicTest, MultiGetWithDirectIO) {
   Options options = GetDefaultOptions();
 
@@ -316,7 +316,7 @@ TEST_F(DBBlobBasicTest, MultiGetWithDirectIO) {
     ASSERT_EQ(values[2], second_blob);
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBBlobBasicTest, MultiGetBlobsFromMultipleFiles) {
   Options options = GetDefaultOptions();
@@ -520,7 +520,7 @@ TEST_F(DBBlobBasicTest, GetBlob_IndexWithInvalidFileNumber) {
                   .IsCorruption());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBlobBasicTest, GenerateIOTracing) {
   Options options = GetDefaultOptions();
   options.enable_blob_files = true;
@@ -575,7 +575,7 @@ TEST_F(DBBlobBasicTest, GenerateIOTracing) {
     ASSERT_GT(blob_files_op_count, 2);
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBBlobBasicTest, BestEffortsRecovery_MissingNewestBlobFile) {
   Options options = GetDefaultOptions();
@@ -677,7 +677,7 @@ TEST_F(DBBlobBasicTest, MultiGetMergeBlobWithPut) {
   ASSERT_EQ(values[2], "v2_0");
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBlobBasicTest, Properties) {
   Options options = GetDefaultOptions();
   options.enable_blob_files = true;
@@ -816,7 +816,7 @@ TEST_F(DBBlobBasicTest, PropertiesMultiVersion) {
                  BlobLogRecord::CalculateAdjustmentForRecordHeader(key_size) +
                  blob_size + BlobLogFooter::kSize));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 class DBBlobBasicIOErrorTest : public DBBlobBasicTest,
                                public testing::WithParamInterface<std::string> {
@@ -1016,10 +1016,10 @@ TEST_P(DBBlobBasicIOErrorTest, CompactionFilterReadBlob_IOError) {
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

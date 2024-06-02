@@ -20,7 +20,7 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/coding_lean.h"
 
 // Some processors does not allow unaligned access to memory
@@ -28,7 +28,7 @@
   #define PLATFORM_UNALIGNED_ACCESS_NOT_ALLOWED
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // The maximum length of a varint in bytes for 64-bit.
 const uint32_t kMaxVarint64Length = 10;
@@ -351,7 +351,7 @@ inline Slice GetSliceUntil(Slice* slice, char delimiter) {
 }
 
 template<class T>
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)
@@ -368,7 +368,7 @@ inline void PutUnaligned(T *memory, const T &value) {
 }
 
 template<class T>
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)
@@ -384,4 +384,4 @@ inline void GetUnaligned(const T *memory, T *value) {
 #endif
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

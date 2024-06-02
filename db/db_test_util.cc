@@ -11,14 +11,14 @@
 
 #include "db/forward_iterator.h"
 #include "env/mock_env.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env_encryption.h"
-#include "rocksdb/unique_id.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/env_encryption.h"
+#include "mizar/unique_id.h"
+#include "mizar/utilities/object_registry.h"
 #include "table/format.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 int64_t MaybeCurrentTime(Env* env) {
@@ -67,7 +67,7 @@ DBTestBase::DBTestBase(const std::string path, bool env_do_fsync)
   if (getenv("MEM_ENV")) {
     mem_env_ = MockEnv::Create(base_env, base_env->GetSystemClock());
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (getenv("ENCRYPTED_ENV")) {
     std::shared_ptr<EncryptionProvider> provider;
     std::string provider_id = getenv("ENCRYPTED_ENV");
@@ -79,7 +79,7 @@ DBTestBase::DBTestBase(const std::string path, bool env_do_fsync)
                                                    &provider));
     encrypted_env_ = NewEncryptedEnv(mem_env_ ? mem_env_ : base_env, provider);
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   env_ = new SpecialEnv(encrypted_env_ ? encrypted_env_
                                        : (mem_env_ ? mem_env_ : base_env));
   env_->SetBackgroundThreads(1, Env::LOW);
@@ -101,9 +101,9 @@ DBTestBase::DBTestBase(const std::string path, bool env_do_fsync)
 }
 
 DBTestBase::~DBTestBase() {
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
   Close();
   Options options;
   options.db_paths.emplace_back(dbname_, 0);
@@ -121,8 +121,8 @@ DBTestBase::~DBTestBase() {
 }
 
 bool DBTestBase::ShouldSkipOptions(int option_config, int skip_mask) {
-#ifdef ROCKSDB_LITE
-    // These options are not supported in ROCKSDB_LITE
+#ifdef MIZAR_LITE
+    // These options are not supported in MIZAR_LITE
     if (option_config == kHashSkipList ||
         option_config == kPlainTableFirstBytePrefix ||
         option_config == kPlainTableCappedPrefix ||
@@ -355,15 +355,15 @@ Options DBTestBase::GetOptions(
   bool set_block_based_table_factory = true;
 #if !defined(OS_MACOSX) && !defined(OS_WIN) && !defined(OS_SOLARIS) && \
     !defined(OS_AIX)
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
       "NewRandomAccessFile:O_DIRECT");
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
       "NewWritableFile:O_DIRECT");
 #endif
 
   bool can_allow_mmap = IsMemoryMappedAccessSupported();
   switch (option_config) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     case kHashSkipList:
       options.prefix_extractor.reset(NewFixedPrefixTransform(1));
       options.memtable_factory.reset(NewHashSkipListRepFactory(16));
@@ -417,7 +417,7 @@ Options DBTestBase::GetOptions(
         SetupSyncPointsToMockDirectIO();
         break;
       }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     case kMergePut:
       options.merge_operator = MergeOperators::CreatePutOperator();
       break;
@@ -693,7 +693,7 @@ void DBTestBase::Destroy(const Options& options, bool delete_cf_paths) {
   if (delete_cf_paths) {
     for (size_t i = 0; i < handles_.size(); ++i) {
       ColumnFamilyDescriptor cfdescriptor;
-      // GetDescriptor is not implemented for ROCKSDB_LITE
+      // GetDescriptor is not implemented for MIZAR_LITE
       handles_[i]->GetDescriptor(&cfdescriptor).PermitUncheckedError();
       column_families.push_back(cfdescriptor);
     }
@@ -1012,7 +1012,7 @@ std::string DBTestBase::AllEntriesFor(const Slice& user_key, int cf) {
   return result;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 int DBTestBase::NumSortedRuns(int cf) {
   ColumnFamilyMetaData cf_meta;
   if (cf == 0) {
@@ -1129,7 +1129,7 @@ std::string DBTestBase::FilesPerLevel(int cf) {
   return result;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 std::vector<uint64_t> DBTestBase::GetBlobFileNumbers() {
   VersionSet* const versions = dbfull()->GetVersionSet();
@@ -1246,7 +1246,7 @@ void DBTestBase::MoveFilesToLevel(int level, int cf) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void DBTestBase::DumpFileCounts(const char* label) {
   fprintf(stderr, "---\n%s:\n", label);
   fprintf(stderr, "maxoverlap: %" PRIu64 "\n",
@@ -1258,7 +1258,7 @@ void DBTestBase::DumpFileCounts(const char* label) {
     }
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 std::string DBTestBase::DumpSSTableList() {
   std::string property;
@@ -1586,7 +1586,7 @@ void DBTestBase::VerifyDBFromMap(std::map<std::string, std::string> true_data,
   }
 
   if (tailing_iter) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     // Tailing iterator
     int iter_cnt = 0;
     ReadOptions ro;
@@ -1615,7 +1615,7 @@ void DBTestBase::VerifyDBFromMap(std::map<std::string, std::string> true_data,
     }
 
     delete iter;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   if (total_reads_res) {
@@ -1645,7 +1645,7 @@ void DBTestBase::VerifyDBInternal(
   iter->~InternalIterator();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 uint64_t DBTestBase::GetNumberOfSstFilesForColumnFamily(
     DB* db, std::string column_family_name) {
@@ -1657,7 +1657,7 @@ uint64_t DBTestBase::GetNumberOfSstFilesForColumnFamily(
   }
   return result;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 void VerifySstUniqueIds(const TablePropertiesCollection& props) {
   ASSERT_FALSE(props.empty());  // suspicious test if empty
@@ -1669,4 +1669,4 @@ void VerifySstUniqueIds(const TablePropertiesCollection& props) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

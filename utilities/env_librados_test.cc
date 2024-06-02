@@ -4,20 +4,20 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/env_librados.h"
+#include "mizar/utilities/env_librados.h"
 #include <rados/librados.hpp>
 #include "env/mock_env.h"
 #include "test_util/testharness.h"
 
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/options.h"
 #include "util/random.h"
 #include <chrono>
 #include <ostream>
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 
 class Timer {
   using high_resolution_clock = std::chrono::high_resolution_clock;
@@ -46,7 +46,7 @@ private:
   high_resolution_clock::time_point _start;
 };
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class EnvLibradosTest : public testing::Test {
 public:
@@ -391,7 +391,7 @@ TEST_F(EnvLibradosTest, DBLoadKeysInRandomOrder) {
   Status s1 = DB::Open(options1, kDBPath1, &db1);
   assert(s1.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r1(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r1(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -427,7 +427,7 @@ TEST_F(EnvLibradosTest, DBLoadKeysInRandomOrder) {
   Status s2 = DB::Open(options2, kDBPath2, &db2);
   assert(s2.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r2(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r2(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -469,7 +469,7 @@ TEST_F(EnvLibradosTest, DBBulkLoadKeysInRandomOrder) {
   Status s1 = DB::Open(options1, kDBPath1, &db1);
   assert(s1.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r1(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r1(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -508,7 +508,7 @@ TEST_F(EnvLibradosTest, DBBulkLoadKeysInRandomOrder) {
   Status s2 = DB::Open(options2, kDBPath2, &db2);
   assert(s2.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r2(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r2(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -553,7 +553,7 @@ TEST_F(EnvLibradosTest, DBBulkLoadKeysInSequentialOrder) {
   Status s1 = DB::Open(options1, kDBPath1, &db1);
   assert(s1.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r1(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r1(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -592,7 +592,7 @@ TEST_F(EnvLibradosTest, DBBulkLoadKeysInSequentialOrder) {
   Status s2 = DB::Open(options2, kDBPath2, &db2);
   assert(s2.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r2(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r2(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -638,7 +638,7 @@ TEST_F(EnvLibradosTest, DBRandomRead) {
   Status s1 = DB::Open(options1, kDBPath1, &db1);
   assert(s1.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r1(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r1(time(nullptr));
 
   for (int i = 0; i < max_loop; ++i) {
     WriteBatch batch;
@@ -689,7 +689,7 @@ TEST_F(EnvLibradosTest, DBRandomRead) {
   Status s2 = DB::Open(options2, kDBPath2, &db2);
   assert(s2.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r2(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r2(time(nullptr));
 
   for (int i = 0; i < max_loop; ++i) {
     WriteBatch batch;
@@ -936,7 +936,7 @@ TEST_F(EnvLibradosMutipoolTest, DBBulkLoadKeysInRandomOrder) {
   Status s1 = DB::Open(options1, kDBPath1, &db1);
   assert(s1.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r1(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r1(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -979,7 +979,7 @@ TEST_F(EnvLibradosMutipoolTest, DBBulkLoadKeysInRandomOrder) {
   }
   assert(s2.ok());
 
-  ROCKSDB_NAMESPACE::Random64 r2(time(nullptr));
+  MIZAR_NAMESPACE::Random64 r2(time(nullptr));
 
   timer.Reset();
   for (int i = 0; i < max_loop; ++i) {
@@ -1129,7 +1129,7 @@ TEST_F(EnvLibradosMutipoolTest, DBTransactionDB) {
   DestroyDB(kDBPath, options);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -1145,8 +1145,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int argc, char** argv) {
-  fprintf(stderr, "SKIPPED as EnvLibrados is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as EnvLibrados is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

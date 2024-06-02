@@ -11,9 +11,9 @@
 #include "db/table_properties_collector.h"
 #include "file/random_access_file_reader.h"
 #include "logging/logging.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/block_based/block.h"
 #include "table/block_based/reader_common.h"
 #include "table/format.h"
@@ -24,7 +24,7 @@
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::string kPropertiesBlockName = "rocksdb.properties";
 // Old property block name for backward compatibility
@@ -531,4 +531,4 @@ Status ReadMetaBlock(RandomAccessFileReader* file,
       .ReadBlockContents();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

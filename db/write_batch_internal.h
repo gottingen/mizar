@@ -15,14 +15,14 @@
 #include "db/kv_checksum.h"
 #include "db/trim_history_scheduler.h"
 #include "db/write_thread.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/types.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/types.h"
+#include "mizar/write_batch.h"
 #include "util/autovector.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MemTable;
 class FlushScheduler;
@@ -426,4 +426,4 @@ class TimestampAssigner : public TimestampAssignerBase<TimestampAssigner> {
   const Slice timestamp_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

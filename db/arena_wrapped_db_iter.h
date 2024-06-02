@@ -15,11 +15,11 @@
 #include "db/range_del_aggregator.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Arena;
 class Version;
@@ -116,4 +116,4 @@ extern ArenaWrappedDBIter* NewArenaWrappedDbIterator(
     uint64_t version_number, ReadCallback* read_callback,
     DBImpl* db_impl = nullptr, ColumnFamilyData* cfd = nullptr,
     bool expose_blob_index = false, bool allow_refresh = true);
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

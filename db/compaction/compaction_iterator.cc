@@ -15,11 +15,11 @@
 #include "db/snapshot_checker.h"
 #include "logging/logging.h"
 #include "port/likely.h"
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "table/internal_iterator.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 CompactionIterator::CompactionIterator(
     InternalIterator* input, const Comparator* cmp, MergeHelper* merge_helper,
     SequenceNumber last_sequence, std::vector<SequenceNumber>* snapshots,
@@ -1210,4 +1210,4 @@ CompactionIterator::CreatePrefetchBufferCollectionIfNeeded(
       new PrefetchBufferCollection(readahead_size));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

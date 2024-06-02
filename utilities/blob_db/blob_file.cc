@@ -3,7 +3,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "utilities/blob_db/blob_file.h"
 
 #include <stdio.h>
@@ -20,7 +20,7 @@
 #include "logging/logging.h"
 #include "utilities/blob_db/blob_db_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace blob_db {
 
@@ -310,5 +310,5 @@ Status BlobFile::ReadMetadata(const std::shared_ptr<FileSystem>& fs,
 }
 
 }  // namespace blob_db
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

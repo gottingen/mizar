@@ -30,8 +30,8 @@
 #include "port/win/env_win.h"
 #include "port/win/io_win.h"
 #include "port/win/win_logger.h"
-#include "rocksdb/env.h"
-#include "rocksdb/slice.h"
+#include "mizar/env.h"
+#include "mizar/slice.h"
 #include "strsafe.h"
 #include "util/string_util.h"
 
@@ -40,7 +40,7 @@
 #undef DeleteFile
 #undef LoadLibrary
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 ThreadStatusUpdater* CreateThreadStatusUpdater() {
   return new ThreadStatusUpdater();
@@ -218,7 +218,7 @@ IOStatus WinFileSystem::Truncate(const std::string& fname, size_t size,
                                  const IOOptions& /*options*/,
                                  IODebugContext* /*dbg*/) {
   IOStatus s;
-  int result = ROCKSDB_NAMESPACE::port::Truncate(fname, size);
+  int result = MIZAR_NAMESPACE::port::Truncate(fname, size);
   if (result != 0) {
     s = IOError("Failed to truncate: " + fname, errno);
   }
@@ -1412,6 +1412,6 @@ const std::shared_ptr<SystemClock>& SystemClock::Default() {
       std::make_shared<port::WinClock>();
   return clock;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

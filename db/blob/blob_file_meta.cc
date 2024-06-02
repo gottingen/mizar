@@ -9,9 +9,9 @@
 #include <sstream>
 
 #include "db/blob/blob_log_format.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 uint64_t SharedBlobFileMetaData::GetBlobFileSize() const {
   return BlobLogHeader::kSize + total_blob_bytes_ + BlobLogFooter::kSize;
 }
@@ -59,4 +59,4 @@ std::ostream& operator<<(std::ostream& os, const BlobFileMetaData& meta) {
   return os;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

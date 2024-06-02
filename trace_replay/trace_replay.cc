@@ -10,17 +10,17 @@
 #include <thread>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/system_clock.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/write_batch.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::string kTraceMagic = "feedcafedeadbeef";
 
@@ -619,4 +619,4 @@ Status Tracer::WriteTrace(const Trace& trace) {
 
 Status Tracer::Close() { return WriteFooter(); }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

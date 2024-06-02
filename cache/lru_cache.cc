@@ -18,7 +18,7 @@
 #include "port/lang.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 LRUHandleTable::LRUHandleTable(int max_upper_hash_bits)
     : length_bits_(/* historical starting size*/ 4),
@@ -797,4 +797,4 @@ std::shared_ptr<Cache> NewLRUCache(
                      high_pri_pool_ratio, memory_allocator, use_adaptive_mutex,
                      metadata_charge_policy, nullptr);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

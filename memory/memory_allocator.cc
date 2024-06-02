@@ -3,25 +3,25 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 
 #include "memory/jemalloc_nodump_allocator.h"
 #include "memory/memkind_kmem_allocator.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/memory_allocators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> ma_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"target", OptionTypeInfo::AsCustomSharedPtr<MemoryAllocator>(
                    0, OptionVerificationType::kByName, OptionTypeFlags::kNone)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinAllocators(ObjectLibrary& library,
                                      const std::string& /*arg*/) {
   library.AddFactory<MemoryAllocator>(
@@ -61,7 +61,7 @@ static int RegisterBuiltinAllocators(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }  // namespace
 
 MemoryAllocatorWrapper::MemoryAllocatorWrapper(
@@ -73,7 +73,7 @@ MemoryAllocatorWrapper::MemoryAllocatorWrapper(
 Status MemoryAllocator::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<MemoryAllocator>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinAllocators(*(ObjectLibrary::Default().get()), "");
@@ -83,9 +83,9 @@ Status MemoryAllocator::CreateFromString(
     result->reset(new DefaultMemoryAllocator());
     return Status::OK();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   ConfigOptions copy = options;
   copy.invoke_prepare_options = true;
   return LoadManagedObject<MemoryAllocator>(copy, value, result);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

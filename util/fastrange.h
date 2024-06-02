@@ -22,13 +22,13 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 #ifdef TEST_UINT128_COMPAT
 #undef HAVE_UINT128_EXTENSION
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace detail {
 
@@ -111,4 +111,4 @@ inline uint32_t FastRange32(uint32_t hash, uint32_t range) {
   return FastRangeGeneric(hash, range);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -14,12 +14,12 @@
 #include <mutex>
 #include <string>
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/status.h"
+#include "mizar/file_system.h"
+#include "mizar/status.h"
 #include "util/aligned_buffer.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace port {
 
 std::string GetWindowsErrSz(DWORD err);
@@ -497,4 +497,4 @@ class WinFileLock : public FileLock {
   HANDLE hFile_;
 };
 }  // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

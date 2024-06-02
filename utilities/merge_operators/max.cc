@@ -5,13 +5,13 @@
 
 #include <memory>
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "utilities/merge_operators.h"
 
-using ROCKSDB_NAMESPACE::Logger;
-using ROCKSDB_NAMESPACE::MergeOperator;
-using ROCKSDB_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::Logger;
+using MIZAR_NAMESPACE::MergeOperator;
+using MIZAR_NAMESPACE::Slice;
 
 namespace {  // anonymous namespace
 
@@ -72,9 +72,9 @@ class MaxOperator : public MergeOperator {
 
 }  // end of anonymous namespace
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::shared_ptr<MergeOperator> MergeOperators::CreateMaxOperator() {
   return std::make_shared<MaxOperator>();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -15,7 +15,7 @@
 #include "util/kv_map.h"
 #include "util/vector_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 FragmentedRangeTombstoneList::FragmentedRangeTombstoneList(
     std::unique_ptr<InternalIterator> unfragmented_tombstones,
@@ -442,4 +442,4 @@ FragmentedRangeTombstoneIterator::SplitBySnapshot(
   return splits;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

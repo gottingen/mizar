@@ -4,20 +4,20 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <atomic>
 
 #include "db/memtable.h"
 #include "memory/arena.h"
 #include "memtable/skiplist.h"
 #include "port/port.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/memtablerep.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/utilities/options_type.h"
 #include "util/murmurhash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 
 class HashSkipListRep : public MemTableRep {
@@ -391,5 +391,5 @@ MemTableRepFactory* NewHashSkipListRepFactory(
       skiplist_branching_factor);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

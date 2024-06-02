@@ -18,13 +18,13 @@
 #include "file/filename.h"
 #include "logging/log_buffer.h"
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/types.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/types.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ColumnFamilyData;
 class InternalKeyComparator;
@@ -454,4 +454,4 @@ extern Status InstallMemtableAtomicFlushResults(
         committed_flush_jobs_info,
     autovector<MemTable*>* to_delete, FSDirectory* db_directory,
     LogBuffer* log_buffer);
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -20,23 +20,23 @@
 #include "util/math.h"
 #include "util/math128.h"
 
-using ROCKSDB_NAMESPACE::BijectiveHash2x64;
-using ROCKSDB_NAMESPACE::BijectiveUnhash2x64;
-using ROCKSDB_NAMESPACE::DecodeFixed64;
-using ROCKSDB_NAMESPACE::EncodeFixed32;
-using ROCKSDB_NAMESPACE::EndianSwapValue;
-using ROCKSDB_NAMESPACE::GetSliceHash64;
-using ROCKSDB_NAMESPACE::Hash;
-using ROCKSDB_NAMESPACE::Hash128;
-using ROCKSDB_NAMESPACE::Hash2x64;
-using ROCKSDB_NAMESPACE::Hash64;
-using ROCKSDB_NAMESPACE::Lower32of64;
-using ROCKSDB_NAMESPACE::Lower64of128;
-using ROCKSDB_NAMESPACE::ReverseBits;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::Unsigned128;
-using ROCKSDB_NAMESPACE::Upper32of64;
-using ROCKSDB_NAMESPACE::Upper64of128;
+using MIZAR_NAMESPACE::BijectiveHash2x64;
+using MIZAR_NAMESPACE::BijectiveUnhash2x64;
+using MIZAR_NAMESPACE::DecodeFixed64;
+using MIZAR_NAMESPACE::EncodeFixed32;
+using MIZAR_NAMESPACE::EndianSwapValue;
+using MIZAR_NAMESPACE::GetSliceHash64;
+using MIZAR_NAMESPACE::Hash;
+using MIZAR_NAMESPACE::Hash128;
+using MIZAR_NAMESPACE::Hash2x64;
+using MIZAR_NAMESPACE::Hash64;
+using MIZAR_NAMESPACE::Lower32of64;
+using MIZAR_NAMESPACE::Lower64of128;
+using MIZAR_NAMESPACE::ReverseBits;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::Unsigned128;
+using MIZAR_NAMESPACE::Upper32of64;
+using MIZAR_NAMESPACE::Upper64of128;
 
 // The hash algorithm is part of the file format, for example for the Bloom
 // filters. Test that the hash values are stable for a set of random strings of
@@ -439,7 +439,7 @@ TEST(HashTest, Hash128ValueSchema) {
 }
 
 TEST(FastRange32Test, Values) {
-  using ROCKSDB_NAMESPACE::FastRange32;
+  using MIZAR_NAMESPACE::FastRange32;
   // Zero range
   EXPECT_EQ(FastRange32(0, 0), 0U);
   EXPECT_EQ(FastRange32(123, 0), 0U);
@@ -477,7 +477,7 @@ TEST(FastRange32Test, Values) {
 }
 
 TEST(FastRange64Test, Values) {
-  using ROCKSDB_NAMESPACE::FastRange64;
+  using MIZAR_NAMESPACE::FastRange64;
   // Zero range
   EXPECT_EQ(FastRange64(0, 0), 0U);
   EXPECT_EQ(FastRange64(123, 0), 0U);
@@ -534,7 +534,7 @@ TEST(FastRange64Test, Values) {
 }
 
 TEST(FastRangeGenericTest, Values) {
-  using ROCKSDB_NAMESPACE::FastRangeGeneric;
+  using MIZAR_NAMESPACE::FastRangeGeneric;
   // Generic (including big and small)
   // Note that FastRangeGeneric is also tested indirectly above via
   // FastRange32 and FastRange64.
@@ -554,27 +554,27 @@ TEST(FastRangeGenericTest, Values) {
 
 // for inspection of disassembly
 uint32_t FastRange32(uint32_t hash, uint32_t range) {
-  return ROCKSDB_NAMESPACE::FastRange32(hash, range);
+  return MIZAR_NAMESPACE::FastRange32(hash, range);
 }
 
 // for inspection of disassembly
 size_t FastRange64(uint64_t hash, size_t range) {
-  return ROCKSDB_NAMESPACE::FastRange64(hash, range);
+  return MIZAR_NAMESPACE::FastRange64(hash, range);
 }
 
 // Tests for math.h / math128.h (not worth a separate test binary)
-using ROCKSDB_NAMESPACE::BitParity;
-using ROCKSDB_NAMESPACE::BitsSetToOne;
-using ROCKSDB_NAMESPACE::CountTrailingZeroBits;
-using ROCKSDB_NAMESPACE::DecodeFixed128;
-using ROCKSDB_NAMESPACE::DecodeFixedGeneric;
-using ROCKSDB_NAMESPACE::EncodeFixed128;
-using ROCKSDB_NAMESPACE::EncodeFixedGeneric;
-using ROCKSDB_NAMESPACE::FloorLog2;
-using ROCKSDB_NAMESPACE::Lower64of128;
-using ROCKSDB_NAMESPACE::Multiply64to128;
-using ROCKSDB_NAMESPACE::Unsigned128;
-using ROCKSDB_NAMESPACE::Upper64of128;
+using MIZAR_NAMESPACE::BitParity;
+using MIZAR_NAMESPACE::BitsSetToOne;
+using MIZAR_NAMESPACE::CountTrailingZeroBits;
+using MIZAR_NAMESPACE::DecodeFixed128;
+using MIZAR_NAMESPACE::DecodeFixedGeneric;
+using MIZAR_NAMESPACE::EncodeFixed128;
+using MIZAR_NAMESPACE::EncodeFixedGeneric;
+using MIZAR_NAMESPACE::FloorLog2;
+using MIZAR_NAMESPACE::Lower64of128;
+using MIZAR_NAMESPACE::Multiply64to128;
+using MIZAR_NAMESPACE::Unsigned128;
+using MIZAR_NAMESPACE::Upper64of128;
 
 template <typename T>
 static void test_BitOps() {
@@ -769,7 +769,7 @@ TEST(MathTest, CodingGeneric) {
 
 int main(int argc, char** argv) {
   fprintf(stderr, "NPHash64 id: %x\n",
-          static_cast<int>(ROCKSDB_NAMESPACE::GetSliceNPHash64("RocksDB")));
+          static_cast<int>(MIZAR_NAMESPACE::GetSliceNPHash64("RocksDB")));
   ::testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();

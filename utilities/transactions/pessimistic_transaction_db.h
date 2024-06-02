@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <mutex>
 #include <queue>
@@ -16,16 +16,16 @@
 #include "db/db_iter.h"
 #include "db/read_callback.h"
 #include "db/snapshot_checker.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 #include "utilities/transactions/lock/lock_manager.h"
 #include "utilities/transactions/lock/range/range_lock_manager.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 #include "utilities/transactions/write_prepared_txn.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class PessimisticTransactionDB : public TransactionDB {
  public:
@@ -224,5 +224,5 @@ class WriteCommittedTxnDB : public PessimisticTransactionDB {
   virtual Status Write(const WriteOptions& opts, WriteBatch* updates) override;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

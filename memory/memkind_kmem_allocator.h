@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 #include "utilities/memory_allocators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MemkindKmemAllocator : public BaseMemoryAllocator {
  public:
@@ -34,10 +34,10 @@ class MemkindKmemAllocator : public BaseMemoryAllocator {
 #ifdef MEMKIND
   void* Allocate(size_t size) override;
   void Deallocate(void* p) override;
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   size_t UsableSize(void* p, size_t /*allocation_size*/) const override;
 #endif
 #endif  // MEMKIND
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

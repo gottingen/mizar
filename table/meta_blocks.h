@@ -11,16 +11,16 @@
 
 #include "db/builder.h"
 #include "db/table_properties_collector.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/memory_allocator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/comparator.h"
+#include "mizar/memory_allocator.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 #include "table/block_based/block_builder.h"
 #include "table/block_based/block_type.h"
 #include "table/format.h"
 #include "util/kv_map.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBuilder;
 class BlockHandle;
@@ -156,4 +156,4 @@ Status ReadMetaBlock(RandomAccessFileReader* file,
                      BlockContents* contents,
                      MemoryAllocator* memory_allocator = nullptr);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -17,14 +17,14 @@
 #include "db/db_test_util.h"
 #include "options/options_parser.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/options_type.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TODO(yhchiang): the rate will not be accurate when we run test in parallel.
 class RateLimiterTest : public testing::Test {
@@ -366,7 +366,7 @@ TEST_F(RateLimiterTest, LimitChangeTest) {
   // starvation test when limit changes to a smaller value
   int64_t refill_period = 1000 * 1000;
   auto* env = Env::Default();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   struct Arg {
     Arg(int32_t _request_size, Env::IOPriority _pri,
         std::shared_ptr<RateLimiter> _limiter)
@@ -390,7 +390,7 @@ TEST_F(RateLimiterTest, LimitChangeTest) {
           std::make_shared<GenericRateLimiter>(
               target, refill_period, 10, RateLimiter::Mode::kWritesOnly,
               SystemClock::Default(), false /* auto_tuned */);
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
           {{"GenericRateLimiter::Request",
             "RateLimiterTest::LimitChangeTest:changeLimitStart"},
            {"RateLimiterTest::LimitChangeTest:changeLimitEnd",
@@ -412,7 +412,7 @@ TEST_F(RateLimiterTest, LimitChangeTest) {
               target / 1024, new_limit / 1024, refill_period / 1000);
     }
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(RateLimiterTest, AutoTuneIncreaseWhenFull) {
@@ -431,12 +431,12 @@ TEST_F(RateLimiterTest, AutoTuneIncreaseWhenFull) {
   // Rate limiter uses `CondVar::TimedWait()`, which does not have access to the
   // `Env` to advance its time according to the fake wait duration. The
   // workaround is to install a callback that advance the `Env`'s mock time.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "GenericRateLimiter::Request:PostTimedWait", [&](void* arg) {
         int64_t time_waited_us = *static_cast<int64_t*>(arg);
         special_env.SleepForMicroseconds(static_cast<int>(time_waited_us));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // verify rate limit increases after a sequence of periods where rate limiter
   // is always drained
@@ -451,8 +451,8 @@ TEST_F(RateLimiterTest, AutoTuneIncreaseWhenFull) {
   int64_t new_bytes_per_sec = rate_limiter->GetSingleBurstBytes();
   ASSERT_GT(new_bytes_per_sec, orig_bytes_per_sec);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearCallBack(
       "GenericRateLimiter::Request:PostTimedWait");
 
   // decreases after a sequence of periods where rate limiter is not drained
@@ -474,7 +474,7 @@ TEST_F(RateLimiterTest, CreateGenericRateLimiterFromString) {
                                           &limiter));
   ASSERT_NE(limiter, nullptr);
   ASSERT_EQ(limiter->GetBytesPerSecond(), 1024U);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(RateLimiter::CreateFromString(
       config_options, "rate_bytes_per_sec=2048;id=" + limiter_id, &limiter));
   ASSERT_NE(limiter, nullptr);
@@ -502,10 +502,10 @@ TEST_F(RateLimiterTest, CreateGenericRateLimiterFromString) {
   ASSERT_EQ(opts->auto_tuned, true);
   ASSERT_TRUE(limiter->IsRateLimited(RateLimiter::OpType::kRead));
   ASSERT_FALSE(limiter->IsRateLimited(RateLimiter::OpType::kWrite));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // This test is for a rate limiter that has no name (Name() returns "").
 // When the default Name() method is deprecated, this test should be removed.
 TEST_F(RateLimiterTest, NoNameRateLimiter) {
@@ -553,9 +553,9 @@ TEST_F(RateLimiterTest, NoNameRateLimiter) {
   ASSERT_EQ(copy.rate_limiter, nullptr);
   ASSERT_NE(copy.rate_limiter, db_opts.rate_limiter);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

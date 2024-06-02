@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 
-#ifndef ROCKSDB_LITE  // Lite does not support C API
+#ifndef MIZAR_LITE  // Lite does not support C API
 
-#include "rocksdb/c.h"
+#include "mizar/c.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -3027,4 +3027,4 @@ int main(void) {
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

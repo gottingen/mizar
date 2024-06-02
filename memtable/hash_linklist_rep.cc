@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <algorithm>
 #include <atomic>
@@ -14,13 +14,13 @@
 #include "memtable/skiplist.h"
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/memtablerep.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/utilities/options_type.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 
 using Key = const char*;
@@ -903,5 +903,5 @@ MemTableRepFactory* NewHashLinkListRepFactory(
       bucket_entries_logging_threshold, if_log_bucket_dist_when_flash);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

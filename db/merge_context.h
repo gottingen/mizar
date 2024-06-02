@@ -8,9 +8,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::vector<Slice> empty_operand_list;
 
@@ -143,4 +143,4 @@ class MergeContext {
   mutable bool operands_reversed_ = true;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

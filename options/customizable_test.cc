@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/customizable.h"
+#include "mizar/customizable.h"
 
 #include <cctype>
 #include <cinttypes>
@@ -18,19 +18,19 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env_encryption.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/memory_allocator.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/sst_partitioner.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/env_encryption.h"
+#include "mizar/file_checksum.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/memory_allocator.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/slice_transform.h"
+#include "mizar/sst_partitioner.h"
+#include "mizar/statistics.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "table/block_based/flush_block_policy.h"
 #include "table/mock_table.h"
 #include "test_util/mock_time_env.h"
@@ -54,7 +54,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_bool(enable_print, false, "Print options generated to console.");
 #endif  // GFLAGS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 class StringLogger : public Logger {
  public:
@@ -81,7 +81,7 @@ class TestCustomizable : public Customizable {
 
   const char* Name() const override { return name_.c_str(); }
   static const char* Type() { return "test.custom"; }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static Status CreateFromString(const ConfigOptions& opts,
                                  const std::string& value,
                                  std::unique_ptr<TestCustomizable>* result);
@@ -91,7 +91,7 @@ class TestCustomizable : public Customizable {
   static Status CreateFromString(const ConfigOptions& opts,
                                  const std::string& value,
                                  TestCustomizable** result);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   bool IsInstanceOf(const std::string& name) const override {
     if (name == kClassName()) {
       return true;
@@ -111,14 +111,14 @@ struct AOptions {
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> a_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"int",
      {offsetof(struct AOptions, i), OptionType::kInt,
       OptionVerificationType::kNormal, OptionTypeFlags::kMutable}},
     {"bool",
      {offsetof(struct AOptions, b), OptionType::kBoolean,
       OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 class ACustomizable : public TestCustomizable {
@@ -141,14 +141,14 @@ struct BOptions {
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> b_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"string",
      {offsetof(struct BOptions, s), OptionType::kString,
       OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
     {"bool",
      {offsetof(struct BOptions, b), OptionType::kBoolean,
       OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 class BCustomizable : public TestCustomizable {
@@ -163,7 +163,7 @@ class BCustomizable : public TestCustomizable {
   BOptions opts_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static bool LoadSharedB(const std::string& id,
                         std::shared_ptr<TestCustomizable>* result) {
   if (id == "B") {
@@ -196,7 +196,7 @@ static int RegisterCustomTestObjects(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 struct SimpleOptions {
   static const char* kName() { return "simple"; }
@@ -216,7 +216,7 @@ int offset_of(T1 SimpleOptions::*member) {
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> simple_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"bool",
      {offset_of(&SimpleOptions::b), OptionType::kBoolean,
       OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
@@ -232,7 +232,7 @@ static std::unordered_map<std::string, OptionTypeInfo> simple_option_info = {
      OptionTypeInfo::AsCustomRawPtr<TestCustomizable>(
          offset_of(&SimpleOptions::cp), OptionVerificationType::kNormal,
          OptionTypeFlags::kAllowNull)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 class SimpleConfigurable : public Configurable {
@@ -248,7 +248,7 @@ class SimpleConfigurable : public Configurable {
   }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static void GetMapFromProperties(
     const std::string& props,
     std::unordered_map<std::string, std::string>* map) {
@@ -264,10 +264,10 @@ static void GetMapFromProperties(
     (*map)[name] = value;
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }  // namespace
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status TestCustomizable::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::shared_ptr<TestCustomizable>* result) {
@@ -312,23 +312,23 @@ Status TestCustomizable::CreateFromString(const ConfigOptions& config_options,
       },
       result);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class CustomizableTest : public testing::Test {
  public:
   CustomizableTest() {
     config_options_.invoke_prepare_options = false;
-#ifndef ROCKSDB_LITE
-    // GetOptionsFromMap is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE
+    // GetOptionsFromMap is not supported in MIZAR_LITE
     config_options_.registry->AddLibrary("CustomizableTest",
                                          RegisterCustomTestObjects, "");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   ConfigOptions config_options_;
 };
 
-#ifndef ROCKSDB_LITE  // GetOptionsFromMap is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE  // GetOptionsFromMap is not supported in MIZAR_LITE
 // Tests that a Customizable can be created by:
 //    - a simple name
 //    - a XXX.id option
@@ -541,11 +541,11 @@ TEST_F(CustomizableTest, IsInstanceOfTest) {
 
 TEST_F(CustomizableTest, PrepareOptionsTest) {
   static std::unordered_map<std::string, OptionTypeInfo> p_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       {"can_prepare",
        {0, OptionType::kBoolean, OptionVerificationType::kNormal,
         OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   };
 
   class PrepareCustomizable : public TestCustomizable {
@@ -622,11 +622,11 @@ TEST_F(CustomizableTest, PrepareOptionsTest) {
 
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> inner_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"inner",
      OptionTypeInfo::AsCustomSharedPtr<TestCustomizable>(
          0, OptionVerificationType::kNormal, OptionTypeFlags::kStringNameOnly)}
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 struct InnerOptions {
@@ -904,7 +904,7 @@ TEST_F(CustomizableTest, NewEmptyStaticTest) {
 }
 
 namespace {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static std::unordered_map<std::string, OptionTypeInfo> vector_option_info = {
     {"vector",
      OptionTypeInfo::Vector<std::shared_ptr<TestCustomizable>>(
@@ -953,7 +953,7 @@ TEST_F(CustomizableTest, NoNameTest) {
   ASSERT_EQ(copts->cu, nullptr);
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(CustomizableTest, IgnoreUnknownObjects) {
   ConfigOptions ignore = config_options_;
@@ -1274,7 +1274,7 @@ TEST_F(CustomizableTest, CreateManagedObjects) {
   ASSERT_EQ(mc1, obj);
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 namespace {
 class TestSecondaryCache : public SecondaryCache {
@@ -1337,7 +1337,7 @@ class MockMemoryAllocator : public BaseMemoryAllocator {
   const char* Name() const override { return kClassName(); }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class MockEncryptionProvider : public EncryptionProvider {
  public:
   explicit MockEncryptionProvider(const std::string& id) : id_(id) {}
@@ -1380,7 +1380,7 @@ class MockCipher : public BlockCipher {
   Status Encrypt(char* /*data*/) override { return Status::NotSupported(); }
   Status Decrypt(char* data) override { return Encrypt(data); }
 };
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class DummyFileSystem : public FileSystemWrapper {
  public:
@@ -1390,9 +1390,9 @@ class DummyFileSystem : public FileSystemWrapper {
   const char* Name() const override { return kClassName(); }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class MockTablePropertiesCollectorFactory
     : public TablePropertiesCollectorFactory {
@@ -1441,7 +1441,7 @@ class MockRateLimiter : public RateLimiter {
   }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterLocalObjects(ObjectLibrary& library,
                                 const std::string& /*arg*/) {
   size_t num_types;
@@ -1567,7 +1567,7 @@ static int RegisterLocalObjects(ObjectLibrary& library,
 
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }  // namespace
 
 class LoadCustomizableTest : public testing::Test {
@@ -1577,7 +1577,7 @@ class LoadCustomizableTest : public testing::Test {
     config_options_.invoke_prepare_options = false;
   }
   bool RegisterTests(const std::string& arg) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     config_options_.registry->AddLibrary("custom-tests",
                                          test::RegisterTestObjects, arg);
     config_options_.registry->AddLibrary("local-tests", RegisterLocalObjects,
@@ -1586,7 +1586,7 @@ class LoadCustomizableTest : public testing::Test {
 #else
     (void)arg;
     return false;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 
  protected:
@@ -1603,7 +1603,7 @@ TEST_F(LoadCustomizableTest, LoadTableFactoryTest) {
       config_options_, TableFactory::kBlockBasedTableName(), &factory));
   ASSERT_NE(factory, nullptr);
   ASSERT_STREQ(factory->Name(), TableFactory::kBlockBasedTableName());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string opts_str = "table_factory=";
   ASSERT_OK(GetColumnFamilyOptionsFromString(
       config_options_, cf_opts_,
@@ -1611,20 +1611,20 @@ TEST_F(LoadCustomizableTest, LoadTableFactoryTest) {
   ASSERT_NE(cf_opts_.table_factory.get(), nullptr);
   ASSERT_STREQ(cf_opts_.table_factory->Name(),
                TableFactory::kBlockBasedTableName());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   if (RegisterTests("Test")) {
     ASSERT_OK(TableFactory::CreateFromString(
         config_options_, mock::MockTableFactory::kClassName(), &factory));
     ASSERT_NE(factory, nullptr);
     ASSERT_STREQ(factory->Name(), mock::MockTableFactory::kClassName());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ASSERT_OK(GetColumnFamilyOptionsFromString(
         config_options_, cf_opts_,
         opts_str + mock::MockTableFactory::kClassName(), &cf_opts_));
     ASSERT_NE(cf_opts_.table_factory.get(), nullptr);
     ASSERT_STREQ(cf_opts_.table_factory->Name(),
                  mock::MockTableFactory::kClassName());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 }
 
@@ -1658,7 +1658,7 @@ TEST_F(LoadCustomizableTest, LoadSecondaryCacheTest) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(LoadCustomizableTest, LoadSstPartitionerFactoryTest) {
   std::shared_ptr<SstPartitionerFactory> factory;
   ASSERT_NOK(SstPartitionerFactory::CreateFromString(config_options_, "Mock",
@@ -1676,7 +1676,7 @@ TEST_F(LoadCustomizableTest, LoadSstPartitionerFactoryTest) {
     ASSERT_STREQ(factory->Name(), "Mock");
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(LoadCustomizableTest, LoadChecksumGenFactoryTest) {
   std::shared_ptr<FileChecksumGenFactory> factory;
@@ -1774,7 +1774,7 @@ TEST_F(LoadCustomizableTest, LoadStatisticsTest) {
       Statistics::CreateFromString(config_options_, "BasicStatistics", &stats));
   ASSERT_NE(stats, nullptr);
   ASSERT_EQ(stats->Name(), std::string("BasicStatistics"));
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_NOK(GetDBOptionsFromString(config_options_, db_opts_,
                                     "statistics=Test", &db_opts_));
   ASSERT_OK(GetDBOptionsFromString(config_options_, db_opts_,
@@ -1867,7 +1867,7 @@ TEST_F(LoadCustomizableTest, LoadMergeOperatorTest) {
       MergeOperator::CreateFromString(config_options_, "MaxOperator", &result));
   ASSERT_NE(result, nullptr);
   ASSERT_STREQ(result->Name(), "MaxOperator");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(MergeOperator::CreateFromString(
       config_options_, StringAppendOperator::kNickName(), &result));
   ASSERT_NE(result, nullptr);
@@ -1903,7 +1903,7 @@ TEST_F(LoadCustomizableTest, LoadMergeOperatorTest) {
       config_options_, BytesXOROperator::kClassName(), &result));
   ASSERT_NE(result, nullptr);
   ASSERT_STREQ(result->Name(), BytesXOROperator::kClassName());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   ASSERT_NOK(
       MergeOperator::CreateFromString(config_options_, "Changling", &result));
   if (RegisterTests("Test")) {
@@ -1932,7 +1932,7 @@ TEST_F(LoadCustomizableTest, LoadCompactionFilterTest) {
 
   ASSERT_NOK(CompactionFilter::CreateFromString(config_options_, "Changling",
                                                 &result));
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(CompactionFilter::CreateFromString(
       config_options_, RemoveEmptyValueCompactionFilter::kClassName(),
       &result));
@@ -1947,10 +1947,10 @@ TEST_F(LoadCustomizableTest, LoadCompactionFilterTest) {
     ASSERT_STREQ(result->Name(), "ChanglingCompactionFilter");
     delete result;
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(LoadCustomizableTest, LoadEventListenerTest) {
   std::shared_ptr<EventListener> result;
 
@@ -2010,7 +2010,7 @@ TEST_F(LoadCustomizableTest, LoadEncryptionCipherTest) {
     ASSERT_STREQ(result->Name(), "Mock");
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(LoadCustomizableTest, LoadSystemClockTest) {
   std::shared_ptr<SystemClock> result;
@@ -2052,7 +2052,7 @@ TEST_F(LoadCustomizableTest, LoadRateLimiterTest) {
       config_options_, std::string(GenericRateLimiter::kClassName()) + ":1234",
       &result));
   ASSERT_NE(result, nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(RateLimiter::CreateFromString(
       config_options_, GenericRateLimiter::kClassName(), &result));
   ASSERT_NE(result, nullptr);
@@ -2071,7 +2071,7 @@ TEST_F(LoadCustomizableTest, LoadRateLimiterTest) {
         &db_opts_));
     ASSERT_NE(db_opts_.rate_limiter, nullptr);
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 TEST_F(LoadCustomizableTest, LoadFlushBlockPolicyFactoryTest) {
@@ -2094,7 +2094,7 @@ TEST_F(LoadCustomizableTest, LoadFlushBlockPolicyFactoryTest) {
       config_options_, FlushBlockBySizePolicyFactory::kClassName(), &result));
   ASSERT_NE(result, nullptr);
   ASSERT_STREQ(result->Name(), FlushBlockBySizePolicyFactory::kClassName());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string table_opts = "id=BlockBasedTable; flush_block_policy_factory=";
   ASSERT_OK(TableFactory::CreateFromString(
       config_options_,
@@ -2118,13 +2118,13 @@ TEST_F(LoadCustomizableTest, LoadFlushBlockPolicyFactoryTest) {
     ASSERT_STREQ(bbto->flush_block_policy_factory->Name(),
                  TestFlushBlockPolicyFactory::kClassName());
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
 #ifdef GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif  // GFLAGS

@@ -11,7 +11,7 @@
 #include "logging/logging.h"
 #include "util/set_comparator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // During recovery if the memtable is flushed we cannot rely on its help on
 // duplicate key detection and as key insert will not be attempted. This class
 // will be used as a emulator of memtable to tell if insertion of a key/seq
@@ -55,7 +55,7 @@ class DuplicateDetector {
           "Recovering an entry from the dropped column family %" PRIu32
           ". WAL must must have been emptied before dropping the column "
           "family", cf);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       throw std::runtime_error(
           "Recovering an entry from a dropped column family. "
           "WAL must must have been flushed before dropping the column "
@@ -67,4 +67,4 @@ class DuplicateDetector {
     keys_[cf] = CFKeys(SetComparator(cmp));
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

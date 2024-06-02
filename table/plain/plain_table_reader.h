@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <unordered_map>
 #include <memory>
 #include <vector>
@@ -14,17 +14,17 @@
 
 #include "file/random_access_file_reader.h"
 #include "memory/arena.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/plain/plain_table_bloom.h"
 #include "table/plain/plain_table_factory.h"
 #include "table/plain/plain_table_index.h"
 #include "table/table_reader.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Block;
 struct BlockContents;
@@ -242,5 +242,5 @@ class PlainTableReader: public TableReader {
   explicit PlainTableReader(const TableReader&) = delete;
   void operator=(const TableReader&) = delete;
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

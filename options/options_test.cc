@@ -17,13 +17,13 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/utilities/leveldb_options.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/file_checksum.h"
+#include "mizar/memtablerep.h"
+#include "mizar/utilities/leveldb_options.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -43,11 +43,11 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_bool(enable_print, false, "Print options generated to console.");
 #endif  // GFLAGS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class OptionsTest : public testing::Test {};
 
-#ifndef ROCKSDB_LITE  // GetOptionsFromMap is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE  // GetOptionsFromMap is not supported in MIZAR_LITE
 TEST_F(OptionsTest, GetOptionsFromMapTest) {
   std::unordered_map<std::string, std::string> cf_options_map = {
       {"write_buffer_size", "1"},
@@ -342,10 +342,10 @@ TEST_F(OptionsTest, GetOptionsFromMapTest) {
   ASSERT_NOK(
       RocksDBOptionsParser::VerifyDBOptions(exact, base_db_opt, new_db_opt));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // GetColumnFamilyOptionsFromString is not supported in
-                      // ROCKSDB_LITE
+#ifndef MIZAR_LITE  // GetColumnFamilyOptionsFromString is not supported in
+                      // MIZAR_LITE
 TEST_F(OptionsTest, GetColumnFamilyOptionsFromStringTest) {
   ColumnFamilyOptions base_cf_opt;
   ColumnFamilyOptions new_cf_opt;
@@ -836,9 +836,9 @@ TEST_F(OptionsTest, OldInterfaceTest) {
       RocksDBOptionsParser::VerifyDBOptions(exact, base_db_opt, new_db_opt));
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // GetBlockBasedTableOptionsFromString is not supported
+#ifndef MIZAR_LITE  // GetBlockBasedTableOptionsFromString is not supported
 TEST_F(OptionsTest, GetBlockBasedTableOptionsFromString) {
   BlockBasedTableOptions table_opt;
   BlockBasedTableOptions new_opt;
@@ -1091,10 +1091,10 @@ TEST_F(OptionsTest, GetBlockBasedTableOptionsFromString) {
                 ->GetHighPriPoolRatio(),
             0.5);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 
-#ifndef ROCKSDB_LITE  // GetPlainTableOptionsFromString is not supported
+#ifndef MIZAR_LITE  // GetPlainTableOptionsFromString is not supported
 TEST_F(OptionsTest, GetPlainTableOptionsFromString) {
   PlainTableOptions table_opt;
   PlainTableOptions new_opt;
@@ -1135,9 +1135,9 @@ TEST_F(OptionsTest, GetPlainTableOptionsFromString) {
   ASSERT_NOK(s);
   ASSERT_TRUE(s.IsInvalidArgument());
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // GetMemTableRepFactoryFromString is not supported
+#ifndef MIZAR_LITE  // GetMemTableRepFactoryFromString is not supported
 TEST_F(OptionsTest, GetMemTableRepFactoryFromString) {
   std::unique_ptr<MemTableRepFactory> new_mem_factory = nullptr;
 
@@ -1174,7 +1174,7 @@ TEST_F(OptionsTest, GetMemTableRepFactoryFromString) {
 
   ASSERT_NOK(GetMemTableRepFactoryFromString("bad_factory", &new_mem_factory));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(OptionsTest, MemTableRepFactoryCreateFromString) {
   std::unique_ptr<MemTableRepFactory> new_mem_factory = nullptr;
@@ -1202,7 +1202,7 @@ TEST_F(OptionsTest, MemTableRepFactoryCreateFromString) {
   ASSERT_NOK(MemTableRepFactory::CreateFromString(
       config_options, "invalid_opt=10", &new_mem_factory));
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(MemTableRepFactory::CreateFromString(
       config_options, "id=skip_list; lookahead=32", &new_mem_factory));
   ASSERT_OK(MemTableRepFactory::CreateFromString(config_options, "prefix_hash",
@@ -1258,7 +1258,7 @@ TEST_F(OptionsTest, MemTableRepFactoryCreateFromString) {
       config_options, "id=vector; count=42", &new_mem_factory));
   ASSERT_NOK(MemTableRepFactory::CreateFromString(
       config_options, "id=vector; invalid=unknown", &new_mem_factory));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   ASSERT_NOK(MemTableRepFactory::CreateFromString(config_options, "cuckoo",
                                                   &new_mem_factory));
   // CuckooHash memtable is already removed.
@@ -1269,7 +1269,7 @@ TEST_F(OptionsTest, MemTableRepFactoryCreateFromString) {
                                                   &new_mem_factory));
 }
 
-#ifndef ROCKSDB_LITE  // GetOptionsFromString is not supported in RocksDB Lite
+#ifndef MIZAR_LITE  // GetOptionsFromString is not supported in RocksDB Lite
 class CustomEnv : public EnvWrapper {
  public:
   explicit CustomEnv(Env* _target) : EnvWrapper(_target) {}
@@ -1680,13 +1680,13 @@ TEST_F(OptionsTest, MutableCFOptions) {
   ASSERT_EQ(bbto->block_size, 32768);
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status StringToMap(
     const std::string& opts_str,
     std::unordered_map<std::string, std::string>* opts_map);
 
-#ifndef ROCKSDB_LITE  // StringToMap is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE  // StringToMap is not supported in MIZAR_LITE
 TEST_F(OptionsTest, StringToMapTest) {
   std::unordered_map<std::string, std::string> opts_map;
   // Regular options
@@ -1803,9 +1803,9 @@ TEST_F(OptionsTest, StringToMapTest) {
   ASSERT_NOK(StringToMap("k1=v1;k2={{}}{}", &opts_map));
   ASSERT_NOK(StringToMap("k1=v1;k2={{dfdl}adfa}{}", &opts_map));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // StringToMap is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE  // StringToMap is not supported in MIZAR_LITE
 TEST_F(OptionsTest, StringToMapRandomTest) {
   std::unordered_map<std::string, std::string> opts_map;
   // Make sure segfault is not hit by semi-random strings
@@ -2096,7 +2096,7 @@ TEST_F(OptionsTest, OptionTablePropertiesTest) {
   ASSERT_EQ(copy.table_properties_collector_factories.size(), 2);
   ASSERT_OK(RocksDBOptionsParser::VerifyCFOptions(cfg_opts, orig, copy));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(OptionsTest, ConvertOptionsTest) {
   LevelDBOptions leveldb_opt;
@@ -2121,7 +2121,7 @@ TEST_F(OptionsTest, ConvertOptionsTest) {
             leveldb_opt.block_restart_interval);
   ASSERT_EQ(table_opt->filter_policy.get(), leveldb_opt.filter_policy);
 }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class TestEventListener : public EventListener {
  private:
   std::string id_;
@@ -2188,9 +2188,9 @@ TEST_F(OptionsTest, OptionsListenerTest) {
       2);  // The Test{Config}1 Listeners could be loaded but not the others
   ASSERT_OK(RocksDBOptionsParser::VerifyDBOptions(config_opts, orig, copy));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 const static std::string kCustomEnvName = "Custom";
 const static std::string kCustomEnvProp = "env=" + kCustomEnvName;
 
@@ -2732,7 +2732,7 @@ TEST_F(OptionsTest, SliceTransformCreateFromString) {
   ASSERT_NOK(
       SliceTransform::CreateFromString(config_options, "invalid", &transform));
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_OK(SliceTransform::CreateFromString(
       config_options, "id=rocksdb.CappedPrefix; length=11", &transform));
   ASSERT_NE(transform, nullptr);
@@ -2741,7 +2741,7 @@ TEST_F(OptionsTest, SliceTransformCreateFromString) {
   ASSERT_NOK(SliceTransform::CreateFromString(
       config_options, "id=rocksdb.CappedPrefix; length=11; invalid=true",
       &transform));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 TEST_F(OptionsOldApiTest, GetBlockBasedTableOptionsFromString) {
@@ -3063,9 +3063,9 @@ TEST_F(OptionsOldApiTest, ColumnFamilyOptionsSerialization) {
     delete base_opt.compaction_filter;
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class OptionsParserTest : public testing::Test {
  public:
   OptionsParserTest() { fs_.reset(new test::StringFS(FileSystem::Default())); }
@@ -4695,9 +4695,9 @@ TEST_F(ConfigOptionsTest, MergeOperatorFromString) {
 
 INSTANTIATE_TEST_CASE_P(OptionsSanityCheckTest, OptionsSanityCheckTest,
                         ::testing::Bool());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

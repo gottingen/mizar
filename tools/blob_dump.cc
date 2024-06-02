@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <getopt.h>
 #include <cstdio>
 #include <string>
@@ -11,8 +11,8 @@
 
 #include "utilities/blob_db/blob_dump_tool.h"
 
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::blob_db::BlobDumpTool;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::blob_db::BlobDumpTool;
 
 int main(int argc, char** argv) {
   using DisplayType = BlobDumpTool::DisplayType;
@@ -107,4 +107,4 @@ int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "Not supported in lite mode.\n");
   return -1;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

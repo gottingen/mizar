@@ -4,13 +4,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/env_mirror.h"
+#include "mizar/utilities/env_mirror.h"
 #include "env/mock_env.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class EnvMirrorTest : public testing::Test {
  public:
@@ -205,7 +205,7 @@ TEST_F(EnvMirrorTest, LargeWrite) {
   delete[] scratch;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -216,8 +216,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int argc, char** argv) {
-  fprintf(stderr, "SKIPPED as EnvMirror is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as EnvMirror is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

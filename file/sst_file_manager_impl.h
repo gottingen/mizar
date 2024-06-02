@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
 
@@ -13,9 +13,9 @@
 
 #include "db/compaction/compaction.h"
 #include "file/delete_scheduler.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/sst_file_manager.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class ErrorHandler;
 class FileSystem;
 class SystemClock;
@@ -191,6 +191,6 @@ class SstFileManagerImpl : public SstFileManager {
   std::shared_ptr<Statistics> stats_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

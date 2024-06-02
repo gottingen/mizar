@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 
 #ifdef _WIN32
 // Windows API macro interference
@@ -16,7 +16,7 @@
 #undef LoadLibrary
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CompositeEnv : public Env {
  public:
@@ -289,15 +289,15 @@ class CompositeEnvWrapper : public CompositeEnv {
   const Customizable* Inner() const override { return target_.env; }
 
   Status PrepareOptions(const ConfigOptions& options) override;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string SerializeOptions(const ConfigOptions& config_options,
                                const std::string& header) const override;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Return the target to which this Env forwards all calls
   Env* env_target() const { return target_.env; }
 
-#if !defined(OS_WIN) && !defined(ROCKSDB_NO_DYNAMIC_EXTENSION)
+#if !defined(OS_WIN) && !defined(MIZAR_NO_DYNAMIC_EXTENSION)
   Status LoadLibrary(const std::string& lib_name,
                      const std::string& search_path,
                      std::shared_ptr<DynamicLibrary>* result) override {
@@ -369,4 +369,4 @@ class CompositeEnvWrapper : public CompositeEnv {
  private:
   EnvWrapper::Target target_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

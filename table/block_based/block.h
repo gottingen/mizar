@@ -15,10 +15,10 @@
 
 #include "db/pinned_iterators_manager.h"
 #include "port/malloc.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
 #include "table/block_based/block_prefix_index.h"
 #include "table/block_based/data_block_hash_index.h"
 #include "table/format.h"
@@ -26,7 +26,7 @@
 #include "test_util/sync_point.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct BlockContents;
 class Comparator;
@@ -37,7 +37,7 @@ class IndexBlockIter;
 class MetaBlockIter;
 class BlockPrefixIndex;
 
-// BlockReadAmpBitmap is a bitmap that map the ROCKSDB_NAMESPACE::Block data
+// BlockReadAmpBitmap is a bitmap that map the MIZAR_NAMESPACE::Block data
 // bytes to a bitmap with ratio bytes_per_bit. Whenever we access a range of
 // bytes in the Block we update the bitmap and increment
 // READ_AMP_ESTIMATE_USEFUL_BYTES.
@@ -104,9 +104,9 @@ class BlockReadAmpBitmap {
   uint32_t GetBytesPerBit() { return 1 << bytes_per_bit_pow_; }
 
   size_t ApproximateMemoryUsage() const {
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
     return malloc_usable_size((void*)this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     return sizeof(*this);
   }
 
@@ -745,4 +745,4 @@ class IndexBlockIter final : public BlockIter<IndexValue> {
   inline void DecodeCurrentValue(bool is_shared);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

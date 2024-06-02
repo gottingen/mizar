@@ -3,10 +3,10 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#if !defined(GFLAGS) || defined(ROCKSDB_LITE)
+#if !defined(GFLAGS) || defined(MIZAR_LITE)
 #include <cstdio>
 int main() {
-  fprintf(stderr, "filter_bench requires gflags and !ROCKSDB_LITE\n");
+  fprintf(stderr, "filter_bench requires gflags and !MIZAR_LITE\n");
   return 1;
 }
 #else
@@ -19,8 +19,8 @@ int main() {
 #include "memory/arena.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/cache.h"
+#include "mizar/system_clock.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/full_filter_block.h"
 #include "table/block_based/mock_block_based_table.h"
@@ -132,29 +132,29 @@ void _always_assert_fail(int line, const char *file, const char *expr) {
 #define PREDICT_FP_RATE
 #endif
 
-using ROCKSDB_NAMESPACE::Arena;
-using ROCKSDB_NAMESPACE::BlockContents;
-using ROCKSDB_NAMESPACE::BloomFilterPolicy;
-using ROCKSDB_NAMESPACE::BloomHash;
-using ROCKSDB_NAMESPACE::BuiltinFilterBitsBuilder;
-using ROCKSDB_NAMESPACE::CachableEntry;
-using ROCKSDB_NAMESPACE::Cache;
-using ROCKSDB_NAMESPACE::EncodeFixed32;
-using ROCKSDB_NAMESPACE::FastRange32;
-using ROCKSDB_NAMESPACE::FilterBitsReader;
-using ROCKSDB_NAMESPACE::FilterBuildingContext;
-using ROCKSDB_NAMESPACE::FullFilterBlockReader;
-using ROCKSDB_NAMESPACE::GetSliceHash;
-using ROCKSDB_NAMESPACE::GetSliceHash64;
-using ROCKSDB_NAMESPACE::Lower32of64;
-using ROCKSDB_NAMESPACE::LRUCacheOptions;
-using ROCKSDB_NAMESPACE::ParsedFullFilterBlock;
-using ROCKSDB_NAMESPACE::PlainTableBloomV1;
-using ROCKSDB_NAMESPACE::Random32;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::static_cast_with_check;
-using ROCKSDB_NAMESPACE::StderrLogger;
-using ROCKSDB_NAMESPACE::mock::MockBlockBasedTableTester;
+using MIZAR_NAMESPACE::Arena;
+using MIZAR_NAMESPACE::BlockContents;
+using MIZAR_NAMESPACE::BloomFilterPolicy;
+using MIZAR_NAMESPACE::BloomHash;
+using MIZAR_NAMESPACE::BuiltinFilterBitsBuilder;
+using MIZAR_NAMESPACE::CachableEntry;
+using MIZAR_NAMESPACE::Cache;
+using MIZAR_NAMESPACE::EncodeFixed32;
+using MIZAR_NAMESPACE::FastRange32;
+using MIZAR_NAMESPACE::FilterBitsReader;
+using MIZAR_NAMESPACE::FilterBuildingContext;
+using MIZAR_NAMESPACE::FullFilterBlockReader;
+using MIZAR_NAMESPACE::GetSliceHash;
+using MIZAR_NAMESPACE::GetSliceHash64;
+using MIZAR_NAMESPACE::Lower32of64;
+using MIZAR_NAMESPACE::LRUCacheOptions;
+using MIZAR_NAMESPACE::ParsedFullFilterBlock;
+using MIZAR_NAMESPACE::PlainTableBloomV1;
+using MIZAR_NAMESPACE::Random32;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::static_cast_with_check;
+using MIZAR_NAMESPACE::StderrLogger;
+using MIZAR_NAMESPACE::mock::MockBlockBasedTableTester;
 
 struct KeyMaker {
   KeyMaker(size_t avg_size)
@@ -384,8 +384,8 @@ void FilterBench::Go() {
     max_mem = static_cast<size_t>(1024 * 1024 * working_mem_size_mb);
   }
 
-  ROCKSDB_NAMESPACE::StopWatchNano timer(
-      ROCKSDB_NAMESPACE::SystemClock::Default().get(), true);
+  MIZAR_NAMESPACE::StopWatchNano timer(
+      MIZAR_NAMESPACE::SystemClock::Default().get(), true);
 
   infos_.clear();
   while ((working_mem_size_mb == 0 || total_size < max_mem) &&
@@ -439,10 +439,10 @@ void FilterBench::Go() {
           new FullFilterBlockReader(table_.get(), std::move(block)));
     }
     total_size += info.filter_.size();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
     total_memory_used +=
         malloc_usable_size(const_cast<char *>(info.filter_.data()));
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     total_keys_added += keys_to_add;
   }
 
@@ -624,8 +624,8 @@ double FilterBench::RandomQueryTest(uint32_t inside_threshold, bool dry_run,
     batch_slice_ptrs[i] = &batch_slices[i];
   }
 
-  ROCKSDB_NAMESPACE::StopWatchNano timer(
-      ROCKSDB_NAMESPACE::SystemClock::Default().get(), true);
+  MIZAR_NAMESPACE::StopWatchNano timer(
+      MIZAR_NAMESPACE::SystemClock::Default().get(), true);
 
   for (uint64_t q = 0; q < max_queries; q += batch_size) {
     bool inside_this_time = random_.Next() <= inside_threshold;
@@ -692,7 +692,7 @@ double FilterBench::RandomQueryTest(uint32_t inside_threshold, bool dry_run,
             may_match = info.full_block_reader_->KeyMayMatch(
                 batch_slices[i],
                 /*prefix_extractor=*/nullptr,
-                /*block_offset=*/ROCKSDB_NAMESPACE::kNotValid,
+                /*block_offset=*/MIZAR_NAMESPACE::kNotValid,
                 /*no_io=*/false, /*const_ikey_ptr=*/nullptr,
                 /*get_context=*/nullptr,
                 /*lookup_context=*/nullptr);
@@ -758,7 +758,7 @@ double FilterBench::RandomQueryTest(uint32_t inside_threshold, bool dry_run,
 }
 
 int main(int argc, char **argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   SetUsageMessage(std::string("\nUSAGE:\n") + std::string(argv[0]) +
                   " [-quick] [OTHER OPTIONS]...");
   ParseCommandLineFlags(&argc, &argv, true);
@@ -804,4 +804,4 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-#endif  // !defined(GFLAGS) || defined(ROCKSDB_LITE)
+#endif  // !defined(GFLAGS) || defined(MIZAR_LITE)

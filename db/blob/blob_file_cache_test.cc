@@ -15,15 +15,15 @@
 #include "file/read_write_util.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/options.h"
-#include "rocksdb/statistics.h"
+#include "mizar/cache.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/options.h"
+#include "mizar/statistics.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -260,7 +260,7 @@ TEST_F(BlobFileCacheTest, GetBlobFileReader_CacheFull) {
   ASSERT_EQ(options.statistics->getTickerCount(NO_FILE_ERRORS), 1);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

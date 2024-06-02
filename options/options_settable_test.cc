@@ -12,7 +12,7 @@
 #include "options/cf_options.h"
 #include "options/db_options.h"
 #include "options/options_helper.h"
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 #include "test_util/testharness.h"
 
 #ifndef GFLAGS
@@ -23,7 +23,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_bool(enable_print, false, "Print options generated to console.");
 #endif  // GFLAGS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Verify options are settable from options strings.
 // We take the approach that depends on compiler behavior that copy constructor
@@ -31,7 +31,7 @@ namespace ROCKSDB_NAMESPACE {
 // As a result, we only run the tests to verify new fields in options are
 // settable through string on limited platforms as it depends on behavior of
 // compilers.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #if defined OS_LINUX || defined OS_WIN
 #ifndef __clang__
 
@@ -582,9 +582,9 @@ TEST_F(OptionsSettableTest, ColumnFamilyOptionsAllFieldsSettable) {
 }
 #endif  // !__clang__
 #endif  // OS_LINUX || OS_WIN
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

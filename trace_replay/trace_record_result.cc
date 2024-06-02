@@ -3,9 +3,9 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/trace_record_result.h"
+#include "mizar/trace_record_result.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TraceRecordResult
 TraceRecordResult::TraceRecordResult(TraceType trace_type)
@@ -143,4 +143,4 @@ Status IteratorTraceExecutionResult::Accept(Handler* handler) {
   return handler->Handle(*this);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

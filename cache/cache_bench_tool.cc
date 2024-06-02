@@ -15,13 +15,13 @@
 #include "db/db_impl/db_impl.h"
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/system_clock.h"
+#include "mizar/table_properties.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/cachable_entry.h"
 #include "util/coding.h"
@@ -70,11 +70,11 @@ DEFINE_uint32(
 DEFINE_uint32(gather_stats_entries_per_lock, 256,
               "For Cache::ApplyToAllEntries");
 DEFINE_bool(skewed, false, "If true, skew the key access distribution");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 DEFINE_string(secondary_cache_uri, "",
               "Full URI for creating a custom secondary cache object");
-static class std::shared_ptr<ROCKSDB_NAMESPACE::SecondaryCache> secondary_cache;
-#endif  // ROCKSDB_LITE
+static class std::shared_ptr<MIZAR_NAMESPACE::SecondaryCache> secondary_cache;
+#endif  // MIZAR_LITE
 
 DEFINE_bool(use_clock_cache, false, "");
 
@@ -108,7 +108,7 @@ DEFINE_bool(sck_footer_unique_id, false,
             "(-stress_cache_key) Simulate using proposed footer unique id");
 // ## END stress_cache_key sub-tool options ##
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CacheBench;
 namespace {
@@ -266,7 +266,7 @@ class CacheBench {
       }
     } else {
       LRUCacheOptions opts(FLAGS_cache_size, FLAGS_num_shard_bits, false, 0.5);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (!FLAGS_secondary_cache_uri.empty()) {
         Status s = SecondaryCache::CreateFromString(
             ConfigOptions(), FLAGS_secondary_cache_uri, &secondary_cache);
@@ -279,7 +279,7 @@ class CacheBench {
         }
         opts.secondary_cache = secondary_cache;
       }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
       cache_ = NewLRUCache(opts);
     }
@@ -777,7 +777,7 @@ int cache_bench_tool(int argc, char** argv) {
     exit(1);
   }
 
-  ROCKSDB_NAMESPACE::CacheBench bench;
+  MIZAR_NAMESPACE::CacheBench bench;
   if (FLAGS_populate_cache) {
     bench.PopulateCache();
     printf("Population complete\n");
@@ -788,7 +788,7 @@ int cache_bench_tool(int argc, char** argv) {
   } else {
     return 1;
   }
-}  // namespace ROCKSDB_NAMESPACE
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // GFLAGS

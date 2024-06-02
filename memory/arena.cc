@@ -16,11 +16,11 @@
 #include "logging/logging.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // MSVC complains that it is already defined since it is static in the header.
 #ifndef _MSC_VER
@@ -213,7 +213,7 @@ char* Arena::AllocateNewBlock(size_t block_bytes) {
 
   char* block = new char[block_bytes];
   size_t allocated_size;
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   allocated_size = malloc_usable_size(block);
 #ifndef NDEBUG
   // It's hard to predict what malloc_usable_size() returns.
@@ -223,7 +223,7 @@ char* Arena::AllocateNewBlock(size_t block_bytes) {
 #endif  // NDEBUG
 #else
   allocated_size = block_bytes;
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
   blocks_memory_ += allocated_size;
   if (tracker_ != nullptr) {
     tracker_->Allocate(allocated_size);
@@ -232,4 +232,4 @@ char* Arena::AllocateNewBlock(size_t block_bytes) {
   return block;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

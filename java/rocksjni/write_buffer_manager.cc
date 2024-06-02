@@ -7,8 +7,8 @@
 
 #include "include/org_rocksdb_WriteBufferManager.h"
 
-#include "rocksdb/cache.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/write_buffer_manager.h"
 
 /*
  * Class:     org_rocksdb_WriteBufferManager
@@ -19,11 +19,11 @@ jlong Java_org_rocksdb_WriteBufferManager_newWriteBufferManager(
     JNIEnv* /*env*/, jclass /*jclazz*/, jlong jbuffer_size, jlong jcache_handle,
     jboolean allow_stall) {
   auto* cache_ptr =
-      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::Cache>*>(
+      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::Cache>*>(
           jcache_handle);
   auto* write_buffer_manager =
-      new std::shared_ptr<ROCKSDB_NAMESPACE::WriteBufferManager>(
-          std::make_shared<ROCKSDB_NAMESPACE::WriteBufferManager>(
+      new std::shared_ptr<MIZAR_NAMESPACE::WriteBufferManager>(
+          std::make_shared<MIZAR_NAMESPACE::WriteBufferManager>(
               jbuffer_size, *cache_ptr, allow_stall));
   return reinterpret_cast<jlong>(write_buffer_manager);
 }
@@ -36,7 +36,7 @@ jlong Java_org_rocksdb_WriteBufferManager_newWriteBufferManager(
 void Java_org_rocksdb_WriteBufferManager_disposeInternal(
         JNIEnv* /*env*/, jobject /*jobj*/, jlong jhandle) {
   auto* write_buffer_manager =
-      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::WriteBufferManager>*>(
+      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::WriteBufferManager>*>(
           jhandle);
   assert(write_buffer_manager != nullptr);
   delete write_buffer_manager;

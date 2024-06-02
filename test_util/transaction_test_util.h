@@ -5,14 +5,14 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #include "port/port.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DB;
 class Random64;
@@ -127,6 +127,6 @@ class RandomTransactionInserter {
   bool DoInsert(DB* db, Transaction* txn, bool is_optimistic);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

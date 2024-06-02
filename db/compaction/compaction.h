@@ -11,10 +11,10 @@
 #include "db/version_set.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // The file contains class Compaction, as well as some helper functions
 // and data structures used by the class.
 
@@ -412,4 +412,4 @@ class Compaction {
 // Return sum of sizes of all files in `files`.
 extern uint64_t TotalFileSize(const std::vector<FileMetaData*>& files);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

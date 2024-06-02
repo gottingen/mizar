@@ -5,13 +5,13 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <utility>
 
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // An abstract FileSystem wrapper that creates a view of an existing
 // FileSystem by remapping names in some way.
@@ -134,6 +134,6 @@ class RemapFileSystem : public FileSystemWrapper {
                            IODebugContext* dbg) override;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

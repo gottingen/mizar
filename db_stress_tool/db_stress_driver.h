@@ -10,8 +10,8 @@
 #ifdef GFLAGS
 #pragma once
 #include "db_stress_tool/db_stress_test_base.h"
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 extern void ThreadBody(void* /*thread_state*/);
 extern bool RunStressTest(StressTest*);
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

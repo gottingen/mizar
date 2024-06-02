@@ -7,10 +7,10 @@
 
 #include <cassert>
 
-#include "rocksdb/cache.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/cache.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Returns the cached value given a cache handle.
 template <typename T>
@@ -122,4 +122,4 @@ std::shared_ptr<T> MakeSharedCacheHandleGuard(Cache* cache,
   return std::shared_ptr<T>(wrapper, static_cast<T*>(cache->Value(handle)));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

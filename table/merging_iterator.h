@@ -9,10 +9,10 @@
 
 #pragma once
 
-#include "rocksdb/slice.h"
-#include "rocksdb/types.h"
+#include "mizar/slice.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Arena;
 class InternalKeyComparator;
@@ -61,4 +61,4 @@ class MergeIteratorBuilder {
   Arena* arena;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

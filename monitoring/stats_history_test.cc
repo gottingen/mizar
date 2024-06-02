@@ -6,7 +6,7 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-#include "rocksdb/stats_history.h"
+#include "mizar/stats_history.h"
 
 #include <limits>
 #include <string>
@@ -19,17 +19,17 @@
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/rate_limiter.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class StatsHistoryTest : public DBTestBase {
  public:
   StatsHistoryTest() : DBTestBase("stats_history_test", /*env_do_fsync=*/true) {
@@ -651,11 +651,11 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
   Close();
 }
 
-#endif  // !ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // !MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

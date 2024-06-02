@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#if !defined(ROCKSDB_LITE) && !defined(OS_WIN)
+#if !defined(MIZAR_LITE) && !defined(OS_WIN)
 
 #include "env/env_chroot.h"
 
@@ -13,10 +13,10 @@
 
 #include "env/composite_env_wrapper.h"
 #include "env/fs_remap.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"  // errnoStr
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> chroot_fs_type_info = {
     {"chroot_dir", {0, OptionType::kString}}};
@@ -143,6 +143,6 @@ Env* NewChrootEnv(Env* base_env, const std::string& chroot_dir) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !defined(ROCKSDB_LITE) && !defined(OS_WIN)
+#endif  // !defined(MIZAR_LITE) && !defined(OS_WIN)

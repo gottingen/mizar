@@ -8,9 +8,9 @@
 #include <atomic>
 #include <limits>
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // NOTE: SpecialEnv offers most of this functionality, along with hooks
 // for safe DB behavior under a mock time environment, so should be used
@@ -74,4 +74,4 @@ class MockSystemClock : public SystemClockWrapper {
   static constexpr uint64_t kMicrosInSecond = 1000U * 1000U;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

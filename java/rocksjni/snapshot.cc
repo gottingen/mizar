@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include "include/org_rocksdb_Snapshot.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -22,6 +22,6 @@ jlong Java_org_rocksdb_Snapshot_getSequenceNumber(JNIEnv* /*env*/,
                                                   jobject /*jobj*/,
                                                   jlong jsnapshot_handle) {
   auto* snapshot =
-      reinterpret_cast<ROCKSDB_NAMESPACE::Snapshot*>(jsnapshot_handle);
+      reinterpret_cast<MIZAR_NAMESPACE::Snapshot*>(jsnapshot_handle);
   return snapshot->GetSequenceNumber();
 }

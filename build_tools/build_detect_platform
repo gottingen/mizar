@@ -22,7 +22,7 @@
 #
 # The PLATFORM_CCFLAGS and PLATFORM_CXXFLAGS might include the following:
 #
-#       -DROCKSDB_PLATFORM_POSIX    if posix-platform based
+#       -DMIZAR_PLATFORM_POSIX    if posix-platform based
 #       -DSNAPPY                    if the Snappy library is present
 #       -DLZ4                       if the LZ4 library is present
 #       -DZSTD                      if the ZSTD library is present
@@ -53,7 +53,7 @@ else
 fi
 
 # we currently depend on POSIX platform
-COMMON_FLAGS="-DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX"
+COMMON_FLAGS="-DMIZAR_PLATFORM_POSIX -DMIZAR_LIB_IO_POSIX"
 
 # Default to fbcode gcc on internal fb machines
 if [ -z "$ROCKSDB_NO_FBCODE" -a -d /mnt/gvfs/third-party ]; then
@@ -156,7 +156,7 @@ case "$TARGET_OS" in
         ;;
     IOS)
         PLATFORM=IOS
-        COMMON_FLAGS="$COMMON_FLAGS -DOS_MACOSX -DIOS_CROSS_COMPILE -DROCKSDB_LITE"
+        COMMON_FLAGS="$COMMON_FLAGS -DOS_MACOSX -DIOS_CROSS_COMPILE -DMIZAR_LITE"
         PLATFORM_SHARED_EXT=dylib
         PLATFORM_SHARED_LDFLAGS="-dynamiclib -install_name "
         CROSS_COMPILE=true
@@ -186,7 +186,7 @@ case "$TARGET_OS" in
 EOF
             if [ "$?" = 0 ]; then
                 PLATFORM_LDFLAGS="$PLATFORM_LDFLAGS -luring"
-                COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_IOURING_PRESENT"
+                COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_IOURING_PRESENT"
             fi
         fi
         # PORT_FILES=port/linux/linux_specific.cc
@@ -258,7 +258,7 @@ EOF
         ;;
     OS_ANDROID_CROSSCOMPILE)
         PLATFORM=OS_ANDROID
-	COMMON_FLAGS="$COMMON_FLAGS -fno-builtin-memcmp -D_REENTRANT -DOS_ANDROID -DROCKSDB_PLATFORM_POSIX"
+	COMMON_FLAGS="$COMMON_FLAGS -fno-builtin-memcmp -D_REENTRANT -DOS_ANDROID -DMIZAR_PLATFORM_POSIX"
 	PLATFORM_LDFLAGS="$PLATFORM_LDFLAGS "  # All pthread features are in the Android C library
         # PORT_FILES=port/android/android.cc
         CROSS_COMPILE=true
@@ -293,7 +293,7 @@ else
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_FALLOCATE_PRESENT"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_FALLOCATE_PRESENT"
         fi
     fi
 
@@ -465,7 +465,7 @@ EOF
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_MALLOC_USABLE_SIZE"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_MALLOC_USABLE_SIZE"
         fi
     fi
 
@@ -496,7 +496,7 @@ EOF
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_PTHREAD_ADAPTIVE_MUTEX"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_PTHREAD_ADAPTIVE_MUTEX"
         fi
     fi
 
@@ -551,7 +551,7 @@ EOF
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_RANGESYNC_PRESENT"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_RANGESYNC_PRESENT"
         fi
     fi
 
@@ -565,7 +565,7 @@ EOF
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_SCHED_GETCPU_PRESENT"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_SCHED_GETCPU_PRESENT"
         fi
     fi
 
@@ -579,7 +579,7 @@ EOF
           }
 EOF
         if [ "$?" = 0 ]; then
-            COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_AUXV_GETAUXVAL_PRESENT"
+            COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_AUXV_GETAUXVAL_PRESENT"
         fi
     fi
 
@@ -824,7 +824,7 @@ if [ "$PLATFORM" != IOS ]; then
   }
 EOF
   if [ "$?" = 0 ]; then
-    COMMON_FLAGS="$COMMON_FLAGS -DROCKSDB_SUPPORT_THREAD_LOCAL"
+    COMMON_FLAGS="$COMMON_FLAGS -DMIZAR_SUPPORT_THREAD_LOCAL"
   fi
 fi
 

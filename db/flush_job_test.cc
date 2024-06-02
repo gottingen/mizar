@@ -15,16 +15,16 @@
 #include "db/db_impl/db_impl.h"
 #include "db/version_set.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/file_system.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/mock_table.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TODO(icanadi) Mock out everything else:
 // 1. VersionSet
@@ -420,11 +420,11 @@ TEST_F(FlushJobTest, FlushMemtablesMultipleColumnFamilies) {
   }
   autovector<std::list<std::unique_ptr<FlushJobInfo>>*>
       committed_flush_jobs_info;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   for (auto& job : flush_jobs) {
     committed_flush_jobs_info.push_back(job->GetCommittedFlushJobsInfo());
   }
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
 
   Status s = InstallMemtableAtomicFlushResults(
       nullptr /* imm_lists */, all_cfds, mutable_cf_options_list, mems_list,
@@ -656,7 +656,7 @@ TEST_F(FlushJobTimestampTest, NoKeyExpired) {
   ASSERT_TRUE(to_delete.empty());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

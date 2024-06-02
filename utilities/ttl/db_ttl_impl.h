@@ -5,18 +5,18 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <deque>
 #include <string>
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/db_ttl.h"
-#include "rocksdb/utilities/utility_db.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/db_ttl.h"
+#include "mizar/utilities/utility_db.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 
 #ifdef _WIN32
@@ -24,7 +24,7 @@
 #undef GetCurrentTime
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct ConfigOptions;
 class ObjectLibrary;
 class ObjectRegistry;
@@ -246,5 +246,5 @@ extern "C" {
 int RegisterTtlObjects(ObjectLibrary& library, const std::string& /*arg*/);
 }  // extern "C"
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

@@ -13,10 +13,10 @@
 
 #include "db/dbformat.h"
 #include "db/pinned_iterators_manager.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include "table/internal_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct FragmentedRangeTombstoneList {
  public:
@@ -270,4 +270,4 @@ class FragmentedRangeTombstoneIterator : public InternalIterator {
   mutable InternalKey current_start_key_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -31,7 +31,7 @@
 
 #include "port/win/win_thread.h"
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
 #undef min
 #undef max
@@ -68,7 +68,7 @@ using ssize_t = SSIZE_T;
 
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #define PREFETCH(addr, rw, locality)
 
@@ -260,14 +260,14 @@ extern void InitOnce(OnceType* once, void (*initializer)());
 #define CACHE_LINE_SIZE 64U
 #endif
 
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
 // Separate inlines so they can be replaced if needed
 void* jemalloc_aligned_alloc(size_t size, size_t alignment) ROCKSDB_NOEXCEPT;
 void jemalloc_aligned_free(void* p) ROCKSDB_NOEXCEPT;
 #endif
 
 inline void *cacheline_aligned_alloc(size_t size) {
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
   return jemalloc_aligned_alloc(size, CACHE_LINE_SIZE);
 #else
   return _aligned_malloc(size, CACHE_LINE_SIZE);
@@ -275,7 +275,7 @@ inline void *cacheline_aligned_alloc(size_t size) {
 }
 
 inline void cacheline_aligned_free(void *memblock) {
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
   jemalloc_aligned_free(memblock);
 #else
   _aligned_free(memblock);
@@ -366,11 +366,11 @@ bool GenerateRfcUuid(std::string* output);
 }  // namespace port
 
 
-#ifdef ROCKSDB_WINDOWS_UTF8_FILENAMES
+#ifdef MIZAR_WINDOWS_UTF8_FILENAMES
 
 #define RX_FILESTRING std::wstring
-#define RX_FN(a) ROCKSDB_NAMESPACE::port::utf8_to_utf16(a)
-#define FN_TO_RX(a) ROCKSDB_NAMESPACE::port::utf16_to_utf8(a)
+#define RX_FN(a) MIZAR_NAMESPACE::port::utf8_to_utf16(a)
+#define FN_TO_RX(a) MIZAR_NAMESPACE::port::utf16_to_utf8(a)
 #define RX_FNCMP(a, b) ::wcscmp(a, RX_FN(b).c_str())
 #define RX_FNLEN(a) ::wcslen(a)
 
@@ -426,4 +426,4 @@ using port::pthread_setspecific;
 using port::pthread_getspecific;
 using port::truncate;
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

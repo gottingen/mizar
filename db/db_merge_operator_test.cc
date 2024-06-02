@@ -8,12 +8,12 @@
 #include "db/db_test_util.h"
 #include "db/forward_iterator.h"
 #include "port/stack_trace.h"
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 #include "util/random.h"
 #include "utilities/merge_operators.h"
 #include "utilities/merge_operators/string_append/stringappend2.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TestReadCallback : public ReadCallback {
  public:
@@ -215,7 +215,7 @@ class MergeOperatorPinningTest : public DBMergeOperatorTest,
 INSTANTIATE_TEST_CASE_P(MergeOperatorPinningTest, MergeOperatorPinningTest,
                         ::testing::Bool());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(MergeOperatorPinningTest, OperandsMultiBlocks) {
   Options options = CurrentOptions();
   BlockBasedTableOptions table_options;
@@ -422,8 +422,8 @@ TEST_P(MergeOperatorPinningTest, TailingIterator) {
     delete iter;
   };
 
-  ROCKSDB_NAMESPACE::port::Thread writer_thread(writer_func);
-  ROCKSDB_NAMESPACE::port::Thread reader_thread(reader_func);
+  MIZAR_NAMESPACE::port::Thread writer_thread(writer_func);
+  MIZAR_NAMESPACE::port::Thread reader_thread(reader_func);
 
   writer_thread.join();
   reader_thread.join();
@@ -461,19 +461,19 @@ TEST_F(DBMergeOperatorTest, TailingIteratorMemtableUnrefedBySomeoneElse) {
 
   bool pushed_first_operand = false;
   bool stepped_to_next_operand = false;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBIter::MergeValuesNewToOld:PushedFirstOperand", [&](void*) {
         EXPECT_FALSE(pushed_first_operand);
         pushed_first_operand = true;
         EXPECT_OK(db_->Flush(FlushOptions()));  // Switch to SuperVersion B
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBIter::MergeValuesNewToOld:SteppedToNextOperand", [&](void*) {
         EXPECT_FALSE(stepped_to_next_operand);
         stepped_to_next_operand = true;
         someone_else.reset(); // Unpin SuperVersion A
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   ReadOptions ro;
   ro.tailing = true;
@@ -486,7 +486,7 @@ TEST_F(DBMergeOperatorTest, TailingIteratorMemtableUnrefedBySomeoneElse) {
   EXPECT_TRUE(pushed_first_operand);
   EXPECT_TRUE(stepped_to_next_operand);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBMergeOperatorTest, SnapshotCheckerAndReadCallback) {
   Options options = CurrentOptions();
@@ -662,10 +662,10 @@ TEST_P(PerConfigMergeOperatorPinningTest, Randomized) {
   VerifyDBFromMap(true_data);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

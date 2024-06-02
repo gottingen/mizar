@@ -8,11 +8,11 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/compaction/compaction_picker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class FIFOCompactionPicker : public CompactionPicker {
  public:
   FIFOCompactionPicker(const ImmutableOptions& ioptions,
@@ -59,5 +59,5 @@ class FIFOCompactionPicker : public CompactionPicker {
                                    VersionStorageInfo* version,
                                    LogBuffer* log_buffer);
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

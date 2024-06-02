@@ -13,7 +13,7 @@
 #include "port/port.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class FileNameTest : public testing::Test {};
 
@@ -171,7 +171,7 @@ TEST_F(FileNameTest, Construction) {
   ASSERT_EQ(kMetaDatabase, type);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

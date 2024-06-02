@@ -8,7 +8,7 @@
 #include "test_util/testharness.h"
 #include "util/defer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DeferTest {};
 
@@ -41,10 +41,10 @@ TEST(SaveAndRestoreTest, BlockScope) {
   ASSERT_EQ(v, 1);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

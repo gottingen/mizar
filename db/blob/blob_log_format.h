@@ -10,12 +10,12 @@
 #include <memory>
 #include <utility>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 constexpr uint32_t kMagicNumber = 2395959;  // 0x00248f37
 constexpr uint32_t kVersion1 = 1;
@@ -146,4 +146,4 @@ inline bool IsValidBlobOffset(uint64_t value_offset, uint64_t key_size,
   return true;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

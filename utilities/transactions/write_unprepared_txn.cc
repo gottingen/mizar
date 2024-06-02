@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/write_unprepared_txn.h"
 
@@ -12,7 +12,7 @@
 #include "utilities/transactions/write_unprepared_txn_db.h"
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool WriteUnpreparedTxnReadCallback::IsVisibleFullCheck(SequenceNumber seq) {
   // Since unprep_seqs maps prep_seq => prepare_batch_cnt, to check if seq is
@@ -1037,6 +1037,6 @@ WriteUnpreparedTxn::GetUnpreparedSequenceNumbers() {
   return unprep_seqs_;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

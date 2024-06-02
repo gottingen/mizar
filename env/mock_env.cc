@@ -15,8 +15,8 @@
 #include "env/emulated_clock.h"
 #include "file/filename.h"
 #include "port/sys_time.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/file_system.h"
+#include "mizar/utilities/options_type.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/hash.h"
@@ -24,7 +24,7 @@
 #include "util/rate_limiter.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 int64_t MaybeCurrentTime(const std::shared_ptr<SystemClock>& clock) {
   int64_t time = 1337346000;  // arbitrary fallback default
@@ -33,7 +33,7 @@ int64_t MaybeCurrentTime(const std::shared_ptr<SystemClock>& clock) {
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> time_elapse_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"time_elapse_only_sleep",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kCompareNever,
@@ -50,10 +50,10 @@ static std::unordered_map<std::string, OptionTypeInfo> time_elapse_type_info = {
         return Status::OK();
       },
       nullptr}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo> mock_sleep_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"mock_sleep",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kCompareNever,
@@ -70,7 +70,7 @@ static std::unordered_map<std::string, OptionTypeInfo> mock_sleep_type_info = {
         return Status::OK();
       },
       nullptr}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 }  // namespace
 
@@ -567,11 +567,11 @@ class TestMemLogger : public Logger {
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> mock_fs_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"supports_direct_io",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 }  // namespace
 
@@ -1047,14 +1047,14 @@ Status MockEnv::CorruptBuffer(const std::string& fname) {
   return mock->CorruptBuffer(fname);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // This is to maintain the behavior before swithcing from InMemoryEnv to MockEnv
 Env* NewMemEnv(Env* base_env) { return MockEnv::Create(base_env); }
 
-#else  // ROCKSDB_LITE
+#else  // MIZAR_LITE
 
 Env* NewMemEnv(Env* /*base_env*/) { return nullptr; }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

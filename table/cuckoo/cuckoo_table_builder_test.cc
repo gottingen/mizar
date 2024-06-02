@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "table/cuckoo/cuckoo_table_builder.h"
 
@@ -14,13 +14,13 @@
 
 #include "file/random_access_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
 #include "table/meta_blocks.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 extern const uint64_t kCuckooTableMagicNumber;
 
 namespace {
@@ -626,7 +626,7 @@ TEST_F(CuckooBuilderTest, FailWhenSameKeyInserted) {
   ASSERT_TRUE(builder.Finish().IsNotSupported());
   ASSERT_OK(file_writer->Close());
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -637,8 +637,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

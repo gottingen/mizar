@@ -13,10 +13,10 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/table.h"
+#include "mizar/filter_policy.h"
+#include "mizar/table.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Slice;
 
@@ -202,4 +202,4 @@ class LevelThresholdFilterPolicy : public BuiltinFilterPolicy {
   int starting_level_for_b_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

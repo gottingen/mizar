@@ -9,9 +9,9 @@
 #include "env/composite_env_wrapper.h"
 #include "test_util/mock_time_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class PeriodicWorkSchedulerTest : public DBTestBase {
  public:
   PeriodicWorkSchedulerTest()
@@ -226,8 +226,8 @@ TEST_F(PeriodicWorkSchedulerTest, MultiEnv) {
   delete db;
   Close();
 }
-#endif  // !ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // !MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

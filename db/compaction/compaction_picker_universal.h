@@ -8,11 +8,11 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/compaction/compaction_picker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class UniversalCompactionPicker : public CompactionPicker {
  public:
   UniversalCompactionPicker(const ImmutableOptions& ioptions,
@@ -28,5 +28,5 @@ class UniversalCompactionPicker : public CompactionPicker {
   virtual bool NeedsCompaction(
       const VersionStorageInfo* vstorage) const override;
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

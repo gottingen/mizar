@@ -5,19 +5,19 @@
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/perf_context.h"
+#include "mizar/utilities/debug.h"
 #include "table/block_based/block_builder.h"
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 #include "test_util/sync_point.h"
 #endif
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 #include "utilities/fault_injection_env.h"
 #include "utilities/merge_operators.h"
 #include "utilities/merge_operators/sortlist.h"
 #include "utilities/merge_operators/string_append/stringappend2.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 class LimitedStringAppendMergeOp : public StringAppendTESTOperator {
@@ -322,10 +322,10 @@ TEST_F(DBMergeOperandTest, BlobDBGetMergeOperandsBasic) {
   ASSERT_EQ(values[3], "ed");
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

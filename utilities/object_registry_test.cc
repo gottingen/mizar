@@ -3,15 +3,15 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/utilities/object_registry.h"
 
-#include "rocksdb/customizable.h"
-#include "rocksdb/utilities/regex.h"
+#include "mizar/customizable.h"
+#include "mizar/utilities/regex.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ObjRegistryTest : public testing::Test {
  public:
@@ -705,19 +705,19 @@ TEST_F(PatternEntryTest, TestTwoNamesAndPattern) {
   ASSERT_TRUE(entry.Matches("BBB::2"));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
-#else  // ROCKSDB_LITE
+#else  // MIZAR_LITE
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as ObjRegistry is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as ObjRegistry is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

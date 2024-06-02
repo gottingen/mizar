@@ -1,15 +1,15 @@
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <functional>
 
 #include "db/db_test_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/sst_file_writer.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ImportColumnFamilyTest : public DBTestBase {
  public:
@@ -611,10 +611,10 @@ TEST_F(ImportColumnFamilyTest, ImportColumnFamilyNegativeTest) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -625,8 +625,8 @@ int main(int argc, char** argv) {
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
           "SKIPPED as External SST File Writer and Import are not supported "
-          "in ROCKSDB_LITE\n");
+          "in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

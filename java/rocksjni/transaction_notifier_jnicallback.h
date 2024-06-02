@@ -4,17 +4,17 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::TransactionNotifier.
+// MIZAR_NAMESPACE::TransactionNotifier.
 
 #ifndef JAVA_ROCKSJNI_TRANSACTION_NOTIFIER_JNICALLBACK_H_
 #define JAVA_ROCKSJNI_TRANSACTION_NOTIFIER_JNICALLBACK_H_
 
 #include <jni.h>
 
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/utilities/transaction.h"
 #include "rocksjni/jnicallback.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 /**
  * This class acts as a bridge between C++
@@ -37,6 +37,6 @@ class TransactionNotifierJniCallback: public JniCallback,
  private:
   jmethodID m_jsnapshot_created_methodID;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // JAVA_ROCKSJNI_TRANSACTION_NOTIFIER_JNICALLBACK_H_

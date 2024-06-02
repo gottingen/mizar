@@ -7,13 +7,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class WriteBufferManagerTest : public testing::Test {};
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 const size_t kSizeDummyEntry = 256 * 1024;
 
 TEST_F(WriteBufferManagerTest, ShouldFlush) {
@@ -292,8 +292,8 @@ TEST_F(WriteBufferManagerTest, CacheFull) {
             46 * kSizeDummyEntry + kMetaDataChargeOverhead);
 }
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

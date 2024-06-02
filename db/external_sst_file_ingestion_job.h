@@ -14,12 +14,12 @@
 #include "env/file_system_tracer.h"
 #include "logging/event_logger.h"
 #include "options/db_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
+#include "mizar/sst_file_writer.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Directories;
 class SystemClock;
@@ -196,4 +196,4 @@ class ExternalSstFileIngestionJob {
   std::shared_ptr<IOTracer> io_tracer_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

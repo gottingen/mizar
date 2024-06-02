@@ -11,7 +11,7 @@
 #include "db_stress_tool/db_stress_common.h"
 #include "file/file_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class CfConsistencyStressTest : public StressTest {
  public:
   CfConsistencyStressTest() : batch_id_(0) {}
@@ -391,7 +391,7 @@ class CfConsistencyStressTest : public StressTest {
                     column_families_[i]->GetName().c_str(),
                     iters[i]->key().ToString(true /* hex */).c_str(),
                     iters[i]->value().ToString(true /* hex */).c_str());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
             Slice begin_key;
             Slice end_key;
             if (cmp < 0) {
@@ -427,7 +427,7 @@ class CfConsistencyStressTest : public StressTest {
               print_key_versions(column_families_[0]);
             }
             print_key_versions(column_families_[i]);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
             shared->SetVerificationFailure();
           }
         }
@@ -439,7 +439,7 @@ class CfConsistencyStressTest : public StressTest {
     } while (true);
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void ContinuouslyVerifyDb(ThreadState* thread) const override {
     assert(thread);
     Status status;
@@ -498,7 +498,7 @@ class CfConsistencyStressTest : public StressTest {
       shared->SetShouldStopTest();
     }
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   std::vector<int> GenerateColumnFamilies(
       const int /* num_column_families */,
@@ -518,5 +518,5 @@ StressTest* CreateCfConsistencyStressTest() {
   return new CfConsistencyStressTest();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

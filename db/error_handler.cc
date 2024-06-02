@@ -10,7 +10,7 @@
 #include "file/sst_file_manager_impl.h"
 #include "logging/logging.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Maps to help decide the severity of an error based on the
 // BackgroundErrorReason, Code, SubCode and whether db_options.paranoid_checks
@@ -227,7 +227,7 @@ std::map<std::tuple<BackgroundErrorReason, bool>, Status::Severity>
 };
 
 void ErrorHandler::CancelErrorRecovery() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   db_mutex_->AssertHeld();
 
   // We'll release the lock before calling sfm, so make sure no new
@@ -486,7 +486,7 @@ const Status& ErrorHandler::SetBGError(const IOStatus& bg_io_err,
 
 Status ErrorHandler::OverrideNoSpaceError(const Status& bg_error,
                                           bool* auto_recovery) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (bg_error.severity() >= Status::Severity::kFatalError) {
     return bg_error;
   }
@@ -522,7 +522,7 @@ Status ErrorHandler::OverrideNoSpaceError(const Status& bg_error,
 }
 
 void ErrorHandler::RecoverFromNoSpace() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   SstFileManagerImpl* sfm =
       reinterpret_cast<SstFileManagerImpl*>(db_options_.sst_file_manager.get());
 
@@ -534,7 +534,7 @@ void ErrorHandler::RecoverFromNoSpace() {
 }
 
 Status ErrorHandler::ClearBGError() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   db_mutex_->AssertHeld();
 
   // Signal that recovery succeeded
@@ -559,7 +559,7 @@ Status ErrorHandler::ClearBGError() {
 }
 
 Status ErrorHandler::RecoverFromBGError(bool is_manual) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   InstrumentedMutexLock l(db_mutex_);
   bool no_bg_work_original_flag = soft_error_no_bg_work_;
   if (is_manual) {
@@ -620,7 +620,7 @@ Status ErrorHandler::RecoverFromBGError(bool is_manual) {
 
 const Status& ErrorHandler::StartRecoverFromRetryableBGIOError(
     const IOStatus& io_error) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   db_mutex_->AssertHeld();
   if (bg_error_.ok()) {
     return bg_error_;
@@ -663,7 +663,7 @@ const Status& ErrorHandler::StartRecoverFromRetryableBGIOError(
 // Automatic recover from Retryable BG IO error. Must be called after db
 // mutex is released.
 void ErrorHandler::RecoverFromRetryableBGIOError() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TEST_SYNC_POINT("RecoverFromRetryableBGIOError:BeforeStart");
   InstrumentedMutexLock l(db_mutex_);
   if (end_recovery_) {
@@ -799,4 +799,4 @@ void ErrorHandler::EndAutoRecovery() {
   return;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

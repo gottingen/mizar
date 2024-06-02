@@ -7,9 +7,9 @@
 
 #include "monitoring/thread_status_updater.h"
 #include "monitoring/thread_status_util.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #ifndef NDEBUG
 // the delay for debugging purpose.
@@ -29,4 +29,4 @@ void ThreadStatusUtil::TEST_StateDelay(const ThreadStatus::StateType state) {
 
 #endif  // !NDEBUG
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

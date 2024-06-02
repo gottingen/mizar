@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 #include <thread>
 
@@ -19,18 +19,18 @@
 #include "memory/arena.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/options.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/options.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/autovector.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinEnvs(ObjectLibrary& library,
                                const std::string& /*arg*/) {
   library.AddFactory<Env>(MockEnv::kClassName(), [](const std::string& /*uri*/,
@@ -49,15 +49,15 @@ static int RegisterBuiltinEnvs(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 static void RegisterSystemEnvs() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag loaded;
   std::call_once(loaded, [&]() {
     RegisterBuiltinEnvs(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 class LegacySystemClock : public SystemClock {
@@ -98,7 +98,7 @@ class LegacySystemClock : public SystemClock {
     return env_->TimeToString(time);
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string SerializeOptions(const ConfigOptions& /*config_options*/,
                                const std::string& /*prefix*/) const override {
     // We do not want the LegacySystemClock to appear in the serialized output.
@@ -106,7 +106,7 @@ class LegacySystemClock : public SystemClock {
     // would be part of the Env.  As such, do not serialize it here.
     return "";
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 class LegacySequentialFileWrapper : public FSSequentialFile {
@@ -602,7 +602,7 @@ class LegacyFileSystemWrapper : public FileSystem {
     return status_to_io_status(target_->IsDirectory(path, is_dir));
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string SerializeOptions(const ConfigOptions& /*config_options*/,
                                const std::string& /*prefix*/) const override {
     // We do not want the LegacyFileSystem to appear in the serialized output.
@@ -610,7 +610,7 @@ class LegacyFileSystemWrapper : public FileSystem {
     // would be part of the Env.  As such, do not serialize it here.
     return "";
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
  private:
   Env* target_;
 };
@@ -686,7 +686,7 @@ Status Env::CreateFromString(const ConfigOptions& config_options,
     status = Status::OK();
   } else {
     RegisterSystemEnvs();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::string errmsg;
     env = config_options.registry->NewObject<Env>(id, &uniq, &errmsg);
     if (!env) {
@@ -1090,7 +1090,7 @@ Status ReadFileToString(Env* env, const std::string& fname, std::string* data) {
 
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> env_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"target",
      {0, OptionType::kCustomizable, OptionVerificationType::kByName,
       OptionTypeFlags::kDontSerialize | OptionTypeFlags::kRawPointer,
@@ -1101,7 +1101,7 @@ static std::unordered_map<std::string, OptionTypeInfo> env_wrapper_type_info = {
                                      &(target->guard));
       },
       nullptr, nullptr}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 }  // namespace
 
@@ -1125,7 +1125,7 @@ Status EnvWrapper::PrepareOptions(const ConfigOptions& options) {
   return Env::PrepareOptions(options);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::string EnvWrapper::SerializeOptions(const ConfigOptions& config_options,
                                          const std::string& header) const {
   auto parent = Env::SerializeOptions(config_options, "");
@@ -1145,7 +1145,7 @@ std::string EnvWrapper::SerializeOptions(const ConfigOptions& config_options,
     return result;
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 namespace {  // anonymous namespace
 
@@ -1249,11 +1249,11 @@ const std::shared_ptr<SystemClock>& Env::GetSystemClock() const {
 }
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> sc_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"target",
      OptionTypeInfo::AsCustomSharedPtr<SystemClock>(
          0, OptionVerificationType::kByName, OptionTypeFlags::kDontSerialize)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 }  // namespace
@@ -1269,7 +1269,7 @@ Status SystemClockWrapper::PrepareOptions(const ConfigOptions& options) {
   return SystemClock::PrepareOptions(options);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::string SystemClockWrapper::SerializeOptions(
     const ConfigOptions& config_options, const std::string& header) const {
   auto parent = SystemClock::SerializeOptions(config_options, "");
@@ -1289,9 +1289,9 @@ std::string SystemClockWrapper::SerializeOptions(
     return result;
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinSystemClocks(ObjectLibrary& library,
                                        const std::string& /*arg*/) {
   library.AddFactory<SystemClock>(
@@ -1304,7 +1304,7 @@ static int RegisterBuiltinSystemClocks(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status SystemClock::CreateFromString(const ConfigOptions& config_options,
                                      const std::string& value,
@@ -1314,14 +1314,14 @@ Status SystemClock::CreateFromString(const ConfigOptions& config_options,
     *result = clock;
     return Status::OK();
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     static std::once_flag once;
     std::call_once(once, [&]() {
       RegisterBuiltinSystemClocks(*(ObjectLibrary::Default().get()), "");
     });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     return LoadSharedObject<SystemClock>(config_options, value, nullptr,
                                          result);
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

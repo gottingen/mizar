@@ -11,7 +11,7 @@
 */
 #pragma once
 #include <stdint.h>
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #if defined(__x86_64__)
 #define MURMUR_HASH MurmurHash64A
@@ -33,10 +33,10 @@ using murmur_t = unsigned int;
 #endif
 
 // Allow slice to be hashable by murmur hash.
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct murmur_hash {
   size_t operator()(const Slice& slice) const {
     return MurmurHash(slice.data(), static_cast<int>(slice.size()), 0);
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

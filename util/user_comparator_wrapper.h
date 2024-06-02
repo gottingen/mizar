@@ -9,9 +9,9 @@
 #pragma once
 
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Wrapper of user comparator, with auto increment to
 // perf_context.user_key_comparison_count.
@@ -81,4 +81,4 @@ class UserComparatorWrapper final : public Comparator {
   const Comparator* user_comparator_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

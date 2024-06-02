@@ -8,16 +8,16 @@
 #include <vector>
 
 #include "memory/arena.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "util/coding.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 inline uint32_t Hash(const Slice& s) {
-  return ROCKSDB_NAMESPACE::Hash(s.data(), s.size(), 0);
+  return MIZAR_NAMESPACE::Hash(s.data(), s.size(), 0);
 }
 
 inline uint32_t PrefixToBucket(const Slice& prefix, uint32_t num_buckets) {
@@ -229,4 +229,4 @@ uint32_t BlockPrefixIndex::GetBlocks(const Slice& key, uint32_t** blocks) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

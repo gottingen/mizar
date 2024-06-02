@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/sim_cache.h"
+#include "mizar/utilities/sim_cache.h"
 
 #include <atomic>
 #include <iomanip>
@@ -11,11 +11,11 @@
 #include "file/writable_file_writer.h"
 #include "monitoring/statistics.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -361,4 +361,4 @@ std::shared_ptr<SimCache> NewSimCache(std::shared_ptr<Cache> sim_cache,
   return std::make_shared<SimCacheImpl>(sim_cache, cache);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

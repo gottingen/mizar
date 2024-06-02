@@ -10,7 +10,7 @@
 #ifdef GFLAGS
 #include "db_stress_tool/db_stress_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // This file defines MultiOpsTxnsStress so that we can stress test RocksDB
 // transactions on a simple, emulated relational table.
@@ -251,11 +251,11 @@ class MultiOpsTxnsStressTest : public StressTest {
                         const std::vector<int>& rand_column_families,
                         const std::vector<int64_t>& rand_keys) override;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status TestApproximateSize(ThreadState* thread, uint64_t iteration,
                              const std::vector<int>& rand_column_families,
                              const std::vector<int64_t>& rand_keys) override;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   Status TestCustomOperations(
       ThreadState* thread,
@@ -298,5 +298,5 @@ class InvariantChecker {
                 "MultiOpsTxnsStressTest::Record::c_ must be 4 bytes");
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

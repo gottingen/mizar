@@ -3,13 +3,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/transaction_test.h"
 #include "utilities/transactions/write_unprepared_txn.h"
 #include "utilities/transactions/write_unprepared_txn_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WriteUnpreparedTransactionTestBase : public TransactionTestBase {
  public:
@@ -767,7 +767,7 @@ TEST_P(WriteUnpreparedTransactionTest, UntrackedKeys) {
   delete txn;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -779,8 +779,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as Transactions are not supported in ROCKSDB_LITE\n");
+          "SKIPPED as Transactions are not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

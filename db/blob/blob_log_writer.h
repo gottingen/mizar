@@ -9,12 +9,12 @@
 #include <string>
 
 #include "db/blob/blob_log_format.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
+#include "mizar/slice.h"
+#include "mizar/statistics.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WritableFileWriter;
 class SystemClock;
@@ -80,4 +80,4 @@ class BlobLogWriter {
   ElemType last_elem_type_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

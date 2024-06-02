@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CompactorCommand : public LDBCommand {
  public:
@@ -689,4 +689,4 @@ class UnsafeRemoveSstFileCommand : public LDBCommand {
   uint64_t sst_file_number_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

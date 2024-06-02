@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "rocksdb/version.h"
+#include "mizar/version.h"
 #include "util/string_util.h"
 
 // The build script may replace these values with real values based
@@ -20,7 +20,7 @@ static const std::string rocksdb_build_date = "rocksdb_build_date:@GIT_DATE@";
 static const std::string rocksdb_build_date = "rocksdb_build_date:@BUILD_DATE@";
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 static void AddProperty(std::unordered_map<std::string, std::string> *props, const std::string& name) {
   size_t colon = name.find(":");
   if (colon != std::string::npos && colon > 0 && colon < name.length() - 1) {
@@ -67,5 +67,5 @@ std::string GetRocksBuildInfoAsString(const std::string& program, bool verbose) 
   }
   return info;
 }
-} // namespace ROCKSDB_NAMESPACE
+} // namespace MIZAR_NAMESPACE
 

@@ -13,9 +13,9 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Single cache shard interface.
 class CacheShard {
@@ -129,4 +129,4 @@ class ShardedCache : public Cache {
 
 extern int GetDefaultCacheShardBits(size_t capacity);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

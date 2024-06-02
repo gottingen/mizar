@@ -6,7 +6,7 @@
 #include "db/db_test_util.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MockFS;
 
@@ -184,7 +184,7 @@ TEST_P(PrefetchTest, Basic) {
   Close();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(PrefetchTest, ConfigureAutoMaxReadaheadSize) {
   // First param is if the mockFS support_prefetch or not
   bool support_prefetch =
@@ -321,7 +321,7 @@ TEST_P(PrefetchTest, ConfigureAutoMaxReadaheadSize) {
   SyncPoint::GetInstance()->ClearAllCallBacks();
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_P(PrefetchTest, PrefetchWhenReseek) {
   // First param is if the mockFS support_prefetch or not
@@ -681,7 +681,7 @@ INSTANTIATE_TEST_CASE_P(PrefetchTest1, PrefetchTest1,
                         ::testing::Combine(::testing::Bool(),
                                            ::testing::Bool()));
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(PrefetchTest1, DBIterLevelReadAhead) {
   const int kNumKeys = 1000;
   // Set options
@@ -781,7 +781,7 @@ TEST_P(PrefetchTest1, DBIterLevelReadAhead) {
   }
   Close();
 }
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
 
 class PrefetchTest2 : public DBTestBase,
                       public ::testing::WithParamInterface<bool> {
@@ -791,7 +791,7 @@ class PrefetchTest2 : public DBTestBase,
 
 INSTANTIATE_TEST_CASE_P(PrefetchTest2, PrefetchTest2, ::testing::Bool());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(PrefetchTest2, NonSequentialReads) {
   const int kNumKeys = 1000;
   // Set options
@@ -876,7 +876,7 @@ TEST_P(PrefetchTest2, NonSequentialReads) {
   }
   Close();
 }
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
 
 TEST_P(PrefetchTest2, DecreaseReadAheadIfInCache) {
   const int kNumKeys = 2000;
@@ -995,7 +995,7 @@ TEST_P(PrefetchTest2, DecreaseReadAheadIfInCache) {
   Close();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

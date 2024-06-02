@@ -15,12 +15,12 @@
 #include "db/job_context.h"
 #include "db/version_set.h"
 #include "logging/logging.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status DBImpl::SuggestCompactRange(ColumnFamilyHandle* column_family,
                                    const Slice* begin, const Slice* end) {
   auto cfh = static_cast_with_check<ColumnFamilyHandleImpl>(column_family);
@@ -153,6 +153,6 @@ Status DBImpl::PromoteL0(ColumnFamilyHandle* column_family, int target_level) {
 
   return status;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

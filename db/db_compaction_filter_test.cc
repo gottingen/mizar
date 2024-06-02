@@ -10,7 +10,7 @@
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static int cfilter_count = 0;
 static int cfilter_skips = 0;
@@ -285,7 +285,7 @@ class ChangeFilterFactory : public CompactionFilterFactory {
   const char* Name() const override { return "ChangeFilterFactory"; }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBTestCompactionFilter, CompactionFilter) {
   Options options = CurrentOptions();
   options.max_open_files = -1;
@@ -473,7 +473,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterDeletesAll) {
 
   delete itr;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBTestCompactionFilter, CompactionFilterFlush) {
   // Tests a `CompactionFilterFactory` that filters when table file is created
@@ -659,7 +659,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterWithMergeOperator) {
   ASSERT_EQ(newvalue, four);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBTestCompactionFilter, CompactionFilterContextManual) {
   KeepFilterFactory* filter = new KeepFilterFactory(true, true);
 
@@ -721,7 +721,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterContextManual) {
     ASSERT_EQ(count, 0);
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBTestCompactionFilter, CompactionFilterContextCfId) {
   KeepFilterFactory* filter = new KeepFilterFactory(false, true);
@@ -752,7 +752,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterContextCfId) {
   ASSERT_TRUE(filter->compaction_filter_created());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Compaction filters aplies to all records, regardless snapshots.
 TEST_F(DBTestCompactionFilter, CompactionFilterIgnoreSnapshot) {
   std::string five = ToString(5);
@@ -813,7 +813,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterIgnoreSnapshot) {
   // removed.
   db_->ReleaseSnapshot(snapshot);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBTestCompactionFilter, SkipUntil) {
   Options options = CurrentOptions();
@@ -968,10 +968,10 @@ TEST_F(DBTestCompactionFilter, IgnoreSnapshotsFalseRecovery) {
   ASSERT_TRUE(TryReopen(options).IsNotSupported());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

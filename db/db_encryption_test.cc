@@ -5,14 +5,14 @@
 //
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/perf_context.h"
-#if !defined(ROCKSDB_LITE)
+#include "mizar/perf_context.h"
+#if !defined(MIZAR_LITE)
 #include "test_util/sync_point.h"
 #endif
 #include <iostream>
 #include <string>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBEncryptionTest : public DBTestBase {
  public:
@@ -27,7 +27,7 @@ class DBEncryptionTest : public DBTestBase {
   }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 TEST_F(DBEncryptionTest, CheckEncrypted) {
   ASSERT_OK(Put("foo567", "v1.fetdq"));
@@ -119,12 +119,12 @@ TEST_F(DBEncryptionTest, ReadEmptyFile) {
   ASSERT_TRUE(data.empty());
 }
 
-#endif // ROCKSDB_LITE
+#endif // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -5,9 +5,9 @@
 #pragma once
 
 #include <stdint.h>
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Comparator;
 class Iterator;
@@ -63,4 +63,4 @@ class BlockPrefixIndex {
   uint32_t* block_array_buffer_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

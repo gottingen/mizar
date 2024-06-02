@@ -2,13 +2,13 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/persistent_cache/block_cache_tier_metadata.h"
 
 #include <functional>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool BlockCacheTierMetadata::Insert(BlockCacheFile* file) {
   return cache_file_index_.Insert(file);
@@ -81,6 +81,6 @@ void BlockCacheTierMetadata::RemoveAllKeys(BlockCacheFile* f) {
   f->block_infos().clear();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

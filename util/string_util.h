@@ -11,9 +11,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Slice;
 
@@ -156,7 +156,7 @@ bool EndsWith(const std::string& string, const std::string& pattern);
 // Returns true if "string" starts with "pattern"
 bool StartsWith(const std::string& string, const std::string& pattern);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 bool ParseBoolean(const std::string& type, const std::string& value);
 
 uint8_t ParseUint8(const std::string& value);
@@ -186,4 +186,4 @@ extern const std::string kNullptrString;
 // the argument err
 extern std::string errnoStr(int err);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

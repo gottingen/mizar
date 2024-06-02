@@ -27,7 +27,7 @@
 #define ROCKSDB_FIELD_UNUSED
 #endif  // __clang__
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Logger;
 
@@ -97,7 +97,7 @@ class ConcurrentArena : public Allocator {
     Shard() : free_begin_(nullptr), allocated_and_unused_(0) {}
   };
 
-#ifdef ROCKSDB_SUPPORT_THREAD_LOCAL
+#ifdef MIZAR_SUPPORT_THREAD_LOCAL
   static __thread size_t tls_cpuid;
 #else
   enum ZeroFirstEnum : size_t { tls_cpuid = 0 };
@@ -215,4 +215,4 @@ class ConcurrentArena : public Allocator {
   ConcurrentArena& operator=(const ConcurrentArena&) = delete;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

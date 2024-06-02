@@ -3,23 +3,23 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#if !(defined GFLAGS) || defined(ROCKSDB_LITE)
+#if !(defined GFLAGS) || defined(MIZAR_LITE)
 
 #include <cstdio>
 int main() {
 #ifndef GFLAGS
   fprintf(stderr, "Please install gflags to run rocksdb tools\n");
 #endif
-#ifdef ROCKSDB_LITE
-  fprintf(stderr, "DbUndumpTool is not supported in ROCKSDB_LITE\n");
+#ifdef MIZAR_LITE
+  fprintf(stderr, "DbUndumpTool is not supported in MIZAR_LITE\n");
 #endif
   return 1;
 }
 
 #else
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/db_dump_tool.h"
+#include "mizar/convenience.h"
+#include "mizar/db_dump_tool.h"
 #include "util/gflags_compat.h"
 
 DEFINE_string(dump_location, "", "Path to the dump file that will be loaded");
@@ -36,15 +36,15 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  ROCKSDB_NAMESPACE::UndumpOptions undump_options;
+  MIZAR_NAMESPACE::UndumpOptions undump_options;
   undump_options.db_path = FLAGS_db_path;
   undump_options.dump_location = FLAGS_dump_location;
   undump_options.compact_db = FLAGS_compact;
 
-  ROCKSDB_NAMESPACE::Options db_options;
+  MIZAR_NAMESPACE::Options db_options;
   if (FLAGS_db_options != "") {
-    ROCKSDB_NAMESPACE::Options parsed_options;
-    ROCKSDB_NAMESPACE::Status s = ROCKSDB_NAMESPACE::GetOptionsFromString(
+    MIZAR_NAMESPACE::Options parsed_options;
+    MIZAR_NAMESPACE::Status s = MIZAR_NAMESPACE::GetOptionsFromString(
         db_options, FLAGS_db_options, &parsed_options);
     if (!s.ok()) {
       fprintf(stderr, "Cannot parse provided db_options\n");
@@ -53,10 +53,10 @@ int main(int argc, char **argv) {
     db_options = parsed_options;
   }
 
-  ROCKSDB_NAMESPACE::DbUndumpTool tool;
+  MIZAR_NAMESPACE::DbUndumpTool tool;
   if (!tool.Run(undump_options, db_options)) {
     return 1;
   }
   return 0;
 }
-#endif  // !(defined GFLAGS) || defined(ROCKSDB_LITE)
+#endif  // !(defined GFLAGS) || defined(MIZAR_LITE)

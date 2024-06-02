@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/transaction_test.h"
 
@@ -14,11 +14,11 @@
 
 #include "db/db_impl/db_impl.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 #include "table/mock_table.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
@@ -33,7 +33,7 @@
 
 using std::string;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 INSTANTIATE_TEST_CASE_P(
     DBAsBaseDB, TransactionTest,
@@ -354,7 +354,7 @@ TEST_P(TransactionTest, WaitingTxn) {
   ASSERT_TRUE(txn1);
   ASSERT_TRUE(txn2);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "PointLockManager::AcquireWithTimeout:WaitingTxn", [&](void* /*arg*/) {
         std::string key;
         uint32_t cf_id;
@@ -407,7 +407,7 @@ TEST_P(TransactionTest, WaitingTxn) {
   ASSERT_EQ(cf_iterator->second.ids.size(), 1);
   ASSERT_EQ(cf_iterator->second.ids[0], txn1->GetID());
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   s = txn2->GetForUpdate(read_options, "foo", &value);
   ASSERT_TRUE(s.IsTimedOut());
@@ -415,8 +415,8 @@ TEST_P(TransactionTest, WaitingTxn) {
   ASSERT_EQ(get_perf_context()->key_lock_wait_count, 1);
   ASSERT_GE(get_perf_context()->key_lock_wait_time, 0);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   delete cfa;
   delete txn1;
@@ -580,10 +580,10 @@ TEST_P(TransactionTest, DeadlockCycleShared) {
   }
 
   std::atomic<uint32_t> checkpoints(0);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "PointLockManager::AcquireWithTimeout:WaitingTxn",
       [&](void* /*arg*/) { checkpoints.fetch_add(1); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // We want the leaf transactions to block and hold everyone back.
   std::vector<port::Thread> threads;
@@ -603,8 +603,8 @@ TEST_P(TransactionTest, DeadlockCycleShared) {
     /* sleep override */
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   // Complete the cycle T[16 - 31] -> T1
   for (uint32_t i = 15; i < 31; i++) {
@@ -713,10 +713,10 @@ TEST_P(TransactionTest, DeadlockCycleShared) {
   }
 
   std::atomic<uint32_t> checkpoints_shared(0);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "PointLockManager::AcquireWithTimeout:WaitingTxn",
       [&](void* /*arg*/) { checkpoints_shared.fetch_add(1); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::vector<port::Thread> threads_shared;
   for (uint32_t i = 0; i < 1; i++) {
@@ -735,8 +735,8 @@ TEST_P(TransactionTest, DeadlockCycleShared) {
     /* sleep override */
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   // Complete the cycle T2 -> T1 with a shared lock.
   auto s = txns_shared[1]->GetForUpdate(read_options, "0", nullptr, false);
@@ -786,10 +786,10 @@ TEST_P(TransactionStressTest, DeadlockCycle) {
     }
 
     std::atomic<uint32_t> checkpoints(0);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "PointLockManager::AcquireWithTimeout:WaitingTxn",
         [&](void* /*arg*/) { checkpoints.fetch_add(1); });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     // We want the last transaction in the chain to block and hold everyone
     // back.
@@ -809,8 +809,8 @@ TEST_P(TransactionStressTest, DeadlockCycle) {
       /* sleep override */
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
     // Complete the cycle Tlen -> T1
     auto s = txns[len - 1]->GetForUpdate(read_options, "0", nullptr);
@@ -1528,7 +1528,7 @@ TEST_P(TransactionTest, DISABLED_TwoPhaseMultiThreadTest) {
   std::atomic<uint32_t> t_wait_on_prepare(0);
   std::atomic<uint32_t> t_wait_on_commit(0);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WriteThread::JoinBatchGroup:Wait", [&](void* arg) {
         auto* writer = reinterpret_cast<WriteThread::Writer*>(arg);
 
@@ -1549,7 +1549,7 @@ TEST_P(TransactionTest, DISABLED_TwoPhaseMultiThreadTest) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // do all the writes
   std::vector<port::Thread> threads;
@@ -1560,8 +1560,8 @@ TEST_P(TransactionTest, DISABLED_TwoPhaseMultiThreadTest) {
     t.join();
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   ReadOptions read_options;
   std::string value;
@@ -2961,7 +2961,7 @@ TEST_P(TransactionTest, MultiGetLargeBatchedTest) {
   s = wb.Put(handles[1], std::to_string(2), "new_val" + std::to_string(2));
   ASSERT_OK(s);
   // Write a lot of merges so when we call MultiGetFromBatchAndDB later on,
-  // it is forced to use std::vector in ROCKSDB_NAMESPACE::autovector to
+  // it is forced to use std::vector in MIZAR_NAMESPACE::autovector to
   // allocate MergeContexts. The number of merges needs to be >
   // MultiGetContext::MAX_BATCH_SIZE
   for (int i = 8; i < MultiGetContext::MAX_BATCH_SIZE + 24; ++i) {
@@ -5387,9 +5387,9 @@ TEST_P(TransactionTest, ToggleAutoCompactionTest) {
 TEST_P(TransactionStressTest, ExpiredTransactionDataRace1) {
   // In this test, txn1 should succeed committing,
   // as the callback is called after txn1 starts committing.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"TransactionTest::ExpirableTransactionDataRace:1"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "TransactionTest::ExpirableTransactionDataRace:1", [&](void* /*arg*/) {
         WriteOptions write_options;
         TransactionOptions txn_options;
@@ -5407,7 +5407,7 @@ TEST_P(TransactionStressTest, ExpiredTransactionDataRace1) {
         delete txn2;
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   WriteOptions write_options;
   TransactionOptions txn_options;
@@ -5428,7 +5428,7 @@ TEST_P(TransactionStressTest, ExpiredTransactionDataRace1) {
   ASSERT_EQ("1", value);
 
   delete txn1;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 #if !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
@@ -5775,7 +5775,7 @@ TEST_P(TransactionTest, GetWithoutSnapshot) {
   WriteOptions write_options;
   std::atomic<bool> finish = {false};
   ASSERT_OK(db->Put(write_options, "key", "value"));
-  ROCKSDB_NAMESPACE::port::Thread commit_thread([&]() {
+  MIZAR_NAMESPACE::port::Thread commit_thread([&]() {
     for (int i = 0; i < 100; i++) {
       TransactionOptions txn_options;
       Transaction* txn = db->BeginTransaction(write_options, txn_options);
@@ -5788,7 +5788,7 @@ TEST_P(TransactionTest, GetWithoutSnapshot) {
     }
     finish = true;
   });
-  ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
+  MIZAR_NAMESPACE::port::Thread read_thread([&]() {
     while (!finish) {
       ReadOptions ropt;
       PinnableSlice pinnable_val;
@@ -6411,7 +6411,7 @@ TEST_P(TransactionTest, CommitWithoutPrepare) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -6423,8 +6423,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as Transactions are not supported in ROCKSDB_LITE\n");
+          "SKIPPED as Transactions are not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

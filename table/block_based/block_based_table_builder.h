@@ -17,16 +17,16 @@
 #include <vector>
 
 #include "db/version_edit.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/listener.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "table/meta_blocks.h"
 #include "table/table_builder.h"
 #include "util/compression.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBuilder;
 class BlockHandle;
@@ -196,4 +196,4 @@ Slice CompressBlock(const Slice& raw, const CompressionInfo& info,
                     std::string* sampled_output_fast,
                     std::string* sampled_output_slow);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class SystemClock;
 
 struct ImmutableDBOptions {
@@ -77,9 +77,9 @@ struct ImmutableDBOptions {
   WALRecoveryMode wal_recovery_mode;
   bool allow_2pc;
   std::shared_ptr<Cache> row_cache;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   WalFilter* wal_filter;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   bool fail_if_options_file_error;
   bool dump_malloc_stats;
   bool avoid_flush_during_recovery;
@@ -140,7 +140,7 @@ struct MutableDBOptions {
   int max_background_flushes;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status GetStringFromMutableDBOptions(const ConfigOptions& config_options,
                                      const MutableDBOptions& mutable_opts,
                                      std::string* opt_string);
@@ -152,6 +152,6 @@ Status GetMutableDBOptionsFromStrings(
 
 bool MutableDBOptionsAreEqual(const MutableDBOptions& this_options,
                               const MutableDBOptions& that_options);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -1,4 +1,4 @@
-#include "rocksdb/concurrent_task_limiter.h"
+#include "mizar/concurrent_task_limiter.h"
 
 #include <jni.h>
 
@@ -17,13 +17,13 @@ jlong Java_org_rocksdb_ConcurrentTaskLimiterImpl_newConcurrentTaskLimiterImpl0(
     JNIEnv* env, jclass, jstring jname, jint limit) {
   jboolean has_exception = JNI_FALSE;
   std::string name =
-      ROCKSDB_NAMESPACE::JniUtil::copyStdString(env, jname, &has_exception);
+      MIZAR_NAMESPACE::JniUtil::copyStdString(env, jname, &has_exception);
   if (JNI_TRUE == has_exception) {
     return 0;
   }
 
-  auto* ptr = new std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>(
-      ROCKSDB_NAMESPACE::NewConcurrentTaskLimiter(name, limit));
+  auto* ptr = new std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>(
+      MIZAR_NAMESPACE::NewConcurrentTaskLimiter(name, limit));
 
   return reinterpret_cast<jlong>(ptr);
 }
@@ -36,8 +36,8 @@ jlong Java_org_rocksdb_ConcurrentTaskLimiterImpl_newConcurrentTaskLimiterImpl0(
 jstring Java_org_rocksdb_ConcurrentTaskLimiterImpl_name(JNIEnv* env, jclass,
                                                         jlong handle) {
   const auto& limiter = *reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &limiter->GetName());
+      std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &limiter->GetName());
 }
 
 /*
@@ -48,7 +48,7 @@ jstring Java_org_rocksdb_ConcurrentTaskLimiterImpl_name(JNIEnv* env, jclass,
 void Java_org_rocksdb_ConcurrentTaskLimiterImpl_setMaxOutstandingTask(
     JNIEnv*, jclass, jlong handle, jint max_outstanding_task) {
   const auto& limiter = *reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
+      std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
   limiter->SetMaxOutstandingTask(static_cast<int32_t>(max_outstanding_task));
 }
 
@@ -60,7 +60,7 @@ void Java_org_rocksdb_ConcurrentTaskLimiterImpl_setMaxOutstandingTask(
 void Java_org_rocksdb_ConcurrentTaskLimiterImpl_resetMaxOutstandingTask(
     JNIEnv*, jclass, jlong handle) {
   const auto& limiter = *reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
+      std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
   limiter->ResetMaxOutstandingTask();
 }
 
@@ -72,7 +72,7 @@ void Java_org_rocksdb_ConcurrentTaskLimiterImpl_resetMaxOutstandingTask(
 jint Java_org_rocksdb_ConcurrentTaskLimiterImpl_outstandingTask(JNIEnv*, jclass,
                                                                 jlong handle) {
   const auto& limiter = *reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
+      std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>*>(handle);
   return static_cast<jint>(limiter->GetOutstandingTask());
 }
 
@@ -85,6 +85,6 @@ void Java_org_rocksdb_ConcurrentTaskLimiterImpl_disposeInternal(JNIEnv*,
                                                                 jobject,
                                                                 jlong jhandle) {
   auto* ptr = reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::ConcurrentTaskLimiter>*>(jhandle);
+      std::shared_ptr<MIZAR_NAMESPACE::ConcurrentTaskLimiter>*>(jhandle);
   delete ptr;  // delete std::shared_ptr
 }

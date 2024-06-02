@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
 #include <cinttypes>
 #include <limits>
@@ -16,24 +16,24 @@
 #include "monitoring/statistics.h"
 #include "options/db_options.h"
 #include "options/options_helper.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/sst_file_manager.h"
-#include "rocksdb/sst_partitioner.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/wal_filter.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/memtablerep.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/sst_file_manager.h"
+#include "mizar/sst_partitioner.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
+#include "mizar/wal_filter.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "util/compression.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 AdvancedColumnFamilyOptions::AdvancedColumnFamilyOptions() {
   assert(memtable_factory.get() != nullptr);
@@ -543,8 +543,8 @@ DBOptions* DBOptions::OptimizeForSmallDb(std::shared_ptr<Cache>* cache) {
   max_open_files = 5000;
 
   // Cost memtable to block cache too.
-  std::shared_ptr<ROCKSDB_NAMESPACE::WriteBufferManager> wbm =
-      std::make_shared<ROCKSDB_NAMESPACE::WriteBufferManager>(
+  std::shared_ptr<MIZAR_NAMESPACE::WriteBufferManager> wbm =
+      std::make_shared<MIZAR_NAMESPACE::WriteBufferManager>(
           0, (cache != nullptr) ? *cache : std::shared_ptr<Cache>());
   write_buffer_manager = wbm;
 
@@ -571,7 +571,7 @@ ColumnFamilyOptions* ColumnFamilyOptions::OptimizeForSmallDb(
   return this;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 ColumnFamilyOptions* ColumnFamilyOptions::OptimizeForPointLookup(
     uint64_t block_cache_size_mb) {
   BlockBasedTableOptions block_based_options;
@@ -643,7 +643,7 @@ DBOptions* DBOptions::IncreaseParallelism(int total_threads) {
   return this;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 ReadOptions::ReadOptions()
     : snapshot(nullptr),
@@ -695,4 +695,4 @@ ReadOptions::ReadOptions(bool cksum, bool cache)
       value_size_soft_limit(std::numeric_limits<uint64_t>::max()),
       adaptive_readahead(false) {}
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

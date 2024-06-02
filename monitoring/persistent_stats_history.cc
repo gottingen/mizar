@@ -14,7 +14,7 @@
 #include "db/db_impl/db_impl.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // 10 digit seconds timestamp => [Sep 9, 2001 ~ Nov 20, 2286]
 const int kNowSecondsStringLength = 10;
 const std::string kFormatVersionKeyString =
@@ -166,4 +166,4 @@ void PersistentStatsHistoryIterator::AdvanceIteratorByTime(uint64_t start_time,
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

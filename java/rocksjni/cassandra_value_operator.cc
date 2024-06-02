@@ -10,13 +10,13 @@
 #include <string>
 
 #include "include/org_rocksdb_CassandraValueMergeOperator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
+#include "mizar/db.h"
+#include "mizar/memtablerep.h"
+#include "mizar/merge_operator.h"
+#include "mizar/options.h"
+#include "mizar/slice_transform.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
 #include "rocksjni/portal.h"
 #include "utilities/cassandra/merge_operator.h"
 
@@ -28,8 +28,8 @@
 jlong Java_org_rocksdb_CassandraValueMergeOperator_newSharedCassandraValueMergeOperator(
     JNIEnv* /*env*/, jclass /*jclazz*/, jint gcGracePeriodInSeconds,
     jint operands_limit) {
-  auto* op = new std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>(
-      new ROCKSDB_NAMESPACE::cassandra::CassandraValueMergeOperator(
+  auto* op = new std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>(
+      new MIZAR_NAMESPACE::cassandra::CassandraValueMergeOperator(
           gcGracePeriodInSeconds, operands_limit));
   return reinterpret_cast<jlong>(op);
 }
@@ -42,7 +42,7 @@ jlong Java_org_rocksdb_CassandraValueMergeOperator_newSharedCassandraValueMergeO
 void Java_org_rocksdb_CassandraValueMergeOperator_disposeInternal(
     JNIEnv* /*env*/, jobject /*jobj*/, jlong jhandle) {
   auto* op =
-      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>(
+      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>*>(
           jhandle);
   delete op;
 }

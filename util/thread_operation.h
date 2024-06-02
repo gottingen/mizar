@@ -13,11 +13,11 @@
 
 #pragma once
 
-#include "rocksdb/thread_status.h"
+#include "mizar/thread_status.h"
 
 #include <string>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
 
@@ -118,4 +118,4 @@ struct StateInfo {
 };
 
 #endif  // ROCKSDB_USING_THREAD_STATUS
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

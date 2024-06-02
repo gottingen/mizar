@@ -10,13 +10,13 @@
 #include <time.h>
 #include <iostream>
 #include "port/sys_time.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
 
 #ifdef USE_HDFS
 #include <hdfs.h>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Thrown during execution when there is an issue with the supplied
 // arguments.
@@ -232,11 +232,11 @@ class HdfsEnv : public Env {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #else // USE_HDFS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class HdfsEnv : public Env {
 
@@ -389,6 +389,6 @@ class HdfsEnv : public Env {
     return 0;
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif // USE_HDFS

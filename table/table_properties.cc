@@ -3,17 +3,17 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/table_properties.h"
+#include "mizar/table_properties.h"
 
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/unique_id.h"
+#include "mizar/env.h"
+#include "mizar/unique_id.h"
 #include "table/table_properties_internal.h"
 #include "table/unique_id_impl.h"
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const uint32_t TablePropertiesCollectorFactory::Context::kUnknownColumnFamily =
     port::kMaxInt32;
@@ -103,10 +103,10 @@ std::string TableProperties::ToString(
 
   AppendProperty(result, "column family ID",
                  column_family_id ==
-                         ROCKSDB_NAMESPACE::TablePropertiesCollectorFactory::
+                         MIZAR_NAMESPACE::TablePropertiesCollectorFactory::
                              Context::kUnknownColumnFamily
                      ? std::string("N/A")
-                     : ROCKSDB_NAMESPACE::ToString(column_family_id),
+                     : MIZAR_NAMESPACE::ToString(column_family_id),
                  prop_delim, kv_delim);
   AppendProperty(
       result, "column family name",
@@ -302,4 +302,4 @@ void TEST_SetRandomTableProperties(TableProperties* props) {
 }
 #endif
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

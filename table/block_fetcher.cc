@@ -15,8 +15,8 @@
 #include "logging/logging.h"
 #include "memory/memory_allocator.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/compression_type.h"
-#include "rocksdb/env.h"
+#include "mizar/compression_type.h"
+#include "mizar/env.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_type.h"
@@ -26,7 +26,7 @@
 #include "util/compression.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 inline void BlockFetcher::ProcessTrailerIfPresent() {
   if (footer_.GetBlockTrailerSize() > 0) {
@@ -330,4 +330,4 @@ IOStatus BlockFetcher::ReadBlockContents() {
   return io_status_;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -10,14 +10,14 @@
 #include "db/db_impl/db_impl_secondary.h"
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class DBSecondaryTest : public DBTestBase {
  public:
   DBSecondaryTest()
@@ -1249,12 +1249,12 @@ TEST_F(DBSecondaryTest, OpenWithTransactionDB) {
   ASSERT_OK(TryOpenSecondary(options));
 }
 
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

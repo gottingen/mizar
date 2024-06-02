@@ -10,10 +10,10 @@
 
 #include "db/dbformat.h"
 #include "options/db_options.h"
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #include "util/compression.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // ImmutableCFOptions is a data struct used by RocksDB internal. It contains a
 // subset of Options that should not be changed during the entire lifetime
@@ -290,7 +290,7 @@ uint64_t MaxFileSizeForLevel(const MutableCFOptions& cf_options,
 // `pin_l0_filter_and_index_blocks_in_cache` is set.
 size_t MaxFileSizeForL0MetaPin(const MutableCFOptions& cf_options);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status GetStringFromMutableCFOptions(const ConfigOptions& config_options,
                                      const MutableCFOptions& mutable_opts,
                                      std::string* opt_string);
@@ -299,6 +299,6 @@ Status GetMutableOptionsFromStrings(
     const MutableCFOptions& base_options,
     const std::unordered_map<std::string, std::string>& options_map,
     Logger* info_log, MutableCFOptions* new_options);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

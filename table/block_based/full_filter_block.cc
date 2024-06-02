@@ -9,11 +9,11 @@
 #include "monitoring/perf_context_imp.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 FullFilterBlockBuilder::FullFilterBlockBuilder(
     const SliceTransform* _prefix_extractor, bool whole_key_filtering,
@@ -298,11 +298,11 @@ void FullFilterBlockReader::MayMatch(
 
 size_t FullFilterBlockReader::ApproximateMemoryUsage() const {
   size_t usage = ApproximateFilterBlockMemoryUsage();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   usage += malloc_usable_size(const_cast<FullFilterBlockReader*>(this));
 #else
   usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
   return usage;
 }
 
@@ -362,4 +362,4 @@ bool FullFilterBlockReader::IsFilterCompatible(
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

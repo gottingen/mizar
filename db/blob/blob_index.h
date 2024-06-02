@@ -7,12 +7,12 @@
 #include <sstream>
 #include <string>
 
-#include "rocksdb/compression_type.h"
+#include "mizar/compression_type.h"
 #include "util/coding.h"
 #include "util/compression.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // BlobIndex is a pointer to the blob and metadata of the blob. The index is
 // stored in base DB as ValueType::kTypeBlobIndex.
@@ -184,4 +184,4 @@ class BlobIndex {
   CompressionType compression_ = kNoCompression;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

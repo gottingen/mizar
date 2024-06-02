@@ -11,7 +11,7 @@
 
 #include "monitoring/histogram.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class SystemClock;
 
 class HistogramWindowingImpl : public Histogram
@@ -83,4 +83,4 @@ public:
   uint64_t min_num_per_window_ = 0;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

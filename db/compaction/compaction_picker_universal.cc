@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "db/compaction/compaction_picker_universal.h"
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <cinttypes>
 #include <limits>
@@ -25,7 +25,7 @@
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 // A helper class that form universal compactions. The class is used by
 // UniversalCompactionPicker::PickCompaction().
@@ -1379,6 +1379,6 @@ uint64_t UniversalCompactionBuilder::GetMaxOverlappingBytes() const {
     return mutable_cf_options_.target_file_size_base / 2 * 3;
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

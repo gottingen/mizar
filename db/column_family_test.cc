@@ -17,11 +17,11 @@
 #include "options/options_parser.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -30,7 +30,7 @@
 #include "utilities/fault_injection_env.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const int kValueSize = 1000;
 
@@ -73,14 +73,14 @@ class ColumnFamilyTestBase : public testing::Test {
     for (auto h : handles_) {
       ColumnFamilyDescriptor cfdescriptor;
       Status s = h->GetDescriptor(&cfdescriptor);
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       EXPECT_TRUE(s.IsNotSupported());
 #else
       EXPECT_OK(s);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       column_families.push_back(cfdescriptor);
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
     Destroy(column_families);
     delete env_;
   }
@@ -199,12 +199,12 @@ class ColumnFamilyTestBase : public testing::Test {
                                &db_);
   }
 
-#ifndef ROCKSDB_LITE  // ReadOnlyDB is not supported
+#ifndef MIZAR_LITE  // ReadOnlyDB is not supported
   void AssertOpenReadOnly(std::vector<std::string> cf,
                     std::vector<ColumnFamilyOptions> options = {}) {
     ASSERT_OK(OpenReadOnly(cf, options));
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 
   void Open(std::vector<std::string> cf,
@@ -229,17 +229,17 @@ class ColumnFamilyTestBase : public testing::Test {
   }
 
   bool IsDbWriteStopped() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     uint64_t v;
     EXPECT_TRUE(dbfull()->GetIntProperty("rocksdb.is-write-stopped", &v));
     return (v == 1);
 #else
     return dbfull()->TEST_write_controler().IsStopped();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 
   uint64_t GetDbDelayedWriteRate() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     uint64_t v;
     EXPECT_TRUE(
         dbfull()->GetIntProperty("rocksdb.actual-delayed-write-rate", &v));
@@ -249,7 +249,7 @@ class ColumnFamilyTestBase : public testing::Test {
       return 0;
     }
     return dbfull()->TEST_write_controler().delayed_write_rate();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 
   void Destroy(const std::vector<ColumnFamilyDescriptor>& column_families =
@@ -272,7 +272,7 @@ class ColumnFamilyTestBase : public testing::Test {
           db_->CreateColumnFamily(current_cf_opt, cfs[i], &handles_[cfi]));
       names_[cfi] = cfs[i];
 
-#ifndef ROCKSDB_LITE  // RocksDBLite does not support GetDescriptor
+#ifndef MIZAR_LITE  // RocksDBLite does not support GetDescriptor
       // Verify the CF options of the returned CF handle.
       ColumnFamilyDescriptor desc;
       ASSERT_OK(handles_[cfi]->GetDescriptor(&desc));
@@ -281,7 +281,7 @@ class ColumnFamilyTestBase : public testing::Test {
       ASSERT_OK(RocksDBOptionsParser::VerifyCFOptions(
           ConfigOptions(), desc.options,
           SanitizeOptions(dbfull()->immutable_db_options(), current_cf_opt)));
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       cfi++;
     }
   }
@@ -330,7 +330,7 @@ class ColumnFamilyTestBase : public testing::Test {
     ASSERT_OK(db_->FlushWAL(/*sync=*/false));
   }
 
-#ifndef ROCKSDB_LITE  // TEST functions in DB are not supported in lite
+#ifndef MIZAR_LITE  // TEST functions in DB are not supported in lite
   void WaitForFlush(int cf) {
     ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable(handles_[cf]));
   }
@@ -346,7 +346,7 @@ class ColumnFamilyTestBase : public testing::Test {
   void AssertMaxTotalInMemoryState(uint64_t value) {
     ASSERT_EQ(value, MaxTotalInMemoryState());
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   Status Put(int cf, const std::string& key, const std::string& value) {
     return db_->Put(WriteOptions(), handles_[cf], Slice(key), Slice(value));
@@ -386,7 +386,7 @@ class ColumnFamilyTestBase : public testing::Test {
                        "rocksdb.num-files-at-level" + ToString(level));
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Return spread of files per level
   std::string FilesPerLevel(int cf) {
     std::string result;
@@ -406,7 +406,7 @@ class ColumnFamilyTestBase : public testing::Test {
 #endif
 
   void AssertFilesPerLevel(const std::string& value, int cf) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ASSERT_EQ(value, FilesPerLevel(cf));
 #else
     (void) value;
@@ -414,16 +414,16 @@ class ColumnFamilyTestBase : public testing::Test {
 #endif
   }
 
-#ifndef ROCKSDB_LITE  // GetLiveFilesMetaData is not supported
+#ifndef MIZAR_LITE  // GetLiveFilesMetaData is not supported
   int CountLiveFiles() {
     std::vector<LiveFileMetaData> metadata;
     db_->GetLiveFilesMetaData(&metadata);
     return static_cast<int>(metadata.size());
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   void AssertCountLiveFiles(int expected_value) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ASSERT_EQ(expected_value, CountLiveFiles());
 #else
     (void) expected_value;
@@ -441,7 +441,7 @@ class ColumnFamilyTestBase : public testing::Test {
     }
   }
 
-#ifndef ROCKSDB_LITE  // GetSortedWalFiles is not supported
+#ifndef MIZAR_LITE  // GetSortedWalFiles is not supported
   int CountLiveLogFiles() {
     int micros_wait_for_log_deletion = 20000;
     env_->SleepForMicroseconds(micros_wait_for_log_deletion);
@@ -470,25 +470,25 @@ class ColumnFamilyTestBase : public testing::Test {
     return ret;
     return 0;
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   void AssertCountLiveLogFiles(int value) {
-#ifndef ROCKSDB_LITE  // GetSortedWalFiles is not supported
+#ifndef MIZAR_LITE  // GetSortedWalFiles is not supported
     ASSERT_EQ(value, CountLiveLogFiles());
 #else
     (void) value;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 
   void AssertNumberOfImmutableMemtables(std::vector<int> num_per_cf) {
     assert(num_per_cf.size() == handles_.size());
 
-#ifndef ROCKSDB_LITE  // GetProperty is not supported in lite
+#ifndef MIZAR_LITE  // GetProperty is not supported in lite
     for (size_t i = 0; i < num_per_cf.size(); ++i) {
       ASSERT_EQ(num_per_cf[i], GetProperty(static_cast<int>(i),
                                            "rocksdb.num-immutable-mem-table"));
     }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 
   void CopyFile(const std::string& source, const std::string& destination,
@@ -584,18 +584,18 @@ TEST_P(ColumnFamilyTest, DontReuseColumnFamilyID) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(ColumnFamilyTest, CreateCFRaceWithGetAggProperty) {
   Open();
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::WriteOptionsFile:1",
         "ColumnFamilyTest.CreateCFRaceWithGetAggProperty:1"},
        {"ColumnFamilyTest.CreateCFRaceWithGetAggProperty:2",
         "DBImpl::WriteOptionsFile:2"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
-  ROCKSDB_NAMESPACE::port::Thread thread(
+  MIZAR_NAMESPACE::port::Thread thread(
       [&] { CreateColumnFamilies({"one"}); });
 
   TEST_SYNC_POINT("ColumnFamilyTest.CreateCFRaceWithGetAggProperty:1");
@@ -605,9 +605,9 @@ TEST_P(ColumnFamilyTest, CreateCFRaceWithGetAggProperty) {
 
   thread.join();
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 class FlushEmptyCFTestWithParam
     : public ColumnFamilyTestBase,
@@ -950,7 +950,7 @@ TEST_P(ColumnFamilyTest, IgnoreRecoveredLog) {
   }
 }
 
-#ifndef ROCKSDB_LITE  // TEST functions used are not supported
+#ifndef MIZAR_LITE  // TEST functions used are not supported
 TEST_P(ColumnFamilyTest, FlushTest) {
   Open();
   CreateColumnFamiliesAndReopen({"one", "two"});
@@ -1066,7 +1066,7 @@ TEST_P(ColumnFamilyTest, LogDeletionTest) {
   AssertCountLiveLogFiles(4);
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_P(ColumnFamilyTest, CrashAfterFlush) {
   std::unique_ptr<FaultInjectionTestEnv> fault_env(
@@ -1106,7 +1106,7 @@ TEST_P(ColumnFamilyTest, OpenNonexistentColumnFamily) {
   ASSERT_TRUE(TryOpen({"default", "dne"}).IsInvalidArgument());
 }
 
-#ifndef ROCKSDB_LITE  // WaitForFlush() is not supported
+#ifndef MIZAR_LITE  // WaitForFlush() is not supported
 // Makes sure that obsolete log files get deleted
 TEST_P(ColumnFamilyTest, DifferentWriteBufferSizes) {
   // disable flushing stale column families
@@ -1214,14 +1214,14 @@ TEST_P(ColumnFamilyTest, DifferentWriteBufferSizes) {
   AssertCountLiveLogFiles(7);
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // The test is commented out because we want to test that snapshot is
 // not created for memtables not supported it, but There isn't a memtable
 // that doesn't support snapshot right now. If we have one later, we can
 // re-enable the test.
 //
-// #ifndef ROCKSDB_LITE  // Cuckoo is not supported in lite
+// #ifndef MIZAR_LITE  // Cuckoo is not supported in lite
 //   TEST_P(ColumnFamilyTest, MemtableNotSupportSnapshot) {
 //   db_options_.allow_concurrent_memtable_write = false;
 //   Open();
@@ -1241,17 +1241,17 @@ TEST_P(ColumnFamilyTest, DifferentWriteBufferSizes) {
 //   {second}); auto* s3 = dbfull()->GetSnapshot(); ASSERT_TRUE(s3 == nullptr);
 //   Close();
 // }
-// #endif  // !ROCKSDB_LITE
+// #endif  // !MIZAR_LITE
 
 class TestComparator : public Comparator {
-  int Compare(const ROCKSDB_NAMESPACE::Slice& /*a*/,
-              const ROCKSDB_NAMESPACE::Slice& /*b*/) const override {
+  int Compare(const MIZAR_NAMESPACE::Slice& /*a*/,
+              const MIZAR_NAMESPACE::Slice& /*b*/) const override {
     return 0;
   }
   const char* Name() const override { return "Test"; }
   void FindShortestSeparator(
       std::string* /*start*/,
-      const ROCKSDB_NAMESPACE::Slice& /*limit*/) const override {}
+      const MIZAR_NAMESPACE::Slice& /*limit*/) const override {}
   void FindShortSuccessor(std::string* /*key*/) const override {}
 };
 
@@ -1308,7 +1308,7 @@ TEST_P(ColumnFamilyTest, DifferentMergeOperators) {
   Close();
 }
 
-#ifndef ROCKSDB_LITE  // WaitForFlush() is not supported
+#ifndef MIZAR_LITE  // WaitForFlush() is not supported
 TEST_P(ColumnFamilyTest, DifferentCompactionStyles) {
   Open();
   CreateColumnFamilies({"one", "two"});
@@ -1376,9 +1376,9 @@ TEST_P(ColumnFamilyTest, DifferentCompactionStyles) {
 
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Sync points not supported in RocksDB Lite
 
 TEST_P(ColumnFamilyTest, MultipleManualCompactions) {
@@ -1419,11 +1419,11 @@ TEST_P(ColumnFamilyTest, MultipleManualCompactions) {
     AssertFilesPerLevel(ToString(i + 1), 1);
   }
   bool cf_1_1 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::MultiManual:4", "ColumnFamilyTest::MultiManual:1"},
        {"ColumnFamilyTest::MultiManual:2", "ColumnFamilyTest::MultiManual:5"},
        {"ColumnFamilyTest::MultiManual:2", "ColumnFamilyTest::MultiManual:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::MultiManual:4");
@@ -1432,7 +1432,7 @@ TEST_P(ColumnFamilyTest, MultipleManualCompactions) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   std::vector<port::Thread> threads;
   threads.emplace_back([&] {
     CompactRangeOptions compact_options;
@@ -1475,8 +1475,8 @@ TEST_P(ColumnFamilyTest, MultipleManualCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
   Close();
 }
 
@@ -1515,11 +1515,11 @@ TEST_P(ColumnFamilyTest, AutomaticAndManualCompactions) {
       dbfull()->TEST_write_controler().GetCompactionPressureToken();
 
   bool cf_1_1 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::AutoManual:4", "ColumnFamilyTest::AutoManual:1"},
        {"ColumnFamilyTest::AutoManual:2", "ColumnFamilyTest::AutoManual:5"},
        {"ColumnFamilyTest::AutoManual:2", "ColumnFamilyTest::AutoManual:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           cf_1_1 = false;
@@ -1527,7 +1527,7 @@ TEST_P(ColumnFamilyTest, AutomaticAndManualCompactions) {
           TEST_SYNC_POINT("ColumnFamilyTest::AutoManual:3");
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   // SETUP column family "one" -- universal style
   for (int i = 0; i < one.level0_file_num_compaction_trigger; ++i) {
     PutRandomData(1, 10, 12000, true);
@@ -1545,7 +1545,7 @@ TEST_P(ColumnFamilyTest, AutomaticAndManualCompactions) {
     WaitForFlush(2);
     AssertFilesPerLevel(ToString(i + 1), 2);
   }
-  ROCKSDB_NAMESPACE::port::Thread threads([&] {
+  MIZAR_NAMESPACE::port::Thread threads([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = false;
     ASSERT_OK(
@@ -1572,8 +1572,8 @@ TEST_P(ColumnFamilyTest, AutomaticAndManualCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(ColumnFamilyTest, ManualAndAutomaticCompactions) {
@@ -1619,11 +1619,11 @@ TEST_P(ColumnFamilyTest, ManualAndAutomaticCompactions) {
   }
   bool cf_1_1 = true;
   bool cf_1_2 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::ManualAuto:4", "ColumnFamilyTest::ManualAuto:1"},
        {"ColumnFamilyTest::ManualAuto:5", "ColumnFamilyTest::ManualAuto:2"},
        {"ColumnFamilyTest::ManualAuto:2", "ColumnFamilyTest::ManualAuto:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::ManualAuto:4");
@@ -1635,8 +1635,8 @@ TEST_P(ColumnFamilyTest, ManualAndAutomaticCompactions) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::port::Thread threads([&] {
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::port::Thread threads([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = false;
     ASSERT_OK(
@@ -1671,8 +1671,8 @@ TEST_P(ColumnFamilyTest, ManualAndAutomaticCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(ColumnFamilyTest, SameCFManualManualCompactions) {
@@ -1713,13 +1713,13 @@ TEST_P(ColumnFamilyTest, SameCFManualManualCompactions) {
   }
   bool cf_1_1 = true;
   bool cf_1_2 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::ManualManual:4", "ColumnFamilyTest::ManualManual:2"},
        {"ColumnFamilyTest::ManualManual:4", "ColumnFamilyTest::ManualManual:5"},
        {"ColumnFamilyTest::ManualManual:1", "ColumnFamilyTest::ManualManual:2"},
        {"ColumnFamilyTest::ManualManual:1",
         "ColumnFamilyTest::ManualManual:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::ManualManual:4");
@@ -1731,8 +1731,8 @@ TEST_P(ColumnFamilyTest, SameCFManualManualCompactions) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::port::Thread threads([&] {
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::port::Thread threads([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = true;
     ASSERT_OK(
@@ -1752,7 +1752,7 @@ TEST_P(ColumnFamilyTest, SameCFManualManualCompactions) {
                         1);
   }
 
-  ROCKSDB_NAMESPACE::port::Thread threads1([&] {
+  MIZAR_NAMESPACE::port::Thread threads1([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = false;
     ASSERT_OK(
@@ -1773,8 +1773,8 @@ TEST_P(ColumnFamilyTest, SameCFManualManualCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactions) {
@@ -1815,12 +1815,12 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactions) {
   }
   bool cf_1_1 = true;
   bool cf_1_2 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::ManualAuto:4", "ColumnFamilyTest::ManualAuto:2"},
        {"ColumnFamilyTest::ManualAuto:4", "ColumnFamilyTest::ManualAuto:5"},
        {"ColumnFamilyTest::ManualAuto:1", "ColumnFamilyTest::ManualAuto:2"},
        {"ColumnFamilyTest::ManualAuto:1", "ColumnFamilyTest::ManualAuto:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::ManualAuto:4");
@@ -1832,8 +1832,8 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactions) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::port::Thread threads([&] {
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::port::Thread threads([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = false;
     ASSERT_OK(
@@ -1866,8 +1866,8 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactionsLevel) {
@@ -1908,14 +1908,14 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactionsLevel) {
   }
   bool cf_1_1 = true;
   bool cf_1_2 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::ManualAuto:4", "ColumnFamilyTest::ManualAuto:2"},
        {"ColumnFamilyTest::ManualAuto:4", "ColumnFamilyTest::ManualAuto:5"},
        {"ColumnFamilyTest::ManualAuto:3", "ColumnFamilyTest::ManualAuto:2"},
        {"LevelCompactionPicker::PickCompactionBySize:0",
         "ColumnFamilyTest::ManualAuto:3"},
        {"ColumnFamilyTest::ManualAuto:1", "ColumnFamilyTest::ManualAuto:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::ManualAuto:4");
@@ -1927,8 +1927,8 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactionsLevel) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::port::Thread threads([&] {
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::port::Thread threads([&] {
     CompactRangeOptions compact_options;
     compact_options.exclusive_manual_compaction = false;
     ASSERT_OK(
@@ -1959,8 +1959,8 @@ TEST_P(ColumnFamilyTest, SameCFManualAutomaticCompactionsLevel) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 // In this test, we generate enough files to trigger automatic compactions.
@@ -2000,12 +2000,12 @@ TEST_P(ColumnFamilyTest, SameCFAutomaticManualCompactions) {
 
   bool cf_1_1 = true;
   bool cf_1_2 = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"ColumnFamilyTest::AutoManual:4", "ColumnFamilyTest::AutoManual:2"},
        {"ColumnFamilyTest::AutoManual:4", "ColumnFamilyTest::AutoManual:5"},
        {"CompactionPicker::CompactRange:Conflict",
         "ColumnFamilyTest::AutoManual:3"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCompaction:NonTrivial:AfterRun", [&](void* /*arg*/) {
         if (cf_1_1) {
           TEST_SYNC_POINT("ColumnFamilyTest::AutoManual:4");
@@ -2017,7 +2017,7 @@ TEST_P(ColumnFamilyTest, SameCFAutomaticManualCompactions) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // SETUP column family "one" -- universal style
   for (int i = 0; i < one.level0_file_num_compaction_trigger; ++i) {
@@ -2051,12 +2051,12 @@ TEST_P(ColumnFamilyTest, SameCFAutomaticManualCompactions) {
     ASSERT_NE("NOT_FOUND", Get(1, *key_iter));
     key_iter++;
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // Tailing iterator not supported
+#ifndef MIZAR_LITE  // Tailing iterator not supported
 namespace {
 std::string IterStatus(Iterator* iter) {
   std::string result;
@@ -2114,9 +2114,9 @@ TEST_P(ColumnFamilyTest, NewIteratorsTest) {
     Destroy();
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // ReadOnlyDB is not supported
+#ifndef MIZAR_LITE  // ReadOnlyDB is not supported
 TEST_P(ColumnFamilyTest, ReadOnlyDBTest) {
   Open();
   CreateColumnFamiliesAndReopen({"one", "two", "three", "four"});
@@ -2166,9 +2166,9 @@ TEST_P(ColumnFamilyTest, ReadOnlyDBTest) {
   s = OpenReadOnly({"one", "four"});
   ASSERT_TRUE(!s.ok());
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  //  WaitForFlush() is not supported in lite
+#ifndef MIZAR_LITE  //  WaitForFlush() is not supported in lite
 TEST_P(ColumnFamilyTest, DontRollEmptyLogs) {
   Open();
   CreateColumnFamiliesAndReopen({"one", "two", "three", "four"});
@@ -2190,9 +2190,9 @@ TEST_P(ColumnFamilyTest, DontRollEmptyLogs) {
   ASSERT_EQ(static_cast<size_t>(total_new_writable_files), handles_.size() + 1);
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  //  WaitForCompaction() is not supported in lite
+#ifndef MIZAR_LITE  //  WaitForCompaction() is not supported in lite
 TEST_P(ColumnFamilyTest, FlushStaleColumnFamilies) {
   Open();
   CreateColumnFamilies({"one", "two"});
@@ -2226,7 +2226,7 @@ TEST_P(ColumnFamilyTest, FlushStaleColumnFamilies) {
   ASSERT_EQ(0, dbfull()->TEST_total_log_size());
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_P(ColumnFamilyTest, CreateMissingColumnFamilies) {
   Status s = TryOpen({"one", "two"});
@@ -2409,7 +2409,7 @@ TEST_P(ColumnFamilyTest, FlushAndDropRaceCondition) {
   options.write_buffer_size = 100000;  // small write buffer size
   Reopen({options, options});
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"VersionSet::LogAndApply::ColumnFamilyDrop:0",
         "FlushJob::WriteLevel0Table"},
        {"VersionSet::LogAndApply::ColumnFamilyDrop:1",
@@ -2417,7 +2417,7 @@ TEST_P(ColumnFamilyTest, FlushAndDropRaceCondition) {
        {"FlushJob::InstallResults",
         "VersionSet::LogAndApply::ColumnFamilyDrop:2"}});
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   test::SleepingBackgroundTask sleeping_task;
 
   env_->Schedule(&test::SleepingBackgroundTask::DoSleepTask, &sleeping_task,
@@ -2466,8 +2466,8 @@ TEST_P(ColumnFamilyTest, FlushAndDropRaceCondition) {
   Destroy();
 }
 
-#ifndef ROCKSDB_LITE
-// skipped as persisting options is not supported in ROCKSDB_LITE
+#ifndef MIZAR_LITE
+// skipped as persisting options is not supported in MIZAR_LITE
 namespace {
 std::atomic<int> test_stage(0);
 std::atomic<bool> ordered_by_writethread(false);
@@ -2502,7 +2502,7 @@ TEST_P(ColumnFamilyTest, CreateAndDropRace) {
 
   auto main_thread_id = std::this_thread::get_id();
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "PersistRocksDBOptions:start", [&](void* /*arg*/) {
         auto current_thread_id = std::this_thread::get_id();
         // If it's the main thread hitting this sync-point, then it
@@ -2516,7 +2516,7 @@ TEST_P(ColumnFamilyTest, CreateAndDropRace) {
         }
       });
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WriteThread::EnterUnbatched:Wait", [&](void* /*arg*/) {
         // This means a thread doing DropColumnFamily() is waiting for
         // other thread to finish persisting options.
@@ -2528,11 +2528,11 @@ TEST_P(ColumnFamilyTest, CreateAndDropRace) {
   Open({"default", "one", "two", "three"},
        {cf_opts[0], cf_opts[1], cf_opts[2], cf_opts[3]});
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Start a thread that will drop the first column family
   // and its comparator
-  ROCKSDB_NAMESPACE::port::Thread drop_cf_thread(DropSingleColumnFamily, this,
+  MIZAR_NAMESPACE::port::Thread drop_cf_thread(DropSingleColumnFamily, this,
                                                  1, &comparators);
 
   DropColumnFamilies({2});
@@ -2546,10 +2546,10 @@ TEST_P(ColumnFamilyTest, CreateAndDropRace) {
     }
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_P(ColumnFamilyTest, WriteStallSingleColumnFamily) {
   const uint64_t kBaseRate = 800000u;
@@ -2959,7 +2959,7 @@ TEST_P(ColumnFamilyTest, CreateDropAndDestroy) {
   ASSERT_OK(db_->DestroyColumnFamilyHandle(cfh));
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(ColumnFamilyTest, CreateDropAndDestroyWithoutFileDeletion) {
   ColumnFamilyHandle* cfh;
   Open();
@@ -2983,10 +2983,10 @@ TEST_P(ColumnFamilyTest, FlushCloseWALFiles) {
   ASSERT_OK(Put(0, "fodor", "mirko"));
   ASSERT_OK(Put(1, "fodor", "mirko"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"DBImpl::BGWorkFlush:done", "FlushCloseWALFiles:0"},
   });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Block flush jobs from running
   test::SleepingBackgroundTask sleeping_task;
@@ -3005,7 +3005,7 @@ TEST_P(ColumnFamilyTest, FlushCloseWALFiles) {
   sleeping_task.WakeUp();
   sleeping_task.WaitUntilDone();
   TEST_SYNC_POINT("FlushCloseWALFiles:0");
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(1, env.num_open_wal_file_.load());
 
   Reopen();
@@ -3014,9 +3014,9 @@ TEST_P(ColumnFamilyTest, FlushCloseWALFiles) {
   db_options_.env = env_;
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // WaitForFlush() is not supported
+#ifndef MIZAR_LITE  // WaitForFlush() is not supported
 TEST_P(ColumnFamilyTest, IteratorCloseWALFile1) {
   SpecialEnv env(Env::Default());
   db_options_.env = &env;
@@ -3090,14 +3090,14 @@ TEST_P(ColumnFamilyTest, IteratorCloseWALFile2) {
   ASSERT_OK(Put(0, "fodor", "mirko"));
   ASSERT_OK(Put(1, "fodor", "mirko"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"ColumnFamilyTest::IteratorCloseWALFile2:0",
        "DBImpl::BGWorkPurge:start"},
       {"ColumnFamilyTest::IteratorCloseWALFile2:2",
        "DBImpl::BackgroundCallFlush:start"},
       {"DBImpl::BGWorkPurge:end", "ColumnFamilyTest::IteratorCloseWALFile2:1"},
   });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   WriteOptions wo;
   wo.sync = true;
@@ -3115,7 +3115,7 @@ TEST_P(ColumnFamilyTest, IteratorCloseWALFile2) {
   TEST_SYNC_POINT("ColumnFamilyTest::IteratorCloseWALFile2:2");
   WaitForFlush(1);
   ASSERT_EQ(1, env.num_open_wal_file_.load());
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   Reopen();
   ASSERT_EQ("mirko", Get(0, "fodor"));
@@ -3123,9 +3123,9 @@ TEST_P(ColumnFamilyTest, IteratorCloseWALFile2) {
   db_options_.env = env_;
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-#ifndef ROCKSDB_LITE  // TEST functions are not supported in lite
+#ifndef MIZAR_LITE  // TEST functions are not supported in lite
 TEST_P(ColumnFamilyTest, ForwardIteratorCloseWALFile) {
   SpecialEnv env(Env::Default());
   // Allow both of flush and purge job to schedule.
@@ -3160,14 +3160,14 @@ TEST_P(ColumnFamilyTest, ForwardIteratorCloseWALFile) {
   ASSERT_OK(Put(0, "fodor", "mirko"));
   ASSERT_OK(Put(1, "fodor", "mirko"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"ColumnFamilyTest::IteratorCloseWALFile2:0",
        "DBImpl::BGWorkPurge:start"},
       {"ColumnFamilyTest::IteratorCloseWALFile2:2",
        "DBImpl::BackgroundCallFlush:start"},
       {"DBImpl::BGWorkPurge:end", "ColumnFamilyTest::IteratorCloseWALFile2:1"},
   });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   WriteOptions wo;
   wo.sync = true;
@@ -3193,7 +3193,7 @@ TEST_P(ColumnFamilyTest, ForwardIteratorCloseWALFile) {
   ASSERT_EQ(1, env.delete_count_.load());
 
   delete it;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   Reopen();
   ASSERT_EQ("mirko", Get(0, "fodor"));
@@ -3201,7 +3201,7 @@ TEST_P(ColumnFamilyTest, ForwardIteratorCloseWALFile) {
   db_options_.env = env_;
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Disable on windows because SyncWAL requires env->IsSyncThreadSafe()
 // to return true which is not so in unbuffered mode.
@@ -3213,15 +3213,15 @@ TEST_P(ColumnFamilyTest, LogSyncConflictFlush) {
   ASSERT_OK(Put(0, "", ""));
   ASSERT_OK(Put(1, "foo", "bar"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::SyncWAL:BeforeMarkLogsSynced:1",
         "ColumnFamilyTest::LogSyncConflictFlush:1"},
        {"ColumnFamilyTest::LogSyncConflictFlush:2",
         "DBImpl::SyncWAL:BeforeMarkLogsSynced:2"}});
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
-  ROCKSDB_NAMESPACE::port::Thread thread([&] { ASSERT_OK(db_->SyncWAL()); });
+  MIZAR_NAMESPACE::port::Thread thread([&] { ASSERT_OK(db_->SyncWAL()); });
 
   TEST_SYNC_POINT("ColumnFamilyTest::LogSyncConflictFlush:1");
   ASSERT_OK(Flush(1));
@@ -3232,7 +3232,7 @@ TEST_P(ColumnFamilyTest, LogSyncConflictFlush) {
 
   thread.join();
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   Close();
 }
 #endif
@@ -3431,10 +3431,10 @@ TEST(ColumnFamilyTest, ValidateBlobGCForceThreshold) {
                   .IsInvalidArgument());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

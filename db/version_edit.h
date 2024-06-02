@@ -19,12 +19,12 @@
 #include "db/dbformat.h"
 #include "db/wal_edit.h"
 #include "memory/arena.h"
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/cache.h"
+#include "mizar/advanced_options.h"
+#include "mizar/cache.h"
 #include "table/table_reader.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Tag numbers for serialized VersionEdit.  These numbers are written to
 // disk and should not be changed. The number should be forward compatible so
@@ -632,4 +632,4 @@ class VersionEdit {
   std::string full_history_ts_low_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

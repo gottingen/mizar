@@ -23,7 +23,7 @@
 #pragma once
 
 #ifndef NDEBUG
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // A hacky allocator for single use.
 // Arena depends on SyncPoint and create circular dependency.
 class SingleAllocator : public Allocator {
@@ -97,5 +97,5 @@ struct SyncPoint::Data {
   }
   void Process(const Slice& point, void* cb_arg);
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif // NDEBUG

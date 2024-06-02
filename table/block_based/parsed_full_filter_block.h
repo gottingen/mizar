@@ -9,7 +9,7 @@
 
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class FilterBitsReader;
 class FilterPolicy;
@@ -39,4 +39,4 @@ class ParsedFullFilterBlock {
   std::unique_ptr<FilterBitsReader> filter_bits_reader_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

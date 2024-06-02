@@ -13,24 +13,24 @@
 
 #include "options/cf_options.h"
 #include "options/db_options.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/filter_policy.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/memtablerep.h"
+#include "mizar/merge_operator.h"
+#include "mizar/options.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 ConfigOptions::ConfigOptions()
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     : registry(ObjectRegistry::NewInstance())
 #endif
 {
@@ -38,7 +38,7 @@ ConfigOptions::ConfigOptions()
 }
 
 ConfigOptions::ConfigOptions(const DBOptions& db_opts) : env(db_opts.env) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   registry = ObjectRegistry::NewInstance();
 #endif
 }
@@ -46,7 +46,7 @@ ConfigOptions::ConfigOptions(const DBOptions& db_opts) : env(db_opts.env) {
 Status ValidateOptions(const DBOptions& db_opts,
                        const ColumnFamilyOptions& cf_opts) {
   Status s;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   auto db_cfg = DBOptionsAsConfigurable(db_opts);
   auto cf_cfg = CFOptionsAsConfigurable(cf_opts);
   s = db_cfg->ValidateOptions(db_opts, cf_opts);
@@ -156,9 +156,9 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.wal_recovery_mode = immutable_db_options.wal_recovery_mode;
   options.allow_2pc = immutable_db_options.allow_2pc;
   options.row_cache = immutable_db_options.row_cache;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   options.wal_filter = immutable_db_options.wal_filter;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   options.fail_if_options_file_error =
       immutable_db_options.fail_if_options_file_error;
   options.dump_malloc_stats = immutable_db_options.dump_malloc_stats;
@@ -382,7 +382,7 @@ std::vector<ChecksumType> GetSupportedChecksums() {
                                    checksum_types.end());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static bool ParseOptionHelper(void* opt_address, const OptionType& opt_type,
                               const std::string& value) {
   switch (opt_type) {
@@ -1392,6 +1392,6 @@ const OptionTypeInfo* OptionTypeInfo::Find(
   }
   return nullptr;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

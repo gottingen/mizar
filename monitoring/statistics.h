@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #pragma once
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 
 #include <atomic>
 #include <map>
@@ -28,7 +28,7 @@
 #define TOSTRING(x) STRINGIFY(x)
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 enum TickersInternal : uint32_t {
   INTERNAL_TICKER_ENUM_START = TICKER_ENUM_MAX,
@@ -141,4 +141,4 @@ inline void SetTickerCount(Statistics* statistics, uint32_t ticker_type,
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

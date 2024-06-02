@@ -10,13 +10,13 @@
 #include <thread>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ThreadLocalTest : public testing::Test {
  public:
@@ -552,28 +552,28 @@ void* AccessThreadLocal(void* /*arg*/) {
 // this test and only see an ASAN error on SyncPoint, it means you pass the
 // test.
 TEST_F(ThreadLocalTest, DISABLED_MainThreadDiesFirst) {
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"AccessThreadLocal:Start", "MainThreadDiesFirst:End"},
        {"PosixEnv::~PosixEnv():End", "AccessThreadLocal:End"}});
 
   // Triggers the initialization of singletons.
   Env::Default();
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   try {
-#endif  // ROCKSDB_LITE
-    ROCKSDB_NAMESPACE::port::Thread th(&AccessThreadLocal, nullptr);
+#endif  // MIZAR_LITE
+    MIZAR_NAMESPACE::port::Thread th(&AccessThreadLocal, nullptr);
     th.detach();
     TEST_SYNC_POINT("MainThreadDiesFirst:End");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   } catch (const std::system_error& ex) {
     std::cerr << "Start thread: " << ex.code() << std::endl;
     FAIL();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

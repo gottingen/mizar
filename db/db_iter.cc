@@ -21,11 +21,11 @@
 #include "logging/logging.h"
 #include "memory/arena.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/merge_operator.h"
+#include "mizar/options.h"
+#include "mizar/system_clock.h"
 #include "table/internal_iterator.h"
 #include "table/iterator_wrapper.h"
 #include "trace_replay/trace_replay.h"
@@ -33,7 +33,7 @@
 #include "util/string_util.h"
 #include "util/user_comparator_wrapper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 DBIter::DBIter(Env* _env, const ReadOptions& read_options,
                const ImmutableOptions& ioptions,
@@ -1343,7 +1343,7 @@ void DBIter::Seek(const Slice& target) {
   PERF_CPU_TIMER_GUARD(iter_seek_cpu_nanos, clock_);
   StopWatch sw(clock_, statistics_, DB_SEEK);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (db_impl_ != nullptr && cfd_ != nullptr) {
     // TODO: What do we do if this returns an error?
     Slice lower_bound, upper_bound;
@@ -1360,7 +1360,7 @@ void DBIter::Seek(const Slice& target) {
     db_impl_->TraceIteratorSeek(cfd_->GetID(), target, lower_bound, upper_bound)
         .PermitUncheckedError();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   status_ = Status::OK();
   ReleaseTempPinnedData();
@@ -1417,7 +1417,7 @@ void DBIter::SeekForPrev(const Slice& target) {
   PERF_CPU_TIMER_GUARD(iter_seek_cpu_nanos, clock_);
   StopWatch sw(clock_, statistics_, DB_SEEK);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (db_impl_ != nullptr && cfd_ != nullptr) {
     // TODO: What do we do if this returns an error?
     Slice lower_bound, upper_bound;
@@ -1436,7 +1436,7 @@ void DBIter::SeekForPrev(const Slice& target) {
                                    upper_bound)
         .PermitUncheckedError();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   status_ = Status::OK();
   ReleaseTempPinnedData();
@@ -1595,4 +1595,4 @@ Iterator* NewDBIterator(Env* env, const ReadOptions& read_options,
   return db_iter;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -21,14 +21,14 @@
 #include "file/file_util.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/transaction_log.h"
-#include "rocksdb/types.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/transaction_log.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 // WAL manager provides the abstraction for reading the WAL files as a single
 // unit. Internally, it opens and reads the files using Reader or Writer
@@ -118,5 +118,5 @@ class WalManager {
   std::shared_ptr<IOTracer> io_tracer_;
 };
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 #include "db/table_properties_collector.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
@@ -20,7 +20,7 @@
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool SearchForOffset(DataBlockHashIndex& index, const char* data,
                      uint16_t map_offset, const Slice& key,
@@ -708,7 +708,7 @@ TEST(DataBlockHashIndex, BlockBoundary) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

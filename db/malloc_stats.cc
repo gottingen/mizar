@@ -9,15 +9,15 @@
 
 #include "db/malloc_stats.h"
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <memory>
 #include <string.h>
 
 #include "port/jemalloc_helper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
 
 struct MallocStatus {
   char* cur;
@@ -49,6 +49,6 @@ void DumpMallocStats(std::string* stats) {
 }
 #else
 void DumpMallocStats(std::string*) {}
-#endif  // ROCKSDB_JEMALLOC
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+#endif  // MIZAR_JEMALLOC
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

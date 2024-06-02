@@ -12,10 +12,10 @@
 #include <algorithm>
 
 #include "monitoring/histogram.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 HistogramWindowingImpl::HistogramWindowingImpl() {
   clock_ = SystemClock::Default();
@@ -199,4 +199,4 @@ void HistogramWindowingImpl::SwapHistoryBucket() {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

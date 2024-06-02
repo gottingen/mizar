@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/write_batch_base.h"
+#include "mizar/write_batch_base.h"
 
 #include <string>
 
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Simple implementation of SlicePart variants of Put().  Child classes
 // can override these method with more performant solutions if they choose.
@@ -91,4 +91,4 @@ Status WriteBatchBase::Merge(const SliceParts& key, const SliceParts& value) {
   return Merge(key_slice, value_slice);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

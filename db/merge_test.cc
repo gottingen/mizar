@@ -12,17 +12,17 @@
 #include "db/dbformat.h"
 #include "db/write_batch_internal.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/db_ttl.h"
+#include "mizar/cache.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/db_ttl.h"
 #include "test_util/testharness.h"
 #include "util/coding.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool use_compression;
 
@@ -104,8 +104,8 @@ std::shared_ptr<DB> OpenDb(const std::string& dbname, const bool ttl = false,
   options.env = EnvMergeTest::GetInstance();
   EXPECT_OK(DestroyDB(dbname, Options()));
   Status s;
-// DBWithTTL is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// DBWithTTL is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
   if (ttl) {
     DBWithTTL* db_with_ttl;
     s = DBWithTTL::Open(options, dbname, &db_with_ttl);
@@ -116,7 +116,7 @@ std::shared_ptr<DB> OpenDb(const std::string& dbname, const bool ttl = false,
 #else
   assert(!ttl);
   s = DB::Open(options, dbname, &db);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   EXPECT_OK(s);
   assert(s.ok());
   // Allowed to call NowNanos during DB creation (in GenerateRawUniqueId() for
@@ -459,7 +459,7 @@ void testPartialMerge(Counters* counters, DB* db, size_t max_merge,
   // Test case 2: partial merge should not be called when a put is found.
   resetNumPartialMergeCalls();
   tmp_sum = 0;
-  ASSERT_OK(db->Put(ROCKSDB_NAMESPACE::WriteOptions(), "c", "10"));
+  ASSERT_OK(db->Put(MIZAR_NAMESPACE::WriteOptions(), "c", "10"));
   for (size_t i = 1; i <= count; i++) {
     counters->assert_add("c", i);
     tmp_sum += i;
@@ -595,7 +595,7 @@ TEST_F(MergeTest, MergeDbTest) {
   runTest(test::PerThreadDBPath("merge_testdb"));
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(MergeTest, MergeDbTtlTest) {
   runTest(test::PerThreadDBPath("merge_testdbttl"),
           true);  // Run test on TTL database
@@ -613,17 +613,17 @@ TEST_F(MergeTest, MergeWithCompactionAndFlush) {
   }
   ASSERT_OK(DestroyDB(dbname, Options()));
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::use_compression = false;
+  MIZAR_NAMESPACE::use_compression = false;
   if (argc > 1) {
-    ROCKSDB_NAMESPACE::use_compression = true;
+    MIZAR_NAMESPACE::use_compression = true;
   }
 
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -20,14 +20,14 @@
 #include "db/write_batch_internal.h"
 #include "db/write_controller.h"
 #include "options/cf_options.h"
-#include "rocksdb/compaction_job_stats.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/compaction_job_stats.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 #include "trace_replay/block_cache_tracer.h"
 #include "util/thread_local.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Version;
 class VersionSet;
@@ -335,12 +335,12 @@ class ColumnFamilyData {
   // Validate CF options against DB options
   static Status ValidateOptions(const DBOptions& db_options,
                                 const ColumnFamilyOptions& cf_options);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // REQUIRES: DB mutex held
   Status SetOptions(
       const DBOptions& db_options,
       const std::unordered_map<std::string, std::string>& options_map);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   InternalStats* internal_stats() { return internal_stats_.get(); }
 
@@ -785,4 +785,4 @@ extern uint32_t GetColumnFamilyID(ColumnFamilyHandle* column_family);
 extern const Comparator* GetColumnFamilyUserComparator(
     ColumnFamilyHandle* column_family);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

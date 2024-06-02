@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/utilities/option_change_migration.h"
+#include "mizar/utilities/option_change_migration.h"
 
 #include <set>
 
@@ -15,7 +15,7 @@
 #include "port/stack_trace.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBOptionChangeMigrationTests
     : public DBTestBase,
@@ -46,7 +46,7 @@ class DBOptionChangeMigrationTests
   bool is_dynamic2_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(DBOptionChangeMigrationTests, Migrate1) {
   Options old_options = CurrentOptions();
   old_options.compaction_style =
@@ -442,11 +442,11 @@ TEST_F(DBOptionChangeMigrationTest, CompactedSrcToUniversal) {
   }
 }
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

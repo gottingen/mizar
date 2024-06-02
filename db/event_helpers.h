@@ -11,20 +11,20 @@
 #include "db/column_family.h"
 #include "db/version_edit.h"
 #include "logging/event_logger.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/listener.h"
+#include "mizar/table_properties.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class EventHelpers {
  public:
   static void AppendCurrentTime(JSONWriter* json_writer);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static void NotifyTableFileCreationStarted(
       const std::vector<std::shared_ptr<EventListener>>& listeners,
       const std::string& db_name, const std::string& cf_name,
       const std::string& file_path, int job_id, TableFileCreationReason reason);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   static void NotifyOnBackgroundError(
       const std::vector<std::shared_ptr<EventListener>>& listeners,
       BackgroundErrorReason reason, Status* bg_error,
@@ -48,13 +48,13 @@ class EventHelpers {
       const Status& old_bg_error, const Status& new_bg_error,
       InstrumentedMutex* db_mutex);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static void NotifyBlobFileCreationStarted(
       const std::vector<std::shared_ptr<EventListener>>& listeners,
       const std::string& db_name, const std::string& cf_name,
       const std::string& file_path, int job_id,
       BlobFileCreationReason creation_reason);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   static void LogAndNotifyBlobFileCreationFinished(
       EventLogger* event_logger,
@@ -79,4 +79,4 @@ class EventHelpers {
       const FileDescriptor& fd, const TableFileCreationInfo& info);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

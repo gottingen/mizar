@@ -13,16 +13,16 @@
 
 #include "db/db_impl/db_impl.h"
 #include "db/log_writer.h"
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/file_system.h"
+#include "mizar/advanced_options.h"
+#include "mizar/convenience.h"
+#include "mizar/file_system.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/mock_table.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class GenerateLevelFilesBriefTest : public testing::Test {
  public:
@@ -3224,7 +3224,7 @@ TEST_F(VersionSetTestMissingFiles, MinLogNumberToKeep2PC) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

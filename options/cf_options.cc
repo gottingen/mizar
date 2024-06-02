@@ -16,20 +16,20 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/port.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/concurrent_task_limiter.h"
-#include "rocksdb/configurable.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/concurrent_task_limiter.h"
+#include "mizar/configurable.h"
+#include "mizar/convenience.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/merge_operator.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // offset_of is used to get the offset of a class data member
 // ex: offset_of(&ColumnFamilyOptions::num_levels)
 // This call will return the offset of num_levels in ColumnFamilyOptions class
@@ -39,7 +39,7 @@ namespace ROCKSDB_NAMESPACE {
 // refs:
 // http://en.cppreference.com/w/cpp/concept/StandardLayoutType
 // https://gist.github.com/graphitemaster/494f21190bb2c63c5516
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static ImmutableCFOptions dummy_cf_options;
 template <typename T1>
 int offset_of(T1 ImmutableCFOptions::*member) {
@@ -824,7 +824,7 @@ std::unique_ptr<Configurable> CFOptionsAsConfigurable(
   std::unique_ptr<Configurable> ptr(new ConfigurableCFOptions(opts, opt_map));
   return ptr;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 ImmutableCFOptions::ImmutableCFOptions() : ImmutableCFOptions(Options()) {}
 
@@ -1066,7 +1066,7 @@ void MutableCFOptions::Dump(Logger* log) const {
 MutableCFOptions::MutableCFOptions(const Options& options)
     : MutableCFOptions(ColumnFamilyOptions(options)) {}
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status GetMutableOptionsFromStrings(
     const MutableCFOptions& base_options,
     const std::unordered_map<std::string, std::string>& options_map,
@@ -1090,5 +1090,5 @@ Status GetStringFromMutableCFOptions(const ConfigOptions& config_options,
   return OptionTypeInfo::SerializeType(
       config_options, cf_mutable_options_type_info, &mutable_opts, opt_string);
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

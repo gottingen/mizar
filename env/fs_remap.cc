@@ -3,11 +3,11 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "env/fs_remap.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 RemapFileSystem::RemapFileSystem(const std::shared_ptr<FileSystem>& base)
     : FileSystemWrapper(base) {}
@@ -301,6 +301,6 @@ IOStatus RemapFileSystem::GetAbsolutePath(const std::string& db_path,
                                             output_path, dbg);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

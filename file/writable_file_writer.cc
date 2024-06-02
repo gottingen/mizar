@@ -16,13 +16,13 @@
 #include "monitoring/histogram.h"
 #include "monitoring/iostats_context_imp.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/crc32c.h"
 #include "util/random.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 IOStatus WritableFileWriter::Create(const std::shared_ptr<FileSystem>& fs,
                                     const std::string& fname,
                                     const FileOptions& file_opts,
@@ -209,14 +209,14 @@ IOStatus WritableFileWriter::Close() {
   // we need to let the file know where data ends.
   if (use_direct_io()) {
     {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       FileOperationInfo::StartTimePoint start_ts;
       if (ShouldNotifyListeners()) {
         start_ts = FileOperationInfo::StartNow();
       }
 #endif
       interim = writable_file_->Truncate(filesize_, IOOptions(), nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (ShouldNotifyListeners()) {
         auto finish_ts = FileOperationInfo::FinishNow();
         NotifyOnFileTruncateFinish(start_ts, finish_ts, s);
@@ -229,14 +229,14 @@ IOStatus WritableFileWriter::Close() {
     }
     if (interim.ok()) {
       {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         FileOperationInfo::StartTimePoint start_ts;
         if (ShouldNotifyListeners()) {
           start_ts = FileOperationInfo::StartNow();
         }
 #endif
         interim = writable_file_->Fsync(IOOptions(), nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         if (ShouldNotifyListeners()) {
           auto finish_ts = FileOperationInfo::FinishNow();
           NotifyOnFileSyncFinish(start_ts, finish_ts, s,
@@ -255,14 +255,14 @@ IOStatus WritableFileWriter::Close() {
 
   TEST_KILL_RANDOM("WritableFileWriter::Close:0");
   {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     FileOperationInfo::StartTimePoint start_ts;
     if (ShouldNotifyListeners()) {
       start_ts = FileOperationInfo::StartNow();
     }
 #endif
     interim = writable_file_->Close(IOOptions(), nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (ShouldNotifyListeners()) {
       auto finish_ts = FileOperationInfo::FinishNow();
       NotifyOnFileCloseFinish(start_ts, finish_ts, s);
@@ -295,7 +295,7 @@ IOStatus WritableFileWriter::Flush() {
 
   if (buf_.CurrentSize() > 0) {
     if (use_direct_io()) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (pending_sync_) {
         if (perform_data_verification_ && buffered_data_with_checksum_) {
           s = WriteDirectWithChecksum();
@@ -303,7 +303,7 @@ IOStatus WritableFileWriter::Flush() {
           s = WriteDirect();
         }
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
     } else {
       if (perform_data_verification_ && buffered_data_with_checksum_) {
         s = WriteBufferedWithChecksum(buf_.BufferStart(), buf_.CurrentSize());
@@ -317,14 +317,14 @@ IOStatus WritableFileWriter::Flush() {
   }
 
   {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     FileOperationInfo::StartTimePoint start_ts;
     if (ShouldNotifyListeners()) {
       start_ts = FileOperationInfo::StartNow();
     }
 #endif
     s = writable_file_->Flush(IOOptions(), nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (ShouldNotifyListeners()) {
       auto finish_ts = std::chrono::steady_clock::now();
       NotifyOnFileFlushFinish(start_ts, finish_ts, s);
@@ -421,7 +421,7 @@ IOStatus WritableFileWriter::SyncInternal(bool use_fsync) {
   TEST_SYNC_POINT("WritableFileWriter::SyncInternal:0");
   auto prev_perf_level = GetPerfLevel();
   IOSTATS_CPU_TIMER_GUARD(cpu_write_nanos, clock_);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   FileOperationInfo::StartTimePoint start_ts;
   if (ShouldNotifyListeners()) {
     start_ts = FileOperationInfo::StartNow();
@@ -432,7 +432,7 @@ IOStatus WritableFileWriter::SyncInternal(bool use_fsync) {
   } else {
     s = writable_file_->Sync(IOOptions(), nullptr);
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (ShouldNotifyListeners()) {
     auto finish_ts = std::chrono::steady_clock::now();
     NotifyOnFileSyncFinish(
@@ -452,14 +452,14 @@ IOStatus WritableFileWriter::SyncInternal(bool use_fsync) {
 IOStatus WritableFileWriter::RangeSync(uint64_t offset, uint64_t nbytes) {
   IOSTATS_TIMER_GUARD(range_sync_nanos);
   TEST_SYNC_POINT("WritableFileWriter::RangeSync:0");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   FileOperationInfo::StartTimePoint start_ts;
   if (ShouldNotifyListeners()) {
     start_ts = FileOperationInfo::StartNow();
   }
 #endif
   IOStatus s = writable_file_->RangeSync(offset, nbytes, IOOptions(), nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (ShouldNotifyListeners()) {
     auto finish_ts = std::chrono::steady_clock::now();
     NotifyOnFileRangeSyncFinish(offset, nbytes, start_ts, finish_ts, s);
@@ -496,7 +496,7 @@ IOStatus WritableFileWriter::WriteBuffered(const char* data, size_t size) {
       IOSTATS_TIMER_GUARD(write_nanos);
       TEST_SYNC_POINT("WritableFileWriter::Flush:BeforeAppend");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       FileOperationInfo::StartTimePoint start_ts;
       uint64_t old_size = writable_file_->GetFileSize(IOOptions(), nullptr);
       if (ShouldNotifyListeners()) {
@@ -531,7 +531,7 @@ IOStatus WritableFileWriter::WriteBuffered(const char* data, size_t size) {
         }
         SetPerfLevel(prev_perf_level);
       }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (ShouldNotifyListeners()) {
         auto finish_ts = std::chrono::steady_clock::now();
         NotifyOnFileWriteFinish(old_size, allowed, start_ts, finish_ts, s);
@@ -586,7 +586,7 @@ IOStatus WritableFileWriter::WriteBufferedWithChecksum(const char* data,
     IOSTATS_TIMER_GUARD(write_nanos);
     TEST_SYNC_POINT("WritableFileWriter::Flush:BeforeAppend");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     FileOperationInfo::StartTimePoint start_ts;
     uint64_t old_size = writable_file_->GetFileSize(IOOptions(), nullptr);
     if (ShouldNotifyListeners()) {
@@ -605,7 +605,7 @@ IOStatus WritableFileWriter::WriteBufferedWithChecksum(const char* data,
                                  nullptr);
       SetPerfLevel(prev_perf_level);
     }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (ShouldNotifyListeners()) {
       auto finish_ts = std::chrono::steady_clock::now();
       NotifyOnFileWriteFinish(old_size, left, start_ts, finish_ts, s);
@@ -668,7 +668,7 @@ void WritableFileWriter::Crc32cHandoffChecksumCalculation(const char* data,
 // whole number of pages to be written again on the next flush because we can
 // only write on aligned
 // offsets.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 IOStatus WritableFileWriter::WriteDirect() {
   assert(use_direct_io());
   IOStatus s;
@@ -854,5 +854,5 @@ IOStatus WritableFileWriter::WriteDirectWithChecksum() {
   }
   return s;
 }
-#endif  // !ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // !MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

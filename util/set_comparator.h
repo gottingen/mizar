@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // A comparator to be used in std::set
 struct SetComparator {
   explicit SetComparator() : user_comparator_(BytewiseComparator()) {}
@@ -21,4 +21,4 @@ struct SetComparator {
  private:
   const Comparator* user_comparator_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

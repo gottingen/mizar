@@ -13,8 +13,8 @@
 
 #include <thread>
 
-#include "rocksdb/options.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/options.h"
+#include "mizar/rocksdb_namespace.h"
 
 // size_t printf formatting named in the manner of C99 standard formatting
 // strings such as PRIu64
@@ -85,7 +85,7 @@
 #define fdatasync fsync
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const bool kDefaultToAdaptiveMutex;
 
@@ -233,4 +233,4 @@ int64_t GetProcessID();
 bool GenerateRfcUuid(std::string* output);
 
 } // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

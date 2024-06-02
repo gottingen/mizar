@@ -10,26 +10,26 @@
 
 #include "port/jemalloc_helper.h"
 #include "port/port.h"
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 #include "util/thread_local.h"
 #include "utilities/memory_allocators.h"
 
-#if defined(ROCKSDB_JEMALLOC) && defined(ROCKSDB_PLATFORM_POSIX)
+#if defined(MIZAR_JEMALLOC) && defined(MIZAR_PLATFORM_POSIX)
 
 #include <sys/mman.h>
 
 #if (JEMALLOC_VERSION_MAJOR >= 5) && defined(MADV_DONTDUMP)
-#define ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#define MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 #endif  // (JEMALLOC_VERSION_MAJOR >= 5) && MADV_DONTDUMP
-#endif  // ROCKSDB_JEMALLOC && ROCKSDB_PLATFORM_POSIX
+#endif  // MIZAR_JEMALLOC && MIZAR_PLATFORM_POSIX
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class JemallocNodumpAllocator : public BaseMemoryAllocator {
  public:
   explicit JemallocNodumpAllocator(JemallocAllocatorOptions& options);
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   ~JemallocNodumpAllocator();
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
   static const char* kClassName() { return "JemallocNodumpAllocator"; }
   const char* Name() const override { return kClassName(); }
@@ -42,14 +42,14 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
 
   Status PrepareOptions(const ConfigOptions& config_options) override;
 
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   void* Allocate(size_t size) override;
   void Deallocate(void* p) override;
   size_t UsableSize(void* p, size_t allocation_size) const override;
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
  private:
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   Status InitializeArenas();
 
   friend Status NewJemallocNodumpAllocator(
@@ -70,10 +70,10 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
   // Get or create tcache. Return flag suitable to use with `mallocx`:
   // either MALLOCX_TCACHE_NONE or MALLOCX_TCACHE(tc).
   int GetThreadSpecificCache(size_t size);
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   JemallocAllocatorOptions options_;
 
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   // A function pointer to jemalloc default alloc. Use atomic to make sure
   // NewJemallocNodumpAllocator is thread-safe.
   //
@@ -86,9 +86,9 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
 
   // Hold thread-local tcache index.
   ThreadLocalPtr tcache_;
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
   // Arena index.
   unsigned arena_index_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

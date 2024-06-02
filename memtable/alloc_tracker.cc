@@ -10,9 +10,9 @@
 #include <assert.h>
 #include "memory/allocator.h"
 #include "memory/arena.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 AllocTracker::AllocTracker(WriteBufferManager* write_buffer_manager)
     : write_buffer_manager_(write_buffer_manager),
@@ -59,4 +59,4 @@ void AllocTracker::FreeMem() {
     freed_ = true;
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -17,7 +17,7 @@
 #include <vector>
 #include "port/port.h"
 #include "port/sys_time.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #ifndef __has_cpp_attribute
 #define ROCKSDB_HAS_CPP_ATTRIBUTE(x) 0
@@ -33,7 +33,7 @@
 #define ROCKSDB_MAYBE_UNUSED
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::string kNullptrString = "nullptr";
 
@@ -284,7 +284,7 @@ bool StartsWith(const std::string& string, const std::string& pattern) {
   return string.compare(0, pattern.size(), pattern) == 0;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 bool ParseBoolean(const std::string& type, const std::string& value) {
   if (value == "true" || value == "1") {
@@ -498,4 +498,4 @@ std::string errnoStr(int err) {
   return result;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

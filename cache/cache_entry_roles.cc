@@ -9,7 +9,7 @@
 
 #include "port/lang.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::array<const char*, kNumCacheEntryRoles> kCacheEntryRoleToCamelString{{
     "DataBlock",
@@ -67,4 +67,4 @@ std::unordered_map<Cache::DeleterFn, CacheEntryRole> CopyCacheDeleterRoleMap() {
   return GetRegistry().Copy();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

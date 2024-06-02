@@ -7,11 +7,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "rocksdb/utilities/info_log_finder.h"
+#include "mizar/utilities/info_log_finder.h"
 #include "file/filename.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status GetInfoLogList(DB* db, std::vector<std::string>* info_log_list) {
   if (!db) {
@@ -22,4 +22,4 @@ Status GetInfoLogList(DB* db, std::vector<std::string>* info_log_list) {
   return GetInfoLogFiles(options.env->GetFileSystem(), options.db_log_dir,
                          db->GetName(), &parent_path, info_log_list);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

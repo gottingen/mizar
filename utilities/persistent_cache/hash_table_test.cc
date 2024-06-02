@@ -15,9 +15,9 @@
 #include "utilities/persistent_cache/hash_table.h"
 #include "utilities/persistent_cache/hash_table_evictable.h"
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct HashTableTest : public testing::Test {
   ~HashTableTest() override { map_.Clear(&HashTableTest::ClearNode); }
@@ -151,7 +151,7 @@ TEST_F(EvictableHashTableTest, TestEvict) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif
 
 int main(int argc, char** argv) {

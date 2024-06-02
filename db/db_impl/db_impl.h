@@ -46,18 +46,18 @@
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/status.h"
-#ifndef ROCKSDB_LITE
-#include "rocksdb/trace_reader_writer.h"
-#endif  // ROCKSDB_LITE
-#include "rocksdb/transaction_log.h"
-#ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/replayer.h"
-#endif  // ROCKSDB_LITE
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/memtablerep.h"
+#include "mizar/status.h"
+#ifndef MIZAR_LITE
+#include "mizar/trace_reader_writer.h"
+#endif  // MIZAR_LITE
+#include "mizar/transaction_log.h"
+#ifndef MIZAR_LITE
+#include "mizar/utilities/replayer.h"
+#endif  // MIZAR_LITE
+#include "mizar/write_buffer_manager.h"
 #include "table/merging_iterator.h"
 #include "table/scoped_arena_iterator.h"
 #include "util/autovector.h"
@@ -66,7 +66,7 @@
 #include "util/stop_watch.h"
 #include "util/thread_local.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Arena;
 class ArenaWrappedDBIter;
@@ -387,7 +387,7 @@ class DBImpl : public DB {
       uint64_t start_time, uint64_t end_time,
       std::unique_ptr<StatsHistoryIterator>* stats_iterator) override;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   using DB::ResetStats;
   virtual Status ResetStats() override;
   // All the returned filenames start with "/"
@@ -511,7 +511,7 @@ class DBImpl : public DB {
       ColumnFamilyHandle* column_family, const Range* range, std::size_t n,
       TablePropertiesCollection* props) override;
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // ---- End of implementations of the DB interface ----
   SystemClock* GetSystemClock() const;
@@ -568,7 +568,7 @@ class DBImpl : public DB {
   // depends also on data written to the WAL but not to the memtable.
   SequenceNumber TEST_GetLastVisibleSequence() const;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Similar to Write() but will call the callback once on the single write
   // thread to determine whether it is safe to perform the write.
   virtual Status WriteWithCallback(const WriteOptions& write_options,
@@ -633,7 +633,7 @@ class DBImpl : public DB {
   Status TraceIteratorSeekForPrev(const uint32_t& cf_id, const Slice& key,
                                   const Slice& lower_bound,
                                   const Slice upper_bound);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Similar to GetSnapshot(), but also lets the db know that this snapshot
   // will be used for transaction write-conflict checking.  The DB can then
@@ -1074,9 +1074,9 @@ class DBImpl : public DB {
     return files_grabbed_for_purge_;
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   PeriodicWorkTestScheduler* TEST_GetPeriodicWorkScheduler() const;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 #endif  // NDEBUG
 
@@ -1256,12 +1256,12 @@ class DBImpl : public DB {
   void NotifyOnMemTableSealed(ColumnFamilyData* cfd,
                               const MemTableInfo& mem_table_info);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void NotifyOnExternalFileIngested(
       ColumnFamilyData* cfd, const ExternalSstFileIngestionJob& ingestion_job);
 
   Status FlushForGetLiveFiles();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   void NewThreadStatusCfInfo(ColumnFamilyData* cfd) const;
 
@@ -1378,7 +1378,7 @@ class DBImpl : public DB {
   friend class WriteUnpreparedTxnDB;
   friend class WriteUnpreparedTxn;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   friend class ForwardIterator;
 #endif
   friend struct SuperVersion;
@@ -1755,7 +1755,7 @@ class DBImpl : public DB {
   // Used by WriteImpl to update bg_error_ in case of memtable insert error.
   void MemTableInsertStatusCheck(const Status& memtable_insert_status);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
   Status CompactFilesImpl(const CompactionOptions& compact_options,
                           ColumnFamilyData* cfd, Version* version,
@@ -1770,10 +1770,10 @@ class DBImpl : public DB {
   void WaitForIngestFile();
 
 #else
-  // IngestExternalFile is not supported in ROCKSDB_LITE so this function
+  // IngestExternalFile is not supported in MIZAR_LITE so this function
   // will be no-op
   void WaitForIngestFile() {}
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   ColumnFamilyData* GetColumnFamilyDataByName(const std::string& cf_name);
 
@@ -1891,7 +1891,7 @@ class DBImpl : public DB {
   bool ShouldntRunManualCompaction(ManualCompactionState* m);
   bool HaveManualCompaction(ColumnFamilyData* cfd);
   bool MCOverlap(ManualCompactionState* m, ManualCompactionState* m1);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void BuildCompactionJobInfo(const ColumnFamilyData* cfd, Compaction* c,
                               const Status& st,
                               const CompactionJobStats& compaction_job_stats,
@@ -1904,7 +1904,7 @@ class DBImpl : public DB {
       ColumnFamilyData* cfd, uint64_t num,
       std::unique_ptr<std::list<uint64_t>::iterator>& pending_output_elem,
       uint64_t* next_file_number);
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
 
   bool ShouldPurge(uint64_t file_number) const;
   void MarkAsGrabbedForPurge(uint64_t file_number);
@@ -2246,9 +2246,9 @@ class DBImpl : public DB {
   // REQUIRES: mutex held
   int num_running_ingest_file_;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   WalManager wal_manager_;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // A value of > 0 temporarily disables scheduling of background work
   int bg_work_paused_;
@@ -2276,7 +2276,7 @@ class DBImpl : public DB {
   // Only to be set during initialization
   std::unique_ptr<PreReleaseCallback> recoverable_state_pre_release_callback_;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Scheduler to run DumpStats(), PersistStats(), and FlushInfoLog().
   // Currently, it always use a global instance from
   // PeriodicWorkScheduler::Default(). Only in unittest, it can be overrided by
@@ -2399,4 +2399,4 @@ static void ClipToRange(T* ptr, V minvalue, V maxvalue) {
   if (static_cast<V>(*ptr) < minvalue) *ptr = minvalue;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

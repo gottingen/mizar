@@ -14,9 +14,9 @@
 #include "monitoring/perf_context_imp.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 DBImplReadOnly::DBImplReadOnly(const DBOptions& db_options,
                                const std::string& dbname)
@@ -251,12 +251,12 @@ Status DBImplReadOnly::OpenForReadOnlyWithoutCheck(
   return s;
 }
 
-#else   // !ROCKSDB_LITE
+#else   // !MIZAR_LITE
 
 Status DB::OpenForReadOnly(const Options& /*options*/,
                            const std::string& /*dbname*/, DB** /*dbptr*/,
                            bool /*error_if_wal_file_exists*/) {
-  return Status::NotSupported("Not supported in ROCKSDB_LITE.");
+  return Status::NotSupported("Not supported in MIZAR_LITE.");
 }
 
 Status DB::OpenForReadOnly(
@@ -264,8 +264,8 @@ Status DB::OpenForReadOnly(
     const std::vector<ColumnFamilyDescriptor>& /*column_families*/,
     std::vector<ColumnFamilyHandle*>* /*handles*/, DB** /*dbptr*/,
     bool /*error_if_wal_file_exists*/) {
-  return Status::NotSupported("Not supported in ROCKSDB_LITE.");
+  return Status::NotSupported("Not supported in MIZAR_LITE.");
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

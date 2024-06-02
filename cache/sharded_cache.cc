@@ -17,7 +17,7 @@
 #include "util/math.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -229,4 +229,4 @@ int ShardedCache::GetNumShardBits() const { return BitsSetToOne(shard_mask_); }
 
 uint32_t ShardedCache::GetNumShards() const { return shard_mask_ + 1; }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <algorithm>
 #include <atomic>
@@ -35,10 +35,10 @@
 #include "logging/logging.h"
 #include "monitoring/iostats_context_imp.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/env.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/statistics.h"
+#include "mizar/transaction_log.h"
 #include "table/sst_file_dumper.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
@@ -50,7 +50,7 @@
 #include "utilities/backupable/backupable_db_impl.h"
 #include "utilities/checkpoint/checkpoint_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 using ShareFilesNaming = BackupEngineOptions::ShareFilesNaming;
@@ -489,7 +489,7 @@ class BackupEngineImpl {
                                        bool tmp = false,
                                        const std::string& file = "") const {
     assert(file.size() == 0 || file[0] != '/');
-    return kPrivateDirSlash + ROCKSDB_NAMESPACE::ToString(backup_id) +
+    return kPrivateDirSlash + MIZAR_NAMESPACE::ToString(backup_id) +
            (tmp ? ".tmp" : "") + "/" + file;
   }
   inline std::string GetSharedFileRel(const std::string& file = "",
@@ -537,7 +537,7 @@ class BackupEngineImpl {
   }
   inline std::string GetBackupMetaFile(BackupID backup_id, bool tmp) const {
     return GetAbsolutePath(kMetaDirName) + "/" + (tmp ? "." : "") +
-           ROCKSDB_NAMESPACE::ToString(backup_id) + (tmp ? ".tmp" : "");
+           MIZAR_NAMESPACE::ToString(backup_id) + (tmp ? ".tmp" : "");
   }
 
   // If size_limit == 0, there is no size limit, copy everything.
@@ -1039,7 +1039,7 @@ IOStatus BackupEngineImpl::Initialize() {
     ROCKS_LOG_INFO(options_.info_log, "Detected backup %s", file.c_str());
     BackupID backup_id = 0;
     sscanf(file.c_str(), "%u", &backup_id);
-    if (backup_id == 0 || file != ROCKSDB_NAMESPACE::ToString(backup_id)) {
+    if (backup_id == 0 || file != MIZAR_NAMESPACE::ToString(backup_id)) {
       // Invalid file name, will be deleted with auto-GC when user
       // initiates an append or write operation. (Behave as read-only until
       // then.)
@@ -1628,7 +1628,7 @@ void BackupEngineImpl::SetBackupInfoFromBackupMeta(
   *backup_info = BackupInfo(id, meta.GetTimestamp(), meta.GetSize(),
                             meta.GetNumberFiles(), meta.GetAppMetadata());
   std::string dir = options_.backup_dir + "/" + kPrivateDirSlash +
-                    ROCKSDB_NAMESPACE::ToString(id);
+                    MIZAR_NAMESPACE::ToString(id);
   if (include_file_details) {
     auto& file_details = backup_info->file_details;
     file_details.reserve(meta.GetFiles().size());
@@ -2891,7 +2891,7 @@ IOStatus BackupEngineImpl::BackupMeta::LoadFromFile(
       if (field_name == kFileCrc32cFieldName) {
         uint32_t checksum_value =
             static_cast<uint32_t>(strtoul(field_data.c_str(), nullptr, 10));
-        if (field_data != ROCKSDB_NAMESPACE::ToString(checksum_value)) {
+        if (field_data != MIZAR_NAMESPACE::ToString(checksum_value)) {
           return IOStatus::Corruption("Invalid checksum value for " + filename +
                                       " in " + meta_filename_);
         }
@@ -3071,6 +3071,6 @@ void TEST_EnableWriteFutureSchemaVersion2(
   impl->TEST_EnableWriteFutureSchemaVersion2(options);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

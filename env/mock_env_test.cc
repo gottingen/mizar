@@ -9,10 +9,10 @@
 #include <memory>
 #include <string>
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MockEnvTest : public testing::Test {
  public:
@@ -75,7 +75,7 @@ TEST_F(MockEnvTest, FakeSleeping) {
   ASSERT_TRUE(delta == 3 || delta == 4);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

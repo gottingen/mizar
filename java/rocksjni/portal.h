@@ -24,16 +24,16 @@
 #include <type_traits>
 #include <vector>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/backupable_db.h"
-#include "rocksdb/utilities/memory_util.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/filter_policy.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/utilities/backupable_db.h"
+#include "mizar/utilities/memory_util.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "rocksjni/compaction_filter_factory_jnicallback.h"
 #include "rocksjni/comparatorjnicallback.h"
 #include "rocksjni/event_listener_jnicallback.h"
@@ -49,7 +49,7 @@
 #undef DELETE
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class JavaClass {
  public:
@@ -279,36 +279,36 @@ class SubCodeJni : public JavaClass {
     return mid;
   }
 
-  static ROCKSDB_NAMESPACE::Status::SubCode toCppSubCode(
+  static MIZAR_NAMESPACE::Status::SubCode toCppSubCode(
       const jbyte jsub_code) {
     switch (jsub_code) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kNone;
+        return MIZAR_NAMESPACE::Status::SubCode::kNone;
       case 0x1:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kMutexTimeout;
+        return MIZAR_NAMESPACE::Status::SubCode::kMutexTimeout;
       case 0x2:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kLockTimeout;
+        return MIZAR_NAMESPACE::Status::SubCode::kLockTimeout;
       case 0x3:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kLockLimit;
+        return MIZAR_NAMESPACE::Status::SubCode::kLockLimit;
       case 0x4:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kNoSpace;
+        return MIZAR_NAMESPACE::Status::SubCode::kNoSpace;
       case 0x5:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kDeadlock;
+        return MIZAR_NAMESPACE::Status::SubCode::kDeadlock;
       case 0x6:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kStaleFile;
+        return MIZAR_NAMESPACE::Status::SubCode::kStaleFile;
       case 0x7:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kMemoryLimit;
+        return MIZAR_NAMESPACE::Status::SubCode::kMemoryLimit;
 
       case 0x7F:
       default:
-        return ROCKSDB_NAMESPACE::Status::SubCode::kNone;
+        return MIZAR_NAMESPACE::Status::SubCode::kNone;
     }
   }
 };
 
 // The portal class for org.rocksdb.Status
 class StatusJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Status*, StatusJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::Status*, StatusJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Status
@@ -388,10 +388,10 @@ class StatusJni
 
   /**
    * Create a new Java org.rocksdb.Status object with the same properties as
-   * the provided C++ ROCKSDB_NAMESPACE::Status object
+   * the provided C++ MIZAR_NAMESPACE::Status object
    *
    * @param env A pointer to the Java environment
-   * @param status The ROCKSDB_NAMESPACE::Status object
+   * @param status The MIZAR_NAMESPACE::Status object
    *
    * @return A reference to a Java org.rocksdb.Status object, or nullptr
    *     if an an exception occurs
@@ -446,38 +446,38 @@ class StatusJni
   }
 
   // Returns the equivalent org.rocksdb.Status.Code for the provided
-  // C++ ROCKSDB_NAMESPACE::Status::Code enum
-  static jbyte toJavaStatusCode(const ROCKSDB_NAMESPACE::Status::Code& code) {
+  // C++ MIZAR_NAMESPACE::Status::Code enum
+  static jbyte toJavaStatusCode(const MIZAR_NAMESPACE::Status::Code& code) {
     switch (code) {
-      case ROCKSDB_NAMESPACE::Status::Code::kOk:
+      case MIZAR_NAMESPACE::Status::Code::kOk:
         return 0x0;
-      case ROCKSDB_NAMESPACE::Status::Code::kNotFound:
+      case MIZAR_NAMESPACE::Status::Code::kNotFound:
         return 0x1;
-      case ROCKSDB_NAMESPACE::Status::Code::kCorruption:
+      case MIZAR_NAMESPACE::Status::Code::kCorruption:
         return 0x2;
-      case ROCKSDB_NAMESPACE::Status::Code::kNotSupported:
+      case MIZAR_NAMESPACE::Status::Code::kNotSupported:
         return 0x3;
-      case ROCKSDB_NAMESPACE::Status::Code::kInvalidArgument:
+      case MIZAR_NAMESPACE::Status::Code::kInvalidArgument:
         return 0x4;
-      case ROCKSDB_NAMESPACE::Status::Code::kIOError:
+      case MIZAR_NAMESPACE::Status::Code::kIOError:
         return 0x5;
-      case ROCKSDB_NAMESPACE::Status::Code::kMergeInProgress:
+      case MIZAR_NAMESPACE::Status::Code::kMergeInProgress:
         return 0x6;
-      case ROCKSDB_NAMESPACE::Status::Code::kIncomplete:
+      case MIZAR_NAMESPACE::Status::Code::kIncomplete:
         return 0x7;
-      case ROCKSDB_NAMESPACE::Status::Code::kShutdownInProgress:
+      case MIZAR_NAMESPACE::Status::Code::kShutdownInProgress:
         return 0x8;
-      case ROCKSDB_NAMESPACE::Status::Code::kTimedOut:
+      case MIZAR_NAMESPACE::Status::Code::kTimedOut:
         return 0x9;
-      case ROCKSDB_NAMESPACE::Status::Code::kAborted:
+      case MIZAR_NAMESPACE::Status::Code::kAborted:
         return 0xA;
-      case ROCKSDB_NAMESPACE::Status::Code::kBusy:
+      case MIZAR_NAMESPACE::Status::Code::kBusy:
         return 0xB;
-      case ROCKSDB_NAMESPACE::Status::Code::kExpired:
+      case MIZAR_NAMESPACE::Status::Code::kExpired:
         return 0xC;
-      case ROCKSDB_NAMESPACE::Status::Code::kTryAgain:
+      case MIZAR_NAMESPACE::Status::Code::kTryAgain:
         return 0xD;
-      case ROCKSDB_NAMESPACE::Status::Code::kColumnFamilyDropped:
+      case MIZAR_NAMESPACE::Status::Code::kColumnFamilyDropped:
         return 0xE;
       default:
         return 0x7F;  // undefined
@@ -485,132 +485,132 @@ class StatusJni
   }
 
   // Returns the equivalent org.rocksdb.Status.SubCode for the provided
-  // C++ ROCKSDB_NAMESPACE::Status::SubCode enum
+  // C++ MIZAR_NAMESPACE::Status::SubCode enum
   static jbyte toJavaStatusSubCode(
-      const ROCKSDB_NAMESPACE::Status::SubCode& subCode) {
+      const MIZAR_NAMESPACE::Status::SubCode& subCode) {
     switch (subCode) {
-      case ROCKSDB_NAMESPACE::Status::SubCode::kNone:
+      case MIZAR_NAMESPACE::Status::SubCode::kNone:
         return 0x0;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kMutexTimeout:
+      case MIZAR_NAMESPACE::Status::SubCode::kMutexTimeout:
         return 0x1;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kLockTimeout:
+      case MIZAR_NAMESPACE::Status::SubCode::kLockTimeout:
         return 0x2;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kLockLimit:
+      case MIZAR_NAMESPACE::Status::SubCode::kLockLimit:
         return 0x3;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kNoSpace:
+      case MIZAR_NAMESPACE::Status::SubCode::kNoSpace:
         return 0x4;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kDeadlock:
+      case MIZAR_NAMESPACE::Status::SubCode::kDeadlock:
         return 0x5;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kStaleFile:
+      case MIZAR_NAMESPACE::Status::SubCode::kStaleFile:
         return 0x6;
-      case ROCKSDB_NAMESPACE::Status::SubCode::kMemoryLimit:
+      case MIZAR_NAMESPACE::Status::SubCode::kMemoryLimit:
         return 0x7;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
       const jbyte jcode_value, const jbyte jsub_code_value) {
-    std::unique_ptr<ROCKSDB_NAMESPACE::Status> status;
+    std::unique_ptr<MIZAR_NAMESPACE::Status> status;
     switch (jcode_value) {
       case 0x0:
         //Ok
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::OK()));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::OK()));
         break;
       case 0x1:
         //NotFound
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::NotFound(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::NotFound(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x2:
         //Corruption
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Corruption(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Corruption(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x3:
         //NotSupported
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(
-                ROCKSDB_NAMESPACE::Status::NotSupported(
-                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(
+                MIZAR_NAMESPACE::Status::NotSupported(
+                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x4:
         //InvalidArgument
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(
-                ROCKSDB_NAMESPACE::Status::InvalidArgument(
-                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(
+                MIZAR_NAMESPACE::Status::InvalidArgument(
+                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x5:
         //IOError
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::IOError(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::IOError(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x6:
         //MergeInProgress
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(
-                ROCKSDB_NAMESPACE::Status::MergeInProgress(
-                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(
+                MIZAR_NAMESPACE::Status::MergeInProgress(
+                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x7:
         //Incomplete
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Incomplete(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Incomplete(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x8:
         //ShutdownInProgress
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(
-                ROCKSDB_NAMESPACE::Status::ShutdownInProgress(
-                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(
+                MIZAR_NAMESPACE::Status::ShutdownInProgress(
+                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x9:
         //TimedOut
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::TimedOut(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::TimedOut(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xA:
         //Aborted
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Aborted(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Aborted(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xB:
         //Busy
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Busy(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Busy(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xC:
         //Expired
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Expired(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Expired(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xD:
         //TryAgain
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::TryAgain(
-                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::TryAgain(
+                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xE:
         // ColumnFamilyDropped
-        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-            new ROCKSDB_NAMESPACE::Status(
-                ROCKSDB_NAMESPACE::Status::ColumnFamilyDropped(
-                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
+            new MIZAR_NAMESPACE::Status(
+                MIZAR_NAMESPACE::Status::ColumnFamilyDropped(
+                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x7F:
@@ -620,9 +620,9 @@ class StatusJni
     return status;
   }
 
-  // Returns the equivalent ROCKSDB_NAMESPACE::Status for the Java
+  // Returns the equivalent MIZAR_NAMESPACE::Status for the Java
   // org.rocksdb.Status
-  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
       JNIEnv* env, const jobject jstatus) {
     jmethodID mid_code = getCodeMethod(env);
     if (mid_code == nullptr) {
@@ -635,7 +635,7 @@ class StatusJni
       return nullptr;
     }
 
-    jmethodID mid_code_value = ROCKSDB_NAMESPACE::CodeJni::getValueMethod(env);
+    jmethodID mid_code_value = MIZAR_NAMESPACE::CodeJni::getValueMethod(env);
     if (mid_code_value == nullptr) {
       // exception occurred
       return nullptr;
@@ -666,7 +666,7 @@ class StatusJni
     jbyte jsub_code_value = 0x0;  // None
     if (jsubCode != nullptr) {
       jmethodID mid_subCode_value =
-          ROCKSDB_NAMESPACE::SubCodeJni::getValueMethod(env);
+          MIZAR_NAMESPACE::SubCodeJni::getValueMethod(env);
       if (mid_subCode_value == nullptr) {
         // exception occurred
         return nullptr;
@@ -698,7 +698,7 @@ class StatusJni
       return nullptr;
     }
 
-    std::unique_ptr<ROCKSDB_NAMESPACE::Status> status =
+    std::unique_ptr<MIZAR_NAMESPACE::Status> status =
         toCppStatus(jcode_value, jsub_code_value);
 
     // delete all local refs
@@ -756,7 +756,7 @@ class RocksDBExceptionJni :
    * @return true if an exception was thrown, false otherwise
    */
   static bool ThrowNew(JNIEnv* env, std::unique_ptr<Status>& s) {
-    return ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, *(s.get()));
+    return MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, *(s.get()));
   }
 
   /**
@@ -956,7 +956,7 @@ class RocksDBExceptionJni :
     return mid;
   }
 
-  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
       JNIEnv* env, jthrowable jrocksdb_exception) {
     if(!env->IsInstanceOf(jrocksdb_exception, getJClass(env))) {
       // not an instance of RocksDBException
@@ -980,7 +980,7 @@ class RocksDBExceptionJni :
       return nullptr;   // no status available
     }
 
-    return ROCKSDB_NAMESPACE::StatusJni::toCppStatus(env, jstatus);
+    return MIZAR_NAMESPACE::StatusJni::toCppStatus(env, jstatus);
   }
 };
 
@@ -1642,7 +1642,7 @@ class JniUtil {
      */
     static std::vector<std::string> copyStrings(JNIEnv* env,
         jobjectArray jss, jboolean* has_exception) {
-      return ROCKSDB_NAMESPACE::JniUtil::copyStrings(
+      return MIZAR_NAMESPACE::JniUtil::copyStrings(
           env, jss, env->GetArrayLength(jss), has_exception);
     }
 
@@ -1969,7 +1969,7 @@ class JniUtil {
 
       for (jsize i = 0; i < len; i++) {
         const std::string *str = &((*strings)[i]);
-        jstring js = ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, str);
+        jstring js = MIZAR_NAMESPACE::JniUtil::toJavaString(env, str);
         if (js == nullptr) {
           env->DeleteLocalRef(jstrings);
           return nullptr;
@@ -2031,7 +2031,7 @@ class JniUtil {
       // OutOfMemoryError("Requested array size exceeds VM limit") coming from VM
       static const size_t MAX_JARRAY_SIZE = (static_cast<size_t>(1)) << 31;
       if(size > MAX_JARRAY_SIZE) {
-        ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
             env, "Requested array size exceeds VM limit");
         return nullptr;
       }
@@ -2055,7 +2055,7 @@ class JniUtil {
     }
 
     /**
-     * Copies bytes from a ROCKSDB_NAMESPACE::Slice to a jByteArray
+     * Copies bytes from a MIZAR_NAMESPACE::Slice to a jByteArray
      *
      * @param env A pointer to the java environment
      * @param bytes The bytes to copy
@@ -2076,9 +2076,9 @@ class JniUtil {
      *
      * TODO(AR) could be used for RocksDB->Put etc.
      */
-    static std::unique_ptr<ROCKSDB_NAMESPACE::Status> kv_op(
-        std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice,
-                                                ROCKSDB_NAMESPACE::Slice)>
+    static std::unique_ptr<MIZAR_NAMESPACE::Status> kv_op(
+        std::function<MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Slice,
+                                                MIZAR_NAMESPACE::Slice)>
             op,
         JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len,
         jbyteArray jvalue, jint jvalue_len) {
@@ -2097,9 +2097,9 @@ class JniUtil {
         return nullptr;
       }
 
-      ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
+      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
                                          jkey_len);
-      ROCKSDB_NAMESPACE::Slice value_slice(reinterpret_cast<char*>(value),
+      MIZAR_NAMESPACE::Slice value_slice(reinterpret_cast<char*>(value),
                                            jvalue_len);
 
       auto status = op(key_slice, value_slice);
@@ -2111,8 +2111,8 @@ class JniUtil {
         env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
       }
 
-      return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-          new ROCKSDB_NAMESPACE::Status(status));
+      return std::unique_ptr<MIZAR_NAMESPACE::Status>(
+          new MIZAR_NAMESPACE::Status(status));
     }
 
     /*
@@ -2121,8 +2121,8 @@ class JniUtil {
      *
      * TODO(AR) could be used for RocksDB->Delete etc.
      */
-    static std::unique_ptr<ROCKSDB_NAMESPACE::Status> k_op(
-        std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice)> op,
+    static std::unique_ptr<MIZAR_NAMESPACE::Status> k_op(
+        std::function<MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Slice)> op,
         JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len) {
       jbyte* key = env->GetByteArrayElements(jkey, nullptr);
       if(env->ExceptionCheck()) {
@@ -2130,7 +2130,7 @@ class JniUtil {
         return nullptr;
       }
 
-      ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
+      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
                                          jkey_len);
 
       auto status = op(key_slice);
@@ -2139,16 +2139,16 @@ class JniUtil {
         env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
       }
 
-      return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-          new ROCKSDB_NAMESPACE::Status(status));
+      return std::unique_ptr<MIZAR_NAMESPACE::Status>(
+          new MIZAR_NAMESPACE::Status(status));
     }
 
     /*
      * Helper for operations on a value
      * for example WriteBatchWithIndex->GetFromBatch
      */
-    static jbyteArray v_op(std::function<ROCKSDB_NAMESPACE::Status(
-                               ROCKSDB_NAMESPACE::Slice, std::string*)>
+    static jbyteArray v_op(std::function<MIZAR_NAMESPACE::Status(
+                               MIZAR_NAMESPACE::Slice, std::string*)>
                                op,
                            JNIEnv* env, jbyteArray jkey, jint jkey_len) {
       jbyte* key = env->GetByteArrayElements(jkey, nullptr);
@@ -2157,11 +2157,11 @@ class JniUtil {
         return nullptr;
       }
 
-      ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
+      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
                                          jkey_len);
 
       std::string value;
-      ROCKSDB_NAMESPACE::Status s = op(key_slice, &value);
+      MIZAR_NAMESPACE::Status s = op(key_slice, &value);
 
       if(key != nullptr) {
         env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
@@ -2192,7 +2192,7 @@ class JniUtil {
         return jret_value;
       }
 
-      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, s);
+      MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, s);
       return nullptr;
     }
 
@@ -2271,11 +2271,11 @@ class JniUtil {
      * Helper for operations on a key and value
      * for example WriteBatch->Put
      *
-     * TODO(AR) could be extended to cover returning ROCKSDB_NAMESPACE::Status
+     * TODO(AR) could be extended to cover returning MIZAR_NAMESPACE::Status
      * from `op` and used for RocksDB->Put etc.
      */
-    static void kv_op_direct(std::function<void(ROCKSDB_NAMESPACE::Slice&,
-                                                ROCKSDB_NAMESPACE::Slice&)>
+    static void kv_op_direct(std::function<void(MIZAR_NAMESPACE::Slice&,
+                                                MIZAR_NAMESPACE::Slice&)>
                                  op,
                              JNIEnv* env, jobject jkey, jint jkey_off,
                              jint jkey_len, jobject jval, jint jval_off,
@@ -2283,7 +2283,7 @@ class JniUtil {
       char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
       if (key == nullptr ||
           env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
-        ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
             env, "Invalid key argument");
         return;
       }
@@ -2291,7 +2291,7 @@ class JniUtil {
       char* value = reinterpret_cast<char*>(env->GetDirectBufferAddress(jval));
       if (value == nullptr ||
           env->GetDirectBufferCapacity(jval) < (jval_off + jval_len)) {
-        ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
             env, "Invalid value argument");
         return;
       }
@@ -2299,8 +2299,8 @@ class JniUtil {
       key += jkey_off;
       value += jval_off;
 
-      ROCKSDB_NAMESPACE::Slice key_slice(key, jkey_len);
-      ROCKSDB_NAMESPACE::Slice value_slice(value, jval_len);
+      MIZAR_NAMESPACE::Slice key_slice(key, jkey_len);
+      MIZAR_NAMESPACE::Slice value_slice(value, jval_len);
 
       op(key_slice, value_slice);
     }
@@ -2309,23 +2309,23 @@ class JniUtil {
      * Helper for operations on a key and value
      * for example WriteBatch->Delete
      *
-     * TODO(AR) could be extended to cover returning ROCKSDB_NAMESPACE::Status
+     * TODO(AR) could be extended to cover returning MIZAR_NAMESPACE::Status
      * from `op` and used for RocksDB->Delete etc.
      */
-    static void k_op_direct(std::function<void(ROCKSDB_NAMESPACE::Slice&)> op,
+    static void k_op_direct(std::function<void(MIZAR_NAMESPACE::Slice&)> op,
                             JNIEnv* env, jobject jkey, jint jkey_off,
                             jint jkey_len) {
       char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
       if (key == nullptr ||
           env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
-        ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
             env, "Invalid key argument");
         return;
       }
 
       key += jkey_off;
 
-      ROCKSDB_NAMESPACE::Slice key_slice(key, jkey_len);
+      MIZAR_NAMESPACE::Slice key_slice(key, jkey_len);
 
       return op(key_slice);
     }
@@ -2337,7 +2337,7 @@ class JniUtil {
           reinterpret_cast<char*>(env->GetDirectBufferAddress(jtarget));
       if (target == nullptr ||
           env->GetDirectBufferCapacity(jtarget) < (jtarget_off + jtarget_len)) {
-        ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
             env, "Invalid target argument");
         return 0;
       }
@@ -2451,7 +2451,7 @@ class HashMapJni : public JavaClass {
   template<class iterator_type, typename K, typename V>
   static bool putAll(JNIEnv* env, const jobject jhash_map, iterator_type iterator, iterator_type end, const FnMapKV<K, V, jobject, jobject> &fn_map_kv) {
     const jmethodID jmid_put =
-        ROCKSDB_NAMESPACE::MapJni::getMapPutMethodId(env);
+        MIZAR_NAMESPACE::MapJni::getMapPutMethodId(env);
     if (jmid_put == nullptr) {
       return false;
     }
@@ -2497,18 +2497,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
+    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const std::string, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const std::string>& kv) {
-              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jstring jvalue = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+              jstring jvalue = MIZAR_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.second), true);
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2553,18 +2553,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
+    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const uint32_t, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const uint32_t>& kv) {
-              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jobject jvalue = ROCKSDB_NAMESPACE::IntegerJni::valueOf(
+              jobject jvalue = MIZAR_NAMESPACE::IntegerJni::valueOf(
                   env, static_cast<jint>(kv.second));
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2604,18 +2604,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
+    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const uint64_t, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const uint64_t>& kv) {
-              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jobject jvalue = ROCKSDB_NAMESPACE::LongJni::valueOf(
+              jobject jvalue = MIZAR_NAMESPACE::LongJni::valueOf(
                   env, static_cast<jlong>(kv.second));
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2655,17 +2655,17 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<const uint32_t, const uint64_t,
+    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<const uint32_t, const uint64_t,
                                                  jobject, jobject>
         fn_map_kv = [env](const std::pair<const uint32_t, const uint64_t>& kv) {
-          jobject jkey = ROCKSDB_NAMESPACE::IntegerJni::valueOf(
+          jobject jkey = MIZAR_NAMESPACE::IntegerJni::valueOf(
               env, static_cast<jint>(kv.first));
           if (env->ExceptionCheck()) {
             // an error occurred
             return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
           }
 
-          jobject jvalue = ROCKSDB_NAMESPACE::LongJni::valueOf(
+          jobject jvalue = MIZAR_NAMESPACE::LongJni::valueOf(
               env, static_cast<jlong>(kv.second));
           if (env->ExceptionCheck()) {
             // an error occurred
@@ -2689,7 +2689,7 @@ class HashMapJni : public JavaClass {
 
 // The portal class for org.rocksdb.RocksDB
 class RocksDBJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::DB*, RocksDBJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::DB*, RocksDBJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.RocksDB
@@ -2707,7 +2707,7 @@ class RocksDBJni
 
 // The portal class for org.rocksdb.Options
 class OptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Options*, OptionsJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::Options*, OptionsJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Options
@@ -2725,7 +2725,7 @@ class OptionsJni
 
 // The portal class for org.rocksdb.DBOptions
 class DBOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::DBOptions*, DBOptionsJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::DBOptions*, DBOptionsJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.DBOptions
@@ -2743,7 +2743,7 @@ class DBOptionsJni
 
 // The portal class for org.rocksdb.ColumnFamilyOptions
 class ColumnFamilyOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ColumnFamilyOptions*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::ColumnFamilyOptions*,
                                 ColumnFamilyOptionsJni> {
  public:
   /**
@@ -2762,17 +2762,17 @@ class ColumnFamilyOptionsJni
 
   /**
    * Create a new Java org.rocksdb.ColumnFamilyOptions object with the same
-   * properties as the provided C++ ROCKSDB_NAMESPACE::ColumnFamilyOptions
+   * properties as the provided C++ MIZAR_NAMESPACE::ColumnFamilyOptions
    * object
    *
    * @param env A pointer to the Java environment
-   * @param cfoptions A pointer to ROCKSDB_NAMESPACE::ColumnFamilyOptions object
+   * @param cfoptions A pointer to MIZAR_NAMESPACE::ColumnFamilyOptions object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyOptions object, or
    * nullptr if an an exception occurs
    */
   static jobject construct(JNIEnv* env, const ColumnFamilyOptions* cfoptions) {
-    auto* cfo = new ROCKSDB_NAMESPACE::ColumnFamilyOptions(*cfoptions);
+    auto* cfo = new MIZAR_NAMESPACE::ColumnFamilyOptions(*cfoptions);
     jclass jclazz = getJClass(env);
     if(jclazz == nullptr) {
       // exception occurred accessing class
@@ -2796,7 +2796,7 @@ class ColumnFamilyOptionsJni
 
 // The portal class for org.rocksdb.WriteOptions
 class WriteOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteOptions*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteOptions*,
                                 WriteOptionsJni> {
  public:
   /**
@@ -2815,7 +2815,7 @@ class WriteOptionsJni
 
 // The portal class for org.rocksdb.ReadOptions
 class ReadOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ReadOptions*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::ReadOptions*,
                                 ReadOptionsJni> {
  public:
   /**
@@ -2834,7 +2834,7 @@ class ReadOptionsJni
 
 // The portal class for org.rocksdb.WriteBatch
 class WriteBatchJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteBatch*, WriteBatchJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteBatch*, WriteBatchJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.WriteBatch
@@ -2853,7 +2853,7 @@ class WriteBatchJni
    * Create a new Java org.rocksdb.WriteBatch object
    *
    * @param env A pointer to the Java environment
-   * @param wb A pointer to ROCKSDB_NAMESPACE::WriteBatch object
+   * @param wb A pointer to MIZAR_NAMESPACE::WriteBatch object
    *
    * @return A reference to a Java org.rocksdb.WriteBatch object, or
    * nullptr if an an exception occurs
@@ -2883,7 +2883,7 @@ class WriteBatchJni
 // The portal class for org.rocksdb.WriteBatch.Handler
 class WriteBatchHandlerJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::WriteBatchHandlerJniCallback*,
+          const MIZAR_NAMESPACE::WriteBatchHandlerJniCallback*,
           WriteBatchHandlerJni> {
  public:
   /**
@@ -3321,7 +3321,7 @@ class WriteBatchSavePointJni : public JavaClass {
    * Create a new Java org.rocksdb.WriteBatch.SavePoint object
    *
    * @param env A pointer to the Java environment
-   * @param savePoint A pointer to ROCKSDB_NAMESPACE::WriteBatch::SavePoint
+   * @param savePoint A pointer to MIZAR_NAMESPACE::WriteBatch::SavePoint
    * object
    *
    * @return A reference to a Java org.rocksdb.WriteBatch.SavePoint object, or
@@ -3354,7 +3354,7 @@ class WriteBatchSavePointJni : public JavaClass {
 
 // The portal class for org.rocksdb.WriteBatchWithIndex
 class WriteBatchWithIndexJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteBatchWithIndex*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteBatchWithIndex*,
                                 WriteBatchWithIndexJni> {
  public:
   /**
@@ -3411,7 +3411,7 @@ class HistogramDataJni : public JavaClass {
 
 // The portal class for org.rocksdb.BackupableDBOptions
 class BackupableDBOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::BackupableDBOptions*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::BackupableDBOptions*,
                                 BackupableDBOptionsJni> {
  public:
   /**
@@ -3431,7 +3431,7 @@ class BackupableDBOptionsJni
 
 // The portal class for org.rocksdb.BackupEngine
 class BackupEngineJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::BackupEngine*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::BackupEngine*,
                                 BackupEngineJni> {
  public:
   /**
@@ -3450,7 +3450,7 @@ class BackupEngineJni
 
 // The portal class for org.rocksdb.RocksIterator
 class IteratorJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Iterator*, IteratorJni> {
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::Iterator*, IteratorJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.RocksIterator
@@ -3469,7 +3469,7 @@ class IteratorJni
 // The portal class for org.rocksdb.Filter
 class FilterJni
     : public RocksDBNativeClass<
-          std::shared_ptr<ROCKSDB_NAMESPACE::FilterPolicy>*, FilterJni> {
+          std::shared_ptr<MIZAR_NAMESPACE::FilterPolicy>*, FilterJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Filter
@@ -3487,11 +3487,11 @@ class FilterJni
 
 // The portal class for org.rocksdb.ColumnFamilyHandle
 class ColumnFamilyHandleJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ColumnFamilyHandle*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::ColumnFamilyHandle*,
                                 ColumnFamilyHandleJni> {
  public:
   static jobject fromCppColumnFamilyHandle(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::ColumnFamilyHandle* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::ColumnFamilyHandle* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -3520,7 +3520,7 @@ class ColumnFamilyHandleJni
 
 // The portal class for org.rocksdb.FlushOptions
 class FlushOptionsJni
-    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::FlushOptions*,
+    : public RocksDBNativeClass<MIZAR_NAMESPACE::FlushOptions*,
                                 FlushOptionsJni> {
  public:
   /**
@@ -3540,7 +3540,7 @@ class FlushOptionsJni
 // The portal class for org.rocksdb.ComparatorOptions
 class ComparatorOptionsJni
     : public RocksDBNativeClass<
-          ROCKSDB_NAMESPACE::ComparatorJniCallbackOptions*,
+          MIZAR_NAMESPACE::ComparatorJniCallbackOptions*,
           ComparatorOptionsJni> {
  public:
   /**
@@ -3560,7 +3560,7 @@ class ComparatorOptionsJni
 // The portal class for org.rocksdb.AbstractCompactionFilterFactory
 class AbstractCompactionFilterFactoryJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::CompactionFilterFactoryJniCallback*,
+          const MIZAR_NAMESPACE::CompactionFilterFactoryJniCallback*,
           AbstractCompactionFilterFactoryJni> {
  public:
   /**
@@ -3624,7 +3624,7 @@ class AbstractCompactionFilterFactoryJni
 // The portal class for org.rocksdb.AbstractTransactionNotifier
 class AbstractTransactionNotifierJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::TransactionNotifierJniCallback*,
+          const MIZAR_NAMESPACE::TransactionNotifierJniCallback*,
           AbstractTransactionNotifierJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
@@ -3718,7 +3718,7 @@ class AbstractComparatorJniBridge : public JavaClass {
 
 // The portal class for org.rocksdb.AbstractComparator
 class AbstractComparatorJni
-    : public RocksDBNativeClass<const ROCKSDB_NAMESPACE::ComparatorJniCallback*,
+    : public RocksDBNativeClass<const MIZAR_NAMESPACE::ComparatorJniCallback*,
                                 AbstractComparatorJni> {
  public:
   /**
@@ -3759,7 +3759,7 @@ class AbstractComparatorJni
 
 // The portal class for org.rocksdb.AbstractSlice
 class AbstractSliceJni
-    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3778,7 +3778,7 @@ class AbstractSliceJni
 
 // The portal class for org.rocksdb.Slice
 class SliceJni
-    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3826,7 +3826,7 @@ class SliceJni
 
 // The portal class for org.rocksdb.DirectSlice
 class DirectSliceJni
-    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3952,20 +3952,20 @@ class BackupInfoListJni {
   static jobject getBackupInfo(JNIEnv* env,
       std::vector<BackupInfo> backup_infos) {
     jclass jarray_list_clazz =
-        ROCKSDB_NAMESPACE::ListJni::getArrayListClass(env);
+        MIZAR_NAMESPACE::ListJni::getArrayListClass(env);
     if(jarray_list_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jmethodID cstr_mid =
-        ROCKSDB_NAMESPACE::ListJni::getArrayListConstructorMethodId(env);
+        MIZAR_NAMESPACE::ListJni::getArrayListConstructorMethodId(env);
     if(cstr_mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
 
-    jmethodID add_mid = ROCKSDB_NAMESPACE::ListJni::getListAddMethodId(env);
+    jmethodID add_mid = MIZAR_NAMESPACE::ListJni::getListAddMethodId(env);
     if(add_mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
@@ -3984,7 +3984,7 @@ class BackupInfoListJni {
     for (auto it = backup_infos.begin(); it != end; ++it) {
       auto backup_info = *it;
 
-      jobject obj = ROCKSDB_NAMESPACE::BackupInfoJni::construct0(
+      jobject obj = MIZAR_NAMESPACE::BackupInfoJni::construct0(
           env, backup_info.backup_id, backup_info.timestamp, backup_info.size,
           backup_info.number_files, backup_info.app_metadata);
       if(env->ExceptionCheck()) {
@@ -4130,22 +4130,22 @@ class WriteTypeJni : public JavaClass {
   }
 
   // Returns the equivalent org.rocksdb.WBWIRocksIterator.WriteType for the
-  // provided C++ ROCKSDB_NAMESPACE::WriteType enum
-  static jbyte toJavaWriteType(const ROCKSDB_NAMESPACE::WriteType& writeType) {
+  // provided C++ MIZAR_NAMESPACE::WriteType enum
+  static jbyte toJavaWriteType(const MIZAR_NAMESPACE::WriteType& writeType) {
     switch (writeType) {
-      case ROCKSDB_NAMESPACE::WriteType::kPutRecord:
+      case MIZAR_NAMESPACE::WriteType::kPutRecord:
         return 0x0;
-      case ROCKSDB_NAMESPACE::WriteType::kMergeRecord:
+      case MIZAR_NAMESPACE::WriteType::kMergeRecord:
         return 0x1;
-      case ROCKSDB_NAMESPACE::WriteType::kDeleteRecord:
+      case MIZAR_NAMESPACE::WriteType::kDeleteRecord:
         return 0x2;
-      case ROCKSDB_NAMESPACE::WriteType::kSingleDeleteRecord:
+      case MIZAR_NAMESPACE::WriteType::kSingleDeleteRecord:
         return 0x3;
-      case ROCKSDB_NAMESPACE::WriteType::kDeleteRangeRecord:
+      case MIZAR_NAMESPACE::WriteType::kDeleteRangeRecord:
         return 0x4;
-      case ROCKSDB_NAMESPACE::WriteType::kLogDataRecord:
+      case MIZAR_NAMESPACE::WriteType::kLogDataRecord:
         return 0x5;
-      case ROCKSDB_NAMESPACE::WriteType::kXIDRecord:
+      case MIZAR_NAMESPACE::WriteType::kXIDRecord:
         return 0x6;
       default:
         return 0x7F;  // undefined
@@ -4338,7 +4338,7 @@ class InfoLogLevelJni : public JavaClass {
 // The portal class for org.rocksdb.Logger
 class LoggerJni
     : public RocksDBNativeClass<
-          std::shared_ptr<ROCKSDB_NAMESPACE::LoggerJniCallback>*, LoggerJni> {
+          std::shared_ptr<MIZAR_NAMESPACE::LoggerJniCallback>*, LoggerJni> {
  public:
   /**
    * Get the Java Class org/rocksdb/Logger
@@ -4395,18 +4395,18 @@ class BatchResultJni : public JavaClass {
 
   /**
    * Create a new Java org.rocksdb.TransactionLogIterator.BatchResult object
-   * with the same properties as the provided C++ ROCKSDB_NAMESPACE::BatchResult
+   * with the same properties as the provided C++ MIZAR_NAMESPACE::BatchResult
    * object
    *
    * @param env A pointer to the Java environment
-   * @param batch_result The ROCKSDB_NAMESPACE::BatchResult object
+   * @param batch_result The MIZAR_NAMESPACE::BatchResult object
    *
    * @return A reference to a Java
    *     org.rocksdb.TransactionLogIterator.BatchResult object,
    *     or nullptr if an an exception occurs
    */
   static jobject construct(JNIEnv* env,
-                           ROCKSDB_NAMESPACE::BatchResult& batch_result) {
+                           MIZAR_NAMESPACE::BatchResult& batch_result) {
     jclass jclazz = getJClass(env);
     if(jclazz == nullptr) {
       // exception occurred accessing class
@@ -4436,42 +4436,42 @@ class BatchResultJni : public JavaClass {
 class BottommostLevelCompactionJni {
  public:
   // Returns the equivalent org.rocksdb.BottommostLevelCompaction for the
-  // provided C++ ROCKSDB_NAMESPACE::BottommostLevelCompaction enum
+  // provided C++ MIZAR_NAMESPACE::BottommostLevelCompaction enum
   static jint toJavaBottommostLevelCompaction(
-      const ROCKSDB_NAMESPACE::BottommostLevelCompaction&
+      const MIZAR_NAMESPACE::BottommostLevelCompaction&
           bottommost_level_compaction) {
     switch(bottommost_level_compaction) {
-      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kSkip:
+      case MIZAR_NAMESPACE::BottommostLevelCompaction::kSkip:
         return 0x0;
-      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::
+      case MIZAR_NAMESPACE::BottommostLevelCompaction::
           kIfHaveCompactionFilter:
         return 0x1;
-      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForce:
+      case MIZAR_NAMESPACE::BottommostLevelCompaction::kForce:
         return 0x2;
-      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForceOptimized:
+      case MIZAR_NAMESPACE::BottommostLevelCompaction::kForceOptimized:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::BottommostLevelCompaction
+  // Returns the equivalent C++ MIZAR_NAMESPACE::BottommostLevelCompaction
   // enum for the provided Java org.rocksdb.BottommostLevelCompaction
-  static ROCKSDB_NAMESPACE::BottommostLevelCompaction
+  static MIZAR_NAMESPACE::BottommostLevelCompaction
   toCppBottommostLevelCompaction(jint bottommost_level_compaction) {
     switch(bottommost_level_compaction) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kSkip;
+        return MIZAR_NAMESPACE::BottommostLevelCompaction::kSkip;
       case 0x1:
-        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::
+        return MIZAR_NAMESPACE::BottommostLevelCompaction::
             kIfHaveCompactionFilter;
       case 0x2:
-        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForce;
+        return MIZAR_NAMESPACE::BottommostLevelCompaction::kForce;
       case 0x3:
-        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForceOptimized;
+        return MIZAR_NAMESPACE::BottommostLevelCompaction::kForceOptimized;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::
+        return MIZAR_NAMESPACE::BottommostLevelCompaction::
             kIfHaveCompactionFilter;
     }
   }
@@ -4481,14 +4481,14 @@ class BottommostLevelCompactionJni {
 class CompactionStopStyleJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionStopStyle for the provided
-  // C++ ROCKSDB_NAMESPACE::CompactionStopStyle enum
+  // C++ MIZAR_NAMESPACE::CompactionStopStyle enum
   static jbyte toJavaCompactionStopStyle(
-      const ROCKSDB_NAMESPACE::CompactionStopStyle& compaction_stop_style) {
+      const MIZAR_NAMESPACE::CompactionStopStyle& compaction_stop_style) {
     switch(compaction_stop_style) {
-      case ROCKSDB_NAMESPACE::CompactionStopStyle::
+      case MIZAR_NAMESPACE::CompactionStopStyle::
           kCompactionStopStyleSimilarSize:
         return 0x0;
-      case ROCKSDB_NAMESPACE::CompactionStopStyle::
+      case MIZAR_NAMESPACE::CompactionStopStyle::
           kCompactionStopStyleTotalSize:
         return 0x1;
       default:
@@ -4496,20 +4496,20 @@ class CompactionStopStyleJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionStopStyle enum for
+  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionStopStyle enum for
   // the provided Java org.rocksdb.CompactionStopStyle
-  static ROCKSDB_NAMESPACE::CompactionStopStyle toCppCompactionStopStyle(
+  static MIZAR_NAMESPACE::CompactionStopStyle toCppCompactionStopStyle(
       jbyte jcompaction_stop_style) {
     switch(jcompaction_stop_style) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::CompactionStopStyle::
+        return MIZAR_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleSimilarSize;
       case 0x1:
-        return ROCKSDB_NAMESPACE::CompactionStopStyle::
+        return MIZAR_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleTotalSize;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::CompactionStopStyle::
+        return MIZAR_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleSimilarSize;
     }
   }
@@ -4519,56 +4519,56 @@ class CompactionStopStyleJni {
 class CompressionTypeJni {
  public:
   // Returns the equivalent org.rocksdb.CompressionType for the provided
-  // C++ ROCKSDB_NAMESPACE::CompressionType enum
+  // C++ MIZAR_NAMESPACE::CompressionType enum
   static jbyte toJavaCompressionType(
-      const ROCKSDB_NAMESPACE::CompressionType& compression_type) {
+      const MIZAR_NAMESPACE::CompressionType& compression_type) {
     switch(compression_type) {
-      case ROCKSDB_NAMESPACE::CompressionType::kNoCompression:
+      case MIZAR_NAMESPACE::CompressionType::kNoCompression:
         return 0x0;
-      case ROCKSDB_NAMESPACE::CompressionType::kSnappyCompression:
+      case MIZAR_NAMESPACE::CompressionType::kSnappyCompression:
         return 0x1;
-      case ROCKSDB_NAMESPACE::CompressionType::kZlibCompression:
+      case MIZAR_NAMESPACE::CompressionType::kZlibCompression:
         return 0x2;
-      case ROCKSDB_NAMESPACE::CompressionType::kBZip2Compression:
+      case MIZAR_NAMESPACE::CompressionType::kBZip2Compression:
         return 0x3;
-      case ROCKSDB_NAMESPACE::CompressionType::kLZ4Compression:
+      case MIZAR_NAMESPACE::CompressionType::kLZ4Compression:
         return 0x4;
-      case ROCKSDB_NAMESPACE::CompressionType::kLZ4HCCompression:
+      case MIZAR_NAMESPACE::CompressionType::kLZ4HCCompression:
         return 0x5;
-      case ROCKSDB_NAMESPACE::CompressionType::kXpressCompression:
+      case MIZAR_NAMESPACE::CompressionType::kXpressCompression:
         return 0x6;
-      case ROCKSDB_NAMESPACE::CompressionType::kZSTD:
+      case MIZAR_NAMESPACE::CompressionType::kZSTD:
         return 0x7;
-      case ROCKSDB_NAMESPACE::CompressionType::kDisableCompressionOption:
+      case MIZAR_NAMESPACE::CompressionType::kDisableCompressionOption:
       default:
         return 0x7F;
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompressionType enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::CompressionType enum for the
   // provided Java org.rocksdb.CompressionType
-  static ROCKSDB_NAMESPACE::CompressionType toCppCompressionType(
+  static MIZAR_NAMESPACE::CompressionType toCppCompressionType(
       jbyte jcompression_type) {
     switch(jcompression_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::CompressionType::kNoCompression;
+        return MIZAR_NAMESPACE::CompressionType::kNoCompression;
       case 0x1:
-        return ROCKSDB_NAMESPACE::CompressionType::kSnappyCompression;
+        return MIZAR_NAMESPACE::CompressionType::kSnappyCompression;
       case 0x2:
-        return ROCKSDB_NAMESPACE::CompressionType::kZlibCompression;
+        return MIZAR_NAMESPACE::CompressionType::kZlibCompression;
       case 0x3:
-        return ROCKSDB_NAMESPACE::CompressionType::kBZip2Compression;
+        return MIZAR_NAMESPACE::CompressionType::kBZip2Compression;
       case 0x4:
-        return ROCKSDB_NAMESPACE::CompressionType::kLZ4Compression;
+        return MIZAR_NAMESPACE::CompressionType::kLZ4Compression;
       case 0x5:
-        return ROCKSDB_NAMESPACE::CompressionType::kLZ4HCCompression;
+        return MIZAR_NAMESPACE::CompressionType::kLZ4HCCompression;
       case 0x6:
-        return ROCKSDB_NAMESPACE::CompressionType::kXpressCompression;
+        return MIZAR_NAMESPACE::CompressionType::kXpressCompression;
       case 0x7:
-        return ROCKSDB_NAMESPACE::CompressionType::kZSTD;
+        return MIZAR_NAMESPACE::CompressionType::kZSTD;
       case 0x7F:
       default:
-        return ROCKSDB_NAMESPACE::CompressionType::kDisableCompressionOption;
+        return MIZAR_NAMESPACE::CompressionType::kDisableCompressionOption;
     }
   }
 };
@@ -4577,39 +4577,39 @@ class CompressionTypeJni {
 class CompactionPriorityJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionPriority for the provided
-  // C++ ROCKSDB_NAMESPACE::CompactionPri enum
+  // C++ MIZAR_NAMESPACE::CompactionPri enum
   static jbyte toJavaCompactionPriority(
-      const ROCKSDB_NAMESPACE::CompactionPri& compaction_priority) {
+      const MIZAR_NAMESPACE::CompactionPri& compaction_priority) {
     switch(compaction_priority) {
-      case ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize:
+      case MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize:
         return 0x0;
-      case ROCKSDB_NAMESPACE::CompactionPri::kOldestLargestSeqFirst:
+      case MIZAR_NAMESPACE::CompactionPri::kOldestLargestSeqFirst:
         return 0x1;
-      case ROCKSDB_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst:
+      case MIZAR_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst:
         return 0x2;
-      case ROCKSDB_NAMESPACE::CompactionPri::kMinOverlappingRatio:
+      case MIZAR_NAMESPACE::CompactionPri::kMinOverlappingRatio:
         return 0x3;
       default:
         return 0x0;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionPri enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionPri enum for the
   // provided Java org.rocksdb.CompactionPriority
-  static ROCKSDB_NAMESPACE::CompactionPri toCppCompactionPriority(
+  static MIZAR_NAMESPACE::CompactionPri toCppCompactionPriority(
       jbyte jcompaction_priority) {
     switch(jcompaction_priority) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize;
+        return MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize;
       case 0x1:
-        return ROCKSDB_NAMESPACE::CompactionPri::kOldestLargestSeqFirst;
+        return MIZAR_NAMESPACE::CompactionPri::kOldestLargestSeqFirst;
       case 0x2:
-        return ROCKSDB_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst;
+        return MIZAR_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst;
       case 0x3:
-        return ROCKSDB_NAMESPACE::CompactionPri::kMinOverlappingRatio;
+        return MIZAR_NAMESPACE::CompactionPri::kMinOverlappingRatio;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize;
+        return MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize;
     }
   }
 };
@@ -4618,17 +4618,17 @@ class CompactionPriorityJni {
 class AccessHintJni {
  public:
   // Returns the equivalent org.rocksdb.AccessHint for the provided
-  // C++ ROCKSDB_NAMESPACE::DBOptions::AccessHint enum
+  // C++ MIZAR_NAMESPACE::DBOptions::AccessHint enum
   static jbyte toJavaAccessHint(
-      const ROCKSDB_NAMESPACE::DBOptions::AccessHint& access_hint) {
+      const MIZAR_NAMESPACE::DBOptions::AccessHint& access_hint) {
     switch(access_hint) {
-      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::NONE:
+      case MIZAR_NAMESPACE::DBOptions::AccessHint::NONE:
         return 0x0;
-      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL:
+      case MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL:
         return 0x1;
-      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL:
+      case MIZAR_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL:
         return 0x2;
-      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::WILLNEED:
+      case MIZAR_NAMESPACE::DBOptions::AccessHint::WILLNEED:
         return 0x3;
       default:
         // undefined/default
@@ -4636,22 +4636,22 @@ class AccessHintJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::DBOptions::AccessHint enum
+  // Returns the equivalent C++ MIZAR_NAMESPACE::DBOptions::AccessHint enum
   // for the provided Java org.rocksdb.AccessHint
-  static ROCKSDB_NAMESPACE::DBOptions::AccessHint toCppAccessHint(
+  static MIZAR_NAMESPACE::DBOptions::AccessHint toCppAccessHint(
       jbyte jaccess_hint) {
     switch(jaccess_hint) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NONE;
+        return MIZAR_NAMESPACE::DBOptions::AccessHint::NONE;
       case 0x1:
-        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL;
+        return MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL;
       case 0x2:
-        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL;
+        return MIZAR_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL;
       case 0x3:
-        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::WILLNEED;
+        return MIZAR_NAMESPACE::DBOptions::AccessHint::WILLNEED;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL;
+        return MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL;
     }
   }
 };
@@ -4660,17 +4660,17 @@ class AccessHintJni {
 class WALRecoveryModeJni {
  public:
   // Returns the equivalent org.rocksdb.WALRecoveryMode for the provided
-  // C++ ROCKSDB_NAMESPACE::WALRecoveryMode enum
+  // C++ MIZAR_NAMESPACE::WALRecoveryMode enum
   static jbyte toJavaWALRecoveryMode(
-      const ROCKSDB_NAMESPACE::WALRecoveryMode& wal_recovery_mode) {
+      const MIZAR_NAMESPACE::WALRecoveryMode& wal_recovery_mode) {
     switch(wal_recovery_mode) {
-      case ROCKSDB_NAMESPACE::WALRecoveryMode::kTolerateCorruptedTailRecords:
+      case MIZAR_NAMESPACE::WALRecoveryMode::kTolerateCorruptedTailRecords:
         return 0x0;
-      case ROCKSDB_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency:
+      case MIZAR_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency:
         return 0x1;
-      case ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery:
+      case MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery:
         return 0x2;
-      case ROCKSDB_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords:
+      case MIZAR_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords:
         return 0x3;
       default:
         // undefined/default
@@ -4678,23 +4678,23 @@ class WALRecoveryModeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::WALRecoveryMode enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::WALRecoveryMode enum for the
   // provided Java org.rocksdb.WALRecoveryMode
-  static ROCKSDB_NAMESPACE::WALRecoveryMode toCppWALRecoveryMode(
+  static MIZAR_NAMESPACE::WALRecoveryMode toCppWALRecoveryMode(
       jbyte jwal_recovery_mode) {
     switch(jwal_recovery_mode) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::WALRecoveryMode::
+        return MIZAR_NAMESPACE::WALRecoveryMode::
             kTolerateCorruptedTailRecords;
       case 0x1:
-        return ROCKSDB_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency;
+        return MIZAR_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency;
       case 0x2:
-        return ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
+        return MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
       case 0x3:
-        return ROCKSDB_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords;
+        return MIZAR_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
+        return MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
     }
   }
 };
@@ -4703,349 +4703,349 @@ class WALRecoveryModeJni {
 class TickerTypeJni {
  public:
   // Returns the equivalent org.rocksdb.TickerType for the provided
-  // C++ ROCKSDB_NAMESPACE::Tickers enum
-  static jbyte toJavaTickerType(const ROCKSDB_NAMESPACE::Tickers& tickers) {
+  // C++ MIZAR_NAMESPACE::Tickers enum
+  static jbyte toJavaTickerType(const MIZAR_NAMESPACE::Tickers& tickers) {
     switch(tickers) {
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS:
         return 0x0;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_HIT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_HIT:
         return 0x1;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD:
         return 0x2;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES:
         return 0x3;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS:
         return 0x4;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT:
         return 0x5;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD:
         return 0x6;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT:
         return 0x7;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT:
         return 0x8;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS:
         return 0x9;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT:
         return 0xA;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD:
         return 0xB;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT:
         return 0xC;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT:
         return 0xD;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS:
         return 0xE;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT:
         return 0xF;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD:
         return 0x10;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT:
         return 0x11;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ:
         return 0x12;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE:
         return 0x13;
-      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL:
+      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL:
         return 0x14;
-      case ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT:
+      case MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT:
         return 0x15;
-      case ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS:
+      case MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS:
         return 0x16;
-      case ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT:
+      case MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT:
         return 0x17;
-      case ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS:
+      case MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS:
         return 0x18;
-      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_HIT:
+      case MIZAR_NAMESPACE::Tickers::MEMTABLE_HIT:
         return 0x19;
-      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_MISS:
+      case MIZAR_NAMESPACE::Tickers::MEMTABLE_MISS:
         return 0x1A;
-      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L0:
+      case MIZAR_NAMESPACE::Tickers::GET_HIT_L0:
         return 0x1B;
-      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L1:
+      case MIZAR_NAMESPACE::Tickers::GET_HIT_L1:
         return 0x1C;
-      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L2_AND_UP:
+      case MIZAR_NAMESPACE::Tickers::GET_HIT_L2_AND_UP:
         return 0x1D;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY:
         return 0x1E;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE:
         return 0x1F;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL:
         return 0x20;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER:
         return 0x21;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE:
         return 0x22;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN:
         return 0x23;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_READ:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_READ:
         return 0x24;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED:
         return 0x25;
-      case ROCKSDB_NAMESPACE::Tickers::BYTES_WRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BYTES_WRITTEN:
         return 0x26;
-      case ROCKSDB_NAMESPACE::Tickers::BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::BYTES_READ:
         return 0x27;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK:
         return 0x28;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT:
         return 0x29;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV:
         return 0x2A;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND:
         return 0x2B;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND:
         return 0x2C;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND:
         return 0x2D;
-      case ROCKSDB_NAMESPACE::Tickers::ITER_BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::ITER_BYTES_READ:
         return 0x2E;
-      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_CLOSES:
+      case MIZAR_NAMESPACE::Tickers::NO_FILE_CLOSES:
         return 0x2F;
-      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_OPENS:
+      case MIZAR_NAMESPACE::Tickers::NO_FILE_OPENS:
         return 0x30;
-      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_ERRORS:
+      case MIZAR_NAMESPACE::Tickers::NO_FILE_ERRORS:
         return 0x31;
-      case ROCKSDB_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS:
+      case MIZAR_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS:
         return 0x32;
-      case ROCKSDB_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS:
+      case MIZAR_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS:
         return 0x33;
-      case ROCKSDB_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS:
+      case MIZAR_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS:
         return 0x34;
-      case ROCKSDB_NAMESPACE::Tickers::STALL_MICROS:
+      case MIZAR_NAMESPACE::Tickers::STALL_MICROS:
         return 0x35;
-      case ROCKSDB_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS:
+      case MIZAR_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS:
         return 0x36;
-      case ROCKSDB_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS:
+      case MIZAR_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS:
         return 0x37;
-      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATORS:
+      case MIZAR_NAMESPACE::Tickers::NO_ITERATORS:
         return 0x38;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS:
         return 0x39;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ:
         return 0x3A;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ:
         return 0x3B;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES:
         return 0x3C;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES:
         return 0x3D;
-      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED:
+      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED:
         return 0x3E;
-      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL:
+      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL:
         return 0x3F;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION:
         return 0x40;
-      case ROCKSDB_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS:
+      case MIZAR_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS:
         return 0x41;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS:
         return 0x42;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT:
         return 0x43;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD:
         return 0x44;
-      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES:
+      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES:
         return 0x45;
-      case ROCKSDB_NAMESPACE::Tickers::WAL_FILE_SYNCED:
+      case MIZAR_NAMESPACE::Tickers::WAL_FILE_SYNCED:
         return 0x46;
-      case ROCKSDB_NAMESPACE::Tickers::WAL_FILE_BYTES:
+      case MIZAR_NAMESPACE::Tickers::WAL_FILE_BYTES:
         return 0x47;
-      case ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_SELF:
+      case MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_SELF:
         return 0x48;
-      case ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER:
+      case MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER:
         return 0x49;
-      case ROCKSDB_NAMESPACE::Tickers::WRITE_TIMEDOUT:
+      case MIZAR_NAMESPACE::Tickers::WRITE_TIMEDOUT:
         return 0x4A;
-      case ROCKSDB_NAMESPACE::Tickers::WRITE_WITH_WAL:
+      case MIZAR_NAMESPACE::Tickers::WRITE_WITH_WAL:
         return 0x4B;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES:
         return 0x4C;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES:
         return 0x4D;
-      case ROCKSDB_NAMESPACE::Tickers::FLUSH_WRITE_BYTES:
+      case MIZAR_NAMESPACE::Tickers::FLUSH_WRITE_BYTES:
         return 0x4E;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES:
         return 0x4F;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES:
         return 0x50;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES:
         return 0x51;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS:
         return 0x52;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED:
         return 0x53;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED:
         return 0x54;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED:
         return 0x55;
-      case ROCKSDB_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME:
+      case MIZAR_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME:
         return 0x56;
-      case ROCKSDB_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME:
+      case MIZAR_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME:
         return 0x57;
-      case ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_HIT:
+      case MIZAR_NAMESPACE::Tickers::ROW_CACHE_HIT:
         return 0x58;
-      case ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_MISS:
+      case MIZAR_NAMESPACE::Tickers::ROW_CACHE_MISS:
         return 0x59;
-      case ROCKSDB_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES:
+      case MIZAR_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES:
         return 0x5A;
-      case ROCKSDB_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES:
         return 0x5B;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS:
         return 0x5C;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_ITER_SKIP:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_ITER_SKIP:
         return 0x5D;
-      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND:
+      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND:
         return 0x5E;
-      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_CREATED:
+      case MIZAR_NAMESPACE::Tickers::NO_ITERATOR_CREATED:
         // -0x01 so we can skip over the already taken 0x5F (TICKER_ENUM_MAX).
         return -0x01;
-      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_DELETED:
+      case MIZAR_NAMESPACE::Tickers::NO_ITERATOR_DELETED:
         return 0x60;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE:
         return 0x61;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_CANCELLED:
+      case MIZAR_NAMESPACE::Tickers::COMPACTION_CANCELLED:
         return 0x62;
-      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE:
+      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE:
         return 0x63;
-      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE:
+      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE:
         return 0x64;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PUT:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PUT:
         return 0x65;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE:
         return 0x66;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_GET:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_GET:
         return 0x67;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET:
         return 0x68;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK:
         return 0x69;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT:
         return 0x6A;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PREV:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PREV:
         return 0x6B;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN:
         return 0x6C;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ:
         return 0x6D;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN:
         return 0x6E;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_READ:
         return 0x6F;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED:
         return 0x70;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL:
         return 0x71;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB:
         return 0x72;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL:
         return 0x73;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN:
         return 0x74;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ:
         return 0x75;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED:
         return 0x76;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT:
         return 0x77;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE:
         return 0x78;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT:
         return 0x79;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE:
         return 0x7A;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES:
         return 0x7B;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES:
         return 0x7C;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES:
         return 0x7D;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN:
         return 0x7E;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED:
         return 0x7F;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED:
         return -0x02;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN:
         return -0x03;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED:
         return -0x04;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED:
         return -0x05;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED:
         return -0x06;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED:
         return -0x07;
-      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED:
+      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED:
         return -0x08;
-      case ROCKSDB_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD:
+      case MIZAR_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD:
         return -0x09;
-      case ROCKSDB_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD:
+      case MIZAR_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD:
         return -0x0A;
-      case ROCKSDB_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD:
+      case MIZAR_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD:
         return -0x0B;
-      case ROCKSDB_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD:
+      case MIZAR_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD:
         return -0x0C;
-      case ROCKSDB_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN:
+      case MIZAR_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN:
         return -0x0D;
-      case ROCKSDB_NAMESPACE::Tickers::FILES_MARKED_TRASH:
+      case MIZAR_NAMESPACE::Tickers::FILES_MARKED_TRASH:
         return -0x0E;
-      case ROCKSDB_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY:
+      case MIZAR_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY:
         return -0X0F;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED:
         return -0x10;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC:
         return -0x11;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL:
         return -0x12;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED:
         return -0x13;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC:
         return -0x14;
-      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL:
+      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL:
         return -0x15;
-      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT:
+      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT:
         return -0x16;
-      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT:
+      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT:
         return -0x17;
-      case ROCKSDB_NAMESPACE::Tickers::
+      case MIZAR_NAMESPACE::Tickers::
           ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT:
         return -0x18;
-      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT:
+      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT:
         return -0x19;
-      case ROCKSDB_NAMESPACE::Tickers::
+      case MIZAR_NAMESPACE::Tickers::
           ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT:
         return -0x1A;
-      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT:
+      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT:
         return -0x1B;
-      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH:
+      case MIZAR_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH:
         return -0x1C;
-      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH:
+      case MIZAR_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH:
         return -0x1D;
-      case ROCKSDB_NAMESPACE::Tickers::SECONDARY_CACHE_HITS:
+      case MIZAR_NAMESPACE::Tickers::SECONDARY_CACHE_HITS:
         return -0x1E;
-      case ROCKSDB_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES:
         return -0x1F;
-      case ROCKSDB_NAMESPACE::Tickers::BACKUP_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::BACKUP_READ_BYTES:
         return -0x20;
-      case ROCKSDB_NAMESPACE::Tickers::BACKUP_WRITE_BYTES:
+      case MIZAR_NAMESPACE::Tickers::BACKUP_WRITE_BYTES:
         return -0x21;
-      case ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES:
         return -0x22;
-      case ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES:
+      case MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES:
         return -0x23;
-      case ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_BYTES:
         return -0x24;
-      case ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_BYTES:
         return -0x25;
-      case ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_BYTES:
+      case MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_BYTES:
         return -0x26;
-      case ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_COUNT:
+      case MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_COUNT:
         return -0x27;
-      case ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_COUNT:
+      case MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_COUNT:
         return -0x28;
-      case ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_COUNT:
+      case MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_COUNT:
         return -0x29;
-      case ROCKSDB_NAMESPACE::Tickers::TICKER_ENUM_MAX:
+      case MIZAR_NAMESPACE::Tickers::TICKER_ENUM_MAX:
         // 0x5F was the max value in the initial copy of tickers to Java.
         // Since these values are exposed directly to Java clients, we keep
         // the value the same forever.
@@ -5061,351 +5061,351 @@ class TickerTypeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::Tickers enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::Tickers enum for the
   // provided Java org.rocksdb.TickerType
-  static ROCKSDB_NAMESPACE::Tickers toCppTickers(jbyte jticker_type) {
+  static MIZAR_NAMESPACE::Tickers toCppTickers(jbyte jticker_type) {
     switch(jticker_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
       case 0x1:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_HIT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_HIT;
       case 0x2:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD;
       case 0x3:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES;
       case 0x4:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS;
       case 0x5:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT;
       case 0x6:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD;
       case 0x7:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT;
       case 0x8:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT;
       case 0x9:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS;
       case 0xA:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT;
       case 0xB:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD;
       case 0xC:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT;
       case 0xD:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT;
       case 0xE:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS;
       case 0xF:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT;
       case 0x10:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD;
       case 0x11:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT;
       case 0x12:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ;
       case 0x13:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE;
       case 0x14:
-        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL;
+        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL;
       case 0x15:
-        return ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT;
+        return MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT;
       case 0x16:
-        return ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS;
+        return MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS;
       case 0x17:
-        return ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT;
+        return MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT;
       case 0x18:
-        return ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS;
+        return MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS;
       case 0x19:
-        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_HIT;
+        return MIZAR_NAMESPACE::Tickers::MEMTABLE_HIT;
       case 0x1A:
-        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_MISS;
+        return MIZAR_NAMESPACE::Tickers::MEMTABLE_MISS;
       case 0x1B:
-        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L0;
+        return MIZAR_NAMESPACE::Tickers::GET_HIT_L0;
       case 0x1C:
-        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L1;
+        return MIZAR_NAMESPACE::Tickers::GET_HIT_L1;
       case 0x1D:
-        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L2_AND_UP;
+        return MIZAR_NAMESPACE::Tickers::GET_HIT_L2_AND_UP;
       case 0x1E:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY;
       case 0x1F:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE;
       case 0x20:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL;
       case 0x21:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER;
       case 0x22:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE;
       case 0x23:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN;
       case 0x24:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_READ;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_READ;
       case 0x25:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED;
       case 0x26:
-        return ROCKSDB_NAMESPACE::Tickers::BYTES_WRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BYTES_WRITTEN;
       case 0x27:
-        return ROCKSDB_NAMESPACE::Tickers::BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::BYTES_READ;
       case 0x28:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK;
       case 0x29:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT;
       case 0x2A:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV;
       case 0x2B:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND;
       case 0x2C:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND;
       case 0x2D:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND;
       case 0x2E:
-        return ROCKSDB_NAMESPACE::Tickers::ITER_BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::ITER_BYTES_READ;
       case 0x2F:
-        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_CLOSES;
+        return MIZAR_NAMESPACE::Tickers::NO_FILE_CLOSES;
       case 0x30:
-        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_OPENS;
+        return MIZAR_NAMESPACE::Tickers::NO_FILE_OPENS;
       case 0x31:
-        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_ERRORS;
+        return MIZAR_NAMESPACE::Tickers::NO_FILE_ERRORS;
       case 0x32:
-        return ROCKSDB_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS;
+        return MIZAR_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS;
       case 0x33:
-        return ROCKSDB_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS;
+        return MIZAR_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS;
       case 0x34:
-        return ROCKSDB_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS;
+        return MIZAR_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS;
       case 0x35:
-        return ROCKSDB_NAMESPACE::Tickers::STALL_MICROS;
+        return MIZAR_NAMESPACE::Tickers::STALL_MICROS;
       case 0x36:
-        return ROCKSDB_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS;
+        return MIZAR_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS;
       case 0x37:
-        return ROCKSDB_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS;
+        return MIZAR_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS;
       case 0x38:
-        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATORS;
+        return MIZAR_NAMESPACE::Tickers::NO_ITERATORS;
       case 0x39:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS;
       case 0x3A:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ;
       case 0x3B:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ;
       case 0x3C:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES;
       case 0x3D:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES;
       case 0x3E:
-        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED;
+        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED;
       case 0x3F:
-        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL;
+        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL;
       case 0x40:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION;
       case 0x41:
-        return ROCKSDB_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS;
+        return MIZAR_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS;
       case 0x42:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS;
       case 0x43:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT;
       case 0x44:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD;
       case 0x45:
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES;
       case 0x46:
-        return ROCKSDB_NAMESPACE::Tickers::WAL_FILE_SYNCED;
+        return MIZAR_NAMESPACE::Tickers::WAL_FILE_SYNCED;
       case 0x47:
-        return ROCKSDB_NAMESPACE::Tickers::WAL_FILE_BYTES;
+        return MIZAR_NAMESPACE::Tickers::WAL_FILE_BYTES;
       case 0x48:
-        return ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_SELF;
+        return MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_SELF;
       case 0x49:
-        return ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER;
+        return MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER;
       case 0x4A:
-        return ROCKSDB_NAMESPACE::Tickers::WRITE_TIMEDOUT;
+        return MIZAR_NAMESPACE::Tickers::WRITE_TIMEDOUT;
       case 0x4B:
-        return ROCKSDB_NAMESPACE::Tickers::WRITE_WITH_WAL;
+        return MIZAR_NAMESPACE::Tickers::WRITE_WITH_WAL;
       case 0x4C:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES;
       case 0x4D:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES;
       case 0x4E:
-        return ROCKSDB_NAMESPACE::Tickers::FLUSH_WRITE_BYTES;
+        return MIZAR_NAMESPACE::Tickers::FLUSH_WRITE_BYTES;
       case 0x4F:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES;
       case 0x50:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES;
       case 0x51:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES;
       case 0x52:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS;
       case 0x53:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED;
       case 0x54:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED;
       case 0x55:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED;
       case 0x56:
-        return ROCKSDB_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME;
+        return MIZAR_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME;
       case 0x57:
-        return ROCKSDB_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME;
+        return MIZAR_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME;
       case 0x58:
-        return ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_HIT;
+        return MIZAR_NAMESPACE::Tickers::ROW_CACHE_HIT;
       case 0x59:
-        return ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_MISS;
+        return MIZAR_NAMESPACE::Tickers::ROW_CACHE_MISS;
       case 0x5A:
-        return ROCKSDB_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES;
+        return MIZAR_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES;
       case 0x5B:
-        return ROCKSDB_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES;
       case 0x5C:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS;
       case 0x5D:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_ITER_SKIP;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_ITER_SKIP;
       case 0x5E:
-        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND;
+        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND;
       case -0x01:
         // -0x01 so we can skip over the already taken 0x5F (TICKER_ENUM_MAX).
-        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_CREATED;
+        return MIZAR_NAMESPACE::Tickers::NO_ITERATOR_CREATED;
       case 0x60:
-        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_DELETED;
+        return MIZAR_NAMESPACE::Tickers::NO_ITERATOR_DELETED;
       case 0x61:
-        return ROCKSDB_NAMESPACE::Tickers::
+        return MIZAR_NAMESPACE::Tickers::
             COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE;
       case 0x62:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_CANCELLED;
+        return MIZAR_NAMESPACE::Tickers::COMPACTION_CANCELLED;
       case 0x63:
-        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE;
+        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE;
       case 0x64:
-        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE;
+        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE;
       case 0x65:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PUT;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PUT;
       case 0x66:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE;
       case 0x67:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_GET;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_GET;
       case 0x68:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET;
       case 0x69:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK;
       case 0x6A:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT;
       case 0x6B:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PREV;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PREV;
       case 0x6C:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN;
       case 0x6D:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ;
       case 0x6E:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN;
       case 0x6F:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_READ;
       case 0x70:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED;
       case 0x71:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL;
       case 0x72:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB;
       case 0x73:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL;
       case 0x74:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN;
       case 0x75:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ;
       case 0x76:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED;
       case 0x77:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT;
       case 0x78:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE;
       case 0x79:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT;
       case 0x7A:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE;
       case 0x7B:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES;
       case 0x7C:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES;
       case 0x7D:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES;
       case 0x7E:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN;
       case 0x7F:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED;
       case -0x02:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED;
       case -0x03:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN;
       case -0x04:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED;
       case -0x05:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED;
       case -0x06:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED;
       case -0x07:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED;
       case -0x08:
-        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED;
+        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED;
       case -0x09:
-        return ROCKSDB_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD;
+        return MIZAR_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD;
       case -0x0A:
-        return ROCKSDB_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD;
+        return MIZAR_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD;
       case -0x0B:
-        return ROCKSDB_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD;
+        return MIZAR_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD;
       case -0x0C:
-        return ROCKSDB_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD;
+        return MIZAR_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD;
       case -0x0D:
-        return ROCKSDB_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN;
+        return MIZAR_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN;
       case -0x0E:
-        return ROCKSDB_NAMESPACE::Tickers::FILES_MARKED_TRASH;
+        return MIZAR_NAMESPACE::Tickers::FILES_MARKED_TRASH;
       case -0x0F:
-        return ROCKSDB_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY;
+        return MIZAR_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY;
       case -0x10:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED;
       case -0x11:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC;
       case -0x12:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL;
       case -0x13:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED;
       case -0x14:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC;
       case -0x15:
-        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL;
+        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL;
       case -0x16:
-        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT;
+        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT;
       case -0x17:
-        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT;
+        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT;
       case -0x18:
-        return ROCKSDB_NAMESPACE::Tickers::
+        return MIZAR_NAMESPACE::Tickers::
             ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT;
       case -0x19:
-        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT;
+        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT;
       case -0x1A:
-        return ROCKSDB_NAMESPACE::Tickers::
+        return MIZAR_NAMESPACE::Tickers::
             ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT;
       case -0x1B:
-        return ROCKSDB_NAMESPACE::Tickers::
+        return MIZAR_NAMESPACE::Tickers::
             ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT;
       case -0x1C:
-        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH;
+        return MIZAR_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH;
       case -0x1D:
-        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH;
+        return MIZAR_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH;
       case -0x1E:
-        return ROCKSDB_NAMESPACE::Tickers::SECONDARY_CACHE_HITS;
+        return MIZAR_NAMESPACE::Tickers::SECONDARY_CACHE_HITS;
       case -0x1F:
-        return ROCKSDB_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES;
       case -0x20:
-        return ROCKSDB_NAMESPACE::Tickers::BACKUP_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::BACKUP_READ_BYTES;
       case -0x21:
-        return ROCKSDB_NAMESPACE::Tickers::BACKUP_WRITE_BYTES;
+        return MIZAR_NAMESPACE::Tickers::BACKUP_WRITE_BYTES;
       case -0x22:
-        return ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES;
       case -0x23:
-        return ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES;
+        return MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES;
       case -0x24:
-        return ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_BYTES;
       case -0x25:
-        return ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_BYTES;
       case -0x26:
-        return ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_BYTES;
+        return MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_BYTES;
       case -0x27:
-        return ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_COUNT;
+        return MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_COUNT;
       case -0x28:
-        return ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_COUNT;
+        return MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_COUNT;
       case -0x29:
-        return ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_COUNT;
+        return MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_COUNT;
       case 0x5F:
         // 0x5F was the max value in the initial copy of tickers to Java.
         // Since these values are exposed directly to Java clients, we keep
@@ -5415,11 +5415,11 @@ class TickerTypeJni {
         // value since it's meant to be the number of tickers, not an actual
         // ticker value. But we aren't yet in a position to fix it since the
         // number of tickers doesn't fit in the Java representation (jbyte).
-        return ROCKSDB_NAMESPACE::Tickers::TICKER_ENUM_MAX;
+        return MIZAR_NAMESPACE::Tickers::TICKER_ENUM_MAX;
 
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
+        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
     }
   }
 };
@@ -5428,113 +5428,113 @@ class TickerTypeJni {
 class HistogramTypeJni {
  public:
   // Returns the equivalent org.rocksdb.HistogramType for the provided
-  // C++ ROCKSDB_NAMESPACE::Histograms enum
+  // C++ MIZAR_NAMESPACE::Histograms enum
   static jbyte toJavaHistogramsType(
-      const ROCKSDB_NAMESPACE::Histograms& histograms) {
+      const MIZAR_NAMESPACE::Histograms& histograms) {
     switch(histograms) {
-      case ROCKSDB_NAMESPACE::Histograms::DB_GET:
+      case MIZAR_NAMESPACE::Histograms::DB_GET:
         return 0x0;
-      case ROCKSDB_NAMESPACE::Histograms::DB_WRITE:
+      case MIZAR_NAMESPACE::Histograms::DB_WRITE:
         return 0x1;
-      case ROCKSDB_NAMESPACE::Histograms::COMPACTION_TIME:
+      case MIZAR_NAMESPACE::Histograms::COMPACTION_TIME:
         return 0x2;
-      case ROCKSDB_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME:
+      case MIZAR_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME:
         return 0x3;
-      case ROCKSDB_NAMESPACE::Histograms::TABLE_SYNC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::TABLE_SYNC_MICROS:
         return 0x4;
-      case ROCKSDB_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS:
         return 0x5;
-      case ROCKSDB_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS:
         return 0x6;
-      case ROCKSDB_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS:
         return 0x7;
-      case ROCKSDB_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS:
+      case MIZAR_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS:
         return 0x8;
-      case ROCKSDB_NAMESPACE::Histograms::DB_MULTIGET:
+      case MIZAR_NAMESPACE::Histograms::DB_MULTIGET:
         return 0x9;
-      case ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS:
+      case MIZAR_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS:
         return 0xA;
-      case ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS:
+      case MIZAR_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS:
         return 0xB;
-      case ROCKSDB_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS:
+      case MIZAR_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS:
         return 0xC;
-      case ROCKSDB_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT:
+      case MIZAR_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT:
         return 0xD;
-      case ROCKSDB_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT:
+      case MIZAR_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT:
         return 0xE;
-      case ROCKSDB_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT:
+      case MIZAR_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT:
         return 0xF;
-      case ROCKSDB_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT:
+      case MIZAR_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT:
         return 0x10;
-      case ROCKSDB_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT:
+      case MIZAR_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT:
         return 0x11;
-      case ROCKSDB_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION:
+      case MIZAR_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION:
         return 0x12;
-      case ROCKSDB_NAMESPACE::Histograms::DB_SEEK:
+      case MIZAR_NAMESPACE::Histograms::DB_SEEK:
         return 0x13;
-      case ROCKSDB_NAMESPACE::Histograms::WRITE_STALL:
+      case MIZAR_NAMESPACE::Histograms::WRITE_STALL:
         return 0x14;
-      case ROCKSDB_NAMESPACE::Histograms::SST_READ_MICROS:
+      case MIZAR_NAMESPACE::Histograms::SST_READ_MICROS:
         return 0x15;
-      case ROCKSDB_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED:
+      case MIZAR_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED:
         return 0x16;
-      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_READ:
+      case MIZAR_NAMESPACE::Histograms::BYTES_PER_READ:
         return 0x17;
-      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_WRITE:
+      case MIZAR_NAMESPACE::Histograms::BYTES_PER_WRITE:
         return 0x18;
-      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_MULTIGET:
+      case MIZAR_NAMESPACE::Histograms::BYTES_PER_MULTIGET:
         return 0x19;
-      case ROCKSDB_NAMESPACE::Histograms::BYTES_COMPRESSED:
+      case MIZAR_NAMESPACE::Histograms::BYTES_COMPRESSED:
         return 0x1A;
-      case ROCKSDB_NAMESPACE::Histograms::BYTES_DECOMPRESSED:
+      case MIZAR_NAMESPACE::Histograms::BYTES_DECOMPRESSED:
         return 0x1B;
-      case ROCKSDB_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS:
+      case MIZAR_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS:
         return 0x1C;
-      case ROCKSDB_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS:
+      case MIZAR_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS:
         return 0x1D;
-      case ROCKSDB_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS:
+      case MIZAR_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS:
         return 0x1E;
       // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor version compatibility.
-      case ROCKSDB_NAMESPACE::Histograms::FLUSH_TIME:
+      case MIZAR_NAMESPACE::Histograms::FLUSH_TIME:
         return 0x20;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE:
         return 0x21;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE:
         return 0x22;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS:
         return 0x23;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GET_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_GET_MICROS:
         return 0x24;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS:
         return 0x25;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS:
         return 0x26;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS:
         return 0x27;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS:
         return 0x28;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS:
         return 0x29;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS:
         return 0x2A;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS:
         return 0x2B;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GC_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_GC_MICROS:
         return 0x2C;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS:
         return 0x2D;
-      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS:
+      case MIZAR_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS:
         return 0x2E;
-      case ROCKSDB_NAMESPACE::Histograms::
+      case MIZAR_NAMESPACE::Histograms::
           NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL:
         return 0x2F;
-      case ROCKSDB_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL:
+      case MIZAR_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL:
         return 0x30;
-      case ROCKSDB_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL:
+      case MIZAR_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL:
         return 0x31;
-      case ROCKSDB_NAMESPACE::Histograms::ERROR_HANDLER_AUTORESUME_RETRY_COUNT:
+      case MIZAR_NAMESPACE::Histograms::ERROR_HANDLER_AUTORESUME_RETRY_COUNT:
         return 0x31;
-      case ROCKSDB_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX:
+      case MIZAR_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX:
         // 0x1F for backwards compatibility on current minor version.
         return 0x1F;
 
@@ -5544,120 +5544,120 @@ class HistogramTypeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::Histograms enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::Histograms enum for the
   // provided Java org.rocksdb.HistogramsType
-  static ROCKSDB_NAMESPACE::Histograms toCppHistograms(jbyte jhistograms_type) {
+  static MIZAR_NAMESPACE::Histograms toCppHistograms(jbyte jhistograms_type) {
     switch(jhistograms_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::Histograms::DB_GET;
+        return MIZAR_NAMESPACE::Histograms::DB_GET;
       case 0x1:
-        return ROCKSDB_NAMESPACE::Histograms::DB_WRITE;
+        return MIZAR_NAMESPACE::Histograms::DB_WRITE;
       case 0x2:
-        return ROCKSDB_NAMESPACE::Histograms::COMPACTION_TIME;
+        return MIZAR_NAMESPACE::Histograms::COMPACTION_TIME;
       case 0x3:
-        return ROCKSDB_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME;
+        return MIZAR_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME;
       case 0x4:
-        return ROCKSDB_NAMESPACE::Histograms::TABLE_SYNC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::TABLE_SYNC_MICROS;
       case 0x5:
-        return ROCKSDB_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS;
       case 0x6:
-        return ROCKSDB_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS;
       case 0x7:
-        return ROCKSDB_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS;
       case 0x8:
-        return ROCKSDB_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS;
+        return MIZAR_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS;
       case 0x9:
-        return ROCKSDB_NAMESPACE::Histograms::DB_MULTIGET;
+        return MIZAR_NAMESPACE::Histograms::DB_MULTIGET;
       case 0xA:
-        return ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS;
+        return MIZAR_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS;
       case 0xB:
-        return ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS;
+        return MIZAR_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS;
       case 0xC:
-        return ROCKSDB_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS;
+        return MIZAR_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS;
       case 0xD:
-        return ROCKSDB_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT;
+        return MIZAR_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT;
       case 0xE:
-        return ROCKSDB_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT;
+        return MIZAR_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT;
       case 0xF:
-        return ROCKSDB_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT;
+        return MIZAR_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT;
       case 0x10:
-        return ROCKSDB_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT;
+        return MIZAR_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT;
       case 0x11:
-        return ROCKSDB_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT;
+        return MIZAR_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT;
       case 0x12:
-        return ROCKSDB_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION;
+        return MIZAR_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION;
       case 0x13:
-        return ROCKSDB_NAMESPACE::Histograms::DB_SEEK;
+        return MIZAR_NAMESPACE::Histograms::DB_SEEK;
       case 0x14:
-        return ROCKSDB_NAMESPACE::Histograms::WRITE_STALL;
+        return MIZAR_NAMESPACE::Histograms::WRITE_STALL;
       case 0x15:
-        return ROCKSDB_NAMESPACE::Histograms::SST_READ_MICROS;
+        return MIZAR_NAMESPACE::Histograms::SST_READ_MICROS;
       case 0x16:
-        return ROCKSDB_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED;
+        return MIZAR_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED;
       case 0x17:
-        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_READ;
+        return MIZAR_NAMESPACE::Histograms::BYTES_PER_READ;
       case 0x18:
-        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_WRITE;
+        return MIZAR_NAMESPACE::Histograms::BYTES_PER_WRITE;
       case 0x19:
-        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_MULTIGET;
+        return MIZAR_NAMESPACE::Histograms::BYTES_PER_MULTIGET;
       case 0x1A:
-        return ROCKSDB_NAMESPACE::Histograms::BYTES_COMPRESSED;
+        return MIZAR_NAMESPACE::Histograms::BYTES_COMPRESSED;
       case 0x1B:
-        return ROCKSDB_NAMESPACE::Histograms::BYTES_DECOMPRESSED;
+        return MIZAR_NAMESPACE::Histograms::BYTES_DECOMPRESSED;
       case 0x1C:
-        return ROCKSDB_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS;
+        return MIZAR_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS;
       case 0x1D:
-        return ROCKSDB_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS;
+        return MIZAR_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS;
       case 0x1E:
-        return ROCKSDB_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS;
+        return MIZAR_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS;
       // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor version compatibility.
       case 0x20:
-        return ROCKSDB_NAMESPACE::Histograms::FLUSH_TIME;
+        return MIZAR_NAMESPACE::Histograms::FLUSH_TIME;
       case 0x21:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE;
       case 0x22:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE;
       case 0x23:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS;
       case 0x24:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GET_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_GET_MICROS;
       case 0x25:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS;
       case 0x26:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS;
       case 0x27:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS;
       case 0x28:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS;
       case 0x29:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS;
       case 0x2A:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS;
       case 0x2B:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS;
       case 0x2C:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GC_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_GC_MICROS;
       case 0x2D:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS;
       case 0x2E:
-        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS;
+        return MIZAR_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS;
       case 0x2F:
-        return ROCKSDB_NAMESPACE::Histograms::
+        return MIZAR_NAMESPACE::Histograms::
             NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL;
       case 0x30:
-        return ROCKSDB_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL;
+        return MIZAR_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL;
       case 0x31:
-        return ROCKSDB_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL;
+        return MIZAR_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL;
       case 0x32:
-        return ROCKSDB_NAMESPACE::Histograms::
+        return MIZAR_NAMESPACE::Histograms::
             ERROR_HANDLER_AUTORESUME_RETRY_COUNT;
       case 0x1F:
         // 0x1F for backwards compatibility on current minor version.
-        return ROCKSDB_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX;
+        return MIZAR_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX;
 
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::Histograms::DB_GET;
+        return MIZAR_NAMESPACE::Histograms::DB_GET;
     }
   }
 };
@@ -5666,15 +5666,15 @@ class HistogramTypeJni {
 class StatsLevelJni {
  public:
   // Returns the equivalent org.rocksdb.StatsLevel for the provided
-  // C++ ROCKSDB_NAMESPACE::StatsLevel enum
+  // C++ MIZAR_NAMESPACE::StatsLevel enum
   static jbyte toJavaStatsLevel(
-      const ROCKSDB_NAMESPACE::StatsLevel& stats_level) {
+      const MIZAR_NAMESPACE::StatsLevel& stats_level) {
     switch(stats_level) {
-      case ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers:
+      case MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers:
         return 0x0;
-      case ROCKSDB_NAMESPACE::StatsLevel::kExceptTimeForMutex:
+      case MIZAR_NAMESPACE::StatsLevel::kExceptTimeForMutex:
         return 0x1;
-      case ROCKSDB_NAMESPACE::StatsLevel::kAll:
+      case MIZAR_NAMESPACE::StatsLevel::kAll:
         return 0x2;
 
       default:
@@ -5683,20 +5683,20 @@ class StatsLevelJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::StatsLevel enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::StatsLevel enum for the
   // provided Java org.rocksdb.StatsLevel
-  static ROCKSDB_NAMESPACE::StatsLevel toCppStatsLevel(jbyte jstats_level) {
+  static MIZAR_NAMESPACE::StatsLevel toCppStatsLevel(jbyte jstats_level) {
     switch(jstats_level) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers;
+        return MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers;
       case 0x1:
-        return ROCKSDB_NAMESPACE::StatsLevel::kExceptTimeForMutex;
+        return MIZAR_NAMESPACE::StatsLevel::kExceptTimeForMutex;
       case 0x2:
-        return ROCKSDB_NAMESPACE::StatsLevel::kAll;
+        return MIZAR_NAMESPACE::StatsLevel::kAll;
 
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers;
+        return MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers;
     }
   }
 };
@@ -5705,15 +5705,15 @@ class StatsLevelJni {
 class RateLimiterModeJni {
  public:
   // Returns the equivalent org.rocksdb.RateLimiterMode for the provided
-  // C++ ROCKSDB_NAMESPACE::RateLimiter::Mode enum
+  // C++ MIZAR_NAMESPACE::RateLimiter::Mode enum
   static jbyte toJavaRateLimiterMode(
-      const ROCKSDB_NAMESPACE::RateLimiter::Mode& rate_limiter_mode) {
+      const MIZAR_NAMESPACE::RateLimiter::Mode& rate_limiter_mode) {
     switch(rate_limiter_mode) {
-      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kReadsOnly:
+      case MIZAR_NAMESPACE::RateLimiter::Mode::kReadsOnly:
         return 0x0;
-      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly:
+      case MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly:
         return 0x1;
-      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kAllIo:
+      case MIZAR_NAMESPACE::RateLimiter::Mode::kAllIo:
         return 0x2;
 
       default:
@@ -5722,21 +5722,21 @@ class RateLimiterModeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::RateLimiter::Mode enum for
+  // Returns the equivalent C++ MIZAR_NAMESPACE::RateLimiter::Mode enum for
   // the provided Java org.rocksdb.RateLimiterMode
-  static ROCKSDB_NAMESPACE::RateLimiter::Mode toCppRateLimiterMode(
+  static MIZAR_NAMESPACE::RateLimiter::Mode toCppRateLimiterMode(
       jbyte jrate_limiter_mode) {
     switch(jrate_limiter_mode) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kReadsOnly;
+        return MIZAR_NAMESPACE::RateLimiter::Mode::kReadsOnly;
       case 0x1:
-        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly;
+        return MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly;
       case 0x2:
-        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kAllIo;
+        return MIZAR_NAMESPACE::RateLimiter::Mode::kAllIo;
 
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly;
+        return MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly;
     }
   }
 };
@@ -5745,17 +5745,17 @@ class RateLimiterModeJni {
 class MemoryUsageTypeJni {
 public:
  // Returns the equivalent org.rocksdb.MemoryUsageType for the provided
- // C++ ROCKSDB_NAMESPACE::MemoryUtil::UsageType enum
+ // C++ MIZAR_NAMESPACE::MemoryUtil::UsageType enum
  static jbyte toJavaMemoryUsageType(
-     const ROCKSDB_NAMESPACE::MemoryUtil::UsageType& usage_type) {
+     const MIZAR_NAMESPACE::MemoryUtil::UsageType& usage_type) {
    switch (usage_type) {
-     case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal:
+     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal:
        return 0x0;
-     case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed:
+     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed:
        return 0x1;
-     case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal:
+     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal:
        return 0x2;
-     case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kCacheTotal:
+     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kCacheTotal:
        return 0x3;
      default:
        // undefined: use kNumUsageTypes
@@ -5763,22 +5763,22 @@ public:
    }
  }
 
- // Returns the equivalent C++ ROCKSDB_NAMESPACE::MemoryUtil::UsageType enum for
+ // Returns the equivalent C++ MIZAR_NAMESPACE::MemoryUtil::UsageType enum for
  // the provided Java org.rocksdb.MemoryUsageType
- static ROCKSDB_NAMESPACE::MemoryUtil::UsageType toCppMemoryUsageType(
+ static MIZAR_NAMESPACE::MemoryUtil::UsageType toCppMemoryUsageType(
      jbyte usage_type) {
    switch (usage_type) {
      case 0x0:
-       return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal;
+       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal;
      case 0x1:
-       return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed;
+       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed;
      case 0x2:
-       return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal;
+       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal;
      case 0x3:
-       return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kCacheTotal;
+       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kCacheTotal;
      default:
        // undefined/default: use kNumUsageTypes
-       return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kNumUsageTypes;
+       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kNumUsageTypes;
    }
  }
 };
@@ -5902,7 +5902,7 @@ class TransactionDBJni : public JavaClass {
    */
   static jobject newDeadlockInfo(
       JNIEnv* env, jobject jtransaction_db,
-      const ROCKSDB_NAMESPACE::TransactionID transaction_id,
+      const MIZAR_NAMESPACE::TransactionID transaction_id,
       const uint32_t column_family_id, const std::string& waiting_key,
       const bool exclusive) {
     jclass jclazz = getJClass(env);
@@ -5942,35 +5942,35 @@ class TransactionDBJni : public JavaClass {
 class TxnDBWritePolicyJni {
  public:
   // Returns the equivalent org.rocksdb.TxnDBWritePolicy for the provided
-  // C++ ROCKSDB_NAMESPACE::TxnDBWritePolicy enum
+  // C++ MIZAR_NAMESPACE::TxnDBWritePolicy enum
   static jbyte toJavaTxnDBWritePolicy(
-      const ROCKSDB_NAMESPACE::TxnDBWritePolicy& txndb_write_policy) {
+      const MIZAR_NAMESPACE::TxnDBWritePolicy& txndb_write_policy) {
     switch (txndb_write_policy) {
-      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED:
+      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED:
         return 0x0;
-      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED:
+      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED:
         return 0x1;
-      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED:
+      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::TxnDBWritePolicy enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::TxnDBWritePolicy enum for the
   // provided Java org.rocksdb.TxnDBWritePolicy
-  static ROCKSDB_NAMESPACE::TxnDBWritePolicy toCppTxnDBWritePolicy(
+  static MIZAR_NAMESPACE::TxnDBWritePolicy toCppTxnDBWritePolicy(
       jbyte jtxndb_write_policy) {
     switch (jtxndb_write_policy) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
+        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
       case 0x1:
-        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED;
+        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED;
       case 0x2:
-        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED;
+        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
+        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
     }
   }
 };
@@ -5994,18 +5994,18 @@ class KeyLockInfoJni : public JavaClass {
 
   /**
    * Create a new Java org.rocksdb.TransactionDB.KeyLockInfo object
-   * with the same properties as the provided C++ ROCKSDB_NAMESPACE::KeyLockInfo
+   * with the same properties as the provided C++ MIZAR_NAMESPACE::KeyLockInfo
    * object
    *
    * @param env A pointer to the Java environment
-   * @param key_lock_info The ROCKSDB_NAMESPACE::KeyLockInfo object
+   * @param key_lock_info The MIZAR_NAMESPACE::KeyLockInfo object
    *
    * @return A reference to a Java
    *     org.rocksdb.TransactionDB.KeyLockInfo object,
    *     or nullptr if an an exception occurs
    */
   static jobject construct(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::KeyLockInfo& key_lock_info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::KeyLockInfo& key_lock_info) {
     jclass jclazz = getJClass(env);
     if(jclazz == nullptr) {
       // exception occurred accessing class
@@ -6117,7 +6117,7 @@ class DeadlockPathJni : public JavaClass {
 
 class AbstractTableFilterJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::TableFilterJniCallback*,
+          const MIZAR_NAMESPACE::TableFilterJniCallback*,
           AbstractTableFilterJni> {
  public:
   /**
@@ -6159,7 +6159,7 @@ class TablePropertiesJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppTableProperties(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::TableProperties& table_properties) {
+      JNIEnv* env, const MIZAR_NAMESPACE::TableProperties& table_properties) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -6176,14 +6176,14 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jcolumn_family_name = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jcolumn_family_name = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, table_properties.column_family_name);
     if (jcolumn_family_name == nullptr) {
       // exception occurred creating java string
       return nullptr;
     }
 
-    jstring jfilter_policy_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jfilter_policy_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.filter_policy_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6191,7 +6191,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jcomparator_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jcomparator_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.comparator_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6200,7 +6200,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jmerge_operator_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jmerge_operator_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.merge_operator_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6210,7 +6210,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jprefix_extractor_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jprefix_extractor_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.prefix_extractor_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6222,7 +6222,7 @@ class TablePropertiesJni : public JavaClass {
     }
 
     jstring jproperty_collectors_names =
-        ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+        MIZAR_NAMESPACE::JniUtil::toJavaString(
             env, &table_properties.property_collectors_names, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6234,7 +6234,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jcompression_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jcompression_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.compression_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6249,7 +6249,7 @@ class TablePropertiesJni : public JavaClass {
 
     // Map<String, String>
     jobject juser_collected_properties =
-        ROCKSDB_NAMESPACE::HashMapJni::fromCppMap(
+        MIZAR_NAMESPACE::HashMapJni::fromCppMap(
             env, &table_properties.user_collected_properties);
     if (env->ExceptionCheck()) {
       // exception occurred creating java map
@@ -6264,7 +6264,7 @@ class TablePropertiesJni : public JavaClass {
     }
 
     // Map<String, String>
-    jobject jreadable_properties = ROCKSDB_NAMESPACE::HashMapJni::fromCppMap(
+    jobject jreadable_properties = MIZAR_NAMESPACE::HashMapJni::fromCppMap(
         env, &table_properties.readable_properties);
     if (env->ExceptionCheck()) {
       // exception occurred creating java map
@@ -6340,11 +6340,11 @@ class ColumnFamilyDescriptorJni : public JavaClass {
 
   /**
    * Create a new Java org.rocksdb.ColumnFamilyDescriptor object with the same
-   * properties as the provided C++ ROCKSDB_NAMESPACE::ColumnFamilyDescriptor
+   * properties as the provided C++ MIZAR_NAMESPACE::ColumnFamilyDescriptor
    * object
    *
    * @param env A pointer to the Java environment
-   * @param cfd A pointer to ROCKSDB_NAMESPACE::ColumnFamilyDescriptor object
+   * @param cfd A pointer to MIZAR_NAMESPACE::ColumnFamilyDescriptor object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyDescriptor object, or
    * nullptr if an an exception occurs
@@ -6422,18 +6422,18 @@ class ColumnFamilyDescriptorJni : public JavaClass {
 class IndexTypeJni {
  public:
   // Returns the equivalent org.rocksdb.IndexType for the provided
-  // C++ ROCKSDB_NAMESPACE::IndexType enum
+  // C++ MIZAR_NAMESPACE::IndexType enum
   static jbyte toJavaIndexType(
-      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType& index_type) {
+      const MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType& index_type) {
     switch (index_type) {
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::kBinarySearch:
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::kBinarySearch:
         return 0x0;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::kHashSearch:
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::kHashSearch:
         return 0x1;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
           kTwoLevelIndexSearch:
         return 0x2;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
           kBinarySearchWithFirstKey:
         return 0x3;
       default:
@@ -6441,26 +6441,26 @@ class IndexTypeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::IndexType enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::IndexType enum for the
   // provided Java org.rocksdb.IndexType
-  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType toCppIndexType(
+  static MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType toCppIndexType(
       jbyte jindex_type) {
     switch (jindex_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearch;
       case 0x1:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
             kHashSearch;
       case 0x2:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
             kTwoLevelIndexSearch;
       case 0x3:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearchWithFirstKey;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearch;
     }
   }
@@ -6470,15 +6470,15 @@ class IndexTypeJni {
 class DataBlockIndexTypeJni {
  public:
   // Returns the equivalent org.rocksdb.DataBlockIndexType for the provided
-  // C++ ROCKSDB_NAMESPACE::DataBlockIndexType enum
+  // C++ MIZAR_NAMESPACE::DataBlockIndexType enum
   static jbyte toJavaDataBlockIndexType(
-      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType&
+      const MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType&
           index_type) {
     switch (index_type) {
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
           kDataBlockBinarySearch:
         return 0x0;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
           kDataBlockBinaryAndHash:
         return 0x1;
       default:
@@ -6486,20 +6486,20 @@ class DataBlockIndexTypeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::DataBlockIndexType enum for
+  // Returns the equivalent C++ MIZAR_NAMESPACE::DataBlockIndexType enum for
   // the provided Java org.rocksdb.DataBlockIndexType
-  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType
+  static MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType
   toCppDataBlockIndexType(jbyte jindex_type) {
     switch (jindex_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinarySearch;
       case 0x1:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinaryAndHash;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinarySearch;
     }
   }
@@ -6509,39 +6509,39 @@ class DataBlockIndexTypeJni {
 class ChecksumTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ChecksumType for the provided
-  // C++ ROCKSDB_NAMESPACE::ChecksumType enum
+  // C++ MIZAR_NAMESPACE::ChecksumType enum
   static jbyte toJavaChecksumType(
-      const ROCKSDB_NAMESPACE::ChecksumType& checksum_type) {
+      const MIZAR_NAMESPACE::ChecksumType& checksum_type) {
     switch (checksum_type) {
-      case ROCKSDB_NAMESPACE::ChecksumType::kNoChecksum:
+      case MIZAR_NAMESPACE::ChecksumType::kNoChecksum:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ChecksumType::kCRC32c:
+      case MIZAR_NAMESPACE::ChecksumType::kCRC32c:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ChecksumType::kxxHash:
+      case MIZAR_NAMESPACE::ChecksumType::kxxHash:
         return 0x2;
-      case ROCKSDB_NAMESPACE::ChecksumType::kxxHash64:
+      case MIZAR_NAMESPACE::ChecksumType::kxxHash64:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ChecksumType enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ChecksumType enum for the
   // provided Java org.rocksdb.ChecksumType
-  static ROCKSDB_NAMESPACE::ChecksumType toCppChecksumType(
+  static MIZAR_NAMESPACE::ChecksumType toCppChecksumType(
       jbyte jchecksum_type) {
     switch (jchecksum_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ChecksumType::kNoChecksum;
+        return MIZAR_NAMESPACE::ChecksumType::kNoChecksum;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ChecksumType::kCRC32c;
+        return MIZAR_NAMESPACE::ChecksumType::kCRC32c;
       case 0x2:
-        return ROCKSDB_NAMESPACE::ChecksumType::kxxHash;
+        return MIZAR_NAMESPACE::ChecksumType::kxxHash;
       case 0x3:
-        return ROCKSDB_NAMESPACE::ChecksumType::kxxHash64;
+        return MIZAR_NAMESPACE::ChecksumType::kxxHash64;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ChecksumType::kCRC32c;
+        return MIZAR_NAMESPACE::ChecksumType::kCRC32c;
     }
   }
 };
@@ -6550,18 +6550,18 @@ class ChecksumTypeJni {
 class IndexShorteningModeJni {
  public:
   // Returns the equivalent org.rocksdb.IndexShorteningMode for the provided
-  // C++ ROCKSDB_NAMESPACE::IndexShorteningMode enum
+  // C++ MIZAR_NAMESPACE::IndexShorteningMode enum
   static jbyte toJavaIndexShorteningMode(
-      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode&
+      const MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode&
           index_shortening_mode) {
     switch (index_shortening_mode) {
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kNoShortening:
         return 0x0;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kShortenSeparators:
         return 0x1;
-      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kShortenSeparatorsAndSuccessor:
         return 0x2;
       default:
@@ -6569,23 +6569,23 @@ class IndexShorteningModeJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::IndexShorteningMode enum for
+  // Returns the equivalent C++ MIZAR_NAMESPACE::IndexShorteningMode enum for
   // the provided Java org.rocksdb.IndexShorteningMode
-  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode
+  static MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode
   toCppIndexShorteningMode(jbyte jindex_shortening_mode) {
     switch (jindex_shortening_mode) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kNoShortening;
       case 0x1:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparators;
       case 0x2:
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparatorsAndSuccessor;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparators;
     }
   }
@@ -6595,38 +6595,38 @@ class IndexShorteningModeJni {
 class PriorityJni {
  public:
   // Returns the equivalent org.rocksdb.Priority for the provided
-  // C++ ROCKSDB_NAMESPACE::Env::Priority enum
+  // C++ MIZAR_NAMESPACE::Env::Priority enum
   static jbyte toJavaPriority(
-      const ROCKSDB_NAMESPACE::Env::Priority& priority) {
+      const MIZAR_NAMESPACE::Env::Priority& priority) {
     switch (priority) {
-      case ROCKSDB_NAMESPACE::Env::Priority::BOTTOM:
+      case MIZAR_NAMESPACE::Env::Priority::BOTTOM:
         return 0x0;
-      case ROCKSDB_NAMESPACE::Env::Priority::LOW:
+      case MIZAR_NAMESPACE::Env::Priority::LOW:
         return 0x1;
-      case ROCKSDB_NAMESPACE::Env::Priority::HIGH:
+      case MIZAR_NAMESPACE::Env::Priority::HIGH:
         return 0x2;
-      case ROCKSDB_NAMESPACE::Env::Priority::TOTAL:
+      case MIZAR_NAMESPACE::Env::Priority::TOTAL:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::env::Priority enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::env::Priority enum for the
   // provided Java org.rocksdb.Priority
-  static ROCKSDB_NAMESPACE::Env::Priority toCppPriority(jbyte jpriority) {
+  static MIZAR_NAMESPACE::Env::Priority toCppPriority(jbyte jpriority) {
     switch (jpriority) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::Env::Priority::BOTTOM;
+        return MIZAR_NAMESPACE::Env::Priority::BOTTOM;
       case 0x1:
-        return ROCKSDB_NAMESPACE::Env::Priority::LOW;
+        return MIZAR_NAMESPACE::Env::Priority::LOW;
       case 0x2:
-        return ROCKSDB_NAMESPACE::Env::Priority::HIGH;
+        return MIZAR_NAMESPACE::Env::Priority::HIGH;
       case 0x3:
-        return ROCKSDB_NAMESPACE::Env::Priority::TOTAL;
+        return MIZAR_NAMESPACE::Env::Priority::TOTAL;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::Env::Priority::LOW;
+        return MIZAR_NAMESPACE::Env::Priority::LOW;
     }
   }
 };
@@ -6635,39 +6635,39 @@ class PriorityJni {
 class ThreadTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ThreadType for the provided
-  // C++ ROCKSDB_NAMESPACE::ThreadStatus::ThreadType enum
+  // C++ MIZAR_NAMESPACE::ThreadStatus::ThreadType enum
   static jbyte toJavaThreadType(
-      const ROCKSDB_NAMESPACE::ThreadStatus::ThreadType& thread_type) {
+      const MIZAR_NAMESPACE::ThreadStatus::ThreadType& thread_type) {
     switch (thread_type) {
-      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY:
+      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY:
+      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::USER:
+      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::USER:
         return 0x2;
-      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY:
+      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::ThreadType enum
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::ThreadType enum
   // for the provided Java org.rocksdb.ThreadType
-  static ROCKSDB_NAMESPACE::ThreadStatus::ThreadType toCppThreadType(
+  static MIZAR_NAMESPACE::ThreadStatus::ThreadType toCppThreadType(
       jbyte jthread_type) {
     switch (jthread_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY;
+        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
+        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
       case 0x2:
         return ThreadStatus::ThreadType::USER;
       case 0x3:
-        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY;
+        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
+        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
     }
   }
 };
@@ -6676,35 +6676,35 @@ class ThreadTypeJni {
 class OperationTypeJni {
  public:
   // Returns the equivalent org.rocksdb.OperationType for the provided
-  // C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationType enum
+  // C++ MIZAR_NAMESPACE::ThreadStatus::OperationType enum
   static jbyte toJavaOperationType(
-      const ROCKSDB_NAMESPACE::ThreadStatus::OperationType& operation_type) {
+      const MIZAR_NAMESPACE::ThreadStatus::OperationType& operation_type) {
     switch (operation_type) {
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN:
+      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION:
+      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH:
+      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationType
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::OperationType
   // enum for the provided Java org.rocksdb.OperationType
-  static ROCKSDB_NAMESPACE::ThreadStatus::OperationType toCppOperationType(
+  static MIZAR_NAMESPACE::ThreadStatus::OperationType toCppOperationType(
       jbyte joperation_type) {
     switch (joperation_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION;
       case 0x2:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
     }
   }
 };
@@ -6713,39 +6713,39 @@ class OperationTypeJni {
 class OperationStageJni {
  public:
   // Returns the equivalent org.rocksdb.OperationStage for the provided
-  // C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationStage enum
+  // C++ MIZAR_NAMESPACE::ThreadStatus::OperationStage enum
   static jbyte toJavaOperationStage(
-      const ROCKSDB_NAMESPACE::ThreadStatus::OperationStage& operation_stage) {
+      const MIZAR_NAMESPACE::ThreadStatus::OperationStage& operation_stage) {
     switch (operation_stage) {
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN:
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN:
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_FLUSH_WRITE_L0:
         return 0x2;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_PREPARE:
         return 0x3;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_RUN:
         return 0x4;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_PROCESS_KV:
         return 0x5;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_INSTALL:
         return 0x6;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_SYNC_FILE:
         return 0x7;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_PICK_MEMTABLES_TO_FLUSH:
         return 0x8;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_MEMTABLE_ROLLBACK:
         return 0x9;
-      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_MEMTABLE_INSTALL_FLUSH_RESULTS:
         return 0xA;
       default:
@@ -6753,45 +6753,45 @@ class OperationStageJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationStage
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::OperationStage
   // enum for the provided Java org.rocksdb.OperationStage
-  static ROCKSDB_NAMESPACE::ThreadStatus::OperationStage toCppOperationStage(
+  static MIZAR_NAMESPACE::ThreadStatus::OperationStage toCppOperationStage(
       jbyte joperation_stage) {
     switch (joperation_stage) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN;
       case 0x2:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_FLUSH_WRITE_L0;
       case 0x3:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_PREPARE;
       case 0x4:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_RUN;
       case 0x5:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_PROCESS_KV;
       case 0x6:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_INSTALL;
       case 0x7:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_SYNC_FILE;
       case 0x8:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_PICK_MEMTABLES_TO_FLUSH;
       case 0x9:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_MEMTABLE_ROLLBACK;
       case 0xA:
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_MEMTABLE_INSTALL_FLUSH_RESULTS;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
     }
   }
 };
@@ -6800,31 +6800,31 @@ class OperationStageJni {
 class StateTypeJni {
  public:
   // Returns the equivalent org.rocksdb.StateType for the provided
-  // C++ ROCKSDB_NAMESPACE::ThreadStatus::StateType enum
+  // C++ MIZAR_NAMESPACE::ThreadStatus::StateType enum
   static jbyte toJavaStateType(
-      const ROCKSDB_NAMESPACE::ThreadStatus::StateType& state_type) {
+      const MIZAR_NAMESPACE::ThreadStatus::StateType& state_type) {
     switch (state_type) {
-      case ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN:
+      case MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT:
+      case MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT:
         return 0x1;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::StateType enum
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::StateType enum
   // for the provided Java org.rocksdb.StateType
-  static ROCKSDB_NAMESPACE::ThreadStatus::StateType toCppStateType(
+  static MIZAR_NAMESPACE::ThreadStatus::StateType toCppStateType(
       jbyte jstate_type) {
     switch (jstate_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT;
+        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
+        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
     }
   }
 };
@@ -6848,16 +6848,16 @@ class ThreadStatusJni : public JavaClass {
 
   /**
    * Create a new Java org.rocksdb.ThreadStatus object with the same
-   * properties as the provided C++ ROCKSDB_NAMESPACE::ThreadStatus object
+   * properties as the provided C++ MIZAR_NAMESPACE::ThreadStatus object
    *
    * @param env A pointer to the Java environment
-   * @param thread_status A pointer to ROCKSDB_NAMESPACE::ThreadStatus object
+   * @param thread_status A pointer to MIZAR_NAMESPACE::ThreadStatus object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyOptions object, or
    * nullptr if an an exception occurs
    */
   static jobject construct(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::ThreadStatus* thread_status) {
+      JNIEnv* env, const MIZAR_NAMESPACE::ThreadStatus* thread_status) {
     jclass jclazz = getJClass(env);
     if(jclazz == nullptr) {
       // exception occurred accessing class
@@ -6887,7 +6887,7 @@ class ThreadStatusJni : public JavaClass {
 
     // long[]
     const jsize len = static_cast<jsize>(
-        ROCKSDB_NAMESPACE::ThreadStatus::kNumOperationProperties);
+        MIZAR_NAMESPACE::ThreadStatus::kNumOperationProperties);
     jlongArray joperation_properties =
         env->NewLongArray(len);
     if (joperation_properties == nullptr) {
@@ -6942,39 +6942,39 @@ class ThreadStatusJni : public JavaClass {
 class CompactionStyleJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionStyle for the provided
-  // C++ ROCKSDB_NAMESPACE::CompactionStyle enum
+  // C++ MIZAR_NAMESPACE::CompactionStyle enum
   static jbyte toJavaCompactionStyle(
-      const ROCKSDB_NAMESPACE::CompactionStyle& compaction_style) {
+      const MIZAR_NAMESPACE::CompactionStyle& compaction_style) {
     switch (compaction_style) {
-      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel:
+      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel:
         return 0x0;
-      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleUniversal:
+      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleUniversal:
         return 0x1;
-      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleFIFO:
+      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleFIFO:
         return 0x2;
-      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleNone:
+      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleNone:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionStyle enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionStyle enum for the
   // provided Java org.rocksdb.CompactionStyle
-  static ROCKSDB_NAMESPACE::CompactionStyle toCppCompactionStyle(
+  static MIZAR_NAMESPACE::CompactionStyle toCppCompactionStyle(
       jbyte jcompaction_style) {
     switch (jcompaction_style) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
+        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
       case 0x1:
-        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleUniversal;
+        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleUniversal;
       case 0x2:
-        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleFIFO;
+        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleFIFO;
       case 0x3:
-        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleNone;
+        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleNone;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
+        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
     }
   }
 };
@@ -6983,87 +6983,87 @@ class CompactionStyleJni {
 class CompactionReasonJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionReason for the provided
-  // C++ ROCKSDB_NAMESPACE::CompactionReason enum
+  // C++ MIZAR_NAMESPACE::CompactionReason enum
   static jbyte toJavaCompactionReason(
-      const ROCKSDB_NAMESPACE::CompactionReason& compaction_reason) {
+      const MIZAR_NAMESPACE::CompactionReason& compaction_reason) {
     switch (compaction_reason) {
-      case ROCKSDB_NAMESPACE::CompactionReason::kUnknown:
+      case MIZAR_NAMESPACE::CompactionReason::kUnknown:
         return 0x0;
-      case ROCKSDB_NAMESPACE::CompactionReason::kLevelL0FilesNum:
+      case MIZAR_NAMESPACE::CompactionReason::kLevelL0FilesNum:
         return 0x1;
-      case ROCKSDB_NAMESPACE::CompactionReason::kLevelMaxLevelSize:
+      case MIZAR_NAMESPACE::CompactionReason::kLevelMaxLevelSize:
         return 0x2;
-      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeAmplification:
+      case MIZAR_NAMESPACE::CompactionReason::kUniversalSizeAmplification:
         return 0x3;
-      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeRatio:
+      case MIZAR_NAMESPACE::CompactionReason::kUniversalSizeRatio:
         return 0x4;
-      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSortedRunNum:
+      case MIZAR_NAMESPACE::CompactionReason::kUniversalSortedRunNum:
         return 0x5;
-      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOMaxSize:
+      case MIZAR_NAMESPACE::CompactionReason::kFIFOMaxSize:
         return 0x6;
-      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOReduceNumFiles:
+      case MIZAR_NAMESPACE::CompactionReason::kFIFOReduceNumFiles:
         return 0x7;
-      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOTtl:
+      case MIZAR_NAMESPACE::CompactionReason::kFIFOTtl:
         return 0x8;
-      case ROCKSDB_NAMESPACE::CompactionReason::kManualCompaction:
+      case MIZAR_NAMESPACE::CompactionReason::kManualCompaction:
         return 0x9;
-      case ROCKSDB_NAMESPACE::CompactionReason::kFilesMarkedForCompaction:
+      case MIZAR_NAMESPACE::CompactionReason::kFilesMarkedForCompaction:
         return 0x10;
-      case ROCKSDB_NAMESPACE::CompactionReason::kBottommostFiles:
+      case MIZAR_NAMESPACE::CompactionReason::kBottommostFiles:
         return 0x0A;
-      case ROCKSDB_NAMESPACE::CompactionReason::kTtl:
+      case MIZAR_NAMESPACE::CompactionReason::kTtl:
         return 0x0B;
-      case ROCKSDB_NAMESPACE::CompactionReason::kFlush:
+      case MIZAR_NAMESPACE::CompactionReason::kFlush:
         return 0x0C;
-      case ROCKSDB_NAMESPACE::CompactionReason::kExternalSstIngestion:
+      case MIZAR_NAMESPACE::CompactionReason::kExternalSstIngestion:
         return 0x0D;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionReason enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionReason enum for the
   // provided Java org.rocksdb.CompactionReason
-  static ROCKSDB_NAMESPACE::CompactionReason toCppCompactionReason(
+  static MIZAR_NAMESPACE::CompactionReason toCppCompactionReason(
       jbyte jcompaction_reason) {
     switch (jcompaction_reason) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::CompactionReason::kUnknown;
+        return MIZAR_NAMESPACE::CompactionReason::kUnknown;
       case 0x1:
-        return ROCKSDB_NAMESPACE::CompactionReason::kLevelL0FilesNum;
+        return MIZAR_NAMESPACE::CompactionReason::kLevelL0FilesNum;
       case 0x2:
-        return ROCKSDB_NAMESPACE::CompactionReason::kLevelMaxLevelSize;
+        return MIZAR_NAMESPACE::CompactionReason::kLevelMaxLevelSize;
       case 0x3:
-        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeAmplification;
+        return MIZAR_NAMESPACE::CompactionReason::kUniversalSizeAmplification;
       case 0x4:
-        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeRatio;
+        return MIZAR_NAMESPACE::CompactionReason::kUniversalSizeRatio;
       case 0x5:
-        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSortedRunNum;
+        return MIZAR_NAMESPACE::CompactionReason::kUniversalSortedRunNum;
       case 0x6:
-        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOMaxSize;
+        return MIZAR_NAMESPACE::CompactionReason::kFIFOMaxSize;
       case 0x7:
-        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOReduceNumFiles;
+        return MIZAR_NAMESPACE::CompactionReason::kFIFOReduceNumFiles;
       case 0x8:
-        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOTtl;
+        return MIZAR_NAMESPACE::CompactionReason::kFIFOTtl;
       case 0x9:
-        return ROCKSDB_NAMESPACE::CompactionReason::kManualCompaction;
+        return MIZAR_NAMESPACE::CompactionReason::kManualCompaction;
       case 0x10:
-        return ROCKSDB_NAMESPACE::CompactionReason::kFilesMarkedForCompaction;
+        return MIZAR_NAMESPACE::CompactionReason::kFilesMarkedForCompaction;
       case 0x0A:
-        return ROCKSDB_NAMESPACE::CompactionReason::kBottommostFiles;
+        return MIZAR_NAMESPACE::CompactionReason::kBottommostFiles;
       case 0x0B:
-        return ROCKSDB_NAMESPACE::CompactionReason::kTtl;
+        return MIZAR_NAMESPACE::CompactionReason::kTtl;
       case 0x0C:
-        return ROCKSDB_NAMESPACE::CompactionReason::kFlush;
+        return MIZAR_NAMESPACE::CompactionReason::kFlush;
       case 0x0D:
-        return ROCKSDB_NAMESPACE::CompactionReason::kExternalSstIngestion;
+        return MIZAR_NAMESPACE::CompactionReason::kExternalSstIngestion;
       case 0x0E:
-        return ROCKSDB_NAMESPACE::CompactionReason::kPeriodicCompaction;
+        return MIZAR_NAMESPACE::CompactionReason::kPeriodicCompaction;
       case 0x0F:
-        return ROCKSDB_NAMESPACE::CompactionReason::kChangeTemperature;
+        return MIZAR_NAMESPACE::CompactionReason::kChangeTemperature;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::CompactionReason::kUnknown;
+        return MIZAR_NAMESPACE::CompactionReason::kUnknown;
     }
   }
 };
@@ -7072,30 +7072,30 @@ class CompactionReasonJni {
 class WalFileTypeJni {
  public:
   // Returns the equivalent org.rocksdb.WalFileType for the provided
-  // C++ ROCKSDB_NAMESPACE::WalFileType enum
+  // C++ MIZAR_NAMESPACE::WalFileType enum
   static jbyte toJavaWalFileType(
-      const ROCKSDB_NAMESPACE::WalFileType& wal_file_type) {
+      const MIZAR_NAMESPACE::WalFileType& wal_file_type) {
     switch (wal_file_type) {
-      case ROCKSDB_NAMESPACE::WalFileType::kArchivedLogFile:
+      case MIZAR_NAMESPACE::WalFileType::kArchivedLogFile:
         return 0x0;
-      case ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile:
+      case MIZAR_NAMESPACE::WalFileType::kAliveLogFile:
         return 0x1;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::WalFileType enum for the
+  // Returns the equivalent C++ MIZAR_NAMESPACE::WalFileType enum for the
   // provided Java org.rocksdb.WalFileType
-  static ROCKSDB_NAMESPACE::WalFileType toCppWalFileType(jbyte jwal_file_type) {
+  static MIZAR_NAMESPACE::WalFileType toCppWalFileType(jbyte jwal_file_type) {
     switch (jwal_file_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::WalFileType::kArchivedLogFile;
+        return MIZAR_NAMESPACE::WalFileType::kArchivedLogFile;
       case 0x1:
-        return ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile;
+        return MIZAR_NAMESPACE::WalFileType::kAliveLogFile;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile;
+        return MIZAR_NAMESPACE::WalFileType::kAliveLogFile;
     }
   }
 };
@@ -7112,7 +7112,7 @@ class LogFileJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLogFile(JNIEnv* env,
-                                ROCKSDB_NAMESPACE::LogFile* log_file) {
+                                MIZAR_NAMESPACE::LogFile* log_file) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -7127,7 +7127,7 @@ class LogFileJni : public JavaClass {
 
     std::string path_name = log_file->PathName();
     jstring jpath_name =
-        ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &path_name, true);
+        MIZAR_NAMESPACE::JniUtil::toJavaString(env, &path_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
       return nullptr;
@@ -7135,7 +7135,7 @@ class LogFileJni : public JavaClass {
 
     jobject jlog_file = env->NewObject(
         jclazz, mid, jpath_name, static_cast<jlong>(log_file->LogNumber()),
-        ROCKSDB_NAMESPACE::WalFileTypeJni::toJavaWalFileType(log_file->Type()),
+        MIZAR_NAMESPACE::WalFileTypeJni::toJavaWalFileType(log_file->Type()),
         static_cast<jlong>(log_file->StartSequence()),
         static_cast<jlong>(log_file->SizeFileBytes()));
 
@@ -7167,7 +7167,7 @@ class LiveFileMetaDataJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLiveFileMetaData(
-      JNIEnv* env, ROCKSDB_NAMESPACE::LiveFileMetaData* live_file_meta_data) {
+      JNIEnv* env, MIZAR_NAMESPACE::LiveFileMetaData* live_file_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -7180,14 +7180,14 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jcolumn_family_name = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jcolumn_family_name = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->column_family_name);
     if (jcolumn_family_name == nullptr) {
       // exception occurred creating java byte array
       return nullptr;
     }
 
-    jstring jfile_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jfile_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &live_file_meta_data->name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -7195,7 +7195,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jpath = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jpath = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &live_file_meta_data->db_path, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -7204,7 +7204,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jsmallest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jsmallest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->smallestkey);
     if (jsmallest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7214,7 +7214,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jlargest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jlargest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->largestkey);
     if (jlargest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7278,7 +7278,7 @@ class SstFileMetaDataJni : public JavaClass {
    */
   static jobject fromCppSstFileMetaData(
       JNIEnv* env,
-      const ROCKSDB_NAMESPACE::SstFileMetaData* sst_file_meta_data) {
+      const MIZAR_NAMESPACE::SstFileMetaData* sst_file_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -7291,14 +7291,14 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jfile_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jfile_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &sst_file_meta_data->name, true);
     if (jfile_name == nullptr) {
       // exception occurred creating java byte array
       return nullptr;
     }
 
-    jstring jpath = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+    jstring jpath = MIZAR_NAMESPACE::JniUtil::toJavaString(
         env, &sst_file_meta_data->db_path, true);
     if (jpath == nullptr) {
       // exception occurred creating java byte array
@@ -7306,7 +7306,7 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jsmallest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jsmallest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, sst_file_meta_data->smallestkey);
     if (jsmallest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7315,7 +7315,7 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jlargest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jlargest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, sst_file_meta_data->largestkey);
     if (jlargest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7373,7 +7373,7 @@ class LevelMetaDataJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLevelMetaData(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::LevelMetaData* level_meta_data) {
+      JNIEnv* env, const MIZAR_NAMESPACE::LevelMetaData* level_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -7441,7 +7441,7 @@ class ColumnFamilyMetaDataJni : public JavaClass {
    */
   static jobject fromCppColumnFamilyMetaData(
       JNIEnv* env,
-      const ROCKSDB_NAMESPACE::ColumnFamilyMetaData* column_famly_meta_data) {
+      const MIZAR_NAMESPACE::ColumnFamilyMetaData* column_famly_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -7454,7 +7454,7 @@ class ColumnFamilyMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jname = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jname = MIZAR_NAMESPACE::JniUtil::copyBytes(
         env, column_famly_meta_data->name);
     if (jname == nullptr) {
       // exception occurred creating java byte array
@@ -7511,7 +7511,7 @@ class ColumnFamilyMetaDataJni : public JavaClass {
 // The portal class for org.rocksdb.AbstractTraceWriter
 class AbstractTraceWriterJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::TraceWriterJniCallback*,
+          const MIZAR_NAMESPACE::TraceWriterJniCallback*,
           AbstractTraceWriterJni> {
  public:
   /**
@@ -7594,7 +7594,7 @@ class AbstractTraceWriterJni
 
 // The portal class for org.rocksdb.AbstractWalFilter
 class AbstractWalFilterJni
-    : public RocksDBNativeClass<const ROCKSDB_NAMESPACE::WalFilterJniCallback*,
+    : public RocksDBNativeClass<const MIZAR_NAMESPACE::WalFilterJniCallback*,
                                 AbstractWalFilterJni> {
  public:
   /**
@@ -7680,20 +7680,20 @@ class AbstractWalFilterJni
 class WalProcessingOptionJni {
  public:
   // Returns the equivalent org.rocksdb.WalProcessingOption for the provided
-  // C++ ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption enum
+  // C++ MIZAR_NAMESPACE::WalFilter::WalProcessingOption enum
   static jbyte toJavaWalProcessingOption(
-      const ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption&
+      const MIZAR_NAMESPACE::WalFilter::WalProcessingOption&
           wal_processing_option) {
     switch (wal_processing_option) {
-      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
           kContinueProcessing:
         return 0x0;
-      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
           kIgnoreCurrentRecord:
         return 0x1;
-      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay:
+      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay:
         return 0x2;
-      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kCorruptedRecord:
+      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kCorruptedRecord:
         return 0x3;
       default:
         return 0x7F;  // undefined
@@ -7701,25 +7701,25 @@ class WalProcessingOptionJni {
   }
 
   // Returns the equivalent C++
-  // ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption enum for the provided
+  // MIZAR_NAMESPACE::WalFilter::WalProcessingOption enum for the provided
   // Java org.rocksdb.WalProcessingOption
-  static ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption
+  static MIZAR_NAMESPACE::WalFilter::WalProcessingOption
   toCppWalProcessingOption(jbyte jwal_processing_option) {
     switch (jwal_processing_option) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
             kContinueProcessing;
       case 0x1:
-        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
             kIgnoreCurrentRecord;
       case 0x2:
-        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay;
+        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay;
       case 0x3:
-        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
             kCorruptedRecord;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
+        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
             kCorruptedRecord;
     }
   }
@@ -7729,36 +7729,36 @@ class WalProcessingOptionJni {
 class ReusedSynchronisationTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ReusedSynchronisationType for the
-  // provided C++ ROCKSDB_NAMESPACE::ReusedSynchronisationType enum
+  // provided C++ MIZAR_NAMESPACE::ReusedSynchronisationType enum
   static jbyte toJavaReusedSynchronisationType(
-      const ROCKSDB_NAMESPACE::ReusedSynchronisationType&
+      const MIZAR_NAMESPACE::ReusedSynchronisationType&
           reused_synchronisation_type) {
     switch(reused_synchronisation_type) {
-      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::MUTEX:
+      case MIZAR_NAMESPACE::ReusedSynchronisationType::MUTEX:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX:
+      case MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL:
+      case MIZAR_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ReusedSynchronisationType
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ReusedSynchronisationType
   // enum for the provided Java org.rocksdb.ReusedSynchronisationType
-  static ROCKSDB_NAMESPACE::ReusedSynchronisationType
+  static MIZAR_NAMESPACE::ReusedSynchronisationType
   toCppReusedSynchronisationType(jbyte reused_synchronisation_type) {
     switch(reused_synchronisation_type) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::MUTEX;
+        return MIZAR_NAMESPACE::ReusedSynchronisationType::MUTEX;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
+        return MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
       case 0x2:
-        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL;
+        return MIZAR_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
+        return MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
     }
   }
 };
@@ -7766,16 +7766,16 @@ class ReusedSynchronisationTypeJni {
 class SanityLevelJni {
  public:
   // Returns the equivalent org.rocksdb.SanityLevel for the provided
-  // C++ ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel enum
+  // C++ MIZAR_NAMESPACE::ConfigOptions::SanityLevel enum
   static jbyte toJavaSanityLevel(
-      const ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel &sanity_level) {
+      const MIZAR_NAMESPACE::ConfigOptions::SanityLevel &sanity_level) {
     switch (sanity_level) {
-      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::kSanityLevelNone:
+      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::kSanityLevelNone:
         return 0x0;
-      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::
+      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::
           kSanityLevelLooselyCompatible:
         return 0x1;
-      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::
+      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::
           kSanityLevelExactMatch:
         return -0x01;
       default:
@@ -7783,18 +7783,18 @@ class SanityLevelJni {
     }
   }
 
-  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel enum for
+  // Returns the equivalent C++ MIZAR_NAMESPACE::ConfigOptions::SanityLevel enum for
   // the provided Java org.rocksdb.SanityLevel
-  static ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel toCppSanityLevel(
+  static MIZAR_NAMESPACE::ConfigOptions::SanityLevel toCppSanityLevel(
       jbyte sanity_level) {
     switch (sanity_level) {
       case 0x0:
-        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelNone;
+        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelNone;
       case 0x1:
-        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelLooselyCompatible;
+        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelLooselyCompatible;
       default:
         // undefined/default
-        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelExactMatch;
+        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelExactMatch;
     }
   }
 };
@@ -7803,7 +7803,7 @@ class SanityLevelJni {
 class EnabledEventCallbackJni {
  public:
   // Returns the set of equivalent C++
-  // ROCKSDB_NAMESPACE::EnabledEventCallbackJni::EnabledEventCallback enums for
+  // MIZAR_NAMESPACE::EnabledEventCallbackJni::EnabledEventCallback enums for
   // the provided Java jenabled_event_callback_values
   static std::set<EnabledEventCallback> toCppEnabledEventCallbacks(
       jlong jenabled_event_callback_values) {
@@ -7821,7 +7821,7 @@ class EnabledEventCallbackJni {
 // The portal class for org.rocksdb.AbstractEventListener
 class AbstractEventListenerJni
     : public RocksDBNativeClass<
-          const ROCKSDB_NAMESPACE::EventListenerJniCallback*,
+          const MIZAR_NAMESPACE::EventListenerJniCallback*,
           AbstractEventListenerJni> {
  public:
   /**
@@ -8209,7 +8209,7 @@ class FlushJobInfoJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppFlushJobInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::FlushJobInfo* flush_job_info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::FlushJobInfo* flush_job_info) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -8268,7 +8268,7 @@ class TableFileDeletionInfoJni : public JavaClass {
    */
   static jobject fromCppTableFileDeletionInfo(
       JNIEnv* env,
-      const ROCKSDB_NAMESPACE::TableFileDeletionInfo* file_del_info) {
+      const MIZAR_NAMESPACE::TableFileDeletionInfo* file_del_info) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -8305,7 +8305,7 @@ class CompactionJobInfoJni : public JavaClass {
  public:
   static jobject fromCppCompactionJobInfo(
       JNIEnv* env,
-      const ROCKSDB_NAMESPACE::CompactionJobInfo* compaction_job_info) {
+      const MIZAR_NAMESPACE::CompactionJobInfo* compaction_job_info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8326,7 +8326,7 @@ class CompactionJobInfoJni : public JavaClass {
 class TableFileCreationInfoJni : public JavaClass {
  public:
   static jobject fromCppTableFileCreationInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::TableFileCreationInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::TableFileCreationInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8381,7 +8381,7 @@ class TableFileCreationInfoJni : public JavaClass {
 class TableFileCreationBriefInfoJni : public JavaClass {
  public:
   static jobject fromCppTableFileCreationBriefInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::TableFileCreationBriefInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::TableFileCreationBriefInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8420,7 +8420,7 @@ class TableFileCreationBriefInfoJni : public JavaClass {
 class MemTableInfoJni : public JavaClass {
  public:
   static jobject fromCppMemTableInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::MemTableInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::MemTableInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8448,7 +8448,7 @@ class MemTableInfoJni : public JavaClass {
 class ExternalFileIngestionInfoJni : public JavaClass {
  public:
   static jobject fromCppExternalFileIngestionInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::ExternalFileIngestionInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::ExternalFileIngestionInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8497,7 +8497,7 @@ class ExternalFileIngestionInfoJni : public JavaClass {
 class WriteStallInfoJni : public JavaClass {
  public:
   static jobject fromCppWriteStallInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::WriteStallInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::WriteStallInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8523,7 +8523,7 @@ class WriteStallInfoJni : public JavaClass {
 class FileOperationInfoJni : public JavaClass {
  public:
   static jobject fromCppFileOperationInfo(
-      JNIEnv* env, const ROCKSDB_NAMESPACE::FileOperationInfo* info) {
+      JNIEnv* env, const MIZAR_NAMESPACE::FileOperationInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8553,5 +8553,5 @@ class FileOperationInfoJni : public JavaClass {
                             "(Ljava/lang/String;JJJJLorg/rocksdb/Status;)V");
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // JAVA_ROCKSJNI_PORTAL_H_

@@ -19,12 +19,12 @@
 #include "options/cf_options.h"
 #include "port/malloc.h"
 #include "port/port.h"  // noexcept
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class RandomAccessFile;
 struct ReadOptions;
@@ -293,11 +293,11 @@ struct BlockContents {
       if (allocator) {
         return allocator->UsableSize(allocation.get(), data.size());
       }
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
       return malloc_usable_size(allocation.get());
 #else
       return data.size();
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     } else {
       return 0;  // no extra memory is occupied by the data
     }
@@ -356,4 +356,4 @@ inline BlockHandle::BlockHandle() : BlockHandle(~uint64_t{0}, ~uint64_t{0}) {}
 inline BlockHandle::BlockHandle(uint64_t _offset, uint64_t _size)
     : offset_(_offset), size_(_size) {}
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#include "rocksdb/perf_context.h"
+#include "mizar/perf_context.h"
 
 #include <algorithm>
 #include <iostream>
@@ -15,10 +15,10 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/thread_status_util.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/db.h"
+#include "mizar/memtablerep.h"
+#include "mizar/slice_transform.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "util/stop_watch.h"
 #include "util/string_util.h"
@@ -34,9 +34,9 @@ bool FLAGS_verbose = false;
 
 // Path to the database on file system
 const std::string kDbName =
-    ROCKSDB_NAMESPACE::test::PerThreadDBPath("perf_context_test");
+    MIZAR_NAMESPACE::test::PerThreadDBPath("perf_context_test");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::shared_ptr<DB> OpenDb(bool read_only = false) {
     DB* db;
@@ -49,11 +49,11 @@ std::shared_ptr<DB> OpenDb(bool read_only = false) {
       FLAGS_min_write_buffer_number_to_merge;
 
     if (FLAGS_use_set_based_memetable) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       options.prefix_extractor.reset(
-          ROCKSDB_NAMESPACE::NewFixedPrefixTransform(0));
+          MIZAR_NAMESPACE::NewFixedPrefixTransform(0));
       options.memtable_factory.reset(NewHashSkipListRepFactory());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     }
 
     Status s;
@@ -492,7 +492,7 @@ void ProfileQueries(bool enabled_time = false) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(PerfContextTest, KeyComparisonCount) {
   SetPerfLevel(kEnableCount);
   ProfileQueries();
@@ -503,7 +503,7 @@ TEST_F(PerfContextTest, KeyComparisonCount) {
   SetPerfLevel(kEnableTime);
   ProfileQueries(true);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 // make perf_context_test
 // export ROCKSDB_TESTS=PerfContextTest.SeekKeyComparison
@@ -597,7 +597,7 @@ TEST_F(PerfContextTest, DBMutexLockCounter) {
       InstrumentedMutex mutex(nullptr, SystemClock::Default().get(),
                               stats_code[c]);
       mutex.Lock();
-      ROCKSDB_NAMESPACE::port::Thread child_thread([&] {
+      MIZAR_NAMESPACE::port::Thread child_thread([&] {
         SetPerfLevel(perf_level_test);
         get_perf_context()->Reset();
         ASSERT_EQ(get_perf_context()->db_mutex_lock_nanos, 0);
@@ -956,7 +956,7 @@ TEST_F(PerfContextTest, CPUTimer) {
     ASSERT_EQ(count, get_perf_context()->iter_seek_cpu_nanos);
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

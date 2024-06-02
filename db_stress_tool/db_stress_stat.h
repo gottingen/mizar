@@ -11,20 +11,20 @@
 
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/snapshot.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
 #include "util/gflags_compat.h"
 #include "util/random.h"
 
 DECLARE_bool(histogram);
 DECLARE_bool(progress_reports);
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Database statistics
-extern std::shared_ptr<ROCKSDB_NAMESPACE::Statistics> dbstats;
-extern std::shared_ptr<ROCKSDB_NAMESPACE::Statistics> dbstats_secondaries;
+extern std::shared_ptr<MIZAR_NAMESPACE::Statistics> dbstats;
+extern std::shared_ptr<MIZAR_NAMESPACE::Statistics> dbstats_secondaries;
 
 class Stats {
  private:
@@ -216,4 +216,4 @@ class Stats {
     fflush(stdout);
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

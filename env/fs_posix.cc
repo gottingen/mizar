@@ -10,7 +10,7 @@
 #if !defined(OS_WIN)
 
 #include <dirent.h>
-#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
+#ifndef MIZAR_NO_DYNAMIC_EXTENSION
 #include <dlfcn.h>
 #endif
 #include <errno.h>
@@ -52,9 +52,9 @@
 #include "monitoring/iostats_context_imp.h"
 #include "monitoring/thread_status_updater.h"
 #include "port/port.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/compression_context_cache.h"
@@ -75,7 +75,7 @@
 
 extern "C" bool RocksDbIOUringEnable() __attribute__((__weak__));
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -163,10 +163,10 @@ class PosixFileSystem : public FileSystem {
     FILE* file = nullptr;
 
     if (options.use_direct_reads && !options.use_mmap_reads) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       return IOStatus::IOError(fname,
                                "Direct I/O not supported in RocksDB lite");
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 #if !defined(OS_MACOSX) && !defined(OS_OPENBSD) && !defined(OS_SOLARIS)
       flags |= O_DIRECT;
       TEST_SYNC_POINT_CALLBACK("NewSequentialFile:O_DIRECT", &flags);
@@ -218,10 +218,10 @@ class PosixFileSystem : public FileSystem {
     int flags = cloexec_flags(O_RDONLY, &options);
 
     if (options.use_direct_reads && !options.use_mmap_reads) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       return IOStatus::IOError(fname,
                                "Direct I/O not supported in RocksDB lite");
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 #if !defined(OS_MACOSX) && !defined(OS_OPENBSD) && !defined(OS_SOLARIS)
       flags |= O_DIRECT;
       TEST_SYNC_POINT_CALLBACK("NewRandomAccessFile:O_DIRECT", &flags);
@@ -269,7 +269,7 @@ class PosixFileSystem : public FileSystem {
       result->reset(new PosixRandomAccessFile(
           fname, fd, GetLogicalBlockSizeForReadIfNeeded(options, fname, fd),
           options
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
           ,
           !IsIOUringEnabled() ? nullptr : thread_local_io_urings_.get()
 #endif
@@ -295,10 +295,10 @@ class PosixFileSystem : public FileSystem {
       // appends data to the end of the file, regardless of the value of
       // offset.
       // More info here: https://linux.die.net/man/2/pwrite
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       return IOStatus::IOError(fname,
                                "Direct I/O not supported in RocksDB lite");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       flags |= O_WRONLY;
 #if !defined(OS_MACOSX) && !defined(OS_OPENBSD) && !defined(OS_SOLARIS)
       flags |= O_DIRECT;
@@ -394,10 +394,10 @@ class PosixFileSystem : public FileSystem {
     int flags = 0;
     // Direct IO mode with O_DIRECT flag or F_NOCAHCE (MAC OSX)
     if (options.use_direct_writes && !options.use_mmap_writes) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       return IOStatus::IOError(fname,
                                "Direct I/O not supported in RocksDB lite");
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       flags |= O_WRONLY;
 #if !defined(OS_MACOSX) && !defined(OS_OPENBSD) && !defined(OS_SOLARIS)
       flags |= O_DIRECT;
@@ -593,7 +593,7 @@ class PosixFileSystem : public FileSystem {
       return status_to_io_status(
           IOError("when fdopen a file for new logger", fname, errno));
     } else {
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
       fallocate(fd, FALLOC_FL_KEEP_SIZE, 0, 4 * 1024);
 #endif
       SetFD_CLOEXEC(fd, nullptr);
@@ -621,7 +621,7 @@ class PosixFileSystem : public FileSystem {
       default:
         assert(err == EIO || err == ENOMEM);
         return IOStatus::IOError("Unexpected error(" +
-                                 ROCKSDB_NAMESPACE::ToString(err) +
+                                 MIZAR_NAMESPACE::ToString(err) +
                                  ") accessing file `" + fname + "' ");
     }
   }
@@ -824,9 +824,9 @@ class PosixFileSystem : public FileSystem {
       // posix logger, but posix logger prints it hex format.
       return IOError(
           "lock hold by current process, acquire time " +
-              ROCKSDB_NAMESPACE::ToString(prev_info.acquire_time) +
+              MIZAR_NAMESPACE::ToString(prev_info.acquire_time) +
               " acquiring thread " +
-              ROCKSDB_NAMESPACE::ToString(prev_info.acquiring_thread),
+              MIZAR_NAMESPACE::ToString(prev_info.acquiring_thread),
           fname, errno);
     }
 
@@ -1010,7 +1010,7 @@ class PosixFileSystem : public FileSystem {
   }
 
   bool SupportsFastAllocate(const std::string& path) {
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
     struct statfs s;
     if (statfs(path.c_str(), &s)) {
       return false;
@@ -1031,7 +1031,7 @@ class PosixFileSystem : public FileSystem {
 #endif
   }
 
-#ifdef ROCKSDB_IOURING_PRESENT
+#ifdef MIZAR_IOURING_PRESENT
   bool IsIOUringEnabled() {
     if (RocksDbIOUringEnable && RocksDbIOUringEnable()) {
       return true;
@@ -1039,9 +1039,9 @@ class PosixFileSystem : public FileSystem {
       return false;
     }
   }
-#endif  // ROCKSDB_IOURING_PRESENT
+#endif  // MIZAR_IOURING_PRESENT
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
   // io_uring instance
   std::unique_ptr<ThreadLocalPtr> thread_local_io_urings_;
 #endif
@@ -1098,7 +1098,7 @@ PosixFileSystem::PosixFileSystem()
       forceMmapOff_(false),
       page_size_(getpagesize()),
       allow_non_owner_access_(true) {
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
   // Test whether IOUring is supported, and if it does, create a managing
   // object for thread local point so that in the future thread-local
   // io_uring can be created.
@@ -1122,7 +1122,7 @@ std::shared_ptr<FileSystem> FileSystem::Default() {
   return default_fs_ptr;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static FactoryFunc<FileSystem> posix_filesystem_reg =
     ObjectLibrary::Default()->AddFactory<FileSystem>(
         ObjectLibrary::PatternEntry("posix").AddSeparator("://", false),
@@ -1133,6 +1133,6 @@ static FactoryFunc<FileSystem> posix_filesystem_reg =
         });
 #endif
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

@@ -11,7 +11,7 @@
 #include <algorithm>
 #include "port/port.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // This file contains utilities to handle the alignment of pages and buffers.
 
@@ -252,4 +252,4 @@ public:
     cursize_ = cursize;
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

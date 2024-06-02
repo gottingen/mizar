@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/sim_cache.h"
+#include "mizar/utilities/sim_cache.h"
 
 #include <cstdlib>
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SimCacheTest : public DBTestBase {
  private:
@@ -36,7 +36,7 @@ class SimCacheTest : public DBTestBase {
     Options options = CurrentOptions();
     options.create_if_missing = true;
     // options.compression = kNoCompression;
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     options.table_factory.reset(NewBlockBasedTableFactory(table_options));
     return options;
   }
@@ -217,10 +217,10 @@ TEST_F(SimCacheTest, SimCacheLogging) {
   ASSERT_GT(fsize, max_size - 100);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

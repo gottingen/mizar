@@ -18,9 +18,9 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
 #include "options/options_helper.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/persistent_cache_helper.h"
@@ -33,16 +33,16 @@
 #include "util/string_util.h"
 #include "util/xxhash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const uint64_t kLegacyBlockBasedTableMagicNumber;
 extern const uint64_t kBlockBasedTableMagicNumber;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 extern const uint64_t kLegacyPlainTableMagicNumber;
 extern const uint64_t kPlainTableMagicNumber;
 #else
-// ROCKSDB_LITE doesn't have plain table
+// MIZAR_LITE doesn't have plain table
 const uint64_t kLegacyPlainTableMagicNumber = 0;
 const uint64_t kPlainTableMagicNumber = 0;
 #endif
@@ -295,7 +295,7 @@ Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
     format_version_ = DecodeFixed32(part3_ptr);
     if (!IsSupportedFormatVersion(format_version_)) {
       return Status::Corruption("Corrupt or unsupported format_version: " +
-                                ROCKSDB_NAMESPACE::ToString(format_version_));
+                                MIZAR_NAMESPACE::ToString(format_version_));
     }
     // All known format versions >= 1 occupy exactly this many bytes.
     if (input.size() < kNewVersionsEncodedLength) {
@@ -310,7 +310,7 @@ Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
     if (!IsSupportedChecksumType(checksum_type())) {
       return Status::Corruption(
           "Corrupt or unsupported checksum type: " +
-          ROCKSDB_NAMESPACE::ToString(lossless_cast<uint8_t>(chksum)));
+          MIZAR_NAMESPACE::ToString(lossless_cast<uint8_t>(chksum)));
     }
     // Consume checksum type field
     input.remove_prefix(1);
@@ -334,14 +334,14 @@ std::string Footer::ToString() const {
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
     result.append("table_magic_number: " +
-                  ROCKSDB_NAMESPACE::ToString(table_magic_number_) + "\n  ");
+                  MIZAR_NAMESPACE::ToString(table_magic_number_) + "\n  ");
   } else {
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
     result.append("table_magic_number: " +
-                  ROCKSDB_NAMESPACE::ToString(table_magic_number_) + "\n  ");
+                  MIZAR_NAMESPACE::ToString(table_magic_number_) + "\n  ");
     result.append("format version: " +
-                  ROCKSDB_NAMESPACE::ToString(format_version_) + "\n  ");
+                  MIZAR_NAMESPACE::ToString(format_version_) + "\n  ");
   }
   return result;
 }
@@ -570,4 +570,4 @@ Status ReifyDbHostIdProperty(Env* env, std::string* db_host_id) {
 
   return Status::OK();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -10,7 +10,7 @@
 #if defined(__linux__)
 #include <asm/hwcap.h>
 #endif
-#ifdef ROCKSDB_AUXV_GETAUXVAL_PRESENT
+#ifdef MIZAR_AUXV_GETAUXVAL_PRESENT
 #include <sys/auxv.h>
 #endif
 #ifndef HWCAP_CRC32
@@ -48,7 +48,7 @@ extern bool pmull_runtime_flag;
 uint32_t crc32c_runtime_check(void) {
 #if !defined(__APPLE__)
   uint64_t auxv = 0;
-#if defined(ROCKSDB_AUXV_GETAUXVAL_PRESENT)
+#if defined(MIZAR_AUXV_GETAUXVAL_PRESENT)
   auxv = getauxval(AT_HWCAP);
 #elif defined(__FreeBSD__)
   elf_aux_info(AT_HWCAP, &auxv, sizeof(auxv));
@@ -65,7 +65,7 @@ uint32_t crc32c_runtime_check(void) {
 bool crc32c_pmull_runtime_check(void) {
 #if !defined(__APPLE__)
   uint64_t auxv = 0;
-#if defined(ROCKSDB_AUXV_GETAUXVAL_PRESENT)
+#if defined(MIZAR_AUXV_GETAUXVAL_PRESENT)
   auxv = getauxval(AT_HWCAP);
 #elif defined(__FreeBSD__)
   elf_aux_info(AT_HWCAP, &auxv, sizeof(auxv));
@@ -76,7 +76,7 @@ bool crc32c_pmull_runtime_check(void) {
 #endif
 }
 
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)

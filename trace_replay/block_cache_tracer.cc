@@ -11,13 +11,13 @@
 
 #include "db/db_impl/db_impl.h"
 #include "db/dbformat.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/slice.h"
+#include "mizar/trace_record.h"
 #include "util/coding.h"
 #include "util/hash.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 bool ShouldTrace(const Slice& block_key, const TraceOptions& trace_options) {
@@ -313,7 +313,7 @@ BlockCacheHumanReadableTraceWriter::~BlockCacheHumanReadableTraceWriter() {
 
 Status BlockCacheHumanReadableTraceWriter::NewWritableFile(
     const std::string& human_readable_trace_file_path,
-    ROCKSDB_NAMESPACE::Env* env) {
+    MIZAR_NAMESPACE::Env* env) {
   if (human_readable_trace_file_path.empty()) {
     return Status::InvalidArgument(
         "The provided human_readable_trace_file_path is null.");
@@ -494,4 +494,4 @@ uint64_t BlockCacheTracer::NextGetId() {
   return prev_value;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

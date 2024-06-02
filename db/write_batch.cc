@@ -33,7 +33,7 @@
 //    len: varint32
 //    data: uint8[len]
 
-#include "rocksdb/write_batch.h"
+#include "mizar/write_batch.h"
 
 #include <map>
 #include <stack>
@@ -55,15 +55,15 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
 #include "port/lang.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/merge_operator.h"
+#include "mizar/system_clock.h"
 #include "util/autovector.h"
 #include "util/cast_util.h"
 #include "util/coding.h"
 #include "util/duplicate_detector.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // anon namespace for file-local types
 namespace {
@@ -2408,4 +2408,4 @@ size_t WriteBatchInternal::AppendedByteSize(size_t leftByteSize,
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

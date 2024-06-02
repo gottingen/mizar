@@ -12,12 +12,12 @@
 #include "logging/auto_roll_logger.h"
 #include "logging/logging.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/configurable.h"
+#include "mizar/configurable.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 DBImplSecondary::DBImplSecondary(const DBOptions& db_options,
                                  const std::string& dbname,
                                  std::string secondary_path)
@@ -830,13 +830,13 @@ Status DB::OpenAndCompact(
   return s;
 }
 
-#else   // !ROCKSDB_LITE
+#else   // !MIZAR_LITE
 
 Status DB::OpenAsSecondary(const Options& /*options*/,
                            const std::string& /*name*/,
                            const std::string& /*secondary_path*/,
                            DB** /*dbptr*/) {
-  return Status::NotSupported("Not supported in ROCKSDB_LITE.");
+  return Status::NotSupported("Not supported in MIZAR_LITE.");
 }
 
 Status DB::OpenAsSecondary(
@@ -844,8 +844,8 @@ Status DB::OpenAsSecondary(
     const std::string& /*secondary_path*/,
     const std::vector<ColumnFamilyDescriptor>& /*column_families*/,
     std::vector<ColumnFamilyHandle*>* /*handles*/, DB** /*dbptr*/) {
-  return Status::NotSupported("Not supported in ROCKSDB_LITE.");
+  return Status::NotSupported("Not supported in MIZAR_LITE.");
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

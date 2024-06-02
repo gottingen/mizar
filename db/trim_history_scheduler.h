@@ -10,7 +10,7 @@
 #include <mutex>
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ColumnFamilyData;
 
@@ -41,4 +41,4 @@ class TrimHistoryScheduler {
   std::mutex checking_mutex_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

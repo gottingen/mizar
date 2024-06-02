@@ -3,14 +3,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "table/adaptive/adaptive_table_factory.h"
 
 #include "table/table_builder.h"
 #include "table/format.h"
 #include "port/port.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 AdaptiveTableFactory::AdaptiveTableFactory(
     std::shared_ptr<TableFactory> table_factory_to_write,
@@ -121,5 +121,5 @@ extern TableFactory* NewAdaptiveTableFactory(
       block_based_table_factory, plain_table_factory, cuckoo_table_factory);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

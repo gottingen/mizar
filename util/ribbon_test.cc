@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "util/bloom_impl.h"
 #include "util/coding.h"
@@ -83,7 +83,7 @@ namespace {
 struct StandardKeyGen {
   StandardKeyGen(const std::string& prefix, uint64_t id)
       : id_(id), str_(prefix) {
-    ROCKSDB_NAMESPACE::PutFixed64(&str_, /*placeholder*/ 0);
+    MIZAR_NAMESPACE::PutFixed64(&str_, /*placeholder*/ 0);
   }
 
   // Prefix (only one required)
@@ -99,7 +99,7 @@ struct StandardKeyGen {
 
   const std::string& operator*() {
     // Use multiplication to mix things up a little in the key
-    ROCKSDB_NAMESPACE::EncodeFixed64(&str_[str_.size() - 8],
+    MIZAR_NAMESPACE::EncodeFixed64(&str_[str_.size() - 8],
                                      id_ * uint64_t{0x1500000001});
     return str_;
   }
@@ -124,8 +124,8 @@ struct StandardKeyGen {
 struct SmallKeyGen {
   SmallKeyGen(const std::string& prefix, uint64_t id) : id_(id) {
     // Hash the prefix for a heuristically unique offset
-    id_ += ROCKSDB_NAMESPACE::GetSliceHash64(prefix);
-    ROCKSDB_NAMESPACE::PutFixed64(&str_, id_);
+    id_ += MIZAR_NAMESPACE::GetSliceHash64(prefix);
+    MIZAR_NAMESPACE::PutFixed64(&str_, id_);
   }
 
   // Prefix (only one required)
@@ -140,7 +140,7 @@ struct SmallKeyGen {
   }
 
   const std::string& operator*() {
-    ROCKSDB_NAMESPACE::EncodeFixed64(&str_[str_.size() - 8], id_);
+    MIZAR_NAMESPACE::EncodeFixed64(&str_[str_.size() - 8], id_);
     return str_;
   }
 
@@ -158,7 +158,7 @@ struct Hash32KeyGenWrapper : public KeyGen {
   uint32_t operator*() {
     auto& key = *static_cast<KeyGen&>(*this);
     // unseeded
-    return ROCKSDB_NAMESPACE::GetSliceHash(key);
+    return MIZAR_NAMESPACE::GetSliceHash(key);
   }
 };
 
@@ -169,35 +169,35 @@ struct Hash64KeyGenWrapper : public KeyGen {
   uint64_t operator*() {
     auto& key = *static_cast<KeyGen&>(*this);
     // unseeded
-    return ROCKSDB_NAMESPACE::GetSliceHash64(key);
+    return MIZAR_NAMESPACE::GetSliceHash64(key);
   }
 };
 
-using ROCKSDB_NAMESPACE::ribbon::ConstructionFailureChance;
+using MIZAR_NAMESPACE::ribbon::ConstructionFailureChance;
 
 const std::vector<ConstructionFailureChance> kFailureOnly50Pct = {
-    ROCKSDB_NAMESPACE::ribbon::kOneIn2};
+    MIZAR_NAMESPACE::ribbon::kOneIn2};
 
 const std::vector<ConstructionFailureChance> kFailureOnlyRare = {
-    ROCKSDB_NAMESPACE::ribbon::kOneIn1000};
+    MIZAR_NAMESPACE::ribbon::kOneIn1000};
 
 const std::vector<ConstructionFailureChance> kFailureAll = {
-    ROCKSDB_NAMESPACE::ribbon::kOneIn2, ROCKSDB_NAMESPACE::ribbon::kOneIn20,
-    ROCKSDB_NAMESPACE::ribbon::kOneIn1000};
+    MIZAR_NAMESPACE::ribbon::kOneIn2, MIZAR_NAMESPACE::ribbon::kOneIn20,
+    MIZAR_NAMESPACE::ribbon::kOneIn1000};
 
 }  // namespace
 
-using ROCKSDB_NAMESPACE::ribbon::ExpectedCollisionFpRate;
-using ROCKSDB_NAMESPACE::ribbon::StandardHasher;
-using ROCKSDB_NAMESPACE::ribbon::StandardRehasherAdapter;
+using MIZAR_NAMESPACE::ribbon::ExpectedCollisionFpRate;
+using MIZAR_NAMESPACE::ribbon::StandardHasher;
+using MIZAR_NAMESPACE::ribbon::StandardRehasherAdapter;
 
 struct DefaultTypesAndSettings {
-  using CoeffRow = ROCKSDB_NAMESPACE::Unsigned128;
+  using CoeffRow = MIZAR_NAMESPACE::Unsigned128;
   using ResultRow = uint8_t;
   using Index = uint32_t;
   using Hash = uint64_t;
   using Seed = uint32_t;
-  using Key = ROCKSDB_NAMESPACE::Slice;
+  using Key = MIZAR_NAMESPACE::Slice;
   static constexpr bool kIsFilter = true;
   static constexpr bool kHomogeneous = false;
   static constexpr bool kFirstCoeffAlwaysOne = true;
@@ -207,7 +207,7 @@ struct DefaultTypesAndSettings {
     // This version 0.7.2 preview of XXH3 (a.k.a. XXPH3) function does
     // not pass SmallKeyGen tests below without some seed premixing from
     // StandardHasher. See https://github.com/Cyan4973/xxHash/issues/469
-    return ROCKSDB_NAMESPACE::Hash64(key.data(), key.size(), raw_seed);
+    return MIZAR_NAMESPACE::Hash64(key.data(), key.size(), raw_seed);
   }
   // For testing
   using KeyGen = StandardKeyGen;
@@ -280,7 +280,7 @@ struct TypesAndSettings_Hash32 : public AbridgedTypesAndSettings {
     // This MurmurHash1 function does not pass tests below without the
     // seed premixing from StandardHasher. In fact, it needs more than
     // just a multiplication mixer on the ordinal seed.
-    return ROCKSDB_NAMESPACE::Hash(key.data(), key.size(), raw_seed);
+    return MIZAR_NAMESPACE::Hash(key.data(), key.size(), raw_seed);
   }
 };
 struct TypesAndSettings_Hash32_Result16 : public AbridgedTypesAndSettings {
@@ -409,7 +409,7 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
   IMPORT_RIBBON_IMPL_TYPES(TypeParam);
   using KeyGen = typename TypeParam::KeyGen;
   using ConfigHelper =
-      ROCKSDB_NAMESPACE::ribbon::BandingConfigHelper<TypeParam>;
+      MIZAR_NAMESPACE::ribbon::BandingConfigHelper<TypeParam>;
 
   if (sizeof(CoeffRow) < 8) {
     ROCKSDB_GTEST_BYPASS("Not fully supported");
@@ -417,7 +417,7 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
   }
 
   const auto log2_thoroughness =
-      static_cast<uint32_t>(ROCKSDB_NAMESPACE::FloorLog2(FLAGS_thoroughness));
+      static_cast<uint32_t>(MIZAR_NAMESPACE::FloorLog2(FLAGS_thoroughness));
 
   // We are going to choose num_to_add using an exponential distribution,
   // so that we have good representation of small-to-medium filters.
@@ -442,15 +442,15 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       default:
         assert(false);
         FALLTHROUGH_INTENDED;
-      case ROCKSDB_NAMESPACE::ribbon::kOneIn2:
+      case MIZAR_NAMESPACE::ribbon::kOneIn2:
         fprintf(stderr, "== Failure: 50 percent\n");
         expected_reseeds = 1.0;
         break;
-      case ROCKSDB_NAMESPACE::ribbon::kOneIn20:
+      case MIZAR_NAMESPACE::ribbon::kOneIn20:
         fprintf(stderr, "== Failure: 95 percent\n");
         expected_reseeds = 0.053;
         break;
-      case ROCKSDB_NAMESPACE::ribbon::kOneIn1000:
+      case MIZAR_NAMESPACE::ribbon::kOneIn1000:
         fprintf(stderr, "== Failure: 1/1000\n");
         expected_reseeds = 0.001;
         break;
@@ -474,7 +474,7 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
     uint64_t isoln_query_count = 0;
 
     // Take different samples if you change thoroughness
-    ROCKSDB_NAMESPACE::Random32 rnd(FLAGS_thoroughness);
+    MIZAR_NAMESPACE::Random32 rnd(FLAGS_thoroughness);
 
     for (uint32_t i = 0; i < FLAGS_thoroughness; ++i) {
       // We are going to choose num_to_add using an exponential distribution
@@ -520,7 +520,7 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       total_added += num_to_add;
 
       std::string prefix;
-      ROCKSDB_NAMESPACE::PutFixed32(&prefix, rnd.Next());
+      MIZAR_NAMESPACE::PutFixed32(&prefix, rnd.Next());
 
       // Batch that must be added
       std::string added_str = prefix + "added";
@@ -704,8 +704,8 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       Index fp_count = 0;
       cur = other_keys_begin;
       {
-        ROCKSDB_NAMESPACE::StopWatchNano timer(
-            ROCKSDB_NAMESPACE::SystemClock::Default().get(), true);
+        MIZAR_NAMESPACE::StopWatchNano timer(
+            MIZAR_NAMESPACE::SystemClock::Default().get(), true);
         while (cur != other_keys_end) {
           bool fp = soln.FilterQuery(*cur, hasher);
           fp_count += fp ? 1 : 0;
@@ -733,8 +733,8 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       if (test_interleaved) {
         Index ifp_count = 0;
         cur = other_keys_begin;
-        ROCKSDB_NAMESPACE::StopWatchNano timer(
-            ROCKSDB_NAMESPACE::SystemClock::Default().get(), true);
+        MIZAR_NAMESPACE::StopWatchNano timer(
+            MIZAR_NAMESPACE::SystemClock::Default().get(), true);
         while (cur != other_keys_end) {
           ifp_count += isoln.FilterQuery(*cur, hasher) ? 1 : 0;
           ++cur;
@@ -767,15 +767,15 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       if (ibytes >= /* minimum Bloom impl bytes*/ 64) {
         Index bfp_count = 0;
         cur = other_keys_begin;
-        ROCKSDB_NAMESPACE::StopWatchNano timer(
-            ROCKSDB_NAMESPACE::SystemClock::Default().get(), true);
+        MIZAR_NAMESPACE::StopWatchNano timer(
+            MIZAR_NAMESPACE::SystemClock::Default().get(), true);
         while (cur != other_keys_end) {
           uint64_t h = hasher.GetHash(*cur);
-          uint32_t h1 = ROCKSDB_NAMESPACE::Lower32of64(h);
-          uint32_t h2 = sizeof(Hash) >= 8 ? ROCKSDB_NAMESPACE::Upper32of64(h)
+          uint32_t h1 = MIZAR_NAMESPACE::Lower32of64(h);
+          uint32_t h2 = sizeof(Hash) >= 8 ? MIZAR_NAMESPACE::Upper32of64(h)
                                           : h1 * 0x9e3779b9;
           bfp_count +=
-              ROCKSDB_NAMESPACE::FastLocalBloomImpl::HashMayMatch(
+              MIZAR_NAMESPACE::FastLocalBloomImpl::HashMayMatch(
                   h1, h2, static_cast<uint32_t>(ibytes), 6, idata.get())
                   ? 1
                   : 0;
@@ -1048,7 +1048,7 @@ namespace {
 struct PhsfInputGen {
   PhsfInputGen(const std::string& prefix, uint64_t id) : id_(id) {
     val_.first = prefix;
-    ROCKSDB_NAMESPACE::PutFixed64(&val_.first, /*placeholder*/ 0);
+    MIZAR_NAMESPACE::PutFixed64(&val_.first, /*placeholder*/ 0);
   }
 
   // Prefix (only one required)
@@ -1059,7 +1059,7 @@ struct PhsfInputGen {
 
   const std::pair<std::string, uint8_t>& operator*() {
     // Use multiplication to mix things up a little in the key
-    ROCKSDB_NAMESPACE::EncodeFixed64(&val_.first[val_.first.size() - 8],
+    MIZAR_NAMESPACE::EncodeFixed64(&val_.first[val_.first.size() - 8],
                                      id_ * uint64_t{0x1500000001});
     // Occasionally repeat values etc.
     val_.second = static_cast<uint8_t>(id_ * 7 / 8);
@@ -1128,7 +1128,7 @@ TYPED_TEST(RibbonTypeParamTest, FindOccupancy) {
     return;
   }
 
-  KeyGen cur(ROCKSDB_NAMESPACE::ToString(
+  KeyGen cur(MIZAR_NAMESPACE::ToString(
                  testing::UnitTest::GetInstance()->random_seed()),
              0);
 
@@ -1247,7 +1247,7 @@ TYPED_TEST(RibbonTypeParamTest, OptimizeHomogAtScale) {
     return;
   }
 
-  KeyGen cur(ROCKSDB_NAMESPACE::ToString(
+  KeyGen cur(MIZAR_NAMESPACE::ToString(
                  testing::UnitTest::GetInstance()->random_seed()),
              0);
 

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/transaction_util.h"
 
@@ -12,12 +12,12 @@
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/status.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status TransactionUtil::CheckKeyForConflicts(
     DBImpl* db_impl, ColumnFamilyHandle* column_family, const std::string& key,
@@ -201,6 +201,6 @@ Status TransactionUtil::CheckKeysForConflicts(DBImpl* db_impl,
   return result;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

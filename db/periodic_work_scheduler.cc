@@ -6,10 +6,10 @@
 #include "db/periodic_work_scheduler.h"
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
-#ifndef ROCKSDB_LITE
-namespace ROCKSDB_NAMESPACE {
+#ifndef MIZAR_LITE
+namespace MIZAR_NAMESPACE {
 
 PeriodicWorkScheduler::PeriodicWorkScheduler(
     const std::shared_ptr<SystemClock>& clock) {
@@ -112,6 +112,6 @@ PeriodicWorkTestScheduler::PeriodicWorkTestScheduler(
     : PeriodicWorkScheduler(clock) {}
 
 #endif  // !NDEBUG
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <algorithm>
 #include <atomic>
@@ -16,21 +16,21 @@
 #include <vector>
 
 #include "db/write_callback.h"
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/snapshot.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/autovector.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_base.h"
 #include "utilities/transactions/transaction_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WritePreparedTxnDB;
 
@@ -114,6 +114,6 @@ class WritePreparedTxn : public PessimisticTransaction {
   size_t prepare_batch_cnt_ = 0;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

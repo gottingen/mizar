@@ -4,11 +4,11 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "utilities/cassandra/cassandra_options.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 
 /**
@@ -41,4 +41,4 @@ private:
  CassandraOptions options_;
 };
 } // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

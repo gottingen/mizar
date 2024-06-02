@@ -16,12 +16,12 @@
 #include <string>
 #include <unordered_map>
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/block_based/block_builder.h"
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // The interface for building index.
 // Instruction for adding a new concrete IndexBuilder:
 //  1. Create a subclass instantiated from IndexBuilder.
@@ -36,7 +36,7 @@ class IndexBuilder {
  public:
   static IndexBuilder* CreateIndexBuilder(
       BlockBasedTableOptions::IndexType index_type,
-      const ROCKSDB_NAMESPACE::InternalKeyComparator* comparator,
+      const MIZAR_NAMESPACE::InternalKeyComparator* comparator,
       const InternalKeySliceTransform* int_key_slice_transform,
       const bool use_value_delta_encoding,
       const BlockBasedTableOptions& table_opt);
@@ -366,7 +366,7 @@ class HashIndexBuilder : public IndexBuilder {
 class PartitionedIndexBuilder : public IndexBuilder {
  public:
   static PartitionedIndexBuilder* CreateIndexBuilder(
-      const ROCKSDB_NAMESPACE::InternalKeyComparator* comparator,
+      const MIZAR_NAMESPACE::InternalKeyComparator* comparator,
       const bool use_value_delta_encoding,
       const BlockBasedTableOptions& table_opt);
 
@@ -441,4 +441,4 @@ class PartitionedIndexBuilder : public IndexBuilder {
   bool cut_filter_block = false;
   BlockHandle last_encoded_handle_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

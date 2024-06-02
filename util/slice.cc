@@ -7,28 +7,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #include <stdio.h>
 
 #include <algorithm>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/slice_transform.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo>
     slice_transform_length_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"length",
          {0, OptionType::kSizeT, OptionVerificationType::kNormal,
           OptionTypeFlags::kDontSerialize | OptionTypeFlags::kCompareNever}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 class FixedPrefixTransform : public SliceTransform {
@@ -46,7 +46,7 @@ class FixedPrefixTransform : public SliceTransform {
   const char* NickName() const override { return kNickName(); }
 
   std::string GetId() const override {
-    return std::string(Name()) + "." + ROCKSDB_NAMESPACE::ToString(prefix_len_);
+    return std::string(Name()) + "." + MIZAR_NAMESPACE::ToString(prefix_len_);
   }
 
   Slice Transform(const Slice& src) const override {
@@ -86,7 +86,7 @@ class CappedPrefixTransform : public SliceTransform {
   const char* Name() const override { return kClassName(); }
   const char* NickName() const override { return kNickName(); }
   std::string GetId() const override {
-    return std::string(Name()) + "." + ROCKSDB_NAMESPACE::ToString(cap_len_);
+    return std::string(Name()) + "." + MIZAR_NAMESPACE::ToString(cap_len_);
   }
 
   Slice Transform(const Slice& src) const override {
@@ -140,7 +140,7 @@ const SliceTransform* NewCappedPrefixTransform(size_t cap_len) {
 
 const SliceTransform* NewNoopTransform() { return new NoopTransform; }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinSliceTransform(ObjectLibrary& library,
                                          const std::string& /*arg*/) {
   // For the builtin transforms, the format is typically
@@ -205,17 +205,17 @@ static int RegisterBuiltinSliceTransform(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status SliceTransform::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::shared_ptr<const SliceTransform>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinSliceTransform(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   std::string id;
   std::unordered_map<std::string, std::string> opt_map;
   Status status = Customizable::GetOptionsMap(config_options, result->get(),
@@ -225,7 +225,7 @@ Status SliceTransform::CreateFromString(
   } else if (id.empty() && opt_map.empty()) {
     result->reset();
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     status = config_options.registry->NewSharedObject(id, result);
 #else
     auto Matches = [](const std::string& input, size_t size,
@@ -257,7 +257,7 @@ Status SliceTransform::CreateFromString(
     } else {
       status = Status::NotSupported("Cannot load object in LITE mode ", id);
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     if (config_options.ignore_unsupported_options && status.IsNotSupported()) {
       return Status::OK();
     } else if (status.ok()) {
@@ -270,13 +270,13 @@ Status SliceTransform::CreateFromString(
 }
 
 std::string SliceTransform::AsString() const {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ConfigOptions config_options;
   config_options.delimiter = ";";
   return ToString(config_options);
 #else
   return GetId();
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 // 2 small internal utility functions, for efficient hex conversions
@@ -393,4 +393,4 @@ PinnableSlice& PinnableSlice::operator=(PinnableSlice&& other) {
   return *this;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

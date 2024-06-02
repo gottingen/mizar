@@ -65,11 +65,11 @@ int main() {
 
 #include "file/filename.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/system_clock.h"
 #include "util/gflags_compat.h"
 
 using GFLAGS_NAMESPACE::ParseCommandLineFlags;
@@ -105,7 +105,7 @@ DEFINE_bool(low_open_files_mode, false,
             "If true, we set max_open_files to 20, so that every file access "
             "needs to reopen it");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const int kPrefixSize = 3;
 
@@ -240,9 +240,9 @@ class WriteStress {
     }
     threads_.clear();
 
-// Skip checking for leaked files in ROCKSDB_LITE since we don't have access to
+// Skip checking for leaked files in MIZAR_LITE since we don't have access to
 // function GetLiveFilesMetaData
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     // let's see if we leaked some files
     db_->PauseBackgroundWork();
     std::vector<LiveFileMetaData> metadata;
@@ -278,7 +278,7 @@ class WriteStress {
       }
     }
     db_->ContinueBackgroundWork();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
     return 0;
   }
@@ -293,13 +293,13 @@ class WriteStress {
   std::unique_ptr<DB> db_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   SetUsageMessage(std::string("\nUSAGE:\n") + std::string(argv[0]) +
                   " [OPTIONS]...");
   ParseCommandLineFlags(&argc, &argv, true);
-  ROCKSDB_NAMESPACE::WriteStress write_stress;
+  MIZAR_NAMESPACE::WriteStress write_stress;
   return write_stress.Run();
 }
 

@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <stdint.h>
 #include <limits>
 #include <string>
@@ -12,13 +12,13 @@
 #include <vector>
 #include "db/version_edit.h"
 #include "port/port.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/table_builder.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CuckooTableBuilder: public TableBuilder {
  public:
@@ -132,6 +132,6 @@ class CuckooTableBuilder: public TableBuilder {
   bool closed_;  // Either Finish() or Abandon() has been called.
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

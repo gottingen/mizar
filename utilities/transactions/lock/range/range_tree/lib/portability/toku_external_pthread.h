@@ -1,5 +1,5 @@
 /*
-  A wrapper around ROCKSDB_NAMESPACE::TransactionDBMutexFactory-provided
+  A wrapper around MIZAR_NAMESPACE::TransactionDBMutexFactory-provided
   condition and mutex that provides toku_pthread_*-like interface. The functions
   are named
 
@@ -17,14 +17,14 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/utilities/transaction_db_mutex.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db_mutex.h"
 #include "toku_portability.h"
 
-using ROCKSDB_NAMESPACE::TransactionDBCondVar;
-using ROCKSDB_NAMESPACE::TransactionDBMutex;
+using MIZAR_NAMESPACE::TransactionDBCondVar;
+using MIZAR_NAMESPACE::TransactionDBMutex;
 
-typedef std::shared_ptr<ROCKSDB_NAMESPACE::TransactionDBMutexFactory>
+typedef std::shared_ptr<MIZAR_NAMESPACE::TransactionDBMutexFactory>
     toku_external_mutex_factory_t;
 
 typedef std::shared_ptr<TransactionDBMutex> toku_external_mutex_t;

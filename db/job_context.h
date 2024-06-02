@@ -16,7 +16,7 @@
 #include "db/log_writer.h"
 #include "db/version_set.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MemTable;
 struct SuperVersion;
@@ -28,7 +28,7 @@ struct SuperVersionContext {
   };
 
   autovector<SuperVersion*> superversions_to_free;
-#ifndef ROCKSDB_DISABLE_STALL_NOTIFICATION
+#ifndef MIZAR_DISABLE_STALL_NOTIFICATION
   autovector<WriteStallNotification> write_stall_notifications;
 #endif
   std::unique_ptr<SuperVersion>
@@ -39,7 +39,7 @@ struct SuperVersionContext {
 
   explicit SuperVersionContext(SuperVersionContext&& other)
       : superversions_to_free(std::move(other.superversions_to_free)),
-#ifndef ROCKSDB_DISABLE_STALL_NOTIFICATION
+#ifndef MIZAR_DISABLE_STALL_NOTIFICATION
         write_stall_notifications(std::move(other.write_stall_notifications)),
 #endif
         new_superversion(std::move(other.new_superversion)) {
@@ -50,7 +50,7 @@ struct SuperVersionContext {
   }
 
   inline bool HaveSomethingToDelete() const {
-#ifndef ROCKSDB_DISABLE_STALL_NOTIFICATION
+#ifndef MIZAR_DISABLE_STALL_NOTIFICATION
     return !superversions_to_free.empty() ||
            !write_stall_notifications.empty();
 #else
@@ -62,7 +62,7 @@ struct SuperVersionContext {
                                   WriteStallCondition new_cond,
                                   const std::string& name,
                                   const ImmutableOptions* ioptions) {
-#if !defined(ROCKSDB_LITE) && !defined(ROCKSDB_DISABLE_STALL_NOTIFICATION)
+#if !defined(MIZAR_LITE) && !defined(MIZAR_DISABLE_STALL_NOTIFICATION)
     WriteStallNotification notif;
     notif.write_stall_info.cf_name = name;
     notif.write_stall_info.condition.prev = old_cond;
@@ -74,11 +74,11 @@ struct SuperVersionContext {
     (void)new_cond;
     (void)name;
     (void)ioptions;
-#endif  // !defined(ROCKSDB_LITE) && !defined(ROCKSDB_DISABLE_STALL_NOTIFICATION)
+#endif  // !defined(MIZAR_LITE) && !defined(MIZAR_DISABLE_STALL_NOTIFICATION)
   }
 
   void Clean() {
-#if !defined(ROCKSDB_LITE) && !defined(ROCKSDB_DISABLE_STALL_NOTIFICATION)
+#if !defined(MIZAR_LITE) && !defined(MIZAR_DISABLE_STALL_NOTIFICATION)
     // notify listeners on changed write stall conditions
     for (auto& notif : write_stall_notifications) {
       for (auto& listener : notif.immutable_options->listeners) {
@@ -86,7 +86,7 @@ struct SuperVersionContext {
       }
     }
     write_stall_notifications.clear();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
     // free superversions
     for (auto s : superversions_to_free) {
       delete s;
@@ -95,7 +95,7 @@ struct SuperVersionContext {
   }
 
   ~SuperVersionContext() {
-#ifndef ROCKSDB_DISABLE_STALL_NOTIFICATION
+#ifndef MIZAR_DISABLE_STALL_NOTIFICATION
     assert(write_stall_notifications.empty());
 #endif
     assert(superversions_to_free.empty());
@@ -225,4 +225,4 @@ struct JobContext {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -22,7 +22,7 @@ int main() {
 #include "dynamic_bloom.h"
 #include "memory/arena.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/gflags_compat.h"
@@ -34,7 +34,7 @@ DEFINE_int32(bits_per_key, 10, "");
 DEFINE_int32(num_probes, 6, "");
 DEFINE_bool(enable_perf, false, "");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct KeyMaker {
   uint64_t a;
@@ -312,7 +312,7 @@ TEST_F(DynamicBloomTest, concurrent_with_perf) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

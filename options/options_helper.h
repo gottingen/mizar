@@ -10,11 +10,11 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct ColumnFamilyOptions;
 struct ConfigOptions;
 struct DBOptions;
@@ -53,7 +53,7 @@ void UpdateColumnFamilyOptions(const ImmutableCFOptions& ioptions,
 void UpdateColumnFamilyOptions(const MutableCFOptions& moptions,
                                ColumnFamilyOptions* cf_opts);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::unique_ptr<Configurable> DBOptionsAsConfigurable(
     const MutableDBOptions& opts);
 std::unique_ptr<Configurable> DBOptionsAsConfigurable(
@@ -68,7 +68,7 @@ std::unique_ptr<Configurable> CFOptionsAsConfigurable(
 extern Status StringToMap(
     const std::string& opts_str,
     std::unordered_map<std::string, std::string>* opts_map);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 struct OptionsHelper {
   static const std::string kCFOptionsName /*= "ColumnFamilyOptions"*/;
@@ -80,7 +80,7 @@ struct OptionsHelper {
   static std::unordered_map<std::string, ChecksumType> checksum_type_string_map;
   static std::unordered_map<std::string, CompressionType>
       compression_type_string_map;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::unordered_map<std::string, CompactionStopStyle>
       compaction_stop_style_string_map;
   static std::unordered_map<std::string, EncodingType> encoding_type_string_map;
@@ -88,7 +88,7 @@ struct OptionsHelper {
       compaction_style_string_map;
   static std::unordered_map<std::string, CompactionPri>
       compaction_pri_string_map;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 };
 
 // Some aliasing
@@ -98,7 +98,7 @@ static auto& compaction_pri_to_string = OptionsHelper::compaction_pri_to_string;
 static auto& compaction_stop_style_to_string =
     OptionsHelper::compaction_stop_style_to_string;
 static auto& checksum_type_string_map = OptionsHelper::checksum_type_string_map;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static auto& compaction_stop_style_string_map =
     OptionsHelper::compaction_stop_style_string_map;
 static auto& compression_type_string_map =
@@ -108,6 +108,6 @@ static auto& compaction_style_string_map =
     OptionsHelper::compaction_style_string_map;
 static auto& compaction_pri_string_map =
     OptionsHelper::compaction_pri_string_map;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -3,23 +3,23 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::ReadOptions;
-using ROCKSDB_NAMESPACE::Snapshot;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::Transaction;
-using ROCKSDB_NAMESPACE::TransactionDB;
-using ROCKSDB_NAMESPACE::TransactionDBOptions;
-using ROCKSDB_NAMESPACE::TransactionOptions;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::ReadOptions;
+using MIZAR_NAMESPACE::Snapshot;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::Transaction;
+using MIZAR_NAMESPACE::TransactionDB;
+using MIZAR_NAMESPACE::TransactionDBOptions;
+using MIZAR_NAMESPACE::TransactionOptions;
+using MIZAR_NAMESPACE::WriteOptions;
 
 #if defined(OS_WIN)
 std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_transaction_example";
@@ -191,8 +191,8 @@ int main() {
 
   // Cleanup
   delete txn_db;
-  ROCKSDB_NAMESPACE::DestroyDB(kDBPath, options);
+  MIZAR_NAMESPACE::DestroyDB(kDBPath, options);
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

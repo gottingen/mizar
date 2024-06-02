@@ -4,13 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::EventListener.
+// MIZAR_NAMESPACE::EventListener.
 
 #include "rocksjni/event_listener_jnicallback.h"
 
 #include "rocksjni/portal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 EventListenerJniCallback::EventListenerJniCallback(
     JNIEnv* env, jobject jevent_listener,
     const std::set<EnabledEventCallback>& enabled_event_callbacks)
@@ -499,4 +499,4 @@ void EventListenerJniCallback::OnFileOperation(const jmethodID& mid,
 
   CleanupCallbackInvocation(env, attached_thread, {&jop_info});
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

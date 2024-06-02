@@ -10,7 +10,7 @@
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/mock_block_based_table.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct KeyMaker {
   explicit KeyMaker(size_t avg_size)
@@ -151,6 +151,6 @@ static void FilterQueryNegative(benchmark::State &state) {
 }
 BENCHMARK(FilterQueryNegative)->Apply(CustomArguments);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 BENCHMARK_MAIN();

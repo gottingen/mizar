@@ -10,12 +10,12 @@
 #include "table/two_level_iterator.h"
 #include "db/pinned_iterators_manager.h"
 #include "memory/arena.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/block_based/block.h"
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -216,4 +216,4 @@ InternalIteratorBase<IndexValue>* NewTwoLevelIterator(
     InternalIteratorBase<IndexValue>* first_level_iter) {
   return new TwoLevelIndexIterator(state, first_level_iter);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

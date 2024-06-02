@@ -13,7 +13,7 @@
 
 #include "rocksjni/portal.h"
 
-#include "rocksdb/utilities/memory_util.h"
+#include "mizar/utilities/memory_util.h"
 
 
 /*
@@ -24,15 +24,15 @@
 jobject Java_org_rocksdb_MemoryUtil_getApproximateMemoryUsageByType(
     JNIEnv *env, jclass, jlongArray jdb_handles, jlongArray jcache_handles) {
   jboolean has_exception = JNI_FALSE;
-  std::vector<ROCKSDB_NAMESPACE::DB *> dbs =
-      ROCKSDB_NAMESPACE::JniUtil::fromJPointers<ROCKSDB_NAMESPACE::DB>(
+  std::vector<MIZAR_NAMESPACE::DB *> dbs =
+      MIZAR_NAMESPACE::JniUtil::fromJPointers<MIZAR_NAMESPACE::DB>(
           env, jdb_handles, &has_exception);
   if (has_exception == JNI_TRUE) {
     // exception thrown: OutOfMemoryError
     return nullptr;
   }
 
-  std::unordered_set<const ROCKSDB_NAMESPACE::Cache *> cache_set;
+  std::unordered_set<const MIZAR_NAMESPACE::Cache *> cache_set;
   jsize cache_handle_count = env->GetArrayLength(jcache_handles);
   if(cache_handle_count > 0) {
     jlong *ptr_jcache_handles = env->GetLongArrayElements(jcache_handles, nullptr);
@@ -42,35 +42,35 @@ jobject Java_org_rocksdb_MemoryUtil_getApproximateMemoryUsageByType(
     }
     for (jsize i = 0; i < cache_handle_count; i++) {
       auto *cache_ptr =
-          reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::Cache> *>(
+          reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::Cache> *>(
               ptr_jcache_handles[i]);
       cache_set.insert(cache_ptr->get());
     }
     env->ReleaseLongArrayElements(jcache_handles, ptr_jcache_handles, JNI_ABORT);
   }
 
-  std::map<ROCKSDB_NAMESPACE::MemoryUtil::UsageType, uint64_t> usage_by_type;
-  if (ROCKSDB_NAMESPACE::MemoryUtil::GetApproximateMemoryUsageByType(
-          dbs, cache_set, &usage_by_type) != ROCKSDB_NAMESPACE::Status::OK()) {
+  std::map<MIZAR_NAMESPACE::MemoryUtil::UsageType, uint64_t> usage_by_type;
+  if (MIZAR_NAMESPACE::MemoryUtil::GetApproximateMemoryUsageByType(
+          dbs, cache_set, &usage_by_type) != MIZAR_NAMESPACE::Status::OK()) {
     // Non-OK status
     return nullptr;
   }
 
-  jobject jusage_by_type = ROCKSDB_NAMESPACE::HashMapJni::construct(
+  jobject jusage_by_type = MIZAR_NAMESPACE::HashMapJni::construct(
       env, static_cast<uint32_t>(usage_by_type.size()));
   if (jusage_by_type == nullptr) {
     // exception occurred
     return nullptr;
   }
-  const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
-      const ROCKSDB_NAMESPACE::MemoryUtil::UsageType, const uint64_t, jobject,
+  const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
+      const MIZAR_NAMESPACE::MemoryUtil::UsageType, const uint64_t, jobject,
       jobject>
       fn_map_kv = [env](
-                      const std::pair<ROCKSDB_NAMESPACE::MemoryUtil::UsageType,
+                      const std::pair<MIZAR_NAMESPACE::MemoryUtil::UsageType,
                                       uint64_t> &pair) {
         // Construct key
-        const jobject jusage_type = ROCKSDB_NAMESPACE::ByteJni::valueOf(
-            env, ROCKSDB_NAMESPACE::MemoryUsageTypeJni::toJavaMemoryUsageType(
+        const jobject jusage_type = MIZAR_NAMESPACE::ByteJni::valueOf(
+            env, MIZAR_NAMESPACE::MemoryUsageTypeJni::toJavaMemoryUsageType(
                      pair.first));
         if (jusage_type == nullptr) {
           // an error occurred
@@ -78,7 +78,7 @@ jobject Java_org_rocksdb_MemoryUtil_getApproximateMemoryUsageByType(
         }
         // Construct value
         const jobject jusage_value =
-            ROCKSDB_NAMESPACE::LongJni::valueOf(env, pair.second);
+            MIZAR_NAMESPACE::LongJni::valueOf(env, pair.second);
         if (jusage_value == nullptr) {
           // an error occurred
           return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
@@ -89,7 +89,7 @@ jobject Java_org_rocksdb_MemoryUtil_getApproximateMemoryUsageByType(
                                             jusage_value));
       };
 
-  if (!ROCKSDB_NAMESPACE::HashMapJni::putAll(env, jusage_by_type,
+  if (!MIZAR_NAMESPACE::HashMapJni::putAll(env, jusage_by_type,
                                              usage_by_type.begin(),
                                              usage_by_type.end(), fn_map_kv)) {
     // exception occcurred

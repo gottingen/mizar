@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/write_prepared_txn.h"
 
@@ -13,14 +13,14 @@
 
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 #include "utilities/transactions/write_prepared_txn_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct WriteOptions;
 
@@ -471,6 +471,6 @@ Status WritePreparedTxn::RebuildFromWriteBatch(WriteBatch* src_batch) {
   return ret;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

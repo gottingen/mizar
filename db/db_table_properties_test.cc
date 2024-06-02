@@ -13,18 +13,18 @@
 #include "db/db_test_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/db.h"
+#include "mizar/types.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "table/format.h"
 #include "table/meta_blocks.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A helper function that ensures the table properties returned in
 // `GetPropertiesOfAllTablesTest` is correct.
@@ -479,7 +479,7 @@ TEST_P(DBTablePropertiesTest, DeletionTriggeredCompactionMarking) {
     NewCompactOnDeletionCollectorFactory(kWindowSize, kNumDelsTrigger);
 
   Options opts = CurrentOptions();
-  opts.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  opts.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   opts.table_properties_collector_factories.emplace_back(compact_on_del);
 
   if(GetParam() == "kCompactionStyleUniversal") {
@@ -564,7 +564,7 @@ TEST_P(DBTablePropertiesTest, RatioBasedDeletionTriggeredCompactionMarking) {
                                            kDeletionRatio);
 
   Options opts = CurrentOptions();
-  opts.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  opts.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   opts.table_properties_collector_factories.emplace_back(compact_on_del);
 
   Reopen(opts);
@@ -610,12 +610,12 @@ INSTANTIATE_TEST_CASE_P(
       "kCompactionStyleUniversal"
       ));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

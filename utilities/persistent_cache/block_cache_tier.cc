@@ -2,7 +2,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/persistent_cache/block_cache_tier.h"
 
@@ -15,7 +15,7 @@
 #include "util/stop_watch.h"
 #include "utilities/persistent_cache/block_cache_tier_file.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 //
 // BlockCacheImpl
@@ -419,6 +419,6 @@ Status NewPersistentCache(Env* const env, const std::string& path,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ifndef ROCKSDB_LITE
+#endif  // ifndef MIZAR_LITE

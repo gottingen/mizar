@@ -19,20 +19,20 @@
 #include "logging/logging.h"
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/filter_policy.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/table.h"
+#include "mizar/utilities/options_type.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/format.h"
 #include "util/mutexlock.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void TailPrefetchStats::RecordEffectiveSize(size_t len) {
   MutexLock l(&mutex_);
@@ -164,7 +164,7 @@ size_t TailPrefetchStats::GetSuggestedPrefetchSize() {
   return std::min(kMaxPrefetchSize, max_qualified_size);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 const std::string kOptNameMetadataCacheOpts = "metadata_cache_options";
 
@@ -225,11 +225,11 @@ static std::unordered_map<std::string,
         {"kFlushOnly",
          BlockBasedTableOptions::PrepopulateBlockCache::kFlushOnly}};
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 static std::unordered_map<std::string, OptionTypeInfo>
     block_based_table_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         /* currently not supported
           std::shared_ptr<Cache> block_cache = nullptr;
           std::shared_ptr<Cache> block_cache_compressed = nullptr;
@@ -439,7 +439,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
              &block_base_table_prepopulate_block_cache_string_map,
              OptionTypeFlags::kMutable)},
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 // TODO(myabandeh): We should return an error instead of silently changing the
@@ -693,7 +693,7 @@ Status BlockBasedTableFactory::ValidateOptions(
                                    table_options_.checksum, &garbage)) {
     return Status::InvalidArgument(
         "Unrecognized ChecksumType for checksum: " +
-        ROCKSDB_NAMESPACE::ToString(
+        MIZAR_NAMESPACE::ToString(
             static_cast<uint32_t>(table_options_.checksum)));
   }
   return TableFactory::ValidateOptions(db_opts, cf_opts);
@@ -845,7 +845,7 @@ const void* BlockBasedTableFactory::GetOptionsPtr(
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Take a default BlockBasedTableOptions "table_options" in addition to a
 // map "opts_map" of option name to option value to construct the new
 // BlockBasedTableOptions "new_table_options".
@@ -959,7 +959,7 @@ Status GetBlockBasedTableOptionsFromMap(
   }
   return s;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TableFactory* NewBlockBasedTableFactory(
     const BlockBasedTableOptions& _table_options) {
@@ -978,4 +978,4 @@ const std::string kHashIndexPrefixesMetadataBlock =
 const std::string kPropTrue = "1";
 const std::string kPropFalse = "0";
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

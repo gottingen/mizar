@@ -11,12 +11,12 @@
 #include <set>
 #include <unordered_set>
 #include "memory/concurrent_arena.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "util/hash.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Our test skip list stores 8-byte unsigned integers
 using Key = uint64_t;
@@ -655,7 +655,7 @@ TEST_F(InlineSkipTest, ConcurrentInsertWithHint3) {
 }
 
 #endif  // !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

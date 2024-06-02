@@ -14,10 +14,10 @@
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 #include "table/mock_table.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
@@ -31,7 +31,7 @@
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/write_unprepared_txn_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Return true if the ith bit is set in combination represented by comb
 bool IsInCombination(size_t i, size_t comb) { return comb & (size_t(1) << i); }
@@ -523,4 +523,4 @@ class MySQLStyleTransactionTest
   const bool with_slow_threads_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

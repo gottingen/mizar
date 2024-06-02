@@ -10,13 +10,13 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/env.h"
-#include "rocksdb/trace_record.h"
-#include "rocksdb/utilities/sim_cache.h"
+#include "mizar/env.h"
+#include "mizar/trace_record.h"
+#include "mizar/utilities/sim_cache.h"
 #include "trace_replay/block_cache_tracer.h"
 #include "utilities/simulator_cache/cache_simulator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Statistics of a key refereneced by a Get.
 struct GetKeyInfo {
@@ -369,7 +369,7 @@ class BlockCacheTraceAnalyzer {
       const std::map<std::string, Predictions>& label_predictions,
       uint32_t max_number_of_values) const;
 
-  ROCKSDB_NAMESPACE::Env* env_;
+  MIZAR_NAMESPACE::Env* env_;
   const std::string trace_file_path_;
   const std::string output_dir_;
   std::string human_readable_trace_file_path_;
@@ -393,4 +393,4 @@ class BlockCacheTraceAnalyzer {
 
 int block_cache_trace_analyzer_tool(int argc, char** argv);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

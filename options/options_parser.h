@@ -9,12 +9,12 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 struct ConfigOptions;
 class OptionTypeInfo;
 class TableFactory;
@@ -146,6 +146,6 @@ class RocksDBOptionsParser {
   int opt_file_version[3];
 };
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

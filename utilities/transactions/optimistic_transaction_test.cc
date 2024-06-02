@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <functional>
 #include <string>
@@ -12,10 +12,10 @@
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/db.h"
+#include "mizar/perf_context.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/transaction.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/transaction_test_util.h"
@@ -24,7 +24,7 @@
 
 using std::string;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class OptimisticTransactionTest
     : public testing::Test,
@@ -353,10 +353,10 @@ TEST_P(OptimisticTransactionTest, CheckKeySkipOldMemtable) {
       // For the second attempt, hold flush from beginning. The memtable
       // will be switched to immutable after calling TEST_SwitchMemtable()
       // while CheckKey() is called.
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
           {{"OptimisticTransactionTest.CheckKeySkipOldMemtable",
             "FlushJob::Start"}});
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     }
 
     // force a memtable flush. The memtable should still be kept
@@ -413,7 +413,7 @@ TEST_P(OptimisticTransactionTest, CheckKeySkipOldMemtable) {
     ASSERT_TRUE(s.ok());
 
     TEST_SYNC_POINT("OptimisticTransactionTest.CheckKeySkipOldMemtable");
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
     SetPerfLevel(PerfLevel::kDisable);
 
@@ -1397,7 +1397,7 @@ INSTANTIATE_TEST_CASE_P(
     testing::Values(OccValidationPolicy::kValidateSerial,
                     OccValidationPolicy::kValidateParallel));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -1410,8 +1410,8 @@ int main(int argc, char** argv) {
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(
       stderr,
-      "SKIPPED as optimistic_transaction is not supported in ROCKSDB_LITE\n");
+      "SKIPPED as optimistic_transaction is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

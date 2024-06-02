@@ -17,8 +17,8 @@
 #include "file/filename.h"
 #include "file/random_access_file_reader.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/statistics.h"
+#include "mizar/advanced_options.h"
+#include "mizar/statistics.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/get_context.h"
 #include "table/internal_iterator.h"
@@ -31,7 +31,7 @@
 #include "util/coding.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -52,7 +52,7 @@ static Slice GetSliceForFileNumber(const uint64_t* file_number) {
                sizeof(*file_number));
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 void AppendVarint64(IterKey* key, uint64_t v) {
   char buf[10];
@@ -60,7 +60,7 @@ void AppendVarint64(IterKey* key, uint64_t v) {
   key->TrimAppend(key->Size(), buf, ptr - buf);
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 }  // namespace
 
@@ -324,7 +324,7 @@ Status TableCache::GetRangeTombstoneIterator(
   return s;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void TableCache::CreateRowCacheKeyPrefix(const ReadOptions& options,
                                          const FileDescriptor& fd,
                                          const Slice& internal_key,
@@ -394,7 +394,7 @@ bool TableCache::GetFromRowCache(const Slice& user_key, IterKey& row_cache_key,
   }
   return found;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status TableCache::Get(
     const ReadOptions& options,
@@ -406,7 +406,7 @@ Status TableCache::Get(
   auto& fd = file_meta.fd;
   std::string* row_cache_entry = nullptr;
   bool done = false;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   IterKey row_cache_key;
   std::string row_cache_entry_buffer;
 
@@ -421,7 +421,7 @@ Status TableCache::Get(
       row_cache_entry = &row_cache_entry_buffer;
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   Status s;
   TableReader* t = fd.table_reader;
   Cache::Handle* handle = nullptr;
@@ -462,7 +462,7 @@ Status TableCache::Get(
     }
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Put the replay log in row cache only if something was found.
   if (!done && s.ok() && row_cache_entry && !row_cache_entry->empty()) {
     size_t charge =
@@ -474,7 +474,7 @@ Status TableCache::Get(
                  &DeleteEntry<std::string>)
         .PermitUncheckedError();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   if (handle != nullptr) {
     ReleaseHandle(handle);
@@ -495,7 +495,7 @@ Status TableCache::MultiGet(
   Cache::Handle* handle = nullptr;
   MultiGetRange table_range(*mget_range, mget_range->begin(),
                             mget_range->end());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   autovector<std::string, MultiGetContext::MAX_BATCH_SIZE> row_cache_entries;
   IterKey row_cache_key;
   size_t row_cache_key_prefix_size = 0;
@@ -526,7 +526,7 @@ Status TableCache::MultiGet(
       }
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Check that table_range is not empty. Its possible all keys may have been
   // found in the row cache and thus the range may now be empty
@@ -572,7 +572,7 @@ Status TableCache::MultiGet(
     }
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (lookup_row_cache) {
     size_t row_idx = 0;
 
@@ -600,7 +600,7 @@ Status TableCache::MultiGet(
       }
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   if (handle != nullptr) {
     ReleaseHandle(handle);
@@ -724,4 +724,4 @@ uint64_t TableCache::ApproximateSize(
 
   return result;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

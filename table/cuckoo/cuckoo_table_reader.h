@@ -8,18 +8,18 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <string>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "file/random_access_file_reader.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 #include "table/table_reader.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Arena;
 class TableReader;
@@ -96,5 +96,5 @@ class CuckooTableReader: public TableReader {
       uint64_t max_num_buckets);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

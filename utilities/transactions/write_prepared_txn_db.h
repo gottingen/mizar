@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <cinttypes>
 #include <mutex>
@@ -19,9 +19,9 @@
 #include "db/read_callback.h"
 #include "db/snapshot_checker.h"
 #include "logging/logging.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 #include "util/set_comparator.h"
 #include "util/string_util.h"
@@ -29,7 +29,7 @@
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/write_prepared_txn.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 enum SnapshotBackup : bool { kUnbackedByDBSnapshot, kBackedByDBSnapshot };
 
 // A PessimisticTransactionDB that writes data to DB after prepare phase of 2PC.
@@ -1108,5 +1108,5 @@ bool WritePreparedTxnDB::ValidateSnapshot(
   return true;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

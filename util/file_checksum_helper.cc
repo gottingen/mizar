@@ -15,9 +15,9 @@
 #include "db/version_edit.h"
 #include "db/version_edit_handler.h"
 #include "file/sequence_file_reader.h"
-#include "rocksdb/utilities/customizable_util.h"
+#include "mizar/utilities/customizable_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void FileChecksumListImpl::reset() { checksum_map_.clear(); }
 
@@ -134,7 +134,7 @@ Status GetFileChecksumsFromManifest(Env* src_env, const std::string& abs_path,
   return retriever.status();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 static int RegisterFileChecksumGenFactories(ObjectLibrary& library,
                                             const std::string& /*arg*/) {
@@ -149,17 +149,17 @@ static int RegisterFileChecksumGenFactories(ObjectLibrary& library,
   return 1;
 }
 }  // namespace
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status FileChecksumGenFactory::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<FileChecksumGenFactory>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterFileChecksumGenFactories(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   if (value == FileChecksumGenCrc32cFactory::kClassName()) {
     *result = GetFileChecksumGenCrc32cFactory();
     return Status::OK();
@@ -169,4 +169,4 @@ Status FileChecksumGenFactory::CreateFromString(
     return s;
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

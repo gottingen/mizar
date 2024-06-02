@@ -9,10 +9,10 @@
 
 #include "memory/allocator.h"
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -67,4 +67,4 @@ DynamicBloom::DynamicBloom(Allocator* allocator, uint32_t total_bits,
   data_ = reinterpret_cast<std::atomic<uint64_t>*>(raw);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

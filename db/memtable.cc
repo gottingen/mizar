@@ -28,13 +28,13 @@
 #include "monitoring/statistics.h"
 #include "port/lang.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/types.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice_transform.h"
+#include "mizar/types.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/internal_iterator.h"
 #include "table/iterator_wrapper.h"
 #include "table/merging_iterator.h"
@@ -42,7 +42,7 @@
 #include "util/coding.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 ImmutableMemTableOptions::ImmutableMemTableOptions(
     const ImmutableOptions& ioptions,
@@ -135,7 +135,7 @@ size_t MemTable::ApproximateMemoryUsage() {
   autovector<size_t> usages = {
       arena_.ApproximateMemoryUsage(), table_->ApproximateMemoryUsage(),
       range_del_table_->ApproximateMemoryUsage(),
-      ROCKSDB_NAMESPACE::ApproximateMemoryUsage(insert_hints_)};
+      MIZAR_NAMESPACE::ApproximateMemoryUsage(insert_hints_)};
   size_t total_usage = 0;
   for (size_t usage : usages) {
     // If usage + total_usage >= kMaxSizet, return kMaxSizet.
@@ -253,7 +253,7 @@ int MemTable::KeyComparator::operator()(const char* prefix_len_key,
 }
 
 void MemTableRep::InsertConcurrently(KeyHandle /*handle*/) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   throw std::runtime_error("concurrent insert not supported");
 #else
   abort();
@@ -748,7 +748,7 @@ static bool SaveValue(void* arg, const char* entry) {
           ROCKS_LOG_ERROR(s->logger, "Encounter unexpected blob index.");
           *(s->status) = Status::NotSupported(
               "Encounter unsupported blob value. Please open DB with "
-              "ROCKSDB_NAMESPACE::blob_db::BlobDB instead.");
+              "MIZAR_NAMESPACE::blob_db::BlobDB instead.");
         } else if (*(s->merge_in_progress)) {
           *(s->status) =
               Status::NotSupported("Blob DB does not support merge operator.");
@@ -1256,4 +1256,4 @@ uint64_t MemTable::GetMinLogContainingPrepSection() {
   return min_prep_log_referenced_.load();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

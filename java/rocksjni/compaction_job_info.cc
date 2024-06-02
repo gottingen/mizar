@@ -4,12 +4,12 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::CompactionJobInfo.
+// MIZAR_NAMESPACE::CompactionJobInfo.
 
 #include <jni.h>
 
 #include "include/org_rocksdb_CompactionJobInfo.h"
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -19,7 +19,7 @@
  */
 jlong Java_org_rocksdb_CompactionJobInfo_newCompactionJobInfo(
     JNIEnv*, jclass) {
-  auto* compact_job_info = new ROCKSDB_NAMESPACE::CompactionJobInfo();
+  auto* compact_job_info = new MIZAR_NAMESPACE::CompactionJobInfo();
   return reinterpret_cast<jlong>(compact_job_info);
 }
 
@@ -31,7 +31,7 @@ jlong Java_org_rocksdb_CompactionJobInfo_newCompactionJobInfo(
 void Java_org_rocksdb_CompactionJobInfo_disposeInternal(
     JNIEnv*, jobject, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   delete compact_job_info;
 }
 
@@ -43,8 +43,8 @@ void Java_org_rocksdb_CompactionJobInfo_disposeInternal(
 jbyteArray Java_org_rocksdb_CompactionJobInfo_columnFamilyName(
     JNIEnv* env, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::JniUtil::copyBytes(env, compact_job_info->cf_name);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::JniUtil::copyBytes(env, compact_job_info->cf_name);
 }
 
 /*
@@ -55,8 +55,8 @@ jbyteArray Java_org_rocksdb_CompactionJobInfo_columnFamilyName(
 jobject Java_org_rocksdb_CompactionJobInfo_status(
     JNIEnv* env, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::StatusJni::construct(env, compact_job_info->status);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::StatusJni::construct(env, compact_job_info->status);
 }
 
 /*
@@ -67,7 +67,7 @@ jobject Java_org_rocksdb_CompactionJobInfo_status(
 jlong Java_org_rocksdb_CompactionJobInfo_threadId(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   return static_cast<jlong>(compact_job_info->thread_id);
 }
 
@@ -79,7 +79,7 @@ jlong Java_org_rocksdb_CompactionJobInfo_threadId(
 jint Java_org_rocksdb_CompactionJobInfo_jobId(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   return static_cast<jint>(compact_job_info->job_id);
 }
 
@@ -91,7 +91,7 @@ jint Java_org_rocksdb_CompactionJobInfo_jobId(
 jint Java_org_rocksdb_CompactionJobInfo_baseInputLevel(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   return static_cast<jint>(compact_job_info->base_input_level);
 }
 
@@ -103,7 +103,7 @@ jint Java_org_rocksdb_CompactionJobInfo_baseInputLevel(
 jint Java_org_rocksdb_CompactionJobInfo_outputLevel(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   return static_cast<jint>(compact_job_info->output_level);
 }
 
@@ -115,8 +115,8 @@ jint Java_org_rocksdb_CompactionJobInfo_outputLevel(
 jobjectArray Java_org_rocksdb_CompactionJobInfo_inputFiles(
     JNIEnv* env, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaStrings(
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::JniUtil::toJavaStrings(
       env, &compact_job_info->input_files);
 }
 
@@ -128,8 +128,8 @@ jobjectArray Java_org_rocksdb_CompactionJobInfo_inputFiles(
 jobjectArray Java_org_rocksdb_CompactionJobInfo_outputFiles(
     JNIEnv* env, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaStrings(
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::JniUtil::toJavaStrings(
       env, &compact_job_info->output_files);
 }
 
@@ -141,26 +141,26 @@ jobjectArray Java_org_rocksdb_CompactionJobInfo_outputFiles(
 jobject Java_org_rocksdb_CompactionJobInfo_tableProperties(
     JNIEnv* env, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
   auto* map = &compact_job_info->table_properties;
 
-  jobject jhash_map = ROCKSDB_NAMESPACE::HashMapJni::construct(
+  jobject jhash_map = MIZAR_NAMESPACE::HashMapJni::construct(
       env, static_cast<uint32_t>(map->size()));
   if (jhash_map == nullptr) {
     // exception occurred
     return nullptr;
   }
 
-  const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
+  const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
       const std::string,
-      std::shared_ptr<const ROCKSDB_NAMESPACE::TableProperties>, jobject,
+      std::shared_ptr<const MIZAR_NAMESPACE::TableProperties>, jobject,
       jobject>
       fn_map_kv =
           [env](const std::pair<
                 const std::string,
-                std::shared_ptr<const ROCKSDB_NAMESPACE::TableProperties>>&
+                std::shared_ptr<const MIZAR_NAMESPACE::TableProperties>>&
                     kv) {
-            jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
+            jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
                 env, &(kv.first), false);
             if (env->ExceptionCheck()) {
               // an error occurred
@@ -168,7 +168,7 @@ jobject Java_org_rocksdb_CompactionJobInfo_tableProperties(
             }
 
             jobject jtable_properties =
-                ROCKSDB_NAMESPACE::TablePropertiesJni::fromCppTableProperties(
+                MIZAR_NAMESPACE::TablePropertiesJni::fromCppTableProperties(
                     env, *(kv.second.get()));
             if (env->ExceptionCheck()) {
               // an error occurred
@@ -181,7 +181,7 @@ jobject Java_org_rocksdb_CompactionJobInfo_tableProperties(
                                                 jtable_properties));
           };
 
-  if (!ROCKSDB_NAMESPACE::HashMapJni::putAll(env, jhash_map, map->begin(),
+  if (!MIZAR_NAMESPACE::HashMapJni::putAll(env, jhash_map, map->begin(),
                                              map->end(), fn_map_kv)) {
     // exception occurred
     return nullptr;
@@ -198,8 +198,8 @@ jobject Java_org_rocksdb_CompactionJobInfo_tableProperties(
 jbyte Java_org_rocksdb_CompactionJobInfo_compactionReason(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::CompactionReasonJni::toJavaCompactionReason(
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::CompactionReasonJni::toJavaCompactionReason(
       compact_job_info->compaction_reason);
 }
 
@@ -211,8 +211,8 @@ jbyte Java_org_rocksdb_CompactionJobInfo_compactionReason(
 jbyte Java_org_rocksdb_CompactionJobInfo_compression(
     JNIEnv*, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  return ROCKSDB_NAMESPACE::CompressionTypeJni::toJavaCompressionType(
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  return MIZAR_NAMESPACE::CompressionTypeJni::toJavaCompressionType(
       compact_job_info->compression);
 }
 
@@ -224,8 +224,8 @@ jbyte Java_org_rocksdb_CompactionJobInfo_compression(
 jlong Java_org_rocksdb_CompactionJobInfo_stats(
     JNIEnv *, jclass, jlong jhandle) {
   auto* compact_job_info =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionJobInfo*>(jhandle);
-  auto* stats = new ROCKSDB_NAMESPACE::CompactionJobStats();
+      reinterpret_cast<MIZAR_NAMESPACE::CompactionJobInfo*>(jhandle);
+  auto* stats = new MIZAR_NAMESPACE::CompactionJobStats();
   stats->Add(compact_job_info->stats);
   return reinterpret_cast<jlong>(stats);
 }

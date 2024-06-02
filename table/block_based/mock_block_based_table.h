@@ -4,12 +4,12 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block_based_filter_block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace mock {
 
 class MockBlockBasedTable : public BlockBasedTable {
@@ -53,4 +53,4 @@ class MockBlockBasedTableTester {
 };
 
 }  // namespace mock
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

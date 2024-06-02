@@ -25,10 +25,10 @@
 #include "port/sys_time.h"
 #include "port/win/env_win.h"
 #include "port/win/io_win.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace port {
 
@@ -189,6 +189,6 @@ size_t WinLogger::GetLogFileSize() const { return log_size_; }
 
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

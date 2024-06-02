@@ -14,13 +14,13 @@
 #include "db/db_test_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/iostats_context.h"
-#include "rocksdb/perf_context.h"
+#include "mizar/iostats_context.h"
+#include "mizar/perf_context.h"
 #include "table/block_based/flush_block_policy.h"
 #include "util/random.h"
 #include "utilities/merge_operators/string_append/stringappend2.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A dumb ReadCallback which saying every key is committed.
 class DummyReadCallback : public ReadCallback {
@@ -112,7 +112,7 @@ TEST_P(DBIteratorTest, NonBlockingIteration) {
   do {
     ReadOptions non_blocking_opts, regular_opts;
     Options options = CurrentOptions();
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     non_blocking_opts.read_tier = kBlockCacheTier;
     CreateAndReopenWithCF({"pikachu"}, options);
     // write one kv to the database.
@@ -540,7 +540,7 @@ TEST_P(DBIteratorTest, IterReseek) {
   Options options = CurrentOptions(options_override);
   options.max_sequential_skip_in_iterations = 3;
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   CreateAndReopenWithCF({"pikachu"}, options);
 
@@ -624,7 +624,7 @@ TEST_F(DBIteratorTest, ReseekUponDirectionChange) {
   Options options = GetDefaultOptions();
   options.create_if_missing = true;
   options.prefix_extractor.reset(NewFixedPrefixTransform(1));
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   options.merge_operator.reset(
       new StringAppendTESTOperator(/*delim_char=*/' '));
   DestroyAndReopen(options);
@@ -888,7 +888,7 @@ TEST_P(DBIteratorTest, IteratorDeleteAfterCfDrop) {
 }
 
 // SetOptions not defined in ROCKSDB LITE
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(DBIteratorTest, DBIteratorBoundTest) {
   Options options = CurrentOptions();
   options.env = env_;
@@ -1065,7 +1065,7 @@ TEST_P(DBIteratorTest, DBIteratorBoundMultiSeek) {
   Options options = CurrentOptions();
   options.env = env_;
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   options.prefix_extractor = nullptr;
   DestroyAndReopen(options);
   ASSERT_OK(Put("a", "0"));
@@ -1120,10 +1120,10 @@ TEST_P(DBIteratorTest, DBIteratorBoundOptimizationTest) {
   for (auto format_version : {2, 3, 4}) {
     int upper_bound_hits = 0;
     Options options = CurrentOptions();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "BlockBasedTableIterator:out_of_bound",
         [&upper_bound_hits](void*) { upper_bound_hits++; });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     options.env = env_;
     options.create_if_missing = true;
     options.prefix_extractor = nullptr;
@@ -1171,7 +1171,7 @@ TEST_P(DBIteratorTest, IndexWithFirstKey) {
     options.create_if_missing = true;
     options.prefix_extractor = nullptr;
     options.merge_operator = MergeOperators::CreateStringAppendOperator();
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     Statistics* stats = options.statistics.get();
     BlockBasedTableOptions table_options;
     table_options.index_type =
@@ -1292,7 +1292,7 @@ TEST_P(DBIteratorTest, IndexWithFirstKeyGet) {
   options.create_if_missing = true;
   options.prefix_extractor = nullptr;
   options.merge_operator = MergeOperators::CreateStringAppendOperator();
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   Statistics* stats = options.statistics.get();
   BlockBasedTableOptions table_options;
   table_options.index_type =
@@ -1559,7 +1559,7 @@ INSTANTIATE_TEST_CASE_P(DBIteratorTestForPinnedDataInstance,
                         DBIteratorTestForPinnedData,
                         testing::Values(true, false));
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(DBIteratorTest, PinnedDataIteratorMultipleFiles) {
   Options options = CurrentOptions();
   BlockBasedTableOptions table_options;
@@ -2089,7 +2089,7 @@ TEST_P(DBIteratorTest, IterPrevKeyCrossingBlocksRandomized) {
 
 TEST_P(DBIteratorTest, IteratorWithLocalStatistics) {
   Options options = CurrentOptions();
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   Random rnd(301);
@@ -2187,7 +2187,7 @@ TEST_P(DBIteratorTest, ReadAhead) {
   options.env = env_;
   options.disable_auto_compactions = true;
   options.write_buffer_size = 4 << 20;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.block_size = 1024;
   table_options.no_block_cache = true;
@@ -2211,9 +2211,9 @@ TEST_P(DBIteratorTest, ReadAhead) {
     ASSERT_OK(Put(Key(i), value));
   }
   ASSERT_OK(Flush());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_EQ("1,1,1", FilesPerLevel());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   env_->random_read_bytes_counter_ = 0;
   options.statistics->setTickerCount(NO_FILE_OPENS, 0);
@@ -2265,7 +2265,7 @@ TEST_P(DBIteratorTest, DBIteratorSkipRecentDuplicatesTest) {
   options.max_sequential_skip_in_iterations = 3;
   options.prefix_extractor = nullptr;
   options.write_buffer_size = 1 << 27;  // big enough to avoid flush
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   // Insert.
@@ -2280,7 +2280,7 @@ TEST_P(DBIteratorTest, DBIteratorSkipRecentDuplicatesTest) {
     ASSERT_OK(Put("b", std::to_string(i + 1).c_str()));
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Check that memtable wasn't flushed.
   std::string val;
   ASSERT_TRUE(db_->GetProperty("rocksdb.num-files-at-level0", &val));
@@ -2561,7 +2561,7 @@ TEST_P(DBIteratorTest, UpperBoundWithPrevReseek) {
 
 TEST_P(DBIteratorTest, SkipStatistics) {
   Options options = CurrentOptions();
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   int skip_count = 0;
@@ -3229,10 +3229,10 @@ TEST_F(DBIteratorTest, BackwardIterationOnInplaceUpdateMemtable) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

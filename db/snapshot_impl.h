@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SnapshotList;
 
@@ -165,4 +165,4 @@ class SnapshotList {
   uint64_t count_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

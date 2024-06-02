@@ -8,14 +8,14 @@
 #include <memory>
 #include <sstream>
 
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 
 CompactOnDeletionCollector::CompactOnDeletionCollector(
     size_t sliding_window_size, size_t deletion_trigger, double deletion_ratio)
@@ -100,7 +100,7 @@ Status CompactOnDeletionCollector::Finish(
 }
 static std::unordered_map<std::string, OptionTypeInfo>
     on_deletion_collector_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"window_size",
          {0, OptionType::kUnknown, OptionVerificationType::kNormal,
           OptionTypeFlags::kCompareNever | OptionTypeFlags::kMutable,
@@ -156,7 +156,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
           },
           nullptr}},
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 CompactOnDeletionCollectorFactory::CompactOnDeletionCollectorFactory(
@@ -208,20 +208,20 @@ static int RegisterTablePropertiesCollectorFactories(
   return 1;
 }
 }  // namespace
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status TablePropertiesCollectorFactory::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<TablePropertiesCollectorFactory>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterTablePropertiesCollectorFactories(*(ObjectLibrary::Default().get()),
                                               "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   return LoadSharedObject<TablePropertiesCollectorFactory>(options, value,
                                                            nullptr, result);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

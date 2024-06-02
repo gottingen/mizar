@@ -16,7 +16,7 @@
 // it's called by other files (e.g. block_based_iterator.h) and
 // are templates.
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Convert an index iterator value (i.e., an encoded BlockHandle)
 // into an iterator over the contents of the corresponding block.
 // If input_iter is null, new a iterator
@@ -160,4 +160,4 @@ TBlockIter* BlockBasedTable::NewDataBlockIterator(const ReadOptions& ro,
   block.TransferTo(iter);
   return iter;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

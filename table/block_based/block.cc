@@ -18,13 +18,13 @@
 #include "monitoring/perf_context_imp.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "table/block_based/block_prefix_index.h"
 #include "table/block_based/data_block_footer.h"
 #include "table/format.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Helper routine: decode the next block entry starting at "p",
 // storing the number of shared key bytes, non_shared key bytes,
@@ -1113,15 +1113,15 @@ IndexBlockIter* Block::NewIndexIterator(
 
 size_t Block::ApproximateMemoryUsage() const {
   size_t usage = usable_size();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   usage += malloc_usable_size((void*)this);
 #else
   usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
   if (read_amp_bitmap_) {
     usage += read_amp_bitmap_->ApproximateMemoryUsage();
   }
   return usage;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

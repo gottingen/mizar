@@ -9,7 +9,7 @@
 
 #include "table/internal_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // An internal iterator that wraps another one and ensures that any keys
 // returned are strictly within a range [start, end). If the underlying
@@ -272,4 +272,4 @@ class ClippingIterator : public InternalIterator {
   bool valid_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

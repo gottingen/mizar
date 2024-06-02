@@ -14,13 +14,13 @@
 #include <memory>
 
 #include "cache/cache_entry_roles.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/cache.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 CacheReservationManager::CacheReservationManager(std::shared_ptr<Cache> cache,
                                                  bool delayed_decrease)
     : delayed_decrease_(delayed_decrease),
@@ -185,4 +185,4 @@ CacheReservationHandle<R>::~CacheReservationHandle() {
 // This makes it possible to keep the template definitions in the .cc file.
 template class CacheReservationHandle<CacheEntryRole::kMisc>;
 template class CacheReservationHandle<CacheEntryRole::kFilterConstruction>;
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

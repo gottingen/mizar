@@ -3,15 +3,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/wal_filter.h"
+#include "mizar/wal_filter.h"
 
 #include <memory>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/customizable_util.h"
+#include "mizar/convenience.h"
+#include "mizar/options.h"
+#include "mizar/utilities/customizable_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Status WalFilter::CreateFromString(const ConfigOptions& config_options,
                                    const std::string& value,
                                    WalFilter** filter) {
@@ -20,4 +20,4 @@ Status WalFilter::CreateFromString(const ConfigOptions& config_options,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

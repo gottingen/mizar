@@ -2,14 +2,14 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "utilities/transactions/lock/point/point_lock_manager.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MockColumnFamilyHandle : public ColumnFamilyHandle {
  public:
@@ -188,17 +188,17 @@ TEST_P(AnyLockManagerTest, LockConflict) {
 port::Thread BlockUntilWaitingTxn(const char* sync_point_name,
                                   std::function<void()> f) {
   std::atomic<bool> reached(false);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       sync_point_name, [&](void* /*arg*/) { reached.store(true); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   port::Thread t(f);
 
   while (!reached.load()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   return t;
 }
@@ -316,4 +316,4 @@ TEST_P(AnyLockManagerTest, GetWaitingTxns_MultipleTxns) {
   delete txn3;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

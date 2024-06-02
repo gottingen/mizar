@@ -19,16 +19,16 @@
 #include <tuple>
 
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/db_ttl.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/db_ttl.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "utilities/merge_operators.h"
 #include "utilities/merge_operators/string_append/stringappend2.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Path to the database on file system
 const std::string kDbName = test::PerThreadDBPath("stringappend_test");
@@ -50,7 +50,7 @@ std::shared_ptr<DB> OpenNormalDb(const std::string& delim) {
   return std::shared_ptr<DB>(db);
 }
 
-#ifndef ROCKSDB_LITE  // TtlDb is not supported in Lite
+#ifndef MIZAR_LITE  // TtlDb is not supported in Lite
 // Open a TtlDB with a non-associative StringAppendTESTOperator
 std::shared_ptr<DB> OpenTtlDb(const std::string& delim) {
   DBWithTTL* db;
@@ -66,7 +66,7 @@ std::shared_ptr<DB> OpenTtlDb(const std::string& delim) {
   EXPECT_OK(DBWithTTL::Open(options, kDbName, &db, 123456));
   return std::shared_ptr<DB>(db);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }  // namespace
 
 /// StringLists represents a set of string-lists, each with a key-index.
@@ -137,14 +137,14 @@ class StringAppendOperatorTest : public testing::Test,
   }
 
   void SetUp() override {
-#ifndef ROCKSDB_LITE  // TtlDb is not supported in Lite
+#ifndef MIZAR_LITE  // TtlDb is not supported in Lite
     bool if_use_ttl = GetParam();
     if (if_use_ttl) {
       fprintf(stderr, "Running tests with ttl db and generic operator.\n");
       StringAppendOperatorTest::SetOpenDbFunction(&OpenTtlDb);
       return;
     }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
     fprintf(stderr, "Running tests with regular db and operator.\n");
     StringAppendOperatorTest::SetOpenDbFunction(&OpenNormalDb);
   }
@@ -177,7 +177,7 @@ TEST_P(StringAppendOperatorTest, IteratorTest) {
   slists.Append("k2", "a3");
 
   std::string res;
-  std::unique_ptr<ROCKSDB_NAMESPACE::Iterator> it(
+  std::unique_ptr<MIZAR_NAMESPACE::Iterator> it(
       db_->NewIterator(ReadOptions()));
   std::string k1("k1");
   std::string k2("k2");
@@ -537,14 +537,14 @@ TEST_P(StringAppendOperatorTest, PersistentFlushAndCompaction) {
 
     // Append, Flush, Get
     slists.Append("c", "asdasd");
-    ASSERT_OK(db->Flush(ROCKSDB_NAMESPACE::FlushOptions()));
+    ASSERT_OK(db->Flush(MIZAR_NAMESPACE::FlushOptions()));
     ASSERT_TRUE(slists.Get("c", &c));
     ASSERT_EQ(c, "asdasd");
 
     // Append, Flush, Append, Get
     slists.Append("a", "x");
     slists.Append("b", "y");
-    ASSERT_OK(db->Flush(ROCKSDB_NAMESPACE::FlushOptions()));
+    ASSERT_OK(db->Flush(MIZAR_NAMESPACE::FlushOptions()));
     slists.Append("a", "t");
     slists.Append("a", "r");
     slists.Append("b", "2");
@@ -610,7 +610,7 @@ TEST_P(StringAppendOperatorTest, PersistentFlushAndCompaction) {
 
     // Append, Flush, Compact, Get
     slists.Append("b", "afcg");
-    ASSERT_OK(db->Flush(ROCKSDB_NAMESPACE::FlushOptions()));
+    ASSERT_OK(db->Flush(MIZAR_NAMESPACE::FlushOptions()));
     ASSERT_OK(db->CompactRange(CompactRangeOptions(), nullptr, nullptr));
     ASSERT_TRUE(slists.Get("b", &b));
     ASSERT_EQ(b, "y\n2\nmonkey\ndf\nl;\nafcg");
@@ -642,10 +642,10 @@ TEST_P(StringAppendOperatorTest, SimpleTestNullDelimiter) {
 INSTANTIATE_TEST_CASE_P(StringAppendOperatorTest, StringAppendOperatorTest,
                         testing::Bool());
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

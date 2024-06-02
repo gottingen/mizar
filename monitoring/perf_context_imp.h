@@ -5,11 +5,11 @@
 //
 #pragma once
 #include "monitoring/perf_step_timer.h"
-#include "rocksdb/perf_context.h"
+#include "mizar/perf_context.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
-#if defined(NPERF_CONTEXT) || !defined(ROCKSDB_SUPPORT_THREAD_LOCAL)
+namespace MIZAR_NAMESPACE {
+#if defined(NPERF_CONTEXT) || !defined(MIZAR_SUPPORT_THREAD_LOCAL)
 extern PerfContext perf_context;
 #else
 #if defined(OS_SOLARIS)
@@ -93,4 +93,4 @@ extern thread_local PerfContext perf_context;
 
 #endif
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

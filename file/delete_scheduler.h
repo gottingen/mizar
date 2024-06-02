@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <map>
 #include <queue>
@@ -15,9 +15,9 @@
 #include "monitoring/instrumented_mutex.h"
 #include "port/port.h"
 
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Env;
 class FileSystem;
@@ -147,6 +147,6 @@ class DeleteScheduler {
   std::shared_ptr<Statistics> stats_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

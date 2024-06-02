@@ -4,14 +4,14 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 // LITE not supported here in part because of exception handling
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/regex.h"
+#include "mizar/utilities/regex.h"
 
 #include <cassert>
 #include <regex>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // This section would change for alternate underlying implementations other
 // than std::regex.
@@ -45,6 +45,6 @@ Status Regex::Parse(const char *pattern, Regex *out) {
   return Parse(std::string(pattern), out);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

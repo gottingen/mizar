@@ -7,16 +7,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
 #include "cache/lru_cache.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 static std::unordered_map<std::string, OptionTypeInfo>
     lru_cache_options_type_info = {
         {"capacity",
@@ -34,7 +34,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
           OptionType::kDouble, OptionVerificationType::kNormal,
           OptionTypeFlags::kMutable}},
 };
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status SecondaryCache::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
@@ -51,7 +51,7 @@ Status Cache::CreateFromString(const ConfigOptions& config_options,
   if (value.find('=') == std::string::npos) {
     cache = NewLRUCache(ParseSizeT(value));
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     LRUCacheOptions cache_opts;
     status = OptionTypeInfo::ParseStruct(config_options, "",
                                          &lru_cache_options_type_info, "",
@@ -62,11 +62,11 @@ Status Cache::CreateFromString(const ConfigOptions& config_options,
 #else
     (void)config_options;
     status = Status::NotSupported("Cannot load cache in LITE mode ", value);
-#endif  //! ROCKSDB_LITE
+#endif  //! MIZAR_LITE
   }
   if (status.ok()) {
     result->swap(cache);
   }
   return status;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

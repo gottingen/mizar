@@ -11,10 +11,10 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/comparator.h"
+#include "mizar/table_properties.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Base class for internal table properties collector.
 class IntTblPropCollector {
@@ -172,4 +172,4 @@ class TimestampTablePropertiesCollector : public IntTblPropCollector {
   std::string timestamp_max_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

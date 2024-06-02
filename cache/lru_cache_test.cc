@@ -13,17 +13,17 @@
 #include "file/sst_file_manager_impl.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/sst_file_manager.h"
-#include "rocksdb/utilities/cache_dump_load.h"
+#include "mizar/cache.h"
+#include "mizar/io_status.h"
+#include "mizar/sst_file_manager.h"
+#include "mizar/utilities/cache_dump_load.h"
 #include "test_util/testharness.h"
 #include "util/coding.h"
 #include "util/random.h"
 #include "utilities/cache_dump_load_impl.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class LRUCacheTest : public testing::Test {
  public:
@@ -1135,17 +1135,17 @@ TEST_F(DBSecondaryCacheTest, TestSecondaryCacheMultiGet) {
   cache->SetCapacity(1 << 20);
 
   std::vector<std::string> cache_keys;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "TestSecondaryCache::Lookup", [&cache_keys](void* key) -> void {
         cache_keys.emplace_back(*(static_cast<std::string*>(key)));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   for (int i = 0; i < N; ++i) {
     std::string v = Get(Key(i));
     ASSERT_EQ(4000, v.size());
     ASSERT_EQ(v, keys[i]);
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(secondary_cache->num_lookups(), 16u);
   cache->SetCapacity(0);
   cache->SetCapacity(1 << 20);
@@ -1230,7 +1230,7 @@ class LRUCacheWithStat : public LRUCache {
   uint32_t lookup_count_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 TEST_F(DBSecondaryCacheTest, LRUCacheDumpLoadBasic) {
   LRUCacheOptions cache_opts(1024 * 1024, 0, false, 0.5, nullptr,
@@ -1838,9 +1838,9 @@ TEST_F(DBSecondaryCacheTest, TestSecondaryCacheOptionTwoDB) {
   ASSERT_OK(DestroyDB(dbname2, options));
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

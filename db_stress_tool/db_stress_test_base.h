@@ -12,7 +12,7 @@
 #include "db_stress_tool/db_stress_common.h"
 #include "db_stress_tool/db_stress_shared_state.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class SystemClock;
 class Transaction;
 class TransactionDB;
@@ -53,7 +53,7 @@ class StressTest {
 
   Status SetOptions(ThreadState* thread);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status NewTxn(WriteOptions& write_opts, Transaction** txn);
 
   Status CommitTxn(Transaction* txn);
@@ -132,19 +132,19 @@ class StressTest {
     return column_families_[column_family_id];
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Generated a list of keys that close to boundaries of SST keys.
   // If there isn't any SST file in the DB, return empty list.
   std::vector<std::string> GetWhiteBoxKeys(ThreadState* thread, DB* db,
                                            ColumnFamilyHandle* cfh,
                                            size_t num_keys);
-#else   // !ROCKSDB_LITE
+#else   // !MIZAR_LITE
   std::vector<std::string> GetWhiteBoxKeys(ThreadState*, DB*,
                                            ColumnFamilyHandle*, size_t) {
     // Not supported in LITE mode.
     return {};
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   // Given a key K, this creates an iterator which scans to K and then
   // does a random sequence of Next/Prev operations.
@@ -191,7 +191,7 @@ class StressTest {
                            const std::string& keystr, uint64_t i);
 
   Status MaybeReleaseSnapshots(ThreadState* thread, uint64_t i);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status VerifyGetLiveFiles() const;
   Status VerifyGetSortedWalFiles() const;
   Status VerifyGetCurrentWalFile() const;
@@ -201,7 +201,7 @@ class StressTest {
       ThreadState* thread, uint64_t iteration,
       const std::vector<int>& rand_column_families,
       const std::vector<int64_t>& rand_keys);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   virtual Status TestCustomOperations(
       ThreadState* /*thread*/,
@@ -226,7 +226,7 @@ class StressTest {
   std::shared_ptr<Cache> compressed_cache_;
   std::shared_ptr<const FilterPolicy> filter_policy_;
   DB* db_;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TransactionDB* txn_db_;
 #endif
   Options options_;
@@ -249,5 +249,5 @@ class StressTest {
   bool is_db_stopped_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

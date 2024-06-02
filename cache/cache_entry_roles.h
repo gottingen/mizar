@@ -11,9 +11,9 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Classifications of block cache entries, for reporting statistics
 // Adding new enum to this class requires corresponding updates to
@@ -131,4 +131,4 @@ Cache::DeleterFn GetNoopDeleterForRole() {
   return reg.Delete;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

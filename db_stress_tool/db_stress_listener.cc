@@ -7,13 +7,13 @@
 
 #include <cstdint>
 
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "util/coding_lean.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #ifdef GFLAGS
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 // TODO: consider using expected_values_dir instead, but this is more
 // convenient for now.
@@ -142,7 +142,7 @@ void DbStressListener::VerifyTableFileUniqueId(
   unique_ids_.Verify(id);
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 #endif  // GFLAGS
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

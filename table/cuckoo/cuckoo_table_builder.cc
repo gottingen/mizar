@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "table/cuckoo/cuckoo_table_builder.h"
 
 #include <assert.h>
@@ -14,8 +14,8 @@
 
 #include "db/dbformat.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
-#include "rocksdb/table.h"
+#include "mizar/env.h"
+#include "mizar/table.h"
 #include "table/block_based/block_builder.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/format.h"
@@ -24,7 +24,7 @@
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 const std::string CuckooTablePropertyNames::kEmptyKey =
       "rocksdb.cuckoo.bucket.empty.key";
 const std::string CuckooTablePropertyNames::kNumHashFunc =
@@ -539,5 +539,5 @@ const char* CuckooTableBuilder::GetFileChecksumFuncName() const {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

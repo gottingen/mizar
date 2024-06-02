@@ -26,7 +26,7 @@ from util import ColorString
 # $python3 buckifier/buckify_rocksdb.py \
 #        '{"fake": {
 #                      "extra_deps": [":test_dep", "//fakes/module:mock1"],
-#                      "extra_compiler_flags": ["-DROCKSDB_LITE", "-Os"]
+#                      "extra_compiler_flags": ["-DMIZAR_LITE", "-Os"]
 #                  }
 #         }'
 # (Generated TARGETS file has test_dep and mock1 as dependencies for RocksDB

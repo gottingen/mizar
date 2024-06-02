@@ -7,8 +7,8 @@
 #include <string>
 
 #include "memtable/stl_wrappers.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/hash.h"
@@ -18,7 +18,7 @@
 #include "utilities/merge_operators.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 
 static const Comparator* kTestComparator = nullptr;
@@ -268,7 +268,7 @@ class ComparatorDBTest
     BlockBasedTableOptions toptions;
     toptions.format_version = GetParam();
     last_options_.table_factory.reset(
-        ROCKSDB_NAMESPACE::NewBlockBasedTableFactory(toptions));
+        MIZAR_NAMESPACE::NewBlockBasedTableFactory(toptions));
     EXPECT_OK(DestroyDB(dbname_, last_options_));
   }
 
@@ -652,7 +652,7 @@ TEST_P(ComparatorDBTest, SeparatorSuccessorRandomizeTest) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

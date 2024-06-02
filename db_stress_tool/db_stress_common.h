@@ -46,19 +46,19 @@
 #include "monitoring/histogram.h"
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/env.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/utilities/backupable_db.h"
-#include "rocksdb/utilities/checkpoint.h"
-#include "rocksdb/utilities/db_ttl.h"
-#include "rocksdb/utilities/debug.h"
-#include "rocksdb/utilities/options_util.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/cache.h"
+#include "mizar/env.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/statistics.h"
+#include "mizar/utilities/backupable_db.h"
+#include "mizar/utilities/checkpoint.h"
+#include "mizar/utilities/db_ttl.h"
+#include "mizar/utilities/debug.h"
+#include "mizar/utilities/options_util.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/write_batch.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"
 #include "util/compression.h"
@@ -236,7 +236,7 @@ DECLARE_int32(continuous_verification_interval);
 DECLARE_int32(get_property_one_in);
 DECLARE_string(file_checksum_impl);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Options for StackableDB-based BlobDB
 DECLARE_bool(use_blob_db);
 DECLARE_uint64(blob_db_min_blob_size);
@@ -244,7 +244,7 @@ DECLARE_uint64(blob_db_bytes_per_sync);
 DECLARE_uint64(blob_db_file_size);
 DECLARE_bool(blob_db_enable_gc);
 DECLARE_double(blob_db_gc_cutoff);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Options for integrated BlobDB
 DECLARE_bool(allow_setting_blob_options_dynamically);
@@ -278,17 +278,17 @@ constexpr int kRandomValueMaxFactor = 3;
 constexpr int kValueMaxLen = 100;
 
 // wrapped posix or hdfs environment
-extern ROCKSDB_NAMESPACE::Env* db_stress_env;
+extern MIZAR_NAMESPACE::Env* db_stress_env;
 #ifndef NDEBUG
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class FaultInjectionTestFS;
-}  // namespace ROCKSDB_NAMESPACE
-extern std::shared_ptr<ROCKSDB_NAMESPACE::FaultInjectionTestFS> fault_fs_guard;
+}  // namespace MIZAR_NAMESPACE
+extern std::shared_ptr<MIZAR_NAMESPACE::FaultInjectionTestFS> fault_fs_guard;
 #endif
 
-extern enum ROCKSDB_NAMESPACE::CompressionType compression_type_e;
-extern enum ROCKSDB_NAMESPACE::CompressionType bottommost_compression_type_e;
-extern enum ROCKSDB_NAMESPACE::ChecksumType checksum_type_e;
+extern enum MIZAR_NAMESPACE::CompressionType compression_type_e;
+extern enum MIZAR_NAMESPACE::CompressionType bottommost_compression_type_e;
+extern enum MIZAR_NAMESPACE::ChecksumType checksum_type_e;
 
 enum RepFactory { kSkipList, kHashSkipList, kVectorRep };
 
@@ -308,63 +308,63 @@ inline enum RepFactory StringToRepFactory(const char* ctype) {
 
 extern enum RepFactory FLAGS_rep_factory;
 
-namespace ROCKSDB_NAMESPACE {
-inline enum ROCKSDB_NAMESPACE::CompressionType StringToCompressionType(
+namespace MIZAR_NAMESPACE {
+inline enum MIZAR_NAMESPACE::CompressionType StringToCompressionType(
     const char* ctype) {
   assert(ctype);
 
-  ROCKSDB_NAMESPACE::CompressionType ret_compression_type;
+  MIZAR_NAMESPACE::CompressionType ret_compression_type;
 
   if (!strcasecmp(ctype, "disable")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kDisableCompressionOption;
+    ret_compression_type = MIZAR_NAMESPACE::kDisableCompressionOption;
   } else if (!strcasecmp(ctype, "none")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kNoCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kNoCompression;
   } else if (!strcasecmp(ctype, "snappy")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kSnappyCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kSnappyCompression;
   } else if (!strcasecmp(ctype, "zlib")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kZlibCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kZlibCompression;
   } else if (!strcasecmp(ctype, "bzip2")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kBZip2Compression;
+    ret_compression_type = MIZAR_NAMESPACE::kBZip2Compression;
   } else if (!strcasecmp(ctype, "lz4")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kLZ4Compression;
+    ret_compression_type = MIZAR_NAMESPACE::kLZ4Compression;
   } else if (!strcasecmp(ctype, "lz4hc")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kLZ4HCCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kLZ4HCCompression;
   } else if (!strcasecmp(ctype, "xpress")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kXpressCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kXpressCompression;
   } else if (!strcasecmp(ctype, "zstd")) {
-    ret_compression_type = ROCKSDB_NAMESPACE::kZSTD;
+    ret_compression_type = MIZAR_NAMESPACE::kZSTD;
   } else {
     fprintf(stderr, "Cannot parse compression type '%s'\n", ctype);
     ret_compression_type =
-        ROCKSDB_NAMESPACE::kSnappyCompression;  // default value
+        MIZAR_NAMESPACE::kSnappyCompression;  // default value
   }
-  if (ret_compression_type != ROCKSDB_NAMESPACE::kDisableCompressionOption &&
+  if (ret_compression_type != MIZAR_NAMESPACE::kDisableCompressionOption &&
       !CompressionTypeSupported(ret_compression_type)) {
     // Use no compression will be more portable but considering this is
     // only a stress test and snappy is widely available. Use snappy here.
-    ret_compression_type = ROCKSDB_NAMESPACE::kSnappyCompression;
+    ret_compression_type = MIZAR_NAMESPACE::kSnappyCompression;
   }
   return ret_compression_type;
 }
 
-inline enum ROCKSDB_NAMESPACE::ChecksumType StringToChecksumType(
+inline enum MIZAR_NAMESPACE::ChecksumType StringToChecksumType(
     const char* ctype) {
   assert(ctype);
-  auto iter = ROCKSDB_NAMESPACE::checksum_type_string_map.find(ctype);
-  if (iter != ROCKSDB_NAMESPACE::checksum_type_string_map.end()) {
+  auto iter = MIZAR_NAMESPACE::checksum_type_string_map.find(ctype);
+  if (iter != MIZAR_NAMESPACE::checksum_type_string_map.end()) {
     return iter->second;
   }
   fprintf(stderr, "Cannot parse checksum type '%s'\n", ctype);
-  return ROCKSDB_NAMESPACE::kCRC32c;
+  return MIZAR_NAMESPACE::kCRC32c;
 }
 
-inline std::string ChecksumTypeToString(ROCKSDB_NAMESPACE::ChecksumType ctype) {
+inline std::string ChecksumTypeToString(MIZAR_NAMESPACE::ChecksumType ctype) {
   auto iter = std::find_if(
-      ROCKSDB_NAMESPACE::checksum_type_string_map.begin(),
-      ROCKSDB_NAMESPACE::checksum_type_string_map.end(),
-      [&](const std::pair<std::string, ROCKSDB_NAMESPACE::ChecksumType>&
+      MIZAR_NAMESPACE::checksum_type_string_map.begin(),
+      MIZAR_NAMESPACE::checksum_type_string_map.end(),
+      [&](const std::pair<std::string, MIZAR_NAMESPACE::ChecksumType>&
               name_and_enum_val) { return name_and_enum_val.second == ctype; });
-  assert(iter != ROCKSDB_NAMESPACE::checksum_type_string_map.end());
+  assert(iter != MIZAR_NAMESPACE::checksum_type_string_map.end());
   return iter->first;
 }
 
@@ -388,7 +388,7 @@ inline std::vector<std::string> SplitString(std::string src) {
 // truncation of constant value on static_cast
 #pragma warning(disable : 4309)
 #endif
-inline bool GetNextPrefix(const ROCKSDB_NAMESPACE::Slice& src, std::string* v) {
+inline bool GetNextPrefix(const MIZAR_NAMESPACE::Slice& src, std::string* v) {
   std::string ret = src.ToString();
   for (int i = static_cast<int>(ret.size()) - 1; i >= 0; i--) {
     if (ret[i] != static_cast<char>(255)) {
@@ -582,5 +582,5 @@ extern std::string NowNanosStr();
 
 std::shared_ptr<FileChecksumGenFactory> GetFileChecksumImpl(
     const std::string& name);
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

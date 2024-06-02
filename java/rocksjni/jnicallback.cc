@@ -10,7 +10,7 @@
 #include "rocksjni/jnicallback.h"
 #include "rocksjni/portal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 JniCallback::JniCallback(JNIEnv* env, jobject jcallback_obj) {
   // Note: jcallback_obj may be accessed by multiple threads,
   // so we ref the jvm not the env
@@ -49,4 +49,4 @@ JniCallback::~JniCallback() {
 
   releaseJniEnv(attached_thread);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

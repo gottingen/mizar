@@ -11,7 +11,7 @@
 #include "table/block_based/block_based_table_reader.h"
 #include "util/compression.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status UncompressionDictReader::Create(
     const BlockBasedTable* table, const ReadOptions& ro,
@@ -103,11 +103,11 @@ size_t UncompressionDictReader::ApproximateMemoryUsage() const {
                      ? uncompression_dict_.GetValue()->ApproximateMemoryUsage()
                      : 0;
 
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   usage += malloc_usable_size(const_cast<UncompressionDictReader*>(this));
 #else
   usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
 
   return usage;
 }
@@ -119,4 +119,4 @@ bool UncompressionDictReader::cache_dictionary_blocks() const {
   return table_->get_rep()->table_options.cache_index_and_filter_blocks;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

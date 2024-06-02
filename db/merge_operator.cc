@@ -7,9 +7,9 @@
  * Back-end implementation details specific to the Merge Operator.
  */
 
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool MergeOperator::FullMergeV2(const MergeOperationInput& merge_in,
                                 MergeOperationOutput* merge_out) const {
@@ -83,4 +83,4 @@ bool AssociativeMergeOperator::PartialMerge(
   return Merge(key, &left_operand, right_operand, new_value, logger);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

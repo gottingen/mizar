@@ -9,14 +9,14 @@
 
 #include "db/version_edit.h"
 
-#include "rocksdb/advanced_options.h"
+#include "mizar/advanced_options.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static void TestEncodeDecode(const VersionEdit& edit) {
   std::string encoded, encoded2;
@@ -146,7 +146,7 @@ TEST_F(VersionEditTest, ForwardCompatibleNewFile4) {
 
   // Call back function to add extra customized builds.
   bool first = true;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "VersionEdit::EncodeTo:NewFile4:CustomizeFields", [&](void* arg) {
         std::string* str = reinterpret_cast<std::string*>(arg);
         PutVarint32(str, 33);
@@ -159,9 +159,9 @@ TEST_F(VersionEditTest, ForwardCompatibleNewFile4) {
           PutLengthPrefixedSlice(str, str2);
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   edit.EncodeTo(&encoded);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   VersionEdit parsed;
   Status s = parsed.DecodeFrom(encoded);
@@ -197,15 +197,15 @@ TEST_F(VersionEditTest, NewFile4NotSupportedField) {
   std::string encoded;
 
   // Call back function to add extra customized builds.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "VersionEdit::EncodeTo:NewFile4:CustomizeFields", [&](void* arg) {
         std::string* str = reinterpret_cast<std::string*>(arg);
         const std::string str1 = "s";
         PutLengthPrefixedSlice(str, str1);
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   edit.EncodeTo(&encoded);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   VersionEdit parsed;
   Status s = parsed.DecodeFrom(encoded);
@@ -611,7 +611,7 @@ TEST_F(VersionEditTest, IgnorableTags) {
   SyncPoint::GetInstance()->DisableProcessing();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

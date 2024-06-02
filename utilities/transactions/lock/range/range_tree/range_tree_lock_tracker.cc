@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef OS_WIN
 
 #include "utilities/transactions/lock/range/range_tree/range_tree_lock_tracker.h"
 
 #include "utilities/transactions/lock/range/range_tree/range_tree_lock_manager.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 RangeLockList *RangeTreeLockTracker::getOrCreateList() {
   if (range_list_) return range_list_.get();
@@ -151,6 +151,6 @@ void RangeLockList::ReplaceLocks(const toku::locktree *lt,
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // OS_WIN
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

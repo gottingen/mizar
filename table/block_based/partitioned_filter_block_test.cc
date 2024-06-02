@@ -8,7 +8,7 @@
 #include <map>
 
 #include "index_builder.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/format.h"
@@ -17,7 +17,7 @@
 #include "util/coding.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::map<uint64_t, std::string> blooms;
 
@@ -327,7 +327,7 @@ TEST_P(PartitionedFilterBlockTest, SamePrefixInMultipleBlocks) {
   // some small number to cause partition cuts
   table_options_.metadata_block_size = 1;
   std::unique_ptr<const SliceTransform> prefix_extractor(
-      ROCKSDB_NAMESPACE::NewFixedPrefixTransform(1));
+      MIZAR_NAMESPACE::NewFixedPrefixTransform(1));
   std::unique_ptr<PartitionedIndexBuilder> pib(NewIndexBuilder());
   std::unique_ptr<PartitionedFilterBlockBuilder> builder(
       NewBuilder(pib.get(), prefix_extractor.get()));
@@ -366,7 +366,7 @@ TEST_P(PartitionedFilterBlockTest, PrefixInWrongPartitionBug) {
   // some small number to cause partition cuts
   table_options_.metadata_block_size = 1;
   std::unique_ptr<const SliceTransform> prefix_extractor(
-      ROCKSDB_NAMESPACE::NewFixedPrefixTransform(2));
+      MIZAR_NAMESPACE::NewFixedPrefixTransform(2));
   std::unique_ptr<PartitionedIndexBuilder> pib(NewIndexBuilder());
   std::unique_ptr<PartitionedFilterBlockBuilder> builder(
       NewBuilder(pib.get(), prefix_extractor.get()));
@@ -418,7 +418,7 @@ TEST_P(PartitionedFilterBlockTest, PartitionCount) {
   ASSERT_EQ(partitions, num_keys - 1 /* last two keys make one flush */);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

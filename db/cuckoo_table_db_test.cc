@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
 #include "table/meta_blocks.h"
@@ -17,7 +17,7 @@
 #include "util/cast_util.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CuckooTableDBTest : public testing::Test {
  private:
@@ -341,10 +341,10 @@ TEST_F(CuckooTableDBTest, AdaptiveTable) {
   ASSERT_EQ("v4", Get("key4"));
   ASSERT_EQ("v6", Get("key5"));
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  if (ROCKSDB_NAMESPACE::port::kLittleEndian) {
+  if (MIZAR_NAMESPACE::port::kLittleEndian) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
   } else {
@@ -357,8 +357,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

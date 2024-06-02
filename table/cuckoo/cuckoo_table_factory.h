@@ -4,14 +4,14 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 #include "util/murmurhash.h"
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const uint32_t kCuckooMurmurSeedMultiplier = 816922183;
 static inline uint64_t CuckooHash(
@@ -77,5 +77,5 @@ class CuckooTableFactory : public TableFactory {
   CuckooTableOptions table_options_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

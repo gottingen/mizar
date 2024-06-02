@@ -14,9 +14,9 @@
 
 #include "db/version_edit.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/io_status.h"
+#include "mizar/table.h"
 #include "table/internal_iterator.h"
 #include "table/table_builder.h"
 #include "table/table_reader.h"
@@ -25,7 +25,7 @@
 #include "util/kv_map.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace mock {
 using KVPair = std::pair<std::string, std::string>;
 using KVVector = std::vector<KVPair>;
@@ -87,4 +87,4 @@ class MockTableFactory : public TableFactory {
 };
 
 }  // namespace mock
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

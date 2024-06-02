@@ -30,7 +30,7 @@
 #include "util/crc32c_ppc_constants.h"
 
 #if __linux__
-#ifdef ROCKSDB_AUXV_GETAUXVAL_PRESENT
+#ifdef MIZAR_AUXV_GETAUXVAL_PRESENT
 #include <sys/auxv.h>
 #endif
 
@@ -54,7 +54,7 @@
 bool pmull_runtime_flag = false;
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace crc32c {
 
 #if defined(HAVE_POWER8) && defined(HAS_ALTIVEC)
@@ -470,7 +470,7 @@ uint32_t ExtendPPCImpl(uint32_t crc, const char *buf, size_t size) {
 static int arch_ppc_probe(void) {
   arch_ppc_crc32 = 0;
 
-#if defined(__powerpc64__) && defined(ROCKSDB_AUXV_GETAUXVAL_PRESENT)
+#if defined(__powerpc64__) && defined(MIZAR_AUXV_GETAUXVAL_PRESENT)
   if (getauxval(AT_HWCAP2) & PPC_FEATURE2_VEC_CRYPTO) arch_ppc_crc32 = 1;
 #endif /* __powerpc64__ */
 
@@ -656,7 +656,7 @@ const uint64_t clmul_constants[] = {
 };
 
 // Compute the crc32c value for buffer smaller than 8
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)
@@ -707,7 +707,7 @@ inline uint64_t CombineCRC(
 }
 
 // Compute CRC-32C using the Intel hardware instruction.
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)
@@ -1443,4 +1443,4 @@ uint32_t Crc32cCombine(uint32_t crc1, uint32_t crc2, size_t crc2len) {
 }
 
 }  // namespace crc32c
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

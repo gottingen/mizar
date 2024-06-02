@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "db/db_impl/compacted_db_impl.h"
 
 #include "db/db_impl/db_impl.h"
@@ -12,7 +12,7 @@
 #include "table/get_context.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern void MarkKeyMayExist(void* arg);
 extern bool SaveValue(void* arg, const ParsedInternalKey& parsed_key,
@@ -169,5 +169,5 @@ Status CompactedDBImpl::Open(const Options& options,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

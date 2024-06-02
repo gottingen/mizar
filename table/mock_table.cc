@@ -9,11 +9,11 @@
 #include "env/composite_env_wrapper.h"
 #include "file/random_access_file_reader.h"
 #include "port/port.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/table_properties.h"
 #include "table/get_context.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace mock {
 
 KVVector MakeMockFile(std::initializer_list<KVPair> l) { return KVVector(l); }
@@ -322,4 +322,4 @@ void MockTableFactory::AssertLatestFile(const KVVector& file_contents) {
 }
 
 }  // namespace mock
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -11,11 +11,11 @@
 #include <stdexcept>
 #include <vector>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
 template <class T, size_t kSize = 8>
 class autovector : public std::vector<T> {
   using std::vector<T>::vector;
@@ -363,5 +363,5 @@ autovector<T, kSize>& autovector<T, kSize>::assign(const autovector& other) {
 
   return *this;
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

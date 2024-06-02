@@ -45,32 +45,32 @@
 #include "options/cf_options.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/persistent_cache.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/stats_history.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/options_type.h"
-#include "rocksdb/utilities/options_util.h"
-#ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/replayer.h"
-#endif  // ROCKSDB_LITE
-#include "rocksdb/utilities/sim_cache.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/memtablerep.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/persistent_cache.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/stats_history.h"
+#include "mizar/table.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/options_type.h"
+#include "mizar/utilities/options_util.h"
+#ifndef MIZAR_LITE
+#include "mizar/utilities/replayer.h"
+#endif  // MIZAR_LITE
+#include "mizar/utilities/sim_cache.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/write_batch.h"
 #include "test_util/testutil.h"
 #include "test_util/transaction_test_util.h"
 #include "tools/simulated_hybrid_file_system.h"
@@ -101,10 +101,10 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 using GFLAGS_NAMESPACE::RegisterFlagValidator;
 using GFLAGS_NAMESPACE::SetUsageMessage;
 
-#ifdef ROCKSDB_LITE
-#define IF_ROCKSDB_LITE(Then, Else) Then
+#ifdef MIZAR_LITE
+#define IF_MIZAR_LITE(Then, Else) Then
 #else
-#define IF_ROCKSDB_LITE(Then, Else) Else
+#define IF_MIZAR_LITE(Then, Else) Else
 #endif
 
 DEFINE_string(
@@ -126,7 +126,7 @@ DEFINE_string(
     "compact,"
     "compactall,"
     "flush,"
-IF_ROCKSDB_LITE("",
+IF_MIZAR_LITE("",
     "compact0,"
     "compact1,"
     "waitforcompaction,"
@@ -224,7 +224,7 @@ IF_ROCKSDB_LITE("",
     "Meta operations:\n"
     "\tcompact     -- Compact the entire DB; If multiple, randomly choose one\n"
     "\tcompactall  -- Compact the entire DB\n"
-IF_ROCKSDB_LITE("",
+IF_MIZAR_LITE("",
     "\tcompact0  -- compact L0 into L1\n"
     "\tcompact1  -- compact L1 into L2\n"
     "\twaitforcompaction - pause until compaction is (probably) done\n"
@@ -236,7 +236,7 @@ IF_ROCKSDB_LITE("",
     "\tmemstats  -- Print memtable stats\n"
     "\tsstables    -- Print sstable info\n"
     "\theapprofile -- Dump a heap profile (if supported by this port)\n"
-IF_ROCKSDB_LITE("",
+IF_MIZAR_LITE("",
     "\treplay      -- replay the trace file specified with trace_file\n"
 )
     "\tgetmergeoperands -- Insert lots of merge records which are a list of "
@@ -415,25 +415,25 @@ DEFINE_bool(enable_numa, false,
             "to see NUMA memory architecture.");
 
 DEFINE_int64(db_write_buffer_size,
-             ROCKSDB_NAMESPACE::Options().db_write_buffer_size,
+             MIZAR_NAMESPACE::Options().db_write_buffer_size,
              "Number of bytes to buffer in all memtables before compacting");
 
 DEFINE_bool(cost_write_buffer_to_cache, false,
             "The usage of memtable is costed to the block cache");
 
-DEFINE_int64(arena_block_size, ROCKSDB_NAMESPACE::Options().arena_block_size,
+DEFINE_int64(arena_block_size, MIZAR_NAMESPACE::Options().arena_block_size,
              "The size, in bytes, of one block in arena memory allocation.");
 
-DEFINE_int64(write_buffer_size, ROCKSDB_NAMESPACE::Options().write_buffer_size,
+DEFINE_int64(write_buffer_size, MIZAR_NAMESPACE::Options().write_buffer_size,
              "Number of bytes to buffer in memtable before compacting");
 
 DEFINE_int32(max_write_buffer_number,
-             ROCKSDB_NAMESPACE::Options().max_write_buffer_number,
+             MIZAR_NAMESPACE::Options().max_write_buffer_number,
              "The number of in-memory memtables. Each memtable is of size"
              " write_buffer_size bytes.");
 
 DEFINE_int32(min_write_buffer_number_to_merge,
-             ROCKSDB_NAMESPACE::Options().min_write_buffer_number_to_merge,
+             MIZAR_NAMESPACE::Options().min_write_buffer_number_to_merge,
              "The minimum number of write buffers that will be merged together"
              "before writing to storage. This is cheap because it is an"
              "in-memory merge. If this feature is not enabled, then all these"
@@ -444,7 +444,7 @@ DEFINE_int32(min_write_buffer_number_to_merge,
              " in each of these individual write buffers.");
 
 DEFINE_int32(max_write_buffer_number_to_maintain,
-             ROCKSDB_NAMESPACE::Options().max_write_buffer_number_to_maintain,
+             MIZAR_NAMESPACE::Options().max_write_buffer_number_to_maintain,
              "The total maximum number of write buffers to maintain in memory "
              "including copies of buffers that have already been flushed. "
              "Unlike max_write_buffer_number, this parameter does not affect "
@@ -458,7 +458,7 @@ DEFINE_int32(max_write_buffer_number_to_maintain,
              "'max_write_buffer_number' will be used.");
 
 DEFINE_int64(max_write_buffer_size_to_maintain,
-             ROCKSDB_NAMESPACE::Options().max_write_buffer_size_to_maintain,
+             MIZAR_NAMESPACE::Options().max_write_buffer_size_to_maintain,
              "The total maximum size of write buffers to maintain in memory "
              "including copies of buffers that have already been flushed. "
              "Unlike max_write_buffer_number, this parameter does not affect "
@@ -472,7 +472,7 @@ DEFINE_int64(max_write_buffer_size_to_maintain,
              "'max_write_buffer_number' will be used.");
 
 DEFINE_int32(max_background_jobs,
-             ROCKSDB_NAMESPACE::Options().max_background_jobs,
+             MIZAR_NAMESPACE::Options().max_background_jobs,
              "The maximum number of concurrent background jobs that can occur "
              "in parallel.");
 
@@ -489,7 +489,7 @@ DEFINE_int32(num_low_pri_threads, 0,
              " that can occur in parallel.");
 
 DEFINE_int32(max_background_compactions,
-             ROCKSDB_NAMESPACE::Options().max_background_compactions,
+             MIZAR_NAMESPACE::Options().max_background_compactions,
              "The maximum number of concurrent background compactions"
              " that can occur in parallel.");
 
@@ -503,18 +503,18 @@ static const bool FLAGS_subcompactions_dummy
                                                     &ValidateUint32Range);
 
 DEFINE_int32(max_background_flushes,
-             ROCKSDB_NAMESPACE::Options().max_background_flushes,
+             MIZAR_NAMESPACE::Options().max_background_flushes,
              "The maximum number of concurrent background flushes"
              " that can occur in parallel.");
 
-static ROCKSDB_NAMESPACE::CompactionStyle FLAGS_compaction_style_e;
+static MIZAR_NAMESPACE::CompactionStyle FLAGS_compaction_style_e;
 DEFINE_int32(compaction_style,
-             (int32_t)ROCKSDB_NAMESPACE::Options().compaction_style,
+             (int32_t)MIZAR_NAMESPACE::Options().compaction_style,
              "style of compaction: level-based, universal and fifo");
 
-static ROCKSDB_NAMESPACE::CompactionPri FLAGS_compaction_pri_e;
+static MIZAR_NAMESPACE::CompactionPri FLAGS_compaction_pri_e;
 DEFINE_int32(compaction_pri,
-             (int32_t)ROCKSDB_NAMESPACE::Options().compaction_pri,
+             (int32_t)MIZAR_NAMESPACE::Options().compaction_pri,
              "priority of files to compaction: by size or by data age");
 
 DEFINE_int32(universal_size_ratio, 0,
@@ -575,7 +575,7 @@ DEFINE_bool(index_with_first_key, false, "Include first key in the index");
 
 DEFINE_bool(
     optimize_filters_for_memory,
-    ROCKSDB_NAMESPACE::BlockBasedTableOptions().optimize_filters_for_memory,
+    MIZAR_NAMESPACE::BlockBasedTableOptions().optimize_filters_for_memory,
     "Minimize memory footprint of filters");
 
 DEFINE_int64(
@@ -584,7 +584,7 @@ DEFINE_int64(
     "separaters; 2 for shortening shortening and successor");
 
 DEFINE_int64(metadata_block_size,
-             ROCKSDB_NAMESPACE::BlockBasedTableOptions().metadata_block_size,
+             MIZAR_NAMESPACE::BlockBasedTableOptions().metadata_block_size,
              "Max partition size when partitioning index/filters");
 
 // The default reduces the overhead of reading time with flash. With HDD, which
@@ -601,36 +601,36 @@ DEFINE_bool(
 
 DEFINE_int32(block_size,
              static_cast<int32_t>(
-                 ROCKSDB_NAMESPACE::BlockBasedTableOptions().block_size),
+                 MIZAR_NAMESPACE::BlockBasedTableOptions().block_size),
              "Number of bytes in a block.");
 
 DEFINE_int32(format_version,
              static_cast<int32_t>(
-                 ROCKSDB_NAMESPACE::BlockBasedTableOptions().format_version),
+                 MIZAR_NAMESPACE::BlockBasedTableOptions().format_version),
              "Format version of SST files.");
 
 DEFINE_int32(block_restart_interval,
-             ROCKSDB_NAMESPACE::BlockBasedTableOptions().block_restart_interval,
+             MIZAR_NAMESPACE::BlockBasedTableOptions().block_restart_interval,
              "Number of keys between restart points "
              "for delta encoding of keys in data block.");
 
 DEFINE_int32(
     index_block_restart_interval,
-    ROCKSDB_NAMESPACE::BlockBasedTableOptions().index_block_restart_interval,
+    MIZAR_NAMESPACE::BlockBasedTableOptions().index_block_restart_interval,
     "Number of keys between restart points "
     "for delta encoding of keys in index block.");
 
 DEFINE_int32(read_amp_bytes_per_bit,
-             ROCKSDB_NAMESPACE::BlockBasedTableOptions().read_amp_bytes_per_bit,
+             MIZAR_NAMESPACE::BlockBasedTableOptions().read_amp_bytes_per_bit,
              "Number of bytes per bit to be used in block read-amp bitmap");
 
 DEFINE_bool(
     enable_index_compression,
-    ROCKSDB_NAMESPACE::BlockBasedTableOptions().enable_index_compression,
+    MIZAR_NAMESPACE::BlockBasedTableOptions().enable_index_compression,
     "Compress the index block");
 
 DEFINE_bool(block_align,
-            ROCKSDB_NAMESPACE::BlockBasedTableOptions().block_align,
+            MIZAR_NAMESPACE::BlockBasedTableOptions().block_align,
             "Align data blocks on page size");
 
 DEFINE_int64(prepopulate_block_cache, 0,
@@ -654,12 +654,12 @@ DEFINE_int64(row_cache_size, 0,
              "Number of bytes to use as a cache of individual rows"
              " (0 = disabled).");
 
-DEFINE_int32(open_files, ROCKSDB_NAMESPACE::Options().max_open_files,
+DEFINE_int32(open_files, MIZAR_NAMESPACE::Options().max_open_files,
              "Maximum number of files to keep open at the same time"
              " (use default if == 0)");
 
 DEFINE_int32(file_opening_threads,
-             ROCKSDB_NAMESPACE::Options().max_file_opening_threads,
+             MIZAR_NAMESPACE::Options().max_file_opening_threads,
              "If open_files is set to -1, this option set the number of "
              "threads that will be used to open files during DB::Open()");
 
@@ -739,14 +739,14 @@ DEFINE_bool(verify_checksum, true,
             " from storage");
 
 DEFINE_int32(checksum_type,
-             ROCKSDB_NAMESPACE::BlockBasedTableOptions().checksum,
+             MIZAR_NAMESPACE::BlockBasedTableOptions().checksum,
              "ChecksumType as an int");
 
 DEFINE_bool(statistics, false, "Database statistics");
-DEFINE_int32(stats_level, ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers,
+DEFINE_int32(stats_level, MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers,
              "stats level for statistics");
 DEFINE_string(statistics_string, "", "Serialized statistics string");
-static class std::shared_ptr<ROCKSDB_NAMESPACE::Statistics> dbstats;
+static class std::shared_ptr<MIZAR_NAMESPACE::Statistics> dbstats;
 
 DEFINE_int64(writes, -1, "Number of write operations to do. If negative, do"
              " --num reads.");
@@ -770,15 +770,15 @@ DEFINE_string(truth_db, "/dev/shm/truth_db/dbbench",
 DEFINE_int32(num_levels, 7, "The total number of levels");
 
 DEFINE_int64(target_file_size_base,
-             ROCKSDB_NAMESPACE::Options().target_file_size_base,
+             MIZAR_NAMESPACE::Options().target_file_size_base,
              "Target file size at level-1");
 
 DEFINE_int32(target_file_size_multiplier,
-             ROCKSDB_NAMESPACE::Options().target_file_size_multiplier,
+             MIZAR_NAMESPACE::Options().target_file_size_multiplier,
              "A multiplier to compute target level-N file size (N >= 2)");
 
 DEFINE_uint64(max_bytes_for_level_base,
-              ROCKSDB_NAMESPACE::Options().max_bytes_for_level_base,
+              MIZAR_NAMESPACE::Options().max_bytes_for_level_base,
               "Max bytes for level-1");
 
 DEFINE_bool(level_compaction_dynamic_level_bytes, false,
@@ -792,26 +792,26 @@ DEFINE_string(max_bytes_for_level_multiplier_additional, "",
               "A vector that specifies additional fanout per level");
 
 DEFINE_int32(level0_stop_writes_trigger,
-             ROCKSDB_NAMESPACE::Options().level0_stop_writes_trigger,
+             MIZAR_NAMESPACE::Options().level0_stop_writes_trigger,
              "Number of files in level-0"
              " that will trigger put stop.");
 
 DEFINE_int32(level0_slowdown_writes_trigger,
-             ROCKSDB_NAMESPACE::Options().level0_slowdown_writes_trigger,
+             MIZAR_NAMESPACE::Options().level0_slowdown_writes_trigger,
              "Number of files in level-0"
              " that will slow down writes.");
 
 DEFINE_int32(level0_file_num_compaction_trigger,
-             ROCKSDB_NAMESPACE::Options().level0_file_num_compaction_trigger,
+             MIZAR_NAMESPACE::Options().level0_file_num_compaction_trigger,
              "Number of files in level-0"
              " when compactions start");
 
 DEFINE_uint64(periodic_compaction_seconds,
-              ROCKSDB_NAMESPACE::Options().periodic_compaction_seconds,
+              MIZAR_NAMESPACE::Options().periodic_compaction_seconds,
               "Files older than this will be picked up for compaction and"
               " rewritten to the same level");
 
-DEFINE_uint64(ttl_seconds, ROCKSDB_NAMESPACE::Options().ttl, "Set options.ttl");
+DEFINE_uint64(ttl_seconds, MIZAR_NAMESPACE::Options().ttl, "Set options.ttl");
 
 static bool ValidateInt32Percent(const char* flagname, int32_t value) {
   if (value <= 0 || value>=100) {
@@ -838,21 +838,21 @@ DEFINE_int32(deletepercent, 2, "Percentage of deletes out of reads/writes/"
              "FLAGS_readwritepercent)");
 
 DEFINE_bool(optimize_filters_for_hits,
-            ROCKSDB_NAMESPACE::Options().optimize_filters_for_hits,
+            MIZAR_NAMESPACE::Options().optimize_filters_for_hits,
             "Optimizes bloom filters for workloads for most lookups return "
             "a value. For now this doesn't create bloom filters for the max "
             "level of the LSM to reduce metadata that should fit in RAM. ");
 
-DEFINE_bool(paranoid_checks, ROCKSDB_NAMESPACE::Options().paranoid_checks,
+DEFINE_bool(paranoid_checks, MIZAR_NAMESPACE::Options().paranoid_checks,
             "RocksDB will aggressively check consistency of the data.");
 
 DEFINE_bool(force_consistency_checks,
-            ROCKSDB_NAMESPACE::Options().force_consistency_checks,
+            MIZAR_NAMESPACE::Options().force_consistency_checks,
             "Runs consistency checks on the LSM every time a change is "
             "applied.");
 
 DEFINE_bool(check_flush_compaction_key_order,
-            ROCKSDB_NAMESPACE::Options().check_flush_compaction_key_order,
+            MIZAR_NAMESPACE::Options().check_flush_compaction_key_order,
             "During flush or compaction, check whether keys inserted to "
             "output files are in order.");
 
@@ -874,7 +874,7 @@ DEFINE_int64(max_num_range_tombstones, 0,
 DEFINE_bool(expand_range_tombstones, false,
             "Expand range tombstone into sequential regular tombstones.");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Transactions Options
 DEFINE_bool(optimistic_transaction_db, false,
             "Open a OptimisticTransactionDB instance. "
@@ -932,20 +932,20 @@ DEFINE_bool(use_blob_db, false, "[Stacked BlobDB] Open a BlobDB instance.");
 
 DEFINE_bool(
     blob_db_enable_gc,
-    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().enable_garbage_collection,
+    MIZAR_NAMESPACE::blob_db::BlobDBOptions().enable_garbage_collection,
     "[Stacked BlobDB] Enable BlobDB garbage collection.");
 
 DEFINE_double(
     blob_db_gc_cutoff,
-    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().garbage_collection_cutoff,
+    MIZAR_NAMESPACE::blob_db::BlobDBOptions().garbage_collection_cutoff,
     "[Stacked BlobDB] Cutoff ratio for BlobDB garbage collection.");
 
 DEFINE_bool(blob_db_is_fifo,
-            ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().is_fifo,
+            MIZAR_NAMESPACE::blob_db::BlobDBOptions().is_fifo,
             "[Stacked BlobDB] Enable FIFO eviction strategy in BlobDB.");
 
 DEFINE_uint64(blob_db_max_db_size,
-              ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().max_db_size,
+              MIZAR_NAMESPACE::blob_db::BlobDBOptions().max_db_size,
               "[Stacked BlobDB] Max size limit of the directory where blob "
               "files are stored.");
 
@@ -955,44 +955,44 @@ DEFINE_uint64(blob_db_max_ttl_range, 0,
 
 DEFINE_uint64(
     blob_db_ttl_range_secs,
-    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().ttl_range_secs,
+    MIZAR_NAMESPACE::blob_db::BlobDBOptions().ttl_range_secs,
     "[Stacked BlobDB] TTL bucket size to use when creating blob files.");
 
 DEFINE_uint64(
     blob_db_min_blob_size,
-    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().min_blob_size,
+    MIZAR_NAMESPACE::blob_db::BlobDBOptions().min_blob_size,
     "[Stacked BlobDB] Smallest blob to store in a file. Blobs "
     "smaller than this will be inlined with the key in the LSM tree.");
 
 DEFINE_uint64(blob_db_bytes_per_sync,
-              ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().bytes_per_sync,
+              MIZAR_NAMESPACE::blob_db::BlobDBOptions().bytes_per_sync,
               "[Stacked BlobDB] Bytes to sync blob file at.");
 
 DEFINE_uint64(blob_db_file_size,
-              ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().blob_file_size,
+              MIZAR_NAMESPACE::blob_db::BlobDBOptions().blob_file_size,
               "[Stacked BlobDB] Target size of each blob file.");
 
 DEFINE_string(
     blob_db_compression_type, "snappy",
     "[Stacked BlobDB] Algorithm to use to compress blobs in blob files.");
-static enum ROCKSDB_NAMESPACE::CompressionType
-    FLAGS_blob_db_compression_type_e = ROCKSDB_NAMESPACE::kSnappyCompression;
+static enum MIZAR_NAMESPACE::CompressionType
+    FLAGS_blob_db_compression_type_e = MIZAR_NAMESPACE::kSnappyCompression;
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 // Integrated BlobDB options
 DEFINE_bool(
     enable_blob_files,
-    ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().enable_blob_files,
+    MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().enable_blob_files,
     "[Integrated BlobDB] Enable writing large values to separate blob files.");
 
 DEFINE_uint64(min_blob_size,
-              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().min_blob_size,
+              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().min_blob_size,
               "[Integrated BlobDB] The size of the smallest value to be stored "
               "separately in a blob file.");
 
 DEFINE_uint64(blob_file_size,
-              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().blob_file_size,
+              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().blob_file_size,
               "[Integrated BlobDB] The size limit for blob files.");
 
 DEFINE_string(blob_compression_type, "none",
@@ -1000,28 +1000,28 @@ DEFINE_string(blob_compression_type, "none",
               "values stored in blob files.");
 
 DEFINE_bool(enable_blob_garbage_collection,
-            ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
+            MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
                 .enable_blob_garbage_collection,
             "[Integrated BlobDB] Enable blob garbage collection.");
 
 DEFINE_double(blob_garbage_collection_age_cutoff,
-              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
+              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_garbage_collection_age_cutoff,
               "[Integrated BlobDB] The cutoff in terms of blob file age for "
               "garbage collection.");
 
 DEFINE_double(blob_garbage_collection_force_threshold,
-              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
+              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_garbage_collection_force_threshold,
               "[Integrated BlobDB] The threshold for the ratio of garbage in "
               "the oldest blob files for forcing garbage collection.");
 
 DEFINE_uint64(blob_compaction_readahead_size,
-              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
+              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_compaction_readahead_size,
               "[Integrated BlobDB] Compaction readahead for blob files.");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 // Secondary DB instance Options
 DEFINE_bool(use_secondary_db, false,
@@ -1036,7 +1036,7 @@ DEFINE_int32(secondary_update_interval, 5,
              "Secondary instance attempts to catch up with the primary every "
              "secondary_update_interval seconds.");
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 DEFINE_bool(report_bg_io_stats, false,
             "Measure times spents on I/Os while in compactions. ");
@@ -1044,7 +1044,7 @@ DEFINE_bool(report_bg_io_stats, false,
 DEFINE_bool(use_stderr_info_logger, false,
             "Write info logs to stderr instead of to LOG file. ");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 DEFINE_string(trace_file, "", "Trace workload to a file. ");
 
@@ -1066,40 +1066,40 @@ DEFINE_int32(trace_replay_threads, 1,
 DEFINE_bool(io_uring_enabled, true,
             "If true, enable the use of IO uring if the platform supports it");
 extern "C" bool RocksDbIOUringEnable() { return FLAGS_io_uring_enabled; }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 DEFINE_bool(adaptive_readahead, false,
             "carry forward internal auto readahead size from one file to next "
             "file at each level during iteration");
 
-static enum ROCKSDB_NAMESPACE::CompressionType StringToCompressionType(
+static enum MIZAR_NAMESPACE::CompressionType StringToCompressionType(
     const char* ctype) {
   assert(ctype);
 
   if (!strcasecmp(ctype, "none"))
-    return ROCKSDB_NAMESPACE::kNoCompression;
+    return MIZAR_NAMESPACE::kNoCompression;
   else if (!strcasecmp(ctype, "snappy"))
-    return ROCKSDB_NAMESPACE::kSnappyCompression;
+    return MIZAR_NAMESPACE::kSnappyCompression;
   else if (!strcasecmp(ctype, "zlib"))
-    return ROCKSDB_NAMESPACE::kZlibCompression;
+    return MIZAR_NAMESPACE::kZlibCompression;
   else if (!strcasecmp(ctype, "bzip2"))
-    return ROCKSDB_NAMESPACE::kBZip2Compression;
+    return MIZAR_NAMESPACE::kBZip2Compression;
   else if (!strcasecmp(ctype, "lz4"))
-    return ROCKSDB_NAMESPACE::kLZ4Compression;
+    return MIZAR_NAMESPACE::kLZ4Compression;
   else if (!strcasecmp(ctype, "lz4hc"))
-    return ROCKSDB_NAMESPACE::kLZ4HCCompression;
+    return MIZAR_NAMESPACE::kLZ4HCCompression;
   else if (!strcasecmp(ctype, "xpress"))
-    return ROCKSDB_NAMESPACE::kXpressCompression;
+    return MIZAR_NAMESPACE::kXpressCompression;
   else if (!strcasecmp(ctype, "zstd"))
-    return ROCKSDB_NAMESPACE::kZSTD;
+    return MIZAR_NAMESPACE::kZSTD;
 
   fprintf(stdout, "Cannot parse compression type '%s'\n", ctype);
-  return ROCKSDB_NAMESPACE::kSnappyCompression;  // default value
+  return MIZAR_NAMESPACE::kSnappyCompression;  // default value
 }
 
 static std::string ColumnFamilyName(size_t i) {
   if (i == 0) {
-    return ROCKSDB_NAMESPACE::kDefaultColumnFamilyName;
+    return MIZAR_NAMESPACE::kDefaultColumnFamilyName;
   } else {
     char name[100];
     snprintf(name, sizeof(name), "column_family_name_%06zu", i);
@@ -1109,23 +1109,23 @@ static std::string ColumnFamilyName(size_t i) {
 
 DEFINE_string(compression_type, "snappy",
               "Algorithm to use to compress the database");
-static enum ROCKSDB_NAMESPACE::CompressionType FLAGS_compression_type_e =
-    ROCKSDB_NAMESPACE::kSnappyCompression;
+static enum MIZAR_NAMESPACE::CompressionType FLAGS_compression_type_e =
+    MIZAR_NAMESPACE::kSnappyCompression;
 
 DEFINE_int64(sample_for_compression, 0, "Sample every N block for compression");
 
-DEFINE_int32(compression_level, ROCKSDB_NAMESPACE::CompressionOptions().level,
+DEFINE_int32(compression_level, MIZAR_NAMESPACE::CompressionOptions().level,
              "Compression level. The meaning of this value is library-"
              "dependent. If unset, we try to use the default for the library "
              "specified in `--compression_type`");
 
 DEFINE_int32(compression_max_dict_bytes,
-             ROCKSDB_NAMESPACE::CompressionOptions().max_dict_bytes,
+             MIZAR_NAMESPACE::CompressionOptions().max_dict_bytes,
              "Maximum size of dictionary used to prime the compression "
              "library.");
 
 DEFINE_int32(compression_zstd_max_train_bytes,
-             ROCKSDB_NAMESPACE::CompressionOptions().zstd_max_train_bytes,
+             MIZAR_NAMESPACE::CompressionOptions().zstd_max_train_bytes,
              "Maximum size of training data passed to zstd's dictionary "
              "trainer.");
 
@@ -1138,7 +1138,7 @@ DEFINE_int32(compression_parallel_threads, 1,
              "Number of threads for parallel compression.");
 
 DEFINE_uint64(compression_max_dict_buffer_bytes,
-              ROCKSDB_NAMESPACE::CompressionOptions().max_dict_buffer_bytes,
+              MIZAR_NAMESPACE::CompressionOptions().max_dict_buffer_bytes,
               "Maximum bytes to buffer to collect samples for dictionary.");
 
 static bool ValidateTableCacheNumshardbits(const char* flagname,
@@ -1152,7 +1152,7 @@ static bool ValidateTableCacheNumshardbits(const char* flagname,
 }
 DEFINE_int32(table_cache_numshardbits, 4, "");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 DEFINE_string(env_uri, "",
               "URI for registry Env lookup. Mutually exclusive"
               " with --hdfs and --fs_uri");
@@ -1160,7 +1160,7 @@ DEFINE_string(fs_uri, "",
               "URI for registry Filesystem lookup. Mutually exclusive"
               " with --hdfs and --env_uri."
               " Creates a default environment with the specified filesystem.");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 DEFINE_string(hdfs, "",
               "Name of hdfs environment. Mutually exclusive with"
               " --env_uri and --fs_uri");
@@ -1173,9 +1173,9 @@ DEFINE_int32(simulate_hybrid_hdd_multipliers, 1,
              "are simulated.");
 DEFINE_bool(simulate_hdd, false, "Simulate read/write latency on HDD.");
 
-static std::shared_ptr<ROCKSDB_NAMESPACE::Env> env_guard;
+static std::shared_ptr<MIZAR_NAMESPACE::Env> env_guard;
 
-static ROCKSDB_NAMESPACE::Env* FLAGS_env = ROCKSDB_NAMESPACE::Env::Default();
+static MIZAR_NAMESPACE::Env* FLAGS_env = MIZAR_NAMESPACE::Env::Default();
 
 DEFINE_int64(stats_interval, 0, "Stats are reported every N operations when "
              "this is greater than zero. When 0 the interval grows over time.");
@@ -1198,7 +1198,7 @@ DEFINE_int32(thread_status_per_interval, 0,
              "Takes and report a snapshot of the current status of each thread"
              " when this is greater than 0.");
 
-DEFINE_int32(perf_level, ROCKSDB_NAMESPACE::PerfLevel::kDisable,
+DEFINE_int32(perf_level, MIZAR_NAMESPACE::PerfLevel::kDisable,
              "Level of perf collection");
 
 static bool ValidateRateLimit(const char* flagname, double value) {
@@ -1240,11 +1240,11 @@ DEFINE_double(experimental_mempurge_threshold, 0.0,
               "(memtable garbage collection).");
 
 DEFINE_bool(inplace_update_support,
-            ROCKSDB_NAMESPACE::Options().inplace_update_support,
+            MIZAR_NAMESPACE::Options().inplace_update_support,
             "Support in-place memtable update for smaller or same-size values");
 
 DEFINE_uint64(inplace_update_num_locks,
-              ROCKSDB_NAMESPACE::Options().inplace_update_num_locks,
+              MIZAR_NAMESPACE::Options().inplace_update_num_locks,
               "Number of RW locks to protect in-place memtable updates");
 
 DEFINE_bool(enable_write_thread_adaptive_yield, true,
@@ -1365,15 +1365,15 @@ DEFINE_uint64(
     "is the global rate in ops/second.");
 
 DEFINE_uint64(max_compaction_bytes,
-              ROCKSDB_NAMESPACE::Options().max_compaction_bytes,
+              MIZAR_NAMESPACE::Options().max_compaction_bytes,
               "Max bytes allowed in one compaction");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 DEFINE_bool(readonly, false, "Run read only benchmarks.");
 
 DEFINE_bool(print_malloc_stats, false,
             "Print malloc stats to stdout after benchmarks finish.");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 DEFINE_bool(disable_auto_compactions, false, "Do not auto trigger compactions");
 
@@ -1382,41 +1382,41 @@ DEFINE_uint64(wal_size_limit_MB, 0, "Set the size limit for the WAL Files"
               " in MB.");
 DEFINE_uint64(max_total_wal_size, 0, "Set total max WAL size");
 
-DEFINE_bool(mmap_read, ROCKSDB_NAMESPACE::Options().allow_mmap_reads,
+DEFINE_bool(mmap_read, MIZAR_NAMESPACE::Options().allow_mmap_reads,
             "Allow reads to occur via mmap-ing files");
 
-DEFINE_bool(mmap_write, ROCKSDB_NAMESPACE::Options().allow_mmap_writes,
+DEFINE_bool(mmap_write, MIZAR_NAMESPACE::Options().allow_mmap_writes,
             "Allow writes to occur via mmap-ing files");
 
-DEFINE_bool(use_direct_reads, ROCKSDB_NAMESPACE::Options().use_direct_reads,
+DEFINE_bool(use_direct_reads, MIZAR_NAMESPACE::Options().use_direct_reads,
             "Use O_DIRECT for reading data");
 
 DEFINE_bool(use_direct_io_for_flush_and_compaction,
-            ROCKSDB_NAMESPACE::Options().use_direct_io_for_flush_and_compaction,
+            MIZAR_NAMESPACE::Options().use_direct_io_for_flush_and_compaction,
             "Use O_DIRECT for background flush and compaction writes");
 
 DEFINE_bool(advise_random_on_open,
-            ROCKSDB_NAMESPACE::Options().advise_random_on_open,
+            MIZAR_NAMESPACE::Options().advise_random_on_open,
             "Advise random access on table file open");
 
 DEFINE_string(compaction_fadvice, "NORMAL",
               "Access pattern advice when a file is compacted");
 static auto FLAGS_compaction_fadvice_e =
-    ROCKSDB_NAMESPACE::Options().access_hint_on_compaction_start;
+    MIZAR_NAMESPACE::Options().access_hint_on_compaction_start;
 
 DEFINE_bool(use_tailing_iterator, false,
             "Use tailing iterator to access a series of keys instead of get");
 
-DEFINE_bool(use_adaptive_mutex, ROCKSDB_NAMESPACE::Options().use_adaptive_mutex,
+DEFINE_bool(use_adaptive_mutex, MIZAR_NAMESPACE::Options().use_adaptive_mutex,
             "Use adaptive mutex");
 
-DEFINE_uint64(bytes_per_sync, ROCKSDB_NAMESPACE::Options().bytes_per_sync,
+DEFINE_uint64(bytes_per_sync, MIZAR_NAMESPACE::Options().bytes_per_sync,
               "Allows OS to incrementally sync SST files to disk while they are"
               " being written, in the background. Issue one request for every"
               " bytes_per_sync written. 0 turns it off.");
 
 DEFINE_uint64(wal_bytes_per_sync,
-              ROCKSDB_NAMESPACE::Options().wal_bytes_per_sync,
+              MIZAR_NAMESPACE::Options().wal_bytes_per_sync,
               "Allows OS to incrementally sync WAL files to disk while they are"
               " being written, in the background. Issue one request for every"
               " wal_bytes_per_sync written. 0 turns it off.");
@@ -1483,16 +1483,16 @@ DEFINE_bool(identity_as_first_hash, false, "the first hash function of cuckoo "
             "is 8 bytes");
 DEFINE_bool(dump_malloc_stats, true, "Dump malloc stats in LOG ");
 DEFINE_uint64(stats_dump_period_sec,
-              ROCKSDB_NAMESPACE::Options().stats_dump_period_sec,
+              MIZAR_NAMESPACE::Options().stats_dump_period_sec,
               "Gap between printing stats to log in seconds");
 DEFINE_uint64(stats_persist_period_sec,
-              ROCKSDB_NAMESPACE::Options().stats_persist_period_sec,
+              MIZAR_NAMESPACE::Options().stats_persist_period_sec,
               "Gap between persisting stats in seconds");
 DEFINE_bool(persist_stats_to_disk,
-            ROCKSDB_NAMESPACE::Options().persist_stats_to_disk,
+            MIZAR_NAMESPACE::Options().persist_stats_to_disk,
             "whether to persist stats to disk");
 DEFINE_uint64(stats_history_buffer_size,
-              ROCKSDB_NAMESPACE::Options().stats_history_buffer_size,
+              MIZAR_NAMESPACE::Options().stats_history_buffer_size,
               "Max number of stats snapshots to keep in memory");
 DEFINE_int64(multiread_stride, 0,
              "Stride length for the keys in a MultiGet batch");
@@ -1526,11 +1526,11 @@ DEFINE_bool(read_with_latest_user_timestamp, true,
             "If true, always use the current latest timestamp for read. If "
             "false, choose a random timestamp from the past.");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 DEFINE_string(secondary_cache_uri, "",
               "Full URI for creating a custom secondary cache object");
-static class std::shared_ptr<ROCKSDB_NAMESPACE::SecondaryCache> secondary_cache;
-#endif  // ROCKSDB_LITE
+static class std::shared_ptr<MIZAR_NAMESPACE::SecondaryCache> secondary_cache;
+#endif  // MIZAR_LITE
 
 static const bool FLAGS_soft_rate_limit_dummy __attribute__((__unused__)) =
     RegisterFlagValidator(&FLAGS_soft_rate_limit, &ValidateRateLimit);
@@ -1560,7 +1560,7 @@ static const bool FLAGS_table_cache_numshardbits_dummy __attribute__((__unused__
     RegisterFlagValidator(&FLAGS_table_cache_numshardbits,
                           &ValidateTableCacheNumshardbits);
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 static Status CreateMemTableRepFactory(
     const ConfigOptions& config_options,
@@ -1568,7 +1568,7 @@ static Status CreateMemTableRepFactory(
   Status s;
   if (!strcasecmp(FLAGS_memtablerep.c_str(), SkipListFactory::kNickName())) {
     factory->reset(new SkipListFactory(FLAGS_skip_list_lookahead));
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   } else if (!strcasecmp(FLAGS_memtablerep.c_str(), "prefix_hash")) {
     factory->reset(NewHashSkipListRepFactory(FLAGS_hash_bucket_count));
   } else if (!strcasecmp(FLAGS_memtablerep.c_str(),
@@ -1576,7 +1576,7 @@ static Status CreateMemTableRepFactory(
     factory->reset(new VectorRepFactory());
   } else if (!strcasecmp(FLAGS_memtablerep.c_str(), "hash_linkedlist")) {
     factory->reset(NewHashLinkListRepFactory(FLAGS_hash_bucket_count));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   } else {
     std::unique_ptr<MemTableRepFactory> unique;
     s = MemTableRepFactory::CreateFromString(config_options, FLAGS_memtablerep,
@@ -1941,9 +1941,9 @@ static void AppendWithSpace(std::string* str, Slice msg) {
 struct DBWithColumnFamilies {
   std::vector<ColumnFamilyHandle*> cfh;
   DB* db;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   OptimisticTransactionDB* opt_txn_db;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   std::atomic<size_t> num_created;  // Need to be updated after all the
                                     // new entries in cfh are set.
   size_t num_hot;  // Number of column families to be queried at each moment.
@@ -1955,9 +1955,9 @@ struct DBWithColumnFamilies {
 
   DBWithColumnFamilies()
       : db(nullptr)
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         , opt_txn_db(nullptr)
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   {
     cfh.clear();
     num_created = 0;
@@ -1967,9 +1967,9 @@ struct DBWithColumnFamilies {
   DBWithColumnFamilies(const DBWithColumnFamilies& other)
       : cfh(other.cfh),
         db(other.db),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         opt_txn_db(other.opt_txn_db),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
         num_created(other.num_created.load()),
         num_hot(other.num_hot),
         cfh_idx_to_prob(other.cfh_idx_to_prob) {
@@ -1979,7 +1979,7 @@ struct DBWithColumnFamilies {
     std::for_each(cfh.begin(), cfh.end(),
                   [](ColumnFamilyHandle* cfhi) { delete cfhi; });
     cfh.clear();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (opt_txn_db) {
       delete opt_txn_db;
       opt_txn_db = nullptr;
@@ -1990,7 +1990,7 @@ struct DBWithColumnFamilies {
 #else
     delete db;
     db = nullptr;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   ColumnFamilyHandle* GetCfh(int64_t rand_num) {
@@ -2117,7 +2117,7 @@ class ReporterAgent {
   std::atomic<int64_t> total_ops_done_;
   int64_t last_report_;
   const uint64_t report_interval_secs_;
-  ROCKSDB_NAMESPACE::port::Thread reporting_thread_;
+  MIZAR_NAMESPACE::port::Thread reporting_thread_;
   std::mutex mutex_;
   // will notify on stop
   std::condition_variable stop_cv_;
@@ -2647,7 +2647,7 @@ class Benchmark {
   int64_t max_num_range_tombstones_;
   WriteOptions write_options_;
   Options open_options_;  // keep options around to properly destroy db later
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TraceOptions trace_options_;
   TraceOptions block_cache_trace_options_;
 #endif
@@ -2663,7 +2663,7 @@ class Benchmark {
 
   class ErrorHandlerListener : public EventListener {
    public:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ErrorHandlerListener()
         : mutex_(),
           cv_(&mutex_),
@@ -2708,10 +2708,10 @@ class Benchmark {
     InstrumentedCondVar cv_;
     bool no_auto_recovery_;
     bool recovery_complete_;
-#else   // ROCKSDB_LITE
+#else   // MIZAR_LITE
     bool WaitForRecovery(uint64_t /*abs_time_us*/) { return true; }
     void EnableAutoRecovery(bool /*enable*/) {}
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   };
 
   std::shared_ptr<ErrorHandlerListener> listener_;
@@ -2804,7 +2804,7 @@ class Benchmark {
     fprintf(stdout,
             "WARNING: Assertions are enabled; benchmarks unnecessarily slow\n");
 #endif
-    if (FLAGS_compression_type_e != ROCKSDB_NAMESPACE::kNoCompression) {
+    if (FLAGS_compression_type_e != MIZAR_NAMESPACE::kNoCompression) {
       // The test string should not be too small.
       const int len = FLAGS_block_size;
       std::string input_str(len, 'y');
@@ -2994,7 +2994,7 @@ class Benchmark {
         exit(1);
 #endif
       }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (!FLAGS_secondary_cache_uri.empty()) {
         Status s = SecondaryCache::CreateFromString(
             ConfigOptions(), FLAGS_secondary_cache_uri, &secondary_cache);
@@ -3007,7 +3007,7 @@ class Benchmark {
         }
         opts.secondary_cache = secondary_cache;
       }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       return NewLRUCache(opts);
     }
   }
@@ -3032,11 +3032,11 @@ class Benchmark {
                 : ((FLAGS_writes > FLAGS_reads) ? FLAGS_writes : FLAGS_reads)),
         merge_keys_(FLAGS_merge_keys < 0 ? FLAGS_num : FLAGS_merge_keys),
         report_file_operations_(FLAGS_report_file_operations),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         use_blob_db_(FLAGS_use_blob_db)  // Stacked BlobDB
 #else
         use_blob_db_(false)  // Stacked BlobDB
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   {
     // use simcache instead of cache
     if (FLAGS_simcache_size >= 0) {
@@ -3076,12 +3076,12 @@ class Benchmark {
       if (!FLAGS_wal_dir.empty()) {
         options.wal_dir = FLAGS_wal_dir;
       }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (use_blob_db_) {
         // Stacked BlobDB
         blob_db::DestroyBlobDB(FLAGS_db, options, blob_db::BlobDBOptions());
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       DestroyDB(FLAGS_db, options);
       if (!FLAGS_wal_dir.empty()) {
         FLAGS_env->DeleteDir(FLAGS_wal_dir);
@@ -3462,7 +3462,7 @@ class Benchmark {
         method = &Benchmark::Compact;
       } else if (name == "compactall") {
         CompactAll();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       } else if (name == "compact0") {
         CompactLevel(0);
       } else if (name == "compact1") {
@@ -3486,11 +3486,11 @@ class Benchmark {
         method = &Benchmark::Compress;
       } else if (name == "uncompress") {
         method = &Benchmark::Uncompress;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       } else if (name == "randomtransaction") {
         method = &Benchmark::RandomTransaction;
         post_process_method = &Benchmark::RandomTransactionVerify;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       } else if (name == "randomreplacekeys") {
         fresh_db = true;
         method = &Benchmark::RandomReplaceKeys;
@@ -3523,7 +3523,7 @@ class Benchmark {
         PrintStats("rocksdb.sstables");
       } else if (name == "stats_history") {
         PrintStatsHistory();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       } else if (name == "replay") {
         if (num_threads > 1) {
           fprintf(stderr, "Multi-threaded replay is not yet supported\n");
@@ -3534,7 +3534,7 @@ class Benchmark {
           ErrorExit();
         }
         method = &Benchmark::Replay;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       } else if (name == "getmergeoperands") {
         method = &Benchmark::GetMergeOperands;
       } else if (!name.empty()) {  // No error message for empty name
@@ -3568,7 +3568,7 @@ class Benchmark {
       if (method != nullptr) {
         fprintf(stdout, "DB path: [%s]\n", FLAGS_db.c_str());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         // A trace_file option can be provided both for trace and replay
         // operations. But db_bench does not support tracing and replaying at
         // the same time, for now. So, start tracing only when it is not a
@@ -3632,7 +3632,7 @@ class Benchmark {
           fprintf(stdout, "Tracing block cache accesses to: [%s]\n",
                   FLAGS_block_cache_trace_file.c_str());
         }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
         if (num_warmup > 0) {
           printf("Warming up benchmark by running %d times\n", num_warmup);
@@ -3666,7 +3666,7 @@ class Benchmark {
       secondary_update_thread_.reset();
     }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (name != "replay" && FLAGS_trace_file != "") {
       Status s = db_.db->EndTrace();
       if (!s.ok()) {
@@ -3682,7 +3682,7 @@ class Benchmark {
                 s.ToString().c_str());
       }
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
     if (FLAGS_statistics) {
       fprintf(stdout, "STATISTICS:\n%s\n", dbstats->ToString().c_str());
@@ -3693,21 +3693,21 @@ class Benchmark {
           static_cast_with_check<SimCache>(cache_.get())->ToString().c_str());
     }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (FLAGS_use_secondary_db) {
       fprintf(stdout, "Secondary instance updated  %" PRIu64 " times.\n",
               secondary_db_updates_);
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
  private:
   std::shared_ptr<TimestampEmulator> timestamp_emulator_;
   std::unique_ptr<port::Thread> secondary_update_thread_;
   std::atomic<int> secondary_update_stopped_{0};
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   uint64_t secondary_db_updates_ = 0;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   struct ThreadArg {
     Benchmark* bm;
     SharedState* shared;
@@ -3950,7 +3950,7 @@ class Benchmark {
   // Returns true if the options is initialized from the specified
   // options file.
   bool InitializeOptionsFromFile(Options* opts) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     printf("Initializing RocksDB Options from the specified file\n");
     DBOptions db_opts;
     std::vector<ColumnFamilyDescriptor> cf_descs;
@@ -4007,13 +4007,13 @@ class Benchmark {
     options.use_direct_io_for_flush_and_compaction =
         FLAGS_use_direct_io_for_flush_and_compaction;
     options.manual_wal_flush = FLAGS_manual_wal_flush;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     options.ttl = FLAGS_fifo_compaction_ttl;
     options.compaction_options_fifo = CompactionOptionsFIFO(
         FLAGS_fifo_compaction_max_table_files_size_mb * 1024 * 1024,
         FLAGS_fifo_compaction_allow_compaction);
     options.compaction_options_fifo.age_for_warm = FLAGS_fifo_age_for_warm;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     if (FLAGS_prefix_size != 0) {
       options.prefix_extractor.reset(
           NewFixedPrefixTransform(FLAGS_prefix_size));
@@ -4067,7 +4067,7 @@ class Benchmark {
       exit(1);
     }
     if (FLAGS_use_plain_table) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (!options.memtable_factory->IsInstanceOf("prefix_hash") &&
           !options.memtable_factory->IsInstanceOf("hash_linkedlist")) {
         fprintf(stderr, "Warning: plain table is used with %s\n",
@@ -4088,9 +4088,9 @@ class Benchmark {
 #else
       fprintf(stderr, "Plain table is not supported in lite mode\n");
       exit(1);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     } else if (FLAGS_use_cuckoo_table) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (FLAGS_cuckoo_hash_ratio > 1 || FLAGS_cuckoo_hash_ratio < 0) {
         fprintf(stderr, "Invalid cuckoo_hash_ratio\n");
         exit(1);
@@ -4101,7 +4101,7 @@ class Benchmark {
         exit(1);
       }
 
-      ROCKSDB_NAMESPACE::CuckooTableOptions table_options;
+      MIZAR_NAMESPACE::CuckooTableOptions table_options;
       table_options.hash_table_ratio = FLAGS_cuckoo_hash_ratio;
       table_options.identity_as_first_hash = FLAGS_identity_as_first_hash;
       options.table_factory = std::shared_ptr<TableFactory>(
@@ -4109,7 +4109,7 @@ class Benchmark {
 #else
       fprintf(stderr, "Cuckoo table is not supported in lite mode\n");
       exit(1);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     } else {
       BlockBasedTableOptions block_based_options;
       block_based_options.checksum =
@@ -4208,15 +4208,15 @@ class Benchmark {
       block_based_options.prepopulate_block_cache = prepopulate_block_cache;
       if (FLAGS_use_data_block_hash_index) {
         block_based_options.data_block_index_type =
-            ROCKSDB_NAMESPACE::BlockBasedTableOptions::kDataBlockBinaryAndHash;
+            MIZAR_NAMESPACE::BlockBasedTableOptions::kDataBlockBinaryAndHash;
       } else {
         block_based_options.data_block_index_type =
-            ROCKSDB_NAMESPACE::BlockBasedTableOptions::kDataBlockBinarySearch;
+            MIZAR_NAMESPACE::BlockBasedTableOptions::kDataBlockBinarySearch;
       }
       block_based_options.data_block_hash_table_util_ratio =
           FLAGS_data_block_hash_table_util_ratio;
       if (FLAGS_read_cache_path != "") {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         Status rc_status;
 
         // Read cache need to be provided with a the Logger, we will put all
@@ -4378,7 +4378,7 @@ class Benchmark {
         fprintf(stderr, "Only 64 bits timestamps are supported.\n");
         exit(1);
       }
-      options.comparator = ROCKSDB_NAMESPACE::test::ComparatorWithU64Ts();
+      options.comparator = MIZAR_NAMESPACE::test::ComparatorWithU64Ts();
     }
 
     // Integrated BlobDB
@@ -4396,7 +4396,7 @@ class Benchmark {
     options.blob_compaction_readahead_size =
         FLAGS_blob_compaction_readahead_size;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (FLAGS_readonly && FLAGS_transaction_db) {
       fprintf(stderr, "Cannot use readonly flag with transaction_db\n");
       exit(1);
@@ -4406,7 +4406,7 @@ class Benchmark {
       fprintf(stderr, "Cannot use use_secondary_db flag with transaction_db\n");
       exit(1);
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   }
 
@@ -4575,7 +4575,7 @@ class Benchmark {
           exit(1);
         }
       }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (FLAGS_readonly) {
         s = DB::OpenForReadOnly(options, db_name, column_families,
             &db->cfh, &db->db);
@@ -4603,12 +4603,12 @@ class Benchmark {
       }
 #else
       s = DB::Open(options, db_name, column_families, &db->cfh, &db->db);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       db->cfh.resize(FLAGS_num_column_families);
       db->num_created = num_hot;
       db->num_hot = num_hot;
       db->cfh_idx_to_prob = std::move(cfh_idx_to_prob);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     } else if (FLAGS_readonly) {
       s = DB::OpenForReadOnly(options, db_name, &db->db);
     } else if (FLAGS_optimistic_transaction_db) {
@@ -4674,7 +4674,7 @@ class Benchmark {
             },
             FLAGS_secondary_update_interval, db));
       }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     } else {
       s = DB::Open(options, db_name, &db->db);
     }
@@ -5044,7 +5044,7 @@ class Benchmark {
           val = gen.Generate();
         }
         if (use_blob_db_) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
           // Stacked BlobDB
           blob_db::BlobDB* blobdb =
               static_cast<blob_db::BlobDB*>(db_with_cfh->db);
@@ -5054,7 +5054,7 @@ class Benchmark {
           } else {
             s = blobdb->Put(write_options_, key, val);
           }
-#endif  //  ROCKSDB_LITE
+#endif  //  MIZAR_LITE
         } else if (FLAGS_num_column_families <= 1) {
           batch.Put(key, val);
         } else {
@@ -5099,11 +5099,11 @@ class Benchmark {
               GenerateKeyFromInt(begin_num + offset, FLAGS_num,
                                  &expanded_keys[offset]);
               if (use_blob_db_) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
                 // Stacked BlobDB
                 s = db_with_cfh->db->Delete(write_options_,
                                             expanded_keys[offset]);
-#endif  //  ROCKSDB_LITE
+#endif  //  MIZAR_LITE
               } else if (FLAGS_num_column_families <= 1) {
                 batch.Delete(expanded_keys[offset]);
               } else {
@@ -5116,12 +5116,12 @@ class Benchmark {
             GenerateKeyFromInt(begin_num + range_tombstone_width_, FLAGS_num,
                                &end_key);
             if (use_blob_db_) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
               // Stacked BlobDB
               s = db_with_cfh->db->DeleteRange(
                   write_options_, db_with_cfh->db->DefaultColumnFamily(),
                   begin_key, end_key);
-#endif  //  ROCKSDB_LITE
+#endif  //  MIZAR_LITE
             } else if (FLAGS_num_column_families <= 1) {
               batch.DeleteRange(begin_key, end_key);
             } else {
@@ -5202,7 +5202,7 @@ class Benchmark {
   Status DoDeterministicCompact(ThreadState* thread,
                                 CompactionStyle compaction_style,
                                 WriteMode write_mode) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ColumnFamilyMetaData meta;
     std::vector<DB*> db_list;
     if (db_.db != nullptr) {
@@ -5501,7 +5501,7 @@ class Benchmark {
     fprintf(stderr, "Rocksdb Lite doesn't support filldeterministic\n");
     return Status::NotSupported(
         "Rocksdb Lite doesn't support filldeterministic");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   void ReadSequential(ThreadState* thread) {
@@ -5544,7 +5544,7 @@ class Benchmark {
 
     delete iter;
     thread->stats.AddBytes(bytes);
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -5603,7 +5603,7 @@ class Benchmark {
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(msg);
 
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -5701,7 +5701,7 @@ class Benchmark {
 
     thread->stats.AddMessage(msg);
 
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -5807,7 +5807,7 @@ class Benchmark {
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(msg);
 
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -6369,7 +6369,7 @@ class Benchmark {
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(msg);
 
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -6518,7 +6518,7 @@ class Benchmark {
              found, read);
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(msg);
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -7436,7 +7436,7 @@ class Benchmark {
     }
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // This benchmark stress tests Transactions.  For a given --duration (or
   // total number of --writes, a Transaction will perform a read-modify-write
   // to increment the value of a key in each of N(--transaction-sets) sets of
@@ -7510,7 +7510,7 @@ class Benchmark {
     }
     thread->stats.AddMessage(msg);
 
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -7536,7 +7536,7 @@ class Benchmark {
       fprintf(stdout, "RandomTransactionVerify FAILED!!\n");
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Writes and deletes random keys without overwriting keys.
   //
@@ -7691,7 +7691,7 @@ class Benchmark {
              read);
     thread->stats.AddBytes(bytes);
     thread->stats.AddMessage(msg);
-    if (FLAGS_perf_level > ROCKSDB_NAMESPACE::PerfLevel::kDisable) {
+    if (FLAGS_perf_level > MIZAR_NAMESPACE::PerfLevel::kDisable) {
       thread->stats.AddMessage(std::string("PERF_CONTEXT:\n") +
                                get_perf_context()->ToString());
     }
@@ -7787,7 +7787,7 @@ class Benchmark {
     }
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void WaitForCompactionHelper(DBWithColumnFamilies& db) {
     // This is an imperfect way of waiting for compaction. The loop and sleep
     // is done because a thread that finishes a compaction job should get a
@@ -7894,11 +7894,11 @@ class Benchmark {
             from_level, static_cast<int>(files_to_compact.size()),
             real_from_level, next_level);
 
-    ROCKSDB_NAMESPACE::CompactionOptions options;
+    MIZAR_NAMESPACE::CompactionOptions options;
     // Lets RocksDB use the configured compression for this level
-    options.compression = ROCKSDB_NAMESPACE::kDisableCompressionOption;
+    options.compression = MIZAR_NAMESPACE::kDisableCompressionOption;
 
-    ROCKSDB_NAMESPACE::ColumnFamilyDescriptor cfDesc;
+    MIZAR_NAMESPACE::ColumnFamilyDescriptor cfDesc;
     db_with_cfh.db->DefaultColumnFamily()->GetDescriptor(&cfDesc);
     options.output_file_size_limit = cfDesc.options.target_file_size_base;
 
@@ -8034,7 +8034,7 @@ class Benchmark {
     }
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
   void Replay(ThreadState* thread) {
     if (db_.db != nullptr) {
@@ -8083,11 +8083,11 @@ class Benchmark {
     }
   }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 int db_bench_tool(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ConfigOptions config_options;
   static bool initialized = false;
   if (!initialized) {
@@ -8097,8 +8097,8 @@ int db_bench_tool(int argc, char** argv) {
   }
   ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_compaction_style_e =
-      (ROCKSDB_NAMESPACE::CompactionStyle)FLAGS_compaction_style;
-#ifndef ROCKSDB_LITE
+      (MIZAR_NAMESPACE::CompactionStyle)FLAGS_compaction_style;
+#ifndef MIZAR_LITE
   if (FLAGS_statistics && !FLAGS_statistics_string.empty()) {
     fprintf(stderr,
             "Cannot provide both --statistics and --statistics_string.\n");
@@ -8114,17 +8114,17 @@ int db_bench_tool(int argc, char** argv) {
       exit(1);
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   if (FLAGS_statistics) {
-    dbstats = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    dbstats = MIZAR_NAMESPACE::CreateDBStatistics();
   }
   if (dbstats) {
     dbstats->set_stats_level(static_cast<StatsLevel>(FLAGS_stats_level));
   }
   FLAGS_compaction_pri_e =
-      (ROCKSDB_NAMESPACE::CompactionPri)FLAGS_compaction_pri;
+      (MIZAR_NAMESPACE::CompactionPri)FLAGS_compaction_pri;
 
-  std::vector<std::string> fanout = ROCKSDB_NAMESPACE::StringSplit(
+  std::vector<std::string> fanout = MIZAR_NAMESPACE::StringSplit(
       FLAGS_max_bytes_for_level_multiplier_additional, ',');
   for (size_t j = 0; j < fanout.size(); j++) {
     FLAGS_max_bytes_for_level_multiplier_additional_v.push_back(
@@ -8138,7 +8138,7 @@ int db_bench_tool(int argc, char** argv) {
   FLAGS_compression_type_e =
     StringToCompressionType(FLAGS_compression_type.c_str());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Stacked BlobDB
   FLAGS_blob_db_compression_type_e =
     StringToCompressionType(FLAGS_blob_db_compression_type.c_str());
@@ -8161,7 +8161,7 @@ int db_bench_tool(int argc, char** argv) {
   } else if (FLAGS_simulate_hdd || FLAGS_simulate_hybrid_fs_file != "") {
     //**TODO: Make the simulate fs something that can be loaded
     // from the ObjectRegistry...
-    static std::shared_ptr<ROCKSDB_NAMESPACE::Env> composite_env =
+    static std::shared_ptr<MIZAR_NAMESPACE::Env> composite_env =
         NewCompositeEnv(std::make_shared<SimulatedHybridFileSystem>(
             FileSystem::Default(), FLAGS_simulate_hybrid_fs_file,
             /*throughput_multiplier=*/
@@ -8169,7 +8169,7 @@ int db_bench_tool(int argc, char** argv) {
             /*is_full_fs_warm=*/FLAGS_simulate_hdd));
     FLAGS_env = composite_env.get();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   if (FLAGS_use_existing_keys && !FLAGS_use_existing_db) {
     fprintf(stderr,
             "`-use_existing_db` must be true for `-use_existing_keys` to be "
@@ -8178,17 +8178,17 @@ int db_bench_tool(int argc, char** argv) {
   }
 
   if (!FLAGS_hdfs.empty()) {
-    FLAGS_env = new ROCKSDB_NAMESPACE::HdfsEnv(FLAGS_hdfs);
+    FLAGS_env = new MIZAR_NAMESPACE::HdfsEnv(FLAGS_hdfs);
   }
 
   if (!strcasecmp(FLAGS_compaction_fadvice.c_str(), "NONE"))
-    FLAGS_compaction_fadvice_e = ROCKSDB_NAMESPACE::Options::NONE;
+    FLAGS_compaction_fadvice_e = MIZAR_NAMESPACE::Options::NONE;
   else if (!strcasecmp(FLAGS_compaction_fadvice.c_str(), "NORMAL"))
-    FLAGS_compaction_fadvice_e = ROCKSDB_NAMESPACE::Options::NORMAL;
+    FLAGS_compaction_fadvice_e = MIZAR_NAMESPACE::Options::NORMAL;
   else if (!strcasecmp(FLAGS_compaction_fadvice.c_str(), "SEQUENTIAL"))
-    FLAGS_compaction_fadvice_e = ROCKSDB_NAMESPACE::Options::SEQUENTIAL;
+    FLAGS_compaction_fadvice_e = MIZAR_NAMESPACE::Options::SEQUENTIAL;
   else if (!strcasecmp(FLAGS_compaction_fadvice.c_str(), "WILLNEED"))
-    FLAGS_compaction_fadvice_e = ROCKSDB_NAMESPACE::Options::WILLNEED;
+    FLAGS_compaction_fadvice_e = MIZAR_NAMESPACE::Options::WILLNEED;
   else {
     fprintf(stdout, "Unknown compaction fadvice:%s\n",
             FLAGS_compaction_fadvice.c_str());
@@ -8200,11 +8200,11 @@ int db_bench_tool(int argc, char** argv) {
   // Note options sanitization may increase thread pool sizes according to
   // max_background_flushes/max_background_compactions/max_background_jobs
   FLAGS_env->SetBackgroundThreads(FLAGS_num_high_pri_threads,
-                                  ROCKSDB_NAMESPACE::Env::Priority::HIGH);
+                                  MIZAR_NAMESPACE::Env::Priority::HIGH);
   FLAGS_env->SetBackgroundThreads(FLAGS_num_bottom_pri_threads,
-                                  ROCKSDB_NAMESPACE::Env::Priority::BOTTOM);
+                                  MIZAR_NAMESPACE::Env::Priority::BOTTOM);
   FLAGS_env->SetBackgroundThreads(FLAGS_num_low_pri_threads,
-                                  ROCKSDB_NAMESPACE::Env::Priority::LOW);
+                                  MIZAR_NAMESPACE::Env::Priority::LOW);
 
   // Choose a location for the test database if none given with --db=<path>
   if (FLAGS_db.empty()) {
@@ -8225,18 +8225,18 @@ int db_bench_tool(int argc, char** argv) {
     exit(1);
   }
 
-  ROCKSDB_NAMESPACE::Benchmark benchmark;
+  MIZAR_NAMESPACE::Benchmark benchmark;
   benchmark.Run();
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (FLAGS_print_malloc_stats) {
     std::string stats_string;
-    ROCKSDB_NAMESPACE::DumpMallocStats(&stats_string);
+    MIZAR_NAMESPACE::DumpMallocStats(&stats_string);
     fprintf(stdout, "Malloc stats:\n%s\n", stats_string.c_str());
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   return 0;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif

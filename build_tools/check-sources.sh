@@ -7,7 +7,7 @@ BAD=""
 
 git grep 'namespace rocksdb' -- '*.[ch]*'
 if [ "$?" != "1" ]; then
-  echo "^^^^^ Do not hardcode namespace rocksdb. Use ROCKSDB_NAMESPACE"
+  echo "^^^^^ Do not hardcode namespace rocksdb. Use MIZAR_NAMESPACE"
   BAD=1
 fi
 
@@ -19,7 +19,7 @@ fi
 
 git grep '<rocksdb/' -- ':!build_tools/check-sources.sh'
 if [ "$?" != "1" ]; then
-  echo '^^^^^ Use double-quotes as in #include "rocksdb/something.h"'
+  echo '^^^^^ Use double-quotes as in #include "mizar/something.h"'
   BAD=1
 fi
 

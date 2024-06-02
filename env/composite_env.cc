@@ -4,9 +4,9 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #include "env/composite_env_wrapper.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 // The CompositeEnvWrapper class provides an interface that is compatible
 // with the old monolithic Env API, and an implementation that wraps around
@@ -384,7 +384,7 @@ Status CompositeEnv::NewDirectory(const std::string& name,
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo>
     composite_env_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"target",
          {0, OptionType::kCustomizable, OptionVerificationType::kByName,
           OptionTypeFlags::kDontSerialize | OptionTypeFlags::kRawPointer,
@@ -395,24 +395,24 @@ static std::unordered_map<std::string, OptionTypeInfo>
                                          &(target->guard));
           },
           nullptr, nullptr}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo>
     composite_fs_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"file_system",
          OptionTypeInfo::AsCustomSharedPtr<FileSystem>(
              0, OptionVerificationType::kByName, OptionTypeFlags::kNone)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 static std::unordered_map<std::string, OptionTypeInfo>
     composite_clock_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"clock",
          OptionTypeInfo::AsCustomSharedPtr<SystemClock>(
              0, OptionVerificationType::kByName, OptionTypeFlags::kNone)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 }  // namespace
@@ -450,7 +450,7 @@ Status CompositeEnvWrapper::PrepareOptions(const ConfigOptions& options) {
   return Env::PrepareOptions(options);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::string CompositeEnvWrapper::SerializeOptions(
     const ConfigOptions& config_options, const std::string& header) const {
   auto options = CompositeEnv::SerializeOptions(config_options, header);
@@ -460,5 +460,5 @@ std::string CompositeEnvWrapper::SerializeOptions(
   }
   return options;
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

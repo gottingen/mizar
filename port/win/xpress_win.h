@@ -11,9 +11,9 @@
 
 #include <string>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace port {
 namespace xpress {
 
@@ -23,4 +23,4 @@ char* Decompress(const char* input_data, size_t input_length,
                  size_t* uncompressed_size);
 }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

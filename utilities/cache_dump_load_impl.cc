@@ -5,20 +5,20 @@
 
 #include "cache/cache_key.h"
 #include "table/block_based/block_based_table_reader.h"
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/cache_dump_load_impl.h"
 
 #include "cache/cache_entry_roles.h"
 #include "file/writable_file_writer.h"
 #include "port/lang.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/utilities/ldb_cmd.h"
 #include "table/format.h"
 #include "util/crc32c.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Set the dump filter with a list of DBs. Block cache may be shared by multipe
 // DBs and we may only want to dump out the blocks belonging to certain DB(s).
@@ -485,5 +485,5 @@ IOStatus CacheDumpedLoaderImpl::ReadCacheBlock(std::string* data,
   return io_s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

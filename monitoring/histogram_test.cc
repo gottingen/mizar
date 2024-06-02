@@ -8,12 +8,12 @@
 #include <cmath>
 
 #include "monitoring/histogram_windowing.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class HistogramTest : public testing::Test {};
 
@@ -225,7 +225,7 @@ TEST_F(HistogramTest, HistogramWindowingMerge) {
   ASSERT_EQ(histogramWindowing.max(), 5);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

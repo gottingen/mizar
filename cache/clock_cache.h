@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
-#if defined(TBB) && !defined(ROCKSDB_LITE)
+#if defined(TBB) && !defined(MIZAR_LITE)
 #define SUPPORT_CLOCK_CACHE
 #endif

@@ -18,14 +18,14 @@
 #include "db/range_del_aggregator.h"
 #include "options/cf_options.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/cache.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/table_reader.h"
 #include "trace_replay/block_cache_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Env;
 class Arena;
@@ -240,4 +240,4 @@ class TableCache {
   std::string db_session_id_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

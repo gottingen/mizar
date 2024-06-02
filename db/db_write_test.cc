@@ -19,7 +19,7 @@
 #include "util/string_util.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Test variations of WriteImpl.
 class DBWriteTest : public DBTestBase, public testing::WithParamInterface<int> {
@@ -86,9 +86,9 @@ TEST_P(DBWriteTest, WriteStallRemoveNoSlowdownWrite) {
   ASSERT_OK(Flush());
   ASSERT_OK(Put("foo" + std::to_string(thread_num.fetch_add(1)), "bar"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WriteThread::JoinBatchGroup:Start", unblock_main_thread_func);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBWriteTest::WriteStallRemoveNoSlowdownWrite:1",
         "DBImpl::BackgroundCallFlush:start"},
        {"DBWriteTest::WriteStallRemoveNoSlowdownWrite:2",
@@ -97,7 +97,7 @@ TEST_P(DBWriteTest, WriteStallRemoveNoSlowdownWrite) {
        // implemented by a write group leader
        {"DBWriteTest::WriteStallRemoveNoSlowdownWrite:3",
         "BackgroundCallCompaction:0"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Schedule creation of 4th L0 file without waiting. This will seal the
   // memtable and then wait for a sync point before writing the file. We need
@@ -158,8 +158,8 @@ TEST_P(DBWriteTest, WriteStallRemoveNoSlowdownWrite) {
     t.join();
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(DBWriteTest, WriteThreadHangOnWriteStall) {
@@ -205,9 +205,9 @@ TEST_P(DBWriteTest, WriteThreadHangOnWriteStall) {
   ASSERT_OK(Flush());
   ASSERT_OK(Put("foo" + std::to_string(thread_num.fetch_add(1)), "bar"));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WriteThread::JoinBatchGroup:Start", unblock_main_thread_func);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBWriteTest::WriteThreadHangOnWriteStall:1",
         "DBImpl::BackgroundCallFlush:start"},
        {"DBWriteTest::WriteThreadHangOnWriteStall:2",
@@ -216,7 +216,7 @@ TEST_P(DBWriteTest, WriteThreadHangOnWriteStall) {
        // implemented by a write group leader
        {"DBWriteTest::WriteThreadHangOnWriteStall:3",
         "BackgroundCallCompaction:0"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Schedule creation of 4th L0 file without waiting. This will seal the
   // memtable and then wait for a sync point before writing the file. We need
@@ -255,8 +255,8 @@ TEST_P(DBWriteTest, WriteThreadHangOnWriteStall) {
   for (auto& t : threads) {
     t.join();
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(DBWriteTest, IOErrorOnWALWritePropagateToWriteThreadFollower) {
@@ -414,7 +414,7 @@ TEST_P(DBWriteTest, LockWalInEffect) {
 
 TEST_P(DBWriteTest, ConcurrentlyDisabledWAL) {
     Options options = GetOptions();
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     options.statistics->set_stats_level(StatsLevel::kAll);
     Reopen(options);
     std::string wal_key_prefix = "WAL_KEY_";
@@ -427,9 +427,9 @@ TEST_P(DBWriteTest, ConcurrentlyDisabledWAL) {
     for (int t = 0; t < 10; t++) {
         threads[t] = std::thread([t, wal_key_prefix, wal_value, no_wal_key_prefix, no_wal_value, this] {
             for(int i = 0; i < 10; i++) {
-              ROCKSDB_NAMESPACE::WriteOptions write_option_disable;
+              MIZAR_NAMESPACE::WriteOptions write_option_disable;
               write_option_disable.disableWAL = true;
-              ROCKSDB_NAMESPACE::WriteOptions write_option_default;
+              MIZAR_NAMESPACE::WriteOptions write_option_default;
               std::string no_wal_key = no_wal_key_prefix + std::to_string(t) +
                                        "_" + std::to_string(i);
               ASSERT_OK(
@@ -446,7 +446,7 @@ TEST_P(DBWriteTest, ConcurrentlyDisabledWAL) {
         t.join();
     }
     uint64_t bytes_num = options.statistics->getTickerCount(
-        ROCKSDB_NAMESPACE::Tickers::WAL_FILE_BYTES);
+        MIZAR_NAMESPACE::Tickers::WAL_FILE_BYTES);
     // written WAL size should less than 100KB (even included HEADER & FOOTER overhead)
     ASSERT_LE(bytes_num, 1024 * 100);
 }
@@ -456,10 +456,10 @@ INSTANTIATE_TEST_CASE_P(DBWriteTestInstance, DBWriteTest,
                                         DBTestBase::kConcurrentWALWrites,
                                         DBTestBase::kPipelinedWrite));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

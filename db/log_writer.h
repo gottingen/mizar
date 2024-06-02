@@ -12,11 +12,11 @@
 #include <memory>
 
 #include "db/log_format.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/io_status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WritableFileWriter;
 
@@ -111,4 +111,4 @@ class Writer {
 };
 
 }  // namespace log
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

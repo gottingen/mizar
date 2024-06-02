@@ -14,14 +14,14 @@
 #include <string>
 #include <utility>
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/types.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/types.h"
 #include "util/coding.h"
 #include "util/user_comparator_wrapper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // The file declares data structures and functions that deal with internal
 // keys.
@@ -785,4 +785,4 @@ struct ParsedInternalKeyComparator {
   const InternalKeyComparator* cmp;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

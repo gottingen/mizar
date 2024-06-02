@@ -17,7 +17,7 @@
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Convenience methods
 Status DBImpl::Put(const WriteOptions& o, ColumnFamilyHandle* column_family,
                    const Slice& key, const Slice& val) {
@@ -54,13 +54,13 @@ Status DBImpl::Write(const WriteOptions& write_options, WriteBatch* my_batch) {
   return WriteImpl(write_options, my_batch, nullptr, nullptr);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status DBImpl::WriteWithCallback(const WriteOptions& write_options,
                                  WriteBatch* my_batch,
                                  WriteCallback* callback) {
   return WriteImpl(write_options, my_batch, callback, nullptr);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 // The main write queue. This is the only write queue that updates LastSequence.
 // When using one write queue, the same sequence also indicates the last
@@ -1768,7 +1768,7 @@ Status DBImpl::ScheduleFlushes(WriteContext* context) {
   return status;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void DBImpl::NotifyOnMemTableSealed(ColumnFamilyData* /*cfd*/,
                                     const MemTableInfo& mem_table_info) {
   if (immutable_db_options_.listeners.size() == 0U) {
@@ -1782,7 +1782,7 @@ void DBImpl::NotifyOnMemTableSealed(ColumnFamilyData* /*cfd*/,
     listener->OnMemTableSealed(mem_table_info);
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 // REQUIRES: mutex_ is held
 // REQUIRES: this thread is currently at the front of the writer queue
@@ -1821,14 +1821,14 @@ Status DBImpl::SwitchMemtable(ColumnFamilyData* cfd, WriteContext* context) {
   const MutableCFOptions mutable_cf_options = *cfd->GetLatestMutableCFOptions();
 
   // Set memtable_info for memtable sealed callback
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   MemTableInfo memtable_info;
   memtable_info.cf_name = cfd->GetName();
   memtable_info.first_seqno = cfd->mem()->GetFirstSequenceNumber();
   memtable_info.earliest_seqno = cfd->mem()->GetEarliestSequenceNumber();
   memtable_info.num_entries = cfd->mem()->num_entries();
   memtable_info.num_deletes = cfd->mem()->num_deletes();
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   // Log this later after lock release. It may be outdated, e.g., if background
   // flush happens before logging, but that should be ok.
   int num_imm_unflushed = cfd->imm()->NumNotFlushed();
@@ -1979,13 +1979,13 @@ Status DBImpl::SwitchMemtable(ColumnFamilyData* cfd, WriteContext* context) {
   InstallSuperVersionAndScheduleWork(cfd, &context->superversion_context,
                                      mutable_cf_options);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   mutex_.Unlock();
   // Notify client that memtable is sealed, now that we have successfully
   // installed a new memtable
   NotifyOnMemTableSealed(cfd, memtable_info);
   mutex_.Lock();
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   // It is possible that we got here without checking the value of i_os, but
   // that is okay.  If we did, it most likely means that s was already an error.
   // In any case, ignore any unchecked error for i_os here.
@@ -2138,4 +2138,4 @@ Status DB::Merge(const WriteOptions& opt, ColumnFamilyHandle* column_family,
   }
   return Write(opt, &batch);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <stdlib.h>
 #include <map>
@@ -19,15 +19,15 @@
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/transaction_log.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DeleteFileTest : public DBTestBase {
  public:
@@ -438,13 +438,13 @@ TEST_F(DeleteFileTest, BackgroundPurgeTestMultipleJobs) {
   // 5 sst files after 2 compactions with 2 live iterators
   CheckFileTypeCounts(dbname_, 0, 5, 1);
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   // ~DBImpl should wait until all BGWorkPurge are finished
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::~DBImpl:WaitJob", "DBImpl::BGWorkPurge"},
        {"DeleteFileTest::GuardFinish",
         "DeleteFileTest::BackgroundPurgeTestMultipleJobs:DBClose"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   delete itr1;
   env_->Schedule(&DeleteFileTest::DoSleep, this, Env::Priority::HIGH);
@@ -594,10 +594,10 @@ TEST_F(DeleteFileTest, DeleteNonDefaultColumnFamily) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -608,8 +608,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
+          "SKIPPED as DBImpl::DeleteFile is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

@@ -11,18 +11,18 @@
 
 #include <algorithm>
 #include <limits>
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
 #ifdef OS_FREEBSD
 #include <malloc_np.h>
 #else  // OS_FREEBSD
 #include <malloc.h>
 #endif  // OS_FREEBSD
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
 #include <string>
 
 #include "memory/memory_allocator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/compression_context_cache.h"
@@ -50,17 +50,17 @@
 #if ZSTD_VERSION_NUMBER >= 10103  // v1.1.3+
 #include <zdict.h>
 #endif  // ZSTD_VERSION_NUMBER >= 10103
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Need this for the context allocation override
 // On windows we need to do this explicitly
 #if (ZSTD_VERSION_NUMBER >= 500)
-#if defined(ROCKSDB_JEMALLOC) && defined(OS_WIN) && \
+#if defined(MIZAR_JEMALLOC) && defined(OS_WIN) && \
     defined(ZSTD_STATIC_LINKING_ONLY)
 #define ROCKSDB_ZSTD_CUSTOM_MEM
 namespace port {
 ZSTD_customMem GetJeZstdAllocationOverrides();
 }  // namespace port
-#endif  // defined(ROCKSDB_JEMALLOC) && defined(OS_WIN) &&
+#endif  // defined(MIZAR_JEMALLOC) && defined(OS_WIN) &&
         // defined(ZSTD_STATIC_LINKING_ONLY)
 
 // We require `ZSTD_sizeof_DDict` and `ZSTD_createDDict_byReference` to use
@@ -122,11 +122,11 @@ class ZSTDUncompressCachedData {
   int64_t cache_idx_ = -1;  // -1 means this instance owns the context
 };
 #endif  // (ZSTD_VERSION_NUMBER >= 500)
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // ZSTD
 
 #if !(defined ZSTD) || !(ZSTD_VERSION_NUMBER >= 500)
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class ZSTDUncompressCachedData {
   void* padding;  // unused
  public:
@@ -145,14 +145,14 @@ class ZSTDUncompressCachedData {
  private:
   void ignore_padding__() { padding = nullptr; }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif
 
 #if defined(XPRESS)
 #include "port/xpress.h"
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Holds dictionary and related data, like ZSTD's digested compression
 // dictionary.
@@ -1535,4 +1535,4 @@ inline CacheAllocationPtr UncompressData(
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

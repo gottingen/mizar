@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "table/plain/plain_table_builder.h"
 
 #include <assert.h>
@@ -15,11 +15,11 @@
 #include "db/dbformat.h"
 #include "file/writable_file_writer.h"
 #include "logging/logging.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/block_based/block_builder.h"
 #include "table/format.h"
 #include "table/meta_blocks.h"
@@ -30,7 +30,7 @@
 #include "util/crc32c.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -331,5 +331,5 @@ const char* PlainTableBuilder::GetFileChecksumFuncName() const {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

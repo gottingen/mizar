@@ -10,20 +10,20 @@
 
 #include "port/likely.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 std::atomic<extent_alloc_t*> JemallocNodumpAllocator::original_alloc_{nullptr};
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
 static std::unordered_map<std::string, OptionTypeInfo> jemalloc_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"limit_tcache_size",
      {offsetof(struct JemallocAllocatorOptions, limit_tcache_size),
       OptionType::kBoolean, OptionVerificationType::kNormal,
@@ -36,11 +36,11 @@ static std::unordered_map<std::string, OptionTypeInfo> jemalloc_type_info = {
      {offsetof(struct JemallocAllocatorOptions, tcache_size_upper_bound),
       OptionType::kSizeT, OptionVerificationType::kNormal,
       OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 bool JemallocNodumpAllocator::IsSupported(std::string* why) {
-#ifndef ROCKSDB_JEMALLOC
-  *why = "Not compiled with ROCKSDB_JEMALLOC";
+#ifndef MIZAR_JEMALLOC
+  *why = "Not compiled with MIZAR_JEMALLOC";
   return false;
 #else
   static const std::string unsupported =
@@ -50,26 +50,26 @@ bool JemallocNodumpAllocator::IsSupported(std::string* why) {
     *why = unsupported;
     return false;
   }
-#ifndef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifndef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
   *why = unsupported;
   return false;
 #else
   return true;
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 #endif  // ROCKSDB_MALLOC
 }
 
 JemallocNodumpAllocator::JemallocNodumpAllocator(
     JemallocAllocatorOptions& options)
     : options_(options),
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
       tcache_(&JemallocNodumpAllocator::DestroyThreadSpecificCache),
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
       arena_index_(0) {
   RegisterOptions(&options_, &jemalloc_type_info);
 }
 
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 JemallocNodumpAllocator::~JemallocNodumpAllocator() {
   // Destroy tcache before destroying arena.
   autovector<void*> tcache_list;
@@ -114,19 +114,19 @@ Status JemallocNodumpAllocator::InitializeArenas() {
       mallctl("arenas.create", &arena_index_, &arena_index_size, nullptr, 0);
   if (ret != 0) {
     return Status::Incomplete("Failed to create jemalloc arena, error code: " +
-                              ROCKSDB_NAMESPACE::ToString(ret));
+                              MIZAR_NAMESPACE::ToString(ret));
   }
   assert(arena_index_ != 0);
 
   // Read existing hooks.
   std::string key =
-      "arena." + ROCKSDB_NAMESPACE::ToString(arena_index_) + ".extent_hooks";
+      "arena." + MIZAR_NAMESPACE::ToString(arena_index_) + ".extent_hooks";
   extent_hooks_t* hooks;
   size_t hooks_size = sizeof(hooks);
   ret = mallctl(key.c_str(), &hooks, &hooks_size, nullptr, 0);
   if (ret != 0) {
     return Status::Incomplete("Failed to read existing hooks, error code: " +
-                              ROCKSDB_NAMESPACE::ToString(ret));
+                              MIZAR_NAMESPACE::ToString(ret));
   }
 
   // Store existing alloc.
@@ -146,12 +146,12 @@ Status JemallocNodumpAllocator::InitializeArenas() {
   ret = mallctl(key.c_str(), nullptr, nullptr, &hooks_ptr, sizeof(hooks_ptr));
   if (ret != 0) {
     return Status::Incomplete("Failed to set custom hook, error code: " +
-                              ROCKSDB_NAMESPACE::ToString(ret));
+                              MIZAR_NAMESPACE::ToString(ret));
   }
   return Status::OK();
 }
 
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
 Status JemallocNodumpAllocator::PrepareOptions(
     const ConfigOptions& config_options) {
@@ -166,11 +166,11 @@ Status JemallocNodumpAllocator::PrepareOptions(
         "tcache_size_lower_bound larger or equal to tcache_size_upper_bound.");
   } else if (IsMutable()) {
     Status s = MemoryAllocator::PrepareOptions(config_options);
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
     if (s.ok()) {
       s = InitializeArenas();
     }
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
     return s;
   } else {
     // Already prepared
@@ -178,7 +178,7 @@ Status JemallocNodumpAllocator::PrepareOptions(
   }
 }
 
-#ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#ifdef MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 int JemallocNodumpAllocator::GetThreadSpecificCache(size_t size) {
   // We always enable tcache. The only corner case is when there are a ton of
   // threads accessing with low frequency, then it could consume a lot of
@@ -227,11 +227,11 @@ void* JemallocNodumpAllocator::Alloc(extent_hooks_t* extent, void* new_addr,
 Status JemallocNodumpAllocator::DestroyArena(unsigned arena_index) {
   assert(arena_index != 0);
   std::string key =
-      "arena." + ROCKSDB_NAMESPACE::ToString(arena_index) + ".destroy";
+      "arena." + MIZAR_NAMESPACE::ToString(arena_index) + ".destroy";
   int ret = mallctl(key.c_str(), nullptr, 0, nullptr, 0);
   if (ret != 0) {
     return Status::Incomplete("Failed to destroy jemalloc arena, error code: " +
-                              ROCKSDB_NAMESPACE::ToString(ret));
+                              MIZAR_NAMESPACE::ToString(ret));
   }
   return Status::OK();
 }
@@ -247,7 +247,7 @@ void JemallocNodumpAllocator::DestroyThreadSpecificCache(void* ptr) {
   delete tcache_index;
 }
 
-#endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
+#endif  // MIZAR_JEMALLOC_NODUMP_ALLOCATOR
 
 Status NewJemallocNodumpAllocator(
     JemallocAllocatorOptions& options,
@@ -255,7 +255,7 @@ Status NewJemallocNodumpAllocator(
   if (memory_allocator == nullptr) {
     return Status::InvalidArgument("memory_allocator must be non-null.");
   }
-#ifndef ROCKSDB_JEMALLOC
+#ifndef MIZAR_JEMALLOC
   (void)options;
   return Status::NotSupported("Not compiled with JEMALLOC");
 #else
@@ -268,4 +268,4 @@ Status NewJemallocNodumpAllocator(
   return s;
 #endif
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

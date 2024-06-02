@@ -7,25 +7,25 @@
 #include <cstdlib>
 
 #include "port/port.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/write_batch.h"
 #include "test_util/testharness.h"
 
-using ROCKSDB_NAMESPACE::CompactionFilter;
-using ROCKSDB_NAMESPACE::CompactionStyle;
-using ROCKSDB_NAMESPACE::CompactRangeOptions;
-using ROCKSDB_NAMESPACE::CompressionType;
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::DestroyDB;
-using ROCKSDB_NAMESPACE::FlushOptions;
-using ROCKSDB_NAMESPACE::Iterator;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::ReadOptions;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::WriteBatch;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::CompactionFilter;
+using MIZAR_NAMESPACE::CompactionStyle;
+using MIZAR_NAMESPACE::CompactRangeOptions;
+using MIZAR_NAMESPACE::CompressionType;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::DestroyDB;
+using MIZAR_NAMESPACE::FlushOptions;
+using MIZAR_NAMESPACE::Iterator;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::ReadOptions;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::WriteBatch;
+using MIZAR_NAMESPACE::WriteOptions;
 
 namespace {
 
@@ -50,7 +50,7 @@ class ManualCompactionTest : public testing::Test {
  public:
   ManualCompactionTest() {
     // Get rid of any state from an old run.
-    dbname_ = ROCKSDB_NAMESPACE::test::PerThreadDBPath(
+    dbname_ = MIZAR_NAMESPACE::test::PerThreadDBPath(
         "rocksdb_manual_compaction_test");
     DestroyDB(dbname_, Options());
   }

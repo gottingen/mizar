@@ -13,7 +13,7 @@
 #include "utilities/fault_injection_fs.h"
 #endif // NDEBUG
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class NonBatchedOpsStressTest : public StressTest {
  public:
   NonBatchedOpsStressTest() {}
@@ -265,7 +265,7 @@ class NonBatchedOpsStressTest : public StressTest {
     // Create a transaction in order to write some data. The purpose is to
     // exercise WriteBatchWithIndex::MultiGetFromBatchAndDB. The transaction
     // will be rolled back once MultiGet returns.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     Transaction* txn = nullptr;
     if (use_txn) {
       WriteOptions wo;
@@ -279,7 +279,7 @@ class NonBatchedOpsStressTest : public StressTest {
     for (size_t i = 0; i < num_keys; ++i) {
       key_str.emplace_back(Key(rand_keys[i]));
       keys.emplace_back(key_str.back());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (use_txn) {
         // With a 1 in 10 probability, insert the just added key in the batch
         // into the transaction. This will create an overlap with the MultiGet
@@ -332,7 +332,7 @@ class NonBatchedOpsStressTest : public StressTest {
       }
 #endif // NDEBUG
     } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       txn->MultiGet(readoptionscopy, cfh, num_keys, keys.data(), values.data(),
                     statuses.data());
 #endif
@@ -374,9 +374,9 @@ class NonBatchedOpsStressTest : public StressTest {
         std::string value;
 
         if (use_txn) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
           tmp_s = txn->Get(readoptionscopy, cfh, keys[i], &value);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
         } else {
           tmp_s = db_->Get(readoptionscopy, cfh, keys[i], &value);
         }
@@ -433,7 +433,7 @@ class NonBatchedOpsStressTest : public StressTest {
       db_->ReleaseSnapshot(readoptionscopy.snapshot);
     }
     if (use_txn) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       RollbackTxn(txn);
 #endif
     }
@@ -527,7 +527,7 @@ class NonBatchedOpsStressTest : public StressTest {
       if (!FLAGS_use_txn) {
         s = db_->Merge(write_opts, cfh, key, v);
       } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         Transaction* txn;
         s = NewTxn(write_opts, &txn);
         if (s.ok()) {
@@ -542,7 +542,7 @@ class NonBatchedOpsStressTest : public StressTest {
       if (!FLAGS_use_txn) {
         s = db_->Put(write_opts, cfh, key, v);
       } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         Transaction* txn;
         s = NewTxn(write_opts, &txn);
         if (s.ok()) {
@@ -615,7 +615,7 @@ class NonBatchedOpsStressTest : public StressTest {
       if (!FLAGS_use_txn) {
         s = db_->Delete(write_opts, cfh, key);
       } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         Transaction* txn;
         s = NewTxn(write_opts, &txn);
         if (s.ok()) {
@@ -648,7 +648,7 @@ class NonBatchedOpsStressTest : public StressTest {
       if (!FLAGS_use_txn) {
         s = db_->SingleDelete(write_opts, cfh, key);
       } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         Transaction* txn;
         s = NewTxn(write_opts, &txn);
         if (s.ok()) {
@@ -741,7 +741,7 @@ class NonBatchedOpsStressTest : public StressTest {
     return s;
   }
 
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   void TestIngestExternalFile(
       ThreadState* /* thread */,
       const std::vector<int>& /* rand_column_families */,
@@ -816,7 +816,7 @@ class NonBatchedOpsStressTest : public StressTest {
       ++key;
     }
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   bool VerifyValue(int cf, int64_t key, const ReadOptions& /*opts*/,
                    SharedState* shared, const std::string& value_from_db,
@@ -863,5 +863,5 @@ StressTest* CreateNonBatchedOpsStressTest() {
   return new NonBatchedOpsStressTest();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

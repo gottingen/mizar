@@ -26,10 +26,10 @@
 #include <atomic>
 #include "env/io_posix.h"
 #include "monitoring/iostats_context_imp.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class PosixLogger : public Logger {
  private:
@@ -138,7 +138,7 @@ class PosixLogger : public Logger {
       assert(p <= limit);
       const size_t write_size = p - base;
 
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
       const int kDebugLogChunkSize = 128 * 1024;
 
       // If this write would cross a boundary of kDebugLogChunkSize
@@ -176,4 +176,4 @@ class PosixLogger : public Logger {
   size_t GetLogFileSize() const override { return log_size_; }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

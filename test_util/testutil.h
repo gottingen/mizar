@@ -15,13 +15,13 @@
 
 #include "env/composite_env_wrapper.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/merge_operator.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/table.h"
 #include "table/internal_iterator.h"
 #include "util/mutexlock.h"
 
@@ -33,7 +33,7 @@ void RegisterCustomObjects(int argc, char** argv);
 void RegisterCustomObjects(int argc, char** argv);
 #endif  // !ROCKSDB_UNITTESTS_WITH_CUSTOM_OBJECTS_FROM_STATIC_LIBS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class FileSystem;
 class MemTableRepFactory;
 class ObjectLibrary;
@@ -433,8 +433,8 @@ class FilterNumber : public CompactionFilter {
 
   std::string last_merge_operand_key() { return last_merge_operand_key_; }
 
-  bool Filter(int /*level*/, const ROCKSDB_NAMESPACE::Slice& /*key*/,
-              const ROCKSDB_NAMESPACE::Slice& value, std::string* /*new_value*/,
+  bool Filter(int /*level*/, const MIZAR_NAMESPACE::Slice& /*key*/,
+              const MIZAR_NAMESPACE::Slice& value, std::string* /*new_value*/,
               bool* /*value_changed*/) const override {
     if (value.size() == sizeof(uint64_t)) {
       return num_ == DecodeFixed64(value.data());
@@ -443,8 +443,8 @@ class FilterNumber : public CompactionFilter {
   }
 
   bool FilterMergeOperand(
-      int /*level*/, const ROCKSDB_NAMESPACE::Slice& key,
-      const ROCKSDB_NAMESPACE::Slice& value) const override {
+      int /*level*/, const MIZAR_NAMESPACE::Slice& key,
+      const MIZAR_NAMESPACE::Slice& value) const override {
     last_merge_operand_key_ = key.ToString();
     if (value.size() == sizeof(uint64_t)) {
       return num_ == DecodeFixed64(value.data());
@@ -838,12 +838,12 @@ void DeleteDir(Env* env, const std::string& dirname);
 Status CreateEnvFromSystem(const ConfigOptions& options, Env** result,
                            std::shared_ptr<Env>* guard);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Registers the testutil classes with the ObjectLibrary
 int RegisterTestObjects(ObjectLibrary& library, const std::string& /*arg*/);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 // Register the testutil classes with the default ObjectRegistry/Library
 void RegisterTestLibrary(const std::string& arg = "");
 }  // namespace test
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

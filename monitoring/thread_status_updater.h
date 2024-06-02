@@ -36,12 +36,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "rocksdb/status.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/status.h"
+#include "mizar/thread_status.h"
 #include "port/port.h"
 #include "util/thread_operation.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ColumnFamilyHandle;
 
@@ -230,4 +230,4 @@ class ThreadStatusUpdater {
 #endif  // ROCKSDB_USING_THREAD_STATUS
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

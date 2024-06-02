@@ -13,18 +13,18 @@
 #include "db/db_test_util.h"
 #include "db/memtable.h"
 #include "db/write_batch_internal.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/memtablerep.h"
+#include "mizar/utilities/write_batch_with_index.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/scoped_arena_iterator.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static std::string PrintContents(WriteBatch* b,
                                  bool merge_operator_supported = true) {
@@ -675,7 +675,7 @@ TEST_F(WriteBatchTest, ColumnFamiliesBatchTest) {
       handler.seen);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(WriteBatchTest, ColumnFamiliesBatchWithIndexTest) {
   WriteBatchWithIndex batch;
   ColumnFamilyHandleImplDummy zero(0), two(2), three(3), eight(8);
@@ -777,7 +777,7 @@ TEST_F(WriteBatchTest, ColumnFamiliesBatchWithIndexTest) {
       "Merge(omom, nom)",
       handler.seen);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(WriteBatchTest, SavePointTest) {
   Status s;
@@ -1076,7 +1076,7 @@ TEST_F(WriteBatchTest, CommitWithTimestamp) {
             handler.seen);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

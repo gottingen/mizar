@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include <stdio.h>
 #ifdef OS_WIN
 #include <string.h>
@@ -15,7 +15,7 @@
 #include <cstring>
 #include "port/port.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const char* Status::CopyState(const char* state) {
 #ifdef OS_WIN
@@ -76,9 +76,9 @@ Status::Status(Code _code, SubCode _subcode, const Slice& msg,
 }
 
 std::string Status::ToString() const {
-#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+#ifdef MIZAR_ASSERT_STATUS_CHECKED
   checked_ = true;
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+#endif  // MIZAR_ASSERT_STATUS_CHECKED
   const char* type = nullptr;
   switch (code_) {
     case kOk:
@@ -157,4 +157,4 @@ std::string Status::ToString() const {
   return result;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

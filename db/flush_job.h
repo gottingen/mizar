@@ -33,17 +33,17 @@
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/listener.h"
+#include "mizar/memtablerep.h"
+#include "mizar/transaction_log.h"
 #include "table/scoped_arena_iterator.h"
 #include "util/autovector.h"
 #include "util/stop_watch.h"
 #include "util/thread_local.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBImpl;
 class MemTable;
@@ -87,11 +87,11 @@ class FlushJob {
   void Cancel();
   const autovector<MemTable*>& GetMemTables() const { return mems_; }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::list<std::unique_ptr<FlushJobInfo>>* GetCommittedFlushJobsInfo() {
     return &committed_flush_jobs_info_;
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   // Return the IO status
   IOStatus io_status() const { return io_status_; }
@@ -124,9 +124,9 @@ class FlushJob {
   // process has not matured yet.
   Status MemPurge();
   bool MemPurgeDecider();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::unique_ptr<FlushJobInfo> GetFlushJobInfo() const;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   const std::string& dbname_;
   const std::string db_id_;
@@ -193,4 +193,4 @@ class FlushJob {
   BlobFileCompletionCallback* blob_callback_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

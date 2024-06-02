@@ -5,15 +5,15 @@
 
 #include "trace_replay/block_cache_tracer.h"
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 const uint64_t kBlockSize = 1024;
@@ -30,7 +30,7 @@ class BlockCacheTracerTest : public testing::Test {
  public:
   BlockCacheTracerTest() {
     test_path_ = test::PerThreadDBPath("block_cache_tracer_test");
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
     clock_ = env_->GetSystemClock().get();
     EXPECT_OK(env_->CreateDir(test_path_));
     trace_file_path_ = test_path_ + "/block_cache_trace";
@@ -376,7 +376,7 @@ TEST_F(BlockCacheTracerTest, HumanReadableTrace) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

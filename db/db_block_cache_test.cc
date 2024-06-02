@@ -15,15 +15,15 @@
 #include "db/column_family.h"
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/persistent_cache.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
+#include "mizar/persistent_cache.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
 #include "util/compression.h"
 #include "util/defer.h"
 #include "util/random.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBBlockCacheTest : public DBTestBase {
  private:
@@ -58,7 +58,7 @@ class DBBlockCacheTest : public DBTestBase {
     options.create_if_missing = true;
     options.avoid_flush_during_recovery = false;
     // options.compression = kNoCompression;
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     options.table_factory.reset(NewBlockBasedTableFactory(table_options));
     return options;
   }
@@ -157,7 +157,7 @@ class DBBlockCacheTest : public DBTestBase {
     compressed_failure_count_ = new_failure_count;
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const std::array<size_t, kNumCacheEntryRoles> GetCacheEntryRoleCountsBg() {
     // Verify in cache entry role stats
     ColumnFamilyHandleImpl* cfh =
@@ -168,7 +168,7 @@ class DBBlockCacheTest : public DBTestBase {
                                                     /*foreground=*/false);
     return stats.entry_counts;
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 TEST_F(DBBlockCacheTest, IteratorBlockCacheUsage) {
@@ -264,7 +264,7 @@ TEST_F(DBBlockCacheTest, TestWithoutCompressedBlockCache) {
 TEST_F(DBBlockCacheTest, TestWithCompressedBlockCache) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
   BlockBasedTableOptions table_options;
   table_options.no_block_cache = true;
@@ -476,14 +476,14 @@ TEST_F(DBBlockCacheTest, TestWithSameCompressed) {
 }
 #endif  // SNAPPY
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 // Make sure that when options.block_cache is set, after a new table is
 // created its index/filter blocks are added to block cache.
 TEST_F(DBBlockCacheTest, IndexAndFilterBlocksOfNewTableAddedToCache) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.cache_index_and_filter_blocks = true;
   table_options.filter_policy.reset(NewBloomFilterPolicy(20));
@@ -569,7 +569,7 @@ TEST_F(DBBlockCacheTest, FillCacheAndIterateDB) {
 TEST_F(DBBlockCacheTest, IndexAndFilterBlocksStats) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.cache_index_and_filter_blocks = true;
   LRUCacheOptions co;
@@ -624,7 +624,7 @@ TEST_F(DBBlockCacheTest, IndexAndFilterBlocksStats) {
 TEST_F(DBBlockCacheTest, WarmCacheWithDataBlocksDuringFlush) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
   BlockBasedTableOptions table_options;
   table_options.block_cache = NewLRUCache(1 << 25, 0, false);
@@ -665,7 +665,7 @@ INSTANTIATE_TEST_CASE_P(DBBlockCacheTest1, DBBlockCacheTest1,
 TEST_P(DBBlockCacheTest1, WarmCacheWithBlocksDuringFlush) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
   BlockBasedTableOptions table_options;
   table_options.block_cache = NewLRUCache(1 << 25, 0, false);
@@ -749,7 +749,7 @@ TEST_P(DBBlockCacheTest1, WarmCacheWithBlocksDuringFlush) {
 TEST_F(DBBlockCacheTest, DynamicallyWarmCacheDuringFlush) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
   BlockBasedTableOptions table_options;
   table_options.block_cache = NewLRUCache(1 << 25, 0, false);
@@ -835,7 +835,7 @@ TEST_F(DBBlockCacheTest, IndexAndFilterBlocksCachePriority) {
   for (auto priority : {Cache::Priority::LOW, Cache::Priority::HIGH}) {
     Options options = CurrentOptions();
     options.create_if_missing = true;
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     BlockBasedTableOptions table_options;
     table_options.cache_index_and_filter_blocks = true;
     table_options.block_cache.reset(new MockCache());
@@ -933,7 +933,7 @@ TEST_F(DBBlockCacheTest, AddRedundantStats) {
     ++iterations_tested;
     Options options = CurrentOptions();
     options.create_if_missing = true;
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
     std::shared_ptr<LookupLiarCache> cache =
         std::make_shared<LookupLiarCache>(base_cache);
@@ -1025,7 +1025,7 @@ TEST_F(DBBlockCacheTest, AddRedundantStats) {
 TEST_F(DBBlockCacheTest, ParanoidFileChecks) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   options.level0_file_num_compaction_trigger = 2;
   options.paranoid_file_checks = true;
   BlockBasedTableOptions table_options;
@@ -1081,7 +1081,7 @@ TEST_F(DBBlockCacheTest, CompressedCache) {
   for (int iter = 0; iter < 4; iter++) {
     Options options = CurrentOptions();
     options.write_buffer_size = 64 * 1024;  // small write buffer
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
 
     BlockBasedTableOptions table_options;
     switch (iter) {
@@ -1211,7 +1211,7 @@ TEST_F(DBBlockCacheTest, CacheCompressionDict) {
     options.bottommost_compression_opts.enabled = true;
     options.create_if_missing = true;
     options.num_levels = 2;
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     options.target_file_size_base = kNumEntriesPerFile * kNumBytesPerEntry;
     BlockBasedTableOptions table_options;
     table_options.cache_index_and_filter_blocks = true;
@@ -1289,7 +1289,7 @@ TEST_F(DBBlockCacheTest, CacheEntryRoleStats) {
       Options options = CurrentOptions();
       SetTimeElapseOnlySleepOnReopen(&options);
       options.create_if_missing = true;
-      options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+      options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
       options.max_open_files = 13;
       options.table_cache_numshardbits = 0;
       // If this wakes up, it could interfere with test
@@ -1502,7 +1502,7 @@ TEST_F(DBBlockCacheTest, CacheEntryRoleStats) {
   }
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class DBBlockCacheKeyTest
     : public DBTestBase,
@@ -1545,7 +1545,7 @@ TEST_P(DBBlockCacheKeyTest, StableCacheKeys) {
 
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   options.env = test_env.get();
 
   BlockBasedTableOptions table_options;
@@ -1588,13 +1588,13 @@ TEST_P(DBBlockCacheKeyTest, StableCacheKeys) {
     // Simulate something like old behavior without file numbers in properties.
     // This is a "control" side of the test that also ensures safely degraded
     // behavior on old files.
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "BlockBasedTableBuilder::BlockBasedTableBuilder:PreSetupBaseCacheKey",
         [&](void* arg) {
           TableProperties* props = reinterpret_cast<TableProperties*>(arg);
           props->orig_file_number = 0;
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   }
 
   std::function<void()> perform_gets = [&key_count, &expected_stat, this]() {
@@ -1620,7 +1620,7 @@ TEST_P(DBBlockCacheKeyTest, StableCacheKeys) {
     ++key_count;
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Save an export of those ordinary SST files for later
   std::string export_files_dir = dbname_ + "/exported";
   ExportImportFilesMetaData* metadata_ptr_ = nullptr;
@@ -1668,7 +1668,7 @@ TEST_P(DBBlockCacheKeyTest, StableCacheKeys) {
   // Make sure we can cache hit even on a full copy of the DB. Using
   // StableCacheKeyTestFS, Checkpoint will resort to full copy not hard link.
   // (Checkpoint  not available in LITE mode to test this.)
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   auto db_copy_name = dbname_ + "-copy";
   ASSERT_OK(Checkpoint::Create(db_, &checkpoint));
   ASSERT_OK(checkpoint->CreateCheckpoint(db_copy_name));
@@ -1707,11 +1707,11 @@ TEST_P(DBBlockCacheKeyTest, StableCacheKeys) {
 
   perform_gets();
   verify_stats();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   Close();
   Destroy(options);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 INSTANTIATE_TEST_CASE_P(DBBlockCacheKeyTest, DBBlockCacheKeyTest,
@@ -1755,7 +1755,7 @@ TEST_P(DBBlockCachePinningTest, TwoLevelDB) {
   // (de)compression happening, which seems fairly likely to change over time.
   options.compression = kNoCompression;
   options.compression_opts.max_dict_bytes = 4 << 10;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.block_cache = NewLRUCache(1 << 20 /* capacity */);
   table_options.block_size = kBlockSize;
@@ -1878,10 +1878,10 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(PinningTier::kNone, PinningTier::kFlushedAndSimilar,
                           PinningTier::kAll)));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

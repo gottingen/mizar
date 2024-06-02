@@ -17,11 +17,11 @@
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class FileSystem;
 class SystemClock;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Rolls the log file by size and/or time
 class AutoRollLogger : public Logger {
  public:
@@ -162,11 +162,11 @@ class AutoRollLogger : public Logger {
   IODebugContext io_context_;
   mutable port::Mutex mutex_;
 };
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Facade to craete logger automatically
 Status CreateLoggerFromOptions(const std::string& dbname,
                                const DBOptions& options,
                                std::shared_ptr<Logger>* logger);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

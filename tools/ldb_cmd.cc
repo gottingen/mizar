@@ -4,8 +4,8 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/ldb_cmd.h"
+#ifndef MIZAR_LITE
+#include "mizar/utilities/ldb_cmd.h"
 
 #include <cinttypes>
 #include <cstdlib>
@@ -23,16 +23,16 @@
 #include "db/log_reader.h"
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/utilities/backupable_db.h"
-#include "rocksdb/utilities/checkpoint.h"
-#include "rocksdb/utilities/debug.h"
-#include "rocksdb/utilities/options_util.h"
-#include "rocksdb/write_batch.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/file_checksum.h"
+#include "mizar/filter_policy.h"
+#include "mizar/table_properties.h"
+#include "mizar/utilities/backupable_db.h"
+#include "mizar/utilities/checkpoint.h"
+#include "mizar/utilities/debug.h"
+#include "mizar/utilities/options_util.h"
+#include "mizar/write_batch.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/scoped_arena_iterator.h"
 #include "table/sst_file_dumper.h"
 #include "tools/ldb_cmd_impl.h"
@@ -44,7 +44,7 @@
 #include "utilities/merge_operators.h"
 #include "utilities/ttl/db_ttl_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class FileChecksumGenCrc32c;
 class FileChecksumGenCrc32cFactory;
@@ -1976,7 +1976,7 @@ std::vector<std::string> ReduceDBLevelsCommand::PrepareArgs(
   ret.push_back("reduce_levels");
   ret.push_back("--" + ARG_DB + "=" + db_path);
   ret.push_back("--" + ARG_NEW_LEVELS + "=" +
-                ROCKSDB_NAMESPACE::ToString(new_levels));
+                MIZAR_NAMESPACE::ToString(new_levels));
   if(print_old_level) {
     ret.push_back("--" + ARG_PRINT_OLD_LEVELS);
   }
@@ -3309,7 +3309,7 @@ void DumpSstFile(Options options, std::string filename, bool output_hex,
   }
   // no verification
   // TODO: add support for decoding blob indexes in ldb as well
-  ROCKSDB_NAMESPACE::SstFileDumper dumper(
+  MIZAR_NAMESPACE::SstFileDumper dumper(
       options, filename, 2 * 1024 * 1024 /* readahead_size */,
       /* verify_checksum */ false, output_hex,
       /* decode_blob_index */ false);
@@ -3324,9 +3324,9 @@ void DumpSstFile(Options options, std::string filename, bool output_hex,
   }
 
   if (show_properties) {
-    const ROCKSDB_NAMESPACE::TableProperties* table_properties;
+    const MIZAR_NAMESPACE::TableProperties* table_properties;
 
-    std::shared_ptr<const ROCKSDB_NAMESPACE::TableProperties>
+    std::shared_ptr<const MIZAR_NAMESPACE::TableProperties>
         table_properties_from_reader;
     st = dumper.ReadTableProperties(&table_properties_from_reader);
     if (!st.ok()) {
@@ -3405,7 +3405,7 @@ void DBFileDumperCommand::DoCommand() {
 
   std::cout << "Write Ahead Log Files" << std::endl;
   std::cout << "==============================" << std::endl;
-  ROCKSDB_NAMESPACE::VectorLogPtr wal_files;
+  MIZAR_NAMESPACE::VectorLogPtr wal_files;
   s = db_->GetSortedWalFiles(wal_files);
   if (!s.ok()) {
     std::cerr << "Error when getting WAL files" << std::endl;
@@ -3877,5 +3877,5 @@ void UnsafeRemoveSstFileCommand::DoCommand() {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

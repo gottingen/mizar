@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 #include <errno.h>
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 #include <liburing.h>
 #include <sys/uio.h>
 #endif
@@ -18,9 +18,9 @@
 #include <map>
 #include <string>
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/io_status.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/io_status.h"
 #include "util/mutexlock.h"
 #include "util/thread_local.h"
 
@@ -34,7 +34,7 @@
 #define POSIX_FADV_DONTNEED 4   /* [MC1] don't need these pages */
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 std::string IOErrorMsg(const std::string& context,
                        const std::string& file_name);
 // file_name can be left empty if it is not unkown.
@@ -149,7 +149,7 @@ class PosixSequentialFile : public FSSequentialFile {
   }
 };
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 // io_uring instance queue depth
 const unsigned int kIoUringDepth = 256;
 
@@ -167,7 +167,7 @@ inline struct io_uring* CreateIOUring() {
   }
   return new_io_uring;
 }
-#endif  // defined(ROCKSDB_IOURING_PRESENT)
+#endif  // defined(MIZAR_IOURING_PRESENT)
 
 class PosixRandomAccessFile : public FSRandomAccessFile {
  protected:
@@ -175,7 +175,7 @@ class PosixRandomAccessFile : public FSRandomAccessFile {
   int fd_;
   bool use_direct_io_;
   size_t logical_sector_size_;
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
   ThreadLocalPtr* thread_local_io_urings_;
 #endif
 
@@ -183,7 +183,7 @@ class PosixRandomAccessFile : public FSRandomAccessFile {
   PosixRandomAccessFile(const std::string& fname, int fd,
                         size_t logical_block_size,
                         const EnvOptions& options
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
                         ,
                         ThreadLocalPtr* thread_local_io_urings
 #endif
@@ -219,15 +219,15 @@ class PosixWritableFile : public FSWritableFile {
   int fd_;
   uint64_t filesize_;
   size_t logical_sector_size_;
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   bool allow_fallocate_;
   bool fallocate_with_keep_size_;
 #endif
-#ifdef ROCKSDB_RANGESYNC_PRESENT
+#ifdef MIZAR_RANGESYNC_PRESENT
   // Even if the syscall is present, the filesystem may still not properly
   // support it, so we need to do a dynamic check too.
   bool sync_file_range_supported_;
-#endif  // ROCKSDB_RANGESYNC_PRESENT
+#endif  // MIZAR_RANGESYNC_PRESENT
 
  public:
   explicit PosixWritableFile(const std::string& fname, int fd,
@@ -268,7 +268,7 @@ class PosixWritableFile : public FSWritableFile {
   virtual size_t GetRequiredBufferAlignment() const override {
     return logical_sector_size_;
   }
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   virtual IOStatus Allocate(uint64_t offset, uint64_t len,
                             const IOOptions& opts,
                             IODebugContext* dbg) override;
@@ -310,7 +310,7 @@ class PosixMmapFile : public FSWritableFile {
   char* dst_;             // Where to write next  (in range [base_,limit_])
   char* last_sync_;       // Where have we synced up to
   uint64_t file_offset_;  // Offset of base_ in file
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   bool allow_fallocate_;  // If false, fallocate calls are bypassed
   bool fallocate_with_keep_size_;
 #endif
@@ -353,7 +353,7 @@ class PosixMmapFile : public FSWritableFile {
   virtual uint64_t GetFileSize(const IOOptions& opts,
                                IODebugContext* dbg) override;
   virtual IOStatus InvalidateCache(size_t offset, size_t length) override;
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
   virtual IOStatus Allocate(uint64_t offset, uint64_t len,
                             const IOOptions& opts,
                             IODebugContext* dbg) override;
@@ -404,4 +404,4 @@ class PosixDirectory : public FSDirectory {
   bool is_btrfs_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

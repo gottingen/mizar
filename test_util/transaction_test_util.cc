@@ -2,7 +2,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "test_util/transaction_test_util.h"
 
@@ -13,10 +13,10 @@
 #include <string>
 #include <thread>
 
-#include "rocksdb/db.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 
 #include "db/dbformat.h"
 #include "db/snapshot_impl.h"
@@ -24,7 +24,7 @@
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 RandomTransactionInserter::RandomTransactionInserter(
     Random64* rand, const WriteOptions& write_options,
@@ -394,6 +394,6 @@ Status RandomTransactionInserter::Verify(DB* db, uint16_t num_sets,
   return Status::OK();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

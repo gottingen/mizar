@@ -72,18 +72,18 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/stats_history.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/version.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/statistics.h"
+#include "mizar/stats_history.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/version.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/get_context.h"
@@ -106,7 +106,7 @@
 #include "util/string_util.h"
 #include "utilities/trace/replayer_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::string kDefaultColumnFamilyName("default");
 const std::string kPersistentStatsColumnFamilyName(
@@ -204,17 +204,17 @@ DBImpl::DBImpl(const DBOptions& options, const std::string& dbname,
       has_unpersisted_data_(false),
       unable_to_release_oldest_log_(false),
       num_running_ingest_file_(0),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       wal_manager_(immutable_db_options_, file_options_, io_tracer_,
                    seq_per_batch),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       bg_work_paused_(0),
       bg_compaction_paused_(0),
       refitting_level_(false),
       opened_successfully_(false),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       periodic_work_scheduler_(nullptr),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       two_write_queues_(options.two_write_queues),
       manual_wal_flush_(options.manual_wal_flush),
       // last_sequencee_ is always maintained by the main queue that also writes
@@ -472,11 +472,11 @@ void DBImpl::CancelAllBackgroundWork(bool wait) {
   ROCKS_LOG_INFO(immutable_db_options_.info_log,
                  "Shutdown: canceling all background work");
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (periodic_work_scheduler_ != nullptr) {
     periodic_work_scheduler_->Unregister(this);
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   InstrumentedMutexLock l(&mutex_);
   if (!shutting_down_.load(std::memory_order_acquire) &&
@@ -685,7 +685,7 @@ Status DBImpl::CloseHelper() {
   ROCKS_LOG_INFO(immutable_db_options_.info_log, "Shutdown complete");
   LogFlush(immutable_db_options_.info_log);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // If the sst_file_manager was allocated by us during DB::Open(), ccall
   // Close() on it before closing the info_log. Otherwise, background thread
   // in SstFileManagerImpl might try to log something
@@ -694,7 +694,7 @@ Status DBImpl::CloseHelper() {
         immutable_db_options_.sst_file_manager.get());
     sfm->Close();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   if (immutable_db_options_.info_log && own_info_log_) {
     Status s = immutable_db_options_.info_log->Close();
@@ -756,7 +756,7 @@ void DBImpl::PrintStatistics() {
 }
 
 void DBImpl::StartPeriodicWorkScheduler() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #ifndef NDEBUG
   // It only used by test to disable scheduler
@@ -779,7 +779,7 @@ void DBImpl::StartPeriodicWorkScheduler() {
   periodic_work_scheduler_->Register(
       this, mutable_db_options_.stats_dump_period_sec,
       mutable_db_options_.stats_persist_period_sec);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 // esitmate the total size of stats_history_
@@ -801,7 +801,7 @@ size_t DBImpl::EstimateInMemoryStatsHistorySize() const {
 
 void DBImpl::PersistStats() {
   TEST_SYNC_POINT("DBImpl::PersistStats:Entry");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (shutdown_initiated_) {
     return;
   }
@@ -905,7 +905,7 @@ void DBImpl::PersistStats() {
                    stats_history_size, stats_history_.size());
   }
   TEST_SYNC_POINT("DBImpl::PersistStats:End");
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 bool DBImpl::FindStatsByTime(uint64_t start_time, uint64_t end_time,
@@ -947,7 +947,7 @@ Status DBImpl::GetStatsHistory(
 
 void DBImpl::DumpStats() {
   TEST_SYNC_POINT("DBImpl::DumpStats:1");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string stats;
   if (shutdown_initiated_) {
     return;
@@ -1013,7 +1013,7 @@ void DBImpl::DumpStats() {
       ROCKS_LOG_INFO(immutable_db_options_.info_log, "%s", stats.c_str());
     }
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   PrintStatistics();
 }
@@ -1063,7 +1063,7 @@ FSDirectory* DBImpl::GetDataDir(ColumnFamilyData* cfd, size_t path_id) const {
 Status DBImpl::SetOptions(
     ColumnFamilyHandle* column_family,
     const std::unordered_map<std::string, std::string>& options_map) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)column_family;
   (void)options_map;
   return Status::NotSupported("Not supported in ROCKSDB LITE");
@@ -1124,12 +1124,12 @@ Status DBImpl::SetOptions(
   }
   LogFlush(immutable_db_options_.info_log);
   return s;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 Status DBImpl::SetDBOptions(
     const std::unordered_map<std::string, std::string>& options_map) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)options_map;
   return Status::NotSupported("Not supported in ROCKSDB LITE");
 #else
@@ -1278,7 +1278,7 @@ Status DBImpl::SetDBOptions(
   }
   LogFlush(immutable_db_options_.info_log);
   return s;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 // return the same level if it cannot be moved
@@ -2938,7 +2938,7 @@ Iterator* DBImpl::NewIterator(const ReadOptions& read_options,
   assert(cfd != nullptr);
   ReadCallback* read_callback = nullptr;  // No read callback provided.
   if (read_options.tailing) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
     // not supported in lite version
     result = nullptr;
 
@@ -3063,7 +3063,7 @@ Status DBImpl::NewIterators(
   iterators->clear();
   iterators->reserve(column_families.size());
   if (read_options.tailing) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
     return Status::InvalidArgument(
         "Tailing iterator not supported in RocksDB lite");
 #else
@@ -3100,11 +3100,11 @@ Status DBImpl::NewIterators(
 
 const Snapshot* DBImpl::GetSnapshot() { return GetSnapshotImpl(false); }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 const Snapshot* DBImpl::GetSnapshotForWriteConflictBoundary() {
   return GetSnapshotImpl(true);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 SnapshotImpl* DBImpl::GetSnapshotImpl(bool is_write_conflict_boundary,
                                       bool lock) {
@@ -3196,7 +3196,7 @@ void DBImpl::ReleaseSnapshot(const Snapshot* s) {
   delete casted_s;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status DBImpl::GetPropertiesOfAllTables(ColumnFamilyHandle* column_family,
                                         TablePropertiesCollection* props) {
   auto cfh = static_cast_with_check<ColumnFamilyHandleImpl>(column_family);
@@ -3240,7 +3240,7 @@ Status DBImpl::GetPropertiesOfTablesInRange(ColumnFamilyHandle* column_family,
   return s;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 const std::string& DBImpl::GetName() const { return dbname_; }
 
@@ -3259,7 +3259,7 @@ SystemClock* DBImpl::GetSystemClock() const {
   return immutable_db_options_.clock;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 Status DBImpl::StartIOTrace(const TraceOptions& trace_options,
                             std::unique_ptr<TraceWriter>&& trace_writer) {
@@ -3273,7 +3273,7 @@ Status DBImpl::EndIOTrace() {
   return Status::OK();
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Options DBImpl::GetOptions(ColumnFamilyHandle* column_family) const {
   InstrumentedMutexLock l(&mutex_);
@@ -3402,7 +3402,7 @@ bool DBImpl::GetPropertyHandleOptionsStatistics(std::string* value) {
   return true;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status DBImpl::ResetStats() {
   InstrumentedMutexLock l(&mutex_);
   for (auto* cfd : *versions_->GetColumnFamilySet()) {
@@ -3412,7 +3412,7 @@ Status DBImpl::ResetStats() {
   }
   return Status::OK();
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 bool DBImpl::GetAggregatedIntProperty(const Slice& property,
                                       uint64_t* aggregated_value) {
@@ -3624,7 +3624,7 @@ void DBImpl::ReleaseFileNumberFromPendingOutputs(
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status DBImpl::GetUpdatesSince(
     SequenceNumber seq, std::unique_ptr<TransactionLogIterator>* iter,
     const TransactionLogIterator::ReadOptions& read_options) {
@@ -3868,7 +3868,7 @@ void DBImpl::GetAllColumnFamilyMetaData(
   }
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status DBImpl::CheckConsistency() {
   mutex_.AssertHeld();
@@ -4199,7 +4199,7 @@ Status DestroyDB(const std::string& dbname, const Options& options,
 
 Status DBImpl::WriteOptionsFile(bool need_mutex_lock,
                                 bool need_enter_write_thread) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   WriteThread::Writer w;
   if (need_mutex_lock) {
     mutex_.Lock();
@@ -4259,11 +4259,11 @@ Status DBImpl::WriteOptionsFile(bool need_mutex_lock,
 #else
   (void)need_mutex_lock;
   (void)need_enter_write_thread;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   return Status::OK();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 void DeleteOptionsFilesHelper(const std::map<uint64_t, std::string>& filenames,
                               const size_t num_files_to_keep,
@@ -4281,10 +4281,10 @@ void DeleteOptionsFilesHelper(const std::map<uint64_t, std::string>& filenames,
   }
 }
 }  // namespace
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status DBImpl::DeleteObsoleteOptionsFiles() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::vector<std::string> filenames;
   // use ordered map to store keep the filenames sorted from the newest
   // to the oldest.
@@ -4311,11 +4311,11 @@ Status DBImpl::DeleteObsoleteOptionsFiles() {
   return Status::OK();
 #else
   return Status::OK();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 Status DBImpl::RenameTempFileToOptionsFile(const std::string& file_name) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status s;
 
   uint64_t options_file_number = versions_->NewFileNumber();
@@ -4349,7 +4349,7 @@ Status DBImpl::RenameTempFileToOptionsFile(const std::string& file_name) {
 #else
   (void)file_name;
   return Status::OK();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
@@ -4397,7 +4397,7 @@ void DumpRocksDBBuildVersion(Logger* log) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 SequenceNumber DBImpl::GetEarliestMemTableSequenceNumber(SuperVersion* sv,
                                                          bool include_history) {
   // Find the earliest sequence number that we know we can rely on reading
@@ -5062,7 +5062,7 @@ Status DBImpl::VerifyChecksumInternal(const ReadOptions& read_options,
                                      fmeta->file_checksum_func_name, fname,
                                      read_options);
         } else {
-          s = ROCKSDB_NAMESPACE::VerifySstFileChecksum(opts, file_options_,
+          s = MIZAR_NAMESPACE::VerifySstFileChecksum(opts, file_options_,
                                                        read_options, fname);
         }
         RecordTick(stats_, VERIFY_CHECKSUM_READ_BYTES,
@@ -5131,7 +5131,7 @@ Status DBImpl::VerifyFullFileChecksum(const std::string& file_checksum_expected,
   }
   std::string file_checksum;
   std::string func_name;
-  s = ROCKSDB_NAMESPACE::GenerateOneFileChecksum(
+  s = MIZAR_NAMESPACE::GenerateOneFileChecksum(
       fs_.get(), fname, immutable_db_options_.file_checksum_gen_factory.get(),
       func_name_expected, &file_checksum, &func_name,
       read_options.readahead_size, immutable_db_options_.allow_mmap_reads,
@@ -5300,6 +5300,6 @@ Status DBImpl::GetCreationTimeOfOldestFile(uint64_t* creation_time) {
     return Status::NotSupported("This API only works if max_open_files = -1");
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

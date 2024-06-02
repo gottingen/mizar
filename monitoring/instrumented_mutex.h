@@ -7,12 +7,12 @@
 
 #include "monitoring/statistics.h"
 #include "port/port.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
+#include "mizar/thread_status.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class InstrumentedCondVar;
 
 // A wrapper class for port::Mutex that provides additional layer
@@ -113,4 +113,4 @@ class InstrumentedCondVar {
   int stats_code_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

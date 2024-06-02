@@ -32,7 +32,7 @@
 #include "table/table_reader.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class VersionBuilder::Rep {
   class NewestFirstBySeqNo {
@@ -1306,4 +1306,4 @@ BaseReferencedVersionBuilder::~BaseReferencedVersionBuilder() {
   version_->Unref();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

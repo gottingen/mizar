@@ -4,7 +4,7 @@
 // (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <memory>
 #include <string>
@@ -12,7 +12,7 @@
 
 #include "utilities/transactions/lock/lock_tracker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct TrackedKeyInfo {
   // Earliest sequence number that is relevant to this transaction for this key
@@ -95,5 +95,5 @@ class PointLockTrackerFactory : public LockTrackerFactory {
   PointLockTrackerFactory() {}
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

@@ -25,7 +25,7 @@
 #include "port/port_dirent.h"
 #include "port/sys_time.h"
 
-#ifdef ROCKSDB_WINDOWS_UTF8_FILENAMES
+#ifdef MIZAR_WINDOWS_UTF8_FILENAMES
 // utf8 <-> utf16
 #include <codecvt>
 #include <locale>
@@ -34,13 +34,13 @@
 
 #include "logging/logging.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const bool kDefaultToAdaptiveMutex = false;
 
 namespace port {
 
-#ifdef ROCKSDB_WINDOWS_UTF8_FILENAMES
+#ifdef MIZAR_WINDOWS_UTF8_FILENAMES
 std::string utf16_to_utf8(const std::wstring& utf16) {
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
   return convert.to_bytes(utf16);
@@ -217,7 +217,7 @@ int truncate(const char* path, int64_t length) {
     errno = EFAULT;
     return -1;
   }
-  return ROCKSDB_NAMESPACE::port::Truncate(path, length);
+  return MIZAR_NAMESPACE::port::Truncate(path, length);
 }
 
 int Truncate(std::string path, int64_t len) {
@@ -298,6 +298,6 @@ bool GenerateRfcUuid(std::string* output) {
 }
 
 }  // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

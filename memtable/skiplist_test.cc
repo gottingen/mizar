@@ -10,12 +10,12 @@
 #include "memtable/skiplist.h"
 #include <set>
 #include "memory/arena.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "util/hash.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 using Key = uint64_t;
 
@@ -380,7 +380,7 @@ TEST_F(SkipTest, Concurrent3) { RunConcurrent(3); }
 TEST_F(SkipTest, Concurrent4) { RunConcurrent(4); }
 TEST_F(SkipTest, Concurrent5) { RunConcurrent(5); }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

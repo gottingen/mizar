@@ -4,14 +4,14 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #pragma once
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 
 #include <stdio.h>
 
 #include <memory>
 #include <string>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MergeOperators {
  public:
@@ -32,4 +32,4 @@ class MergeOperators {
       const std::string& name);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

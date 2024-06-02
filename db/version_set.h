@@ -48,13 +48,13 @@
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_checksum.h"
+#include "mizar/env.h"
+#include "mizar/file_checksum.h"
 #include "table/get_context.h"
 #include "table/multiget_context.h"
 #include "trace_replay/block_cache_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace log {
 class Writer;
@@ -367,7 +367,7 @@ class VersionStorageInfo {
     return total_blob_bytes;
   }
 
-  const ROCKSDB_NAMESPACE::LevelFilesBrief& LevelFilesBrief(int level) const {
+  const MIZAR_NAMESPACE::LevelFilesBrief& LevelFilesBrief(int level) const {
     assert(level < static_cast<int>(level_files_brief_.size()));
     return level_files_brief_[level];
   }
@@ -539,7 +539,7 @@ class VersionStorageInfo {
   std::vector<uint64_t> level_max_bytes_;
 
   // A short brief metadata of files per level
-  autovector<ROCKSDB_NAMESPACE::LevelFilesBrief> level_files_brief_;
+  autovector<MIZAR_NAMESPACE::LevelFilesBrief> level_files_brief_;
   FileIndexer file_indexer_;
   Arena arena_;  // Used to allocate space for file_levels_
 
@@ -1062,7 +1062,7 @@ class VersionSet {
   static Status ListColumnFamilies(std::vector<std::string>* column_families,
                                    const std::string& dbname, FileSystem* fs);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Try to reduce the number of levels. This call is valid when
   // only one level from the new max level to the old
   // max level containing files.
@@ -1084,7 +1084,7 @@ class VersionSet {
   Status DumpManifest(Options& options, std::string& manifestFileName,
                       bool verbose, bool hex = false, bool json = false);
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   const std::string& DbSessionId() const { return db_session_id_; }
 
@@ -1502,4 +1502,4 @@ class ReactiveVersionSet : public VersionSet {
   ReactiveVersionSet& operator=(const ReactiveVersionSet&);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -21,7 +21,7 @@
 #include "util/random.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 inline void IOStatsAddBytesByTemperature(Temperature file_temperature,
                                          size_t value) {
   if (file_temperature == Temperature::kUnknown) {
@@ -141,7 +141,7 @@ IOStatus RandomAccessFileReader::Read(const IOOptions& opts, uint64_t offset,
     auto prev_perf_level = GetPerfLevel();
     IOSTATS_TIMER_GUARD(read_nanos);
     if (use_direct_io()) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       size_t alignment = file_->GetRequiredBufferAlignment();
       size_t aligned_offset =
           TruncateToPageBoundary(alignment, static_cast<size_t>(offset));
@@ -206,7 +206,7 @@ IOStatus RandomAccessFileReader::Read(const IOOptions& opts, uint64_t offset,
         }
       }
       *result = Slice(scratch, res_len);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
     } else {
       size_t pos = 0;
       const char* res_scratch = nullptr;
@@ -227,7 +227,7 @@ IOStatus RandomAccessFileReader::Read(const IOOptions& opts, uint64_t offset,
         }
         Slice tmp_result;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         FileOperationInfo::StartTimePoint start_ts;
         if (ShouldNotifyListeners()) {
           start_ts = FileOperationInfo::StartNow();
@@ -244,7 +244,7 @@ IOStatus RandomAccessFileReader::Read(const IOOptions& opts, uint64_t offset,
           io_s = file_->Read(offset + pos, allowed, opts, &tmp_result,
                              scratch + pos, nullptr);
         }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         if (ShouldNotifyListeners()) {
           auto finish_ts = FileOperationInfo::FinishNow();
           NotifyOnFileReadFinish(offset + pos, tmp_result.size(), start_ts,
@@ -346,7 +346,7 @@ IOStatus RandomAccessFileReader::MultiRead(const IOOptions& opts,
 
     FSReadRequest* fs_reqs = read_reqs;
     size_t num_fs_reqs = num_reqs;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::vector<FSReadRequest> aligned_reqs;
     if (use_direct_io()) {
       // num_reqs is the max possible size,
@@ -390,21 +390,21 @@ IOStatus RandomAccessFileReader::MultiRead(const IOOptions& opts,
       fs_reqs = aligned_reqs.data();
       num_fs_reqs = aligned_reqs.size();
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     FileOperationInfo::StartTimePoint start_ts;
     if (ShouldNotifyListeners()) {
       start_ts = FileOperationInfo::StartNow();
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
     {
       IOSTATS_CPU_TIMER_GUARD(cpu_read_nanos, clock_);
       io_s = file_->MultiRead(fs_reqs, num_fs_reqs, opts, nullptr);
     }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (use_direct_io()) {
       // Populate results in the unaligned read requests.
       size_t aligned_i = 0;
@@ -430,10 +430,10 @@ IOStatus RandomAccessFileReader::MultiRead(const IOOptions& opts,
         }
       }
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
     for (size_t i = 0; i < num_reqs; ++i) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (ShouldNotifyListeners()) {
         auto finish_ts = FileOperationInfo::FinishNow();
         NotifyOnFileReadFinish(read_reqs[i].offset, read_reqs[i].result.size(),
@@ -445,7 +445,7 @@ IOStatus RandomAccessFileReader::MultiRead(const IOOptions& opts,
                         read_reqs[i].offset);
       }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       IOSTATS_ADD(bytes_read, read_reqs[i].result.size());
       IOStatsAddBytesByTemperature(file_temperature_,
                                    read_reqs[i].result.size());
@@ -471,4 +471,4 @@ IOStatus RandomAccessFileReader::PrepareIOOptions(const ReadOptions& ro,
     return PrepareIOFromReadOptions(ro, SystemClock::Default().get(), opts);
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

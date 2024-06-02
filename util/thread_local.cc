@@ -12,7 +12,7 @@
 #include "port/likely.h"
 #include <stdlib.h>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct Entry {
   Entry() : ptr(nullptr) {}
@@ -140,7 +140,7 @@ private:
   // The private mutex.  Developers should always use Mutex() instead of
   // using this variable directly.
   port::Mutex mutex_;
-#ifdef ROCKSDB_SUPPORT_THREAD_LOCAL
+#ifdef MIZAR_SUPPORT_THREAD_LOCAL
   // Thread local storage
   static __thread ThreadData* tls_;
 #endif
@@ -151,7 +151,7 @@ private:
 };
 
 
-#ifdef ROCKSDB_SUPPORT_THREAD_LOCAL
+#ifdef MIZAR_SUPPORT_THREAD_LOCAL
 __thread ThreadData* ThreadLocalPtr::StaticMeta::tls_ = nullptr;
 #endif
 
@@ -328,7 +328,7 @@ ThreadLocalPtr::StaticMeta::StaticMeta()
 #if !defined(OS_WIN)
   static struct A {
     ~A() {
-#ifndef ROCKSDB_SUPPORT_THREAD_LOCAL
+#ifndef MIZAR_SUPPORT_THREAD_LOCAL
       ThreadData* tls_ =
         static_cast<ThreadData*>(pthread_getspecific(Instance()->pthread_key_));
 #endif
@@ -366,7 +366,7 @@ void ThreadLocalPtr::StaticMeta::RemoveThreadData(
 }
 
 ThreadData* ThreadLocalPtr::StaticMeta::GetThreadLocal() {
-#ifndef ROCKSDB_SUPPORT_THREAD_LOCAL
+#ifndef MIZAR_SUPPORT_THREAD_LOCAL
   // Make this local variable name look like a member variable so that we
   // can share all the code below
   ThreadData* tls_ =
@@ -551,4 +551,4 @@ void ThreadLocalPtr::Fold(FoldFunc func, void* res) {
   Instance()->Fold(id_, func, res);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

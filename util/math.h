@@ -13,9 +13,9 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Fast implementation of floor(log2(v)). Undefined for 0 or negative
 // numbers (in case of signed type).
@@ -231,4 +231,4 @@ inline T ReverseBits(T v) {
   return r;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

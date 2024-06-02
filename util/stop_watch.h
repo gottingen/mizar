@@ -5,9 +5,9 @@
 //
 #pragma once
 #include "monitoring/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Auto-scoped.
 // Records the measure time into the corresponding histogram if statistics
 // is not nullptr. It is also saved into *elapsed if the pointer is not nullptr
@@ -115,4 +115,4 @@ class StopWatchNano {
   uint64_t start_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

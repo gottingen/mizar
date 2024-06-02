@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TestCompactionServiceBase {
  public:
@@ -104,7 +104,7 @@ class MyTestCompactionServiceLegacy : public CompactionService,
     options_override.statistics = statistics_;
 
     Status s = DB::OpenAndCompact(
-        db_path_, db_path_ + "/" + ROCKSDB_NAMESPACE::ToString(job_id),
+        db_path_, db_path_ + "/" + MIZAR_NAMESPACE::ToString(job_id),
         compaction_input, compaction_service_result, options_override);
     if (is_override_wait_result) {
       *compaction_service_result = override_wait_result;
@@ -192,7 +192,7 @@ class MyTestCompactionService : public CompactionService,
     options_override.statistics = statistics_;
 
     Status s = DB::OpenAndCompact(
-        db_path_, db_path_ + "/" + ROCKSDB_NAMESPACE::ToString(info.job_id),
+        db_path_, db_path_ + "/" + MIZAR_NAMESPACE::ToString(info.job_id),
         compaction_input, compaction_service_result, options_override);
     if (is_override_wait_result) {
       *compaction_service_result = override_wait_result;
@@ -804,10 +804,10 @@ INSTANTIATE_TEST_CASE_P(
         TestCompactionServiceType::MyTestCompactionServiceType,
         TestCompactionServiceType::MyTestCompactionServiceLegacyType));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -818,8 +818,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as CompactionService is not supported in ROCKSDB_LITE\n");
+          "SKIPPED as CompactionService is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

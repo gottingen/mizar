@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -21,12 +21,12 @@
 #include "db/version_set.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/table.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/table.h"
+#include "mizar/write_batch.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/meta_blocks.h"
 #include "table/mock_table.h"
@@ -36,7 +36,7 @@
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static constexpr int kValueSize = 1000;
 namespace {
@@ -143,7 +143,7 @@ class CorruptionTest : public testing::Test {
   void RepairDB() {
     delete db_;
     db_ = nullptr;
-    ASSERT_OK(::ROCKSDB_NAMESPACE::RepairDB(dbname_, options_));
+    ASSERT_OK(::MIZAR_NAMESPACE::RepairDB(dbname_, options_));
   }
 
   void Build(int n, int start, int flush_every) {
@@ -851,11 +851,11 @@ TEST_F(CorruptionTest, FlushKeyOrderCheck) {
           mem_iter->Prev();
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   Status s = static_cast_with_check<DBImpl>(db_)->TEST_FlushMemTable();
   ASSERT_NOK(s);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_F(CorruptionTest, DisableKeyOrderCheck) {
@@ -865,7 +865,7 @@ TEST_F(CorruptionTest, DisableKeyOrderCheck) {
   SyncPoint::GetInstance()->SetCallBack(
       "OutputValidator::Add:order_check",
       [&](void* /*arg*/) { ASSERT_TRUE(false); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(db_->Put(WriteOptions(), "foo1", "v1"));
   ASSERT_OK(db_->Put(WriteOptions(), "foo3", "v1"));
   ASSERT_OK(dbi->TEST_FlushMemTable());
@@ -873,8 +873,8 @@ TEST_F(CorruptionTest, DisableKeyOrderCheck) {
   ASSERT_OK(db_->Put(WriteOptions(), "foo4", "v1"));
   ASSERT_OK(dbi->TEST_FlushMemTable());
   ASSERT_OK(dbi->TEST_CompactRange(0, nullptr, nullptr, nullptr, true));
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_F(CorruptionTest, VerifyWholeTableChecksum) {
@@ -884,7 +884,7 @@ TEST_F(CorruptionTest, VerifyWholeTableChecksum) {
   ASSERT_OK(DestroyDB(dbname_, options));
   options.create_if_missing = true;
   options.file_checksum_gen_factory =
-      ROCKSDB_NAMESPACE::GetFileChecksumGenCrc32cFactory();
+      MIZAR_NAMESPACE::GetFileChecksumGenCrc32cFactory();
   Reopen(&options);
 
   Build(10, 5);
@@ -912,10 +912,10 @@ TEST_F(CorruptionTest, VerifyWholeTableChecksum) {
   ASSERT_EQ(1, count);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -925,8 +925,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as RepairDB() is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as RepairDB() is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

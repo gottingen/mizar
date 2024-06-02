@@ -12,13 +12,13 @@
 #include "db/merge_context.h"
 #include "db/range_del_aggregator.h"
 #include "db/snapshot_checker.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Comparator;
 class Iterator;
@@ -205,4 +205,4 @@ class MergeOutputIterator {
   std::vector<Slice>::const_reverse_iterator it_values_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

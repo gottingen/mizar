@@ -17,11 +17,11 @@
 
 #include "cache/cache_entry_roles.h"
 #include "db/version_set.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 class ColumnFamilyData;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 template <class Stats>
 class CacheEntryStatsCollector;
@@ -61,7 +61,7 @@ struct DBPropertyInfo {
 
 extern const DBPropertyInfo* GetPropertyInfo(const Slice& property);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #undef SCORE
 enum class LevelStatType {
   INVALID = 0,
@@ -807,6 +807,6 @@ class InternalStats {
     return false;
   }
 };
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

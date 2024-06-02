@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 
 #include <gtest/gtest.h>
 #include <stddef.h>
@@ -30,22 +30,22 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compression_type.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/trace_record.h"
-#include "rocksdb/unique_id.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/compression_type.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/file_checksum.h"
+#include "mizar/file_system.h"
+#include "mizar/filter_policy.h"
+#include "mizar/iterator.h"
+#include "mizar/memtablerep.h"
+#include "mizar/perf_context.h"
+#include "mizar/slice_transform.h"
+#include "mizar/statistics.h"
+#include "mizar/table_properties.h"
+#include "mizar/trace_record.h"
+#include "mizar/unique_id.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -72,7 +72,7 @@
 #include "utilities/memory_allocators.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const uint64_t kLegacyBlockBasedTableMagicNumber;
 extern const uint64_t kLegacyPlainTableMagicNumber;
@@ -353,7 +353,7 @@ class TableConstructor : public Constructor {
         largest_seqno_(largest_seqno),
         convert_to_internal_key_(convert_to_internal_key),
         level_(level) {
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
   }
   ~TableConstructor() override { Reset(); }
 
@@ -617,11 +617,11 @@ class DBConstructor: public Constructor {
 
 enum TestType {
   BLOCK_BASED_TABLE_TEST,
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   PLAIN_TABLE_SEMI_FIXED_PREFIX,
   PLAIN_TABLE_FULL_STR_PREFIX,
   PLAIN_TABLE_TOTAL_ORDER,
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   BLOCK_TEST,
   MEMTABLE_TEST,
   DB_TEST
@@ -652,11 +652,11 @@ static std::vector<TestArgs> GenerateArgList() {
   std::vector<TestArgs> test_args;
   std::vector<TestType> test_types = {
       BLOCK_BASED_TABLE_TEST,
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       PLAIN_TABLE_SEMI_FIXED_PREFIX,
       PLAIN_TABLE_FULL_STR_PREFIX,
       PLAIN_TABLE_TOTAL_ORDER,
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       BLOCK_TEST,
       MEMTABLE_TEST, DB_TEST};
   std::vector<bool> reverse_compare_types = {false, true};
@@ -694,7 +694,7 @@ static std::vector<TestArgs> GenerateArgList() {
 
   for (auto test_type : test_types) {
     for (auto reverse_compare : reverse_compare_types) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (test_type == PLAIN_TABLE_SEMI_FIXED_PREFIX ||
           test_type == PLAIN_TABLE_FULL_STR_PREFIX ||
           test_type == PLAIN_TABLE_TOTAL_ORDER) {
@@ -712,7 +712,7 @@ static std::vector<TestArgs> GenerateArgList() {
         test_args.push_back(one_arg);
         continue;
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
       for (auto restart_interval : restart_intervals) {
         for (auto compression_type : compression_types) {
@@ -802,8 +802,8 @@ class HarnessTest : public testing::Test {
         internal_comparator_.reset(
             new InternalKeyComparator(options_.comparator));
         break;
-// Plain table is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// Plain table is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
       case PLAIN_TABLE_SEMI_FIXED_PREFIX:
         support_prev_ = false;
         only_support_prefix_seek_ = true;
@@ -843,7 +843,7 @@ class HarnessTest : public testing::Test {
         internal_comparator_.reset(
             new InternalKeyComparator(options_.comparator));
         break;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       case BLOCK_TEST:
         table_options_.block_size = 256;
         options_.table_factory.reset(
@@ -1129,7 +1129,7 @@ class BlockBasedTableTest
       virtual public ::testing::WithParamInterface<uint32_t> {
  public:
   BlockBasedTableTest() : format_(GetParam()) {
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
   }
 
   BlockBasedTableOptions GetBlockBasedTableOptions() {
@@ -3768,8 +3768,8 @@ TEST_P(BlockBasedTableTest, Crc32cFileChecksum) {
   ASSERT_STREQ(checksum.c_str(), "\345\245\277\110");
 }
 
-// Plain table is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// Plain table is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
 TEST_F(PlainTableTest, BasicPlainTableProperties) {
   PlainTableOptions plain_table_options;
   plain_table_options.user_key_len = 8;
@@ -3899,7 +3899,7 @@ TEST_F(PlainTableTest, Crc32cFileChecksum) {
   EXPECT_STREQ(f.GetFileChecksum().c_str(), checksum.c_str());
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(GeneralTableTest, ApproximateOffsetOfPlain) {
   TableConstructor c(BytewiseComparator(), true /* convert_to_internal_key_ */);
@@ -4022,7 +4022,7 @@ TEST_P(ParameterizedHarnessTest, RandomizedHarnessTest) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBHarnessTest, RandomizedLongDB) {
   Random rnd(test::RandomSeed());
   int num_entries = 100000;
@@ -4043,7 +4043,7 @@ TEST_F(DBHarnessTest, RandomizedLongDB) {
   }
   ASSERT_GT(files, 0);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 #endif  // !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
 
 class MemTableTest : public testing::Test {
@@ -4187,8 +4187,8 @@ TEST(TableTest, FooterTests) {
       ASSERT_EQ(decoded_footer.GetBlockTrailerSize(), 5U);
     }
   }
-// Plain table is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// Plain table is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
   {
     // legacy plain table
     FooterBuilder footer;
@@ -4225,7 +4225,7 @@ TEST(TableTest, FooterTests) {
     ASSERT_EQ(decoded_footer.format_version(), 1U);
     ASSERT_EQ(decoded_footer.GetBlockTrailerSize(), 0U);
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 class IndexBlockRestartIntervalTest
@@ -4313,26 +4313,26 @@ class PrefixTest : public testing::Test {
 
 namespace {
 // A simple PrefixExtractor that only works for test PrefixAndWholeKeyTest
-class TestPrefixExtractor : public ROCKSDB_NAMESPACE::SliceTransform {
+class TestPrefixExtractor : public MIZAR_NAMESPACE::SliceTransform {
  public:
   ~TestPrefixExtractor() override{};
   const char* Name() const override { return "TestPrefixExtractor"; }
 
-  ROCKSDB_NAMESPACE::Slice Transform(
-      const ROCKSDB_NAMESPACE::Slice& src) const override {
+  MIZAR_NAMESPACE::Slice Transform(
+      const MIZAR_NAMESPACE::Slice& src) const override {
     assert(IsValid(src));
-    return ROCKSDB_NAMESPACE::Slice(src.data(), 3);
+    return MIZAR_NAMESPACE::Slice(src.data(), 3);
   }
 
-  bool InDomain(const ROCKSDB_NAMESPACE::Slice& src) const override {
+  bool InDomain(const MIZAR_NAMESPACE::Slice& src) const override {
     return IsValid(src);
   }
 
-  bool InRange(const ROCKSDB_NAMESPACE::Slice& /*dst*/) const override {
+  bool InRange(const MIZAR_NAMESPACE::Slice& /*dst*/) const override {
     return true;
   }
 
-  bool IsValid(const ROCKSDB_NAMESPACE::Slice& src) const {
+  bool IsValid(const MIZAR_NAMESPACE::Slice& src) const {
     if (src.size() != 4) {
       return false;
     }
@@ -4354,30 +4354,30 @@ class TestPrefixExtractor : public ROCKSDB_NAMESPACE::SliceTransform {
 }  // namespace
 
 TEST_F(PrefixTest, PrefixAndWholeKeyTest) {
-  ROCKSDB_NAMESPACE::Options options;
-  options.compaction_style = ROCKSDB_NAMESPACE::kCompactionStyleUniversal;
+  MIZAR_NAMESPACE::Options options;
+  options.compaction_style = MIZAR_NAMESPACE::kCompactionStyleUniversal;
   options.num_levels = 20;
   options.create_if_missing = true;
   options.optimize_filters_for_hits = false;
   options.target_file_size_base = 268435456;
   options.prefix_extractor = std::make_shared<TestPrefixExtractor>();
-  ROCKSDB_NAMESPACE::BlockBasedTableOptions bbto;
-  bbto.filter_policy.reset(ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10));
+  MIZAR_NAMESPACE::BlockBasedTableOptions bbto;
+  bbto.filter_policy.reset(MIZAR_NAMESPACE::NewBloomFilterPolicy(10));
   bbto.block_size = 262144;
   bbto.whole_key_filtering = true;
 
   const std::string kDBPath = test::PerThreadDBPath("table_prefix_test");
   options.table_factory.reset(NewBlockBasedTableFactory(bbto));
   ASSERT_OK(DestroyDB(kDBPath, options));
-  ROCKSDB_NAMESPACE::DB* db;
-  ASSERT_OK(ROCKSDB_NAMESPACE::DB::Open(options, kDBPath, &db));
+  MIZAR_NAMESPACE::DB* db;
+  ASSERT_OK(MIZAR_NAMESPACE::DB::Open(options, kDBPath, &db));
 
   // Create a bunch of keys with 10 filters.
   for (int i = 0; i < 10; i++) {
     std::string prefix = "[" + std::to_string(i) + "]";
     for (int j = 0; j < 10; j++) {
       std::string key = prefix + std::to_string(j);
-      ASSERT_OK(db->Put(ROCKSDB_NAMESPACE::WriteOptions(), key, "1"));
+      ASSERT_OK(db->Put(MIZAR_NAMESPACE::WriteOptions(), key, "1"));
     }
   }
 
@@ -4923,7 +4923,7 @@ TEST_P(BlockBasedTableTest, SeekMetaBlocks) {
 }
 
 TEST_P(BlockBasedTableTest, BadOptions) {
-  ROCKSDB_NAMESPACE::Options options;
+  MIZAR_NAMESPACE::Options options;
   options.compression = kNoCompression;
   BlockBasedTableOptions bbto = GetBlockBasedTableOptions();
   bbto.block_size = 4000;
@@ -4933,13 +4933,13 @@ TEST_P(BlockBasedTableTest, BadOptions) {
       test::PerThreadDBPath("block_based_table_bad_options_test");
   options.table_factory.reset(NewBlockBasedTableFactory(bbto));
   ASSERT_OK(DestroyDB(kDBPath, options));
-  ROCKSDB_NAMESPACE::DB* db;
-  ASSERT_NOK(ROCKSDB_NAMESPACE::DB::Open(options, kDBPath, &db));
+  MIZAR_NAMESPACE::DB* db;
+  ASSERT_NOK(MIZAR_NAMESPACE::DB::Open(options, kDBPath, &db));
 
   bbto.block_size = 4096;
   options.compression = kSnappyCompression;
   options.table_factory.reset(NewBlockBasedTableFactory(bbto));
-  ASSERT_NOK(ROCKSDB_NAMESPACE::DB::Open(options, kDBPath, &db));
+  ASSERT_NOK(MIZAR_NAMESPACE::DB::Open(options, kDBPath, &db));
 }
 
 TEST_F(BBTTailPrefetchTest, TestTailPrefetchStats) {
@@ -5408,10 +5408,10 @@ TEST_P(
   EXPECT_EQ(cache->GetPinnedUsage(), 0 * kSizeDummyEntry);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

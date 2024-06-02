@@ -8,19 +8,19 @@
 #include <vector>
 #include <memory>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/table.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/env.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/comparator.h"
+#include "mizar/table.h"
+#include "mizar/slice_transform.h"
+#include "mizar/filter_policy.h"
 #include "port/port.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SanityTest {
  public:
@@ -195,7 +195,7 @@ class SanityTestZSTDCompression : public SanityTest {
   Options options_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class SanityTestPlainTableFactory : public SanityTest {
  public:
   explicit SanityTestPlainTableFactory(const std::string& path)
@@ -211,7 +211,7 @@ class SanityTestPlainTableFactory : public SanityTest {
  private:
   Options options_;
 };
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class SanityTestBloomFilter : public SanityTest {
  public:
@@ -241,9 +241,9 @@ bool RunSanityTests(const std::string& command, const std::string& path) {
       new SanityTestLZ4Compression(path),
       new SanityTestLZ4HCCompression(path),
       new SanityTestZSTDCompression(path),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       new SanityTestPlainTableFactory(path),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       new SanityTestBloomFilter(path)};
 
   if (command == "create") {
@@ -273,7 +273,7 @@ bool RunSanityTests(const std::string& command, const std::string& path) {
 }
 }  // namespace
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   std::string path, command;
@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
     path += "/";
   }
 
-  bool sanity_ok = ROCKSDB_NAMESPACE::RunSanityTests(command, path);
+  bool sanity_ok = MIZAR_NAMESPACE::RunSanityTests(command, path);
 
   return sanity_ok ? 0 : 1;
 }

@@ -6,7 +6,7 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-#if !defined ROCKSDB_LITE
+#if !defined MIZAR_LITE
 
 #include "utilities/persistent_cache/persistent_cache_test.h"
 
@@ -17,7 +17,7 @@
 #include "file/file_util.h"
 #include "utilities/persistent_cache/block_cache_tier.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const double kStressFactor = .125;
 
@@ -25,7 +25,7 @@ static const double kStressFactor = .125;
 static void OnOpenForRead(void* arg) {
   int* val = static_cast<int*>(arg);
   *val &= ~O_DIRECT;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewRandomAccessFile:O_DIRECT",
       std::bind(OnOpenForRead, std::placeholders::_1));
 }
@@ -33,7 +33,7 @@ static void OnOpenForRead(void* arg) {
 static void OnOpenForWrite(void* arg) {
   int* val = static_cast<int*>(arg);
   *val &= ~O_DIRECT;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewWritableFile:O_DIRECT",
       std::bind(OnOpenForWrite, std::placeholders::_1));
 }
@@ -114,10 +114,10 @@ std::unique_ptr<PersistentTieredCache> NewTieredCache(
 PersistentCacheTierTest::PersistentCacheTierTest()
     : path_(test::PerThreadDBPath("cache_test")) {
 #ifdef OS_LINUX
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewRandomAccessFile:O_DIRECT", OnOpenForRead);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewWritableFile:O_DIRECT", OnOpenForWrite);
 #endif
 }
@@ -127,14 +127,14 @@ TEST_F(PersistentCacheTierTest, DISABLED_BlockCacheInsertWithFileCreateError) {
   cache_ = NewBlockCache(Env::Default(), path_,
                          /*size=*/std::numeric_limits<uint64_t>::max(),
                          /*direct_writes=*/ false);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "BlockCacheTier::NewCacheFile:DeleteDir", OnDeleteDir);
 
   RunNegativeInsertTest(/*nthreads=*/ 1,
                         /*max_keys*/
                           static_cast<size_t>(10 * 1024 * kStressFactor));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 // Travis is unable to handle the normal version of the tests running out of
@@ -255,8 +255,8 @@ static void UniqueIdCallback(void* arg) {
     *result = 0;
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "GetUniqueIdFromFile:FS_IOC_GETVERSION", UniqueIdCallback);
 }
 #endif
@@ -279,10 +279,10 @@ TEST_F(PersistentCacheTierTest, FactoryTest) {
 PersistentCacheDBTest::PersistentCacheDBTest()
     : DBTestBase("cache_test", /*env_do_fsync=*/true) {
 #ifdef OS_LINUX
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "GetUniqueIdFromFile:FS_IOC_GETVERSION", UniqueIdCallback);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewRandomAccessFile:O_DIRECT", OnOpenForRead);
 #endif
 }
@@ -299,7 +299,7 @@ void PersistentCacheDBTest::RunTest(
     Options options;
     options.write_buffer_size =
       static_cast<size_t>(64 * 1024 * kStressFactor);  // small write buffer
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     options = CurrentOptions(options);
 
     // setup page cache
@@ -445,12 +445,12 @@ TEST_F(PersistentCacheDBTest, DISABLED_TieredCacheTest) {
   RunTest(std::bind(&MakeTieredCache, env_, dbname_));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-#else   // !defined ROCKSDB_LITE
+#else   // !defined MIZAR_LITE
 int main() { return 0; }
-#endif  // !defined ROCKSDB_LITE
+#endif  // !defined MIZAR_LITE

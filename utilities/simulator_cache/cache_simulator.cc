@@ -8,9 +8,9 @@
 #include <algorithm>
 
 #include "db/dbformat.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/trace_record.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 const std::string kGhostCachePrefix = "ghost_";
@@ -285,4 +285,4 @@ void BlockCacheTraceSimulator::Access(const BlockCacheTraceRecord& access) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "trace_replay/io_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // FileSystemTracingWrapper is a wrapper class above FileSystem that forwards
 // the call to the underlying storage system. It then invokes IOTracer to record
@@ -444,4 +444,4 @@ class FSRandomRWFilePtr {
   FSRandomRWFileTracingWrapper fs_tracer_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

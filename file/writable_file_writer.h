@@ -14,15 +14,15 @@
 #include "db/version_edit.h"
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/file_checksum.h"
+#include "mizar/file_system.h"
+#include "mizar/io_status.h"
+#include "mizar/listener.h"
+#include "mizar/rate_limiter.h"
 #include "test_util/sync_point.h"
 #include "util/aligned_buffer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Statistics;
 class SystemClock;
 
@@ -35,7 +35,7 @@ class SystemClock;
 // - Update IO stats.
 class WritableFileWriter {
  private:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void NotifyOnFileWriteFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
@@ -127,7 +127,7 @@ class WritableFileWriter {
     }
     io_error_info.io_status.PermitUncheckedError();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
   void UpdateFileChecksum(const Slice& data);
@@ -142,12 +142,12 @@ class WritableFileWriter {
   // Actually written data size can be used for truncate
   // not counting padding data
   uint64_t filesize_;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // This is necessary when we use unbuffered access
   // and writes must happen on aligned offsets
   // so we need to go back and write that page again
   uint64_t next_write_offset_;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   bool pending_sync_;
   uint64_t last_sync_size_;
   uint64_t bytes_per_sync_;
@@ -176,9 +176,9 @@ class WritableFileWriter {
         buf_(),
         max_buffer_size_(options.writable_file_max_buffer_size),
         filesize_(0),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         next_write_offset_(0),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
         pending_sync_(false),
         last_sync_size_(0),
         bytes_per_sync_(options.bytes_per_sync),
@@ -194,14 +194,14 @@ class WritableFileWriter {
                              reinterpret_cast<void*>(max_buffer_size_));
     buf_.Alignment(writable_file_->GetRequiredBufferAlignment());
     buf_.AllocateNewBuffer(std::min((size_t)65536, max_buffer_size_));
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::for_each(listeners.begin(), listeners.end(),
                   [this](const std::shared_ptr<EventListener>& e) {
                     if (e->ShouldBeNotifiedOnFileIO()) {
                       listeners_.emplace_back(e);
                     }
                   });
-#else  // !ROCKSDB_LITE
+#else  // !MIZAR_LITE
     (void)listeners;
 #endif
     if (file_checksum_gen_factory != nullptr) {
@@ -269,14 +269,14 @@ class WritableFileWriter {
  private:
   // Used when os buffering is OFF and we are writing
   // DMA such as in Direct I/O mode
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   IOStatus WriteDirect();
   IOStatus WriteDirectWithChecksum();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   // Normal write
   IOStatus WriteBuffered(const char* data, size_t size);
   IOStatus WriteBufferedWithChecksum(const char* data, size_t size);
   IOStatus RangeSync(uint64_t offset, uint64_t nbytes);
   IOStatus SyncInternal(bool use_fsync);
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

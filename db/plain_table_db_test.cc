@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <algorithm>
 #include <set>
@@ -16,13 +16,13 @@
 #include "db/version_set.h"
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
 #include "table/meta_blocks.h"
 #include "table/plain/plain_table_bloom.h"
 #include "table/plain/plain_table_factory.h"
@@ -39,7 +39,7 @@
 #include "utilities/merge_operators.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class PlainTableKeyDecoderTest : public testing::Test {};
 
 TEST_F(PlainTableKeyDecoderTest, ReadNonMmap) {
@@ -648,9 +648,9 @@ TEST_P(PlainTableDBTest, Immortal) {
     ASSERT_OK(dbfull()->TEST_FlushMemTable());
 
     int copied = 0;
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "GetContext::SaveValue::PinSelf", [&](void* /*arg*/) { copied++; });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     ASSERT_EQ("b", Get("0000000000000bar"));
     ASSERT_EQ("v1", Get("1000000000000foo"));
     ASSERT_EQ(2, copied);
@@ -667,7 +667,7 @@ TEST_P(PlainTableDBTest, Immortal) {
     } else {
       ASSERT_EQ(2, copied);
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 }
 
@@ -1349,7 +1349,7 @@ TEST_P(PlainTableDBTest, AdaptiveTable) {
 
 INSTANTIATE_TEST_CASE_P(PlainTableDBTest, PlainTableDBTest, ::testing::Bool());
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -1360,8 +1360,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as plain table is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as plain table is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

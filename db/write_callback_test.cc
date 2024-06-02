@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <atomic>
 #include <functional>
@@ -14,15 +14,15 @@
 #include "db/db_impl/db_impl.h"
 #include "db/write_callback.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/db.h"
+#include "mizar/write_batch.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 
 using std::string;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WriteCallbackTest : public testing::Test {
  public:
@@ -198,7 +198,7 @@ TEST_P(WriteCallbackPTest, WriteWithCallbackTest) {
     std::atomic<uint64_t> seq(db_impl->GetLatestSequenceNumber());
     ASSERT_EQ(db_impl->GetLatestSequenceNumber(), 0);
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WriteThread::JoinBatchGroup:Start", [&](void*) {
           uint64_t cur_threads_joining = threads_joining.fetch_add(1);
           // Wait for the last joined writer to link to the queue.
@@ -210,7 +210,7 @@ TEST_P(WriteCallbackPTest, WriteWithCallbackTest) {
         });
 
     // Verification once writers call JoinBatchGroup.
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WriteThread::JoinBatchGroup:Wait", [&](void* arg) {
           uint64_t cur_threads_linked = threads_linked.fetch_add(1);
           bool is_leader = false;
@@ -248,7 +248,7 @@ TEST_P(WriteCallbackPTest, WriteWithCallbackTest) {
           }
         });
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WriteThread::JoinBatchGroup:DoneWaiting", [&](void* arg) {
           // check my state
           auto* writer = reinterpret_cast<WriteThread::Writer*>(arg);
@@ -338,7 +338,7 @@ TEST_P(WriteCallbackPTest, WriteWithCallbackTest) {
       }
     };
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     // do all the writes
     std::vector<port::Thread> threads;
@@ -349,7 +349,7 @@ TEST_P(WriteCallbackPTest, WriteWithCallbackTest) {
       t.join();
     }
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
     // check for keys
     string value;
@@ -440,7 +440,7 @@ TEST_F(WriteCallbackTest, WriteCallBackTest) {
   DestroyDB(dbname, options);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -452,8 +452,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as WriteWithCallback is not supported in ROCKSDB_LITE\n");
+          "SKIPPED as WriteWithCallback is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

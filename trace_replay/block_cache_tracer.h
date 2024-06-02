@@ -9,12 +9,12 @@
 #include <fstream>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/options.h"
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/options.h"
+#include "mizar/trace_reader_writer.h"
 #include "table/table_reader_caller.h"
 #include "trace_replay/trace_replay.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Env;
 class SystemClock;
 
@@ -205,14 +205,14 @@ class BlockCacheHumanReadableTraceWriter {
   ~BlockCacheHumanReadableTraceWriter();
 
   Status NewWritableFile(const std::string& human_readable_trace_file_path,
-                         ROCKSDB_NAMESPACE::Env* env);
+                         MIZAR_NAMESPACE::Env* env);
 
   Status WriteHumanReadableTraceRecord(const BlockCacheTraceRecord& access,
                                        uint64_t block_id, uint64_t get_key_id);
 
  private:
   char trace_record_buffer_[1024 * 1024];
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile>
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile>
       human_readable_trace_file_writer_;
 };
 
@@ -292,4 +292,4 @@ class BlockCacheTracer {
   std::atomic<uint64_t> get_id_counter_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

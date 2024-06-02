@@ -14,7 +14,7 @@
 #else
 #include <gtest/gtest.h>
 #endif
-#include "rocksdb/utilities/regex.h"
+#include "mizar/utilities/regex.h"
 
 // A "skipped" test has a specific meaning in Facebook infrastructure: the
 // test is in good shape and should be run, but something about the
@@ -53,9 +53,9 @@
   } while (false) /* user ; */
 
 #include <string>
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace test {
 
 // Return the directory to use for temporary storage.
@@ -74,10 +74,10 @@ int RandomSeed();
 ::testing::AssertionResult AssertStatus(const char* s_expr, const Status& s);
 
 #define ASSERT_OK(s) \
-  ASSERT_PRED_FORMAT1(ROCKSDB_NAMESPACE::test::AssertStatus, s)
+  ASSERT_PRED_FORMAT1(MIZAR_NAMESPACE::test::AssertStatus, s)
 #define ASSERT_NOK(s) ASSERT_FALSE((s).ok())
 #define EXPECT_OK(s) \
-  EXPECT_PRED_FORMAT1(ROCKSDB_NAMESPACE::test::AssertStatus, s)
+  EXPECT_PRED_FORMAT1(MIZAR_NAMESPACE::test::AssertStatus, s)
 #define EXPECT_NOK(s) EXPECT_FALSE((s).ok())
 
 // Useful for testing
@@ -107,12 +107,12 @@ class TestRegex {
                                               const TestRegex& pattern);
 
 #define ASSERT_MATCHES_REGEX(str, pattern) \
-  ASSERT_PRED_FORMAT2(ROCKSDB_NAMESPACE::test::AssertMatchesRegex, str, pattern)
+  ASSERT_PRED_FORMAT2(MIZAR_NAMESPACE::test::AssertMatchesRegex, str, pattern)
 #define EXPECT_MATCHES_REGEX(str, pattern) \
-  EXPECT_PRED_FORMAT2(ROCKSDB_NAMESPACE::test::AssertMatchesRegex, str, pattern)
+  EXPECT_PRED_FORMAT2(MIZAR_NAMESPACE::test::AssertMatchesRegex, str, pattern)
 
 }  // namespace test
 
 using test::TestRegex;
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

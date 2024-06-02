@@ -15,7 +15,7 @@ category: blog
 * (Experimental) Two-level indexing that partition the index and creates a 2nd level index on the partitions. The feature can be enabled by setting kTwoLevelIndexSearch as IndexType and configuring index_per_partition.
 
 ### Bug Fixes
-* RangeSync() should work if ROCKSDB_FALLOCATE_PRESENT is not set
+* RangeSync() should work if MIZAR_FALLOCATE_PRESENT is not set
 * Fix wrong results in a data race case in Get()
 * Some fixes related to 2PC.
 * Fix several bugs in Direct I/O supports.

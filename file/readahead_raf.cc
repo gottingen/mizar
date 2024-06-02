@@ -13,11 +13,11 @@
 #include <mutex>
 
 #include "file/read_write_util.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "util/aligned_buffer.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 class ReadaheadRandomAccessFile : public FSRandomAccessFile {
  public:
@@ -166,4 +166,4 @@ std::unique_ptr<FSRandomAccessFile> NewReadaheadRandomAccessFile(
       new ReadaheadRandomAccessFile(std::move(file), readahead_size));
   return result;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

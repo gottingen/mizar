@@ -3,22 +3,22 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/sst_file_reader.h"
+#include "mizar/sst_file_reader.h"
 
 #include <cinttypes>
 
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/sst_file_writer.h"
 #include "table/sst_file_writer_collectors.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::string EncodeAsString(uint64_t v) {
   char buf[16];
@@ -413,10 +413,10 @@ TEST_F(SstFileReaderTimestampTest, TimestampSizeMismatch) {
                                 "end_key_with_a_complete_lack_of_timestamps"));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -427,8 +427,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as SstFileReader is not supported in ROCKSDB_LITE\n");
+          "SKIPPED as SstFileReader is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

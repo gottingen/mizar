@@ -18,10 +18,10 @@
 #include <string>
 
 #include "file/filename.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Random;
 class TestWritableFile;
 class FaultInjectionTestEnv;
@@ -255,4 +255,4 @@ class FaultInjectionTestEnv : public EnvWrapper {
   Status error_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

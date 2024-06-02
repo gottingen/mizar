@@ -3,16 +3,16 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <string>
 
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class OptionsFileTest : public testing::Test {
  public:
   OptionsFileTest() : dbname_(test::PerThreadDBPath("options_file_test")) {}
@@ -98,7 +98,7 @@ TEST_F(OptionsFileTest, OptionsFileName) {
   ASSERT_EQ(type, kTempFile);
   ASSERT_EQ(number, kTempOptionsFileNum);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
 #if !(defined NDEBUG) || !defined(OS_WIN)
@@ -116,4 +116,4 @@ int main(int /*argc*/, char** /*argv*/) {
   printf("Skipped as Options file is not supported in RocksDBLite.\n");
   return 0;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

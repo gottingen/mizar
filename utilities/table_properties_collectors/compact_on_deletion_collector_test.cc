@@ -9,20 +9,20 @@
 
 #include <stdio.h>
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
 #include "port/stack_trace.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "utilities/table_properties_collectors/compact_on_deletion_collector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 TEST(CompactOnDeletionCollector, DeletionRatio) {
   TablePropertiesCollectorFactory::Context context;
@@ -229,10 +229,10 @@ TEST(CompactOnDeletionCollector, SlidingWindow) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -241,4 +241,4 @@ int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "SKIPPED as RocksDBLite does not include utilities.\n");
   return 0;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

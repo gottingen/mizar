@@ -12,12 +12,12 @@
 
 #include "db/dbformat.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -49,7 +49,7 @@ void AppendItem(std::string* props, const std::string& key,
 
 template <class TKey>
 void AppendItem(std::string* props, const TKey& key, const std::string& value) {
-  std::string key_str = ROCKSDB_NAMESPACE::ToString(key);
+  std::string key_str = MIZAR_NAMESPACE::ToString(key);
   AppendItem(props, key_str, value);
 }
 }  // namespace
@@ -302,11 +302,11 @@ bool BlockBasedFilterBlockReader::MayMatch(
 
 size_t BlockBasedFilterBlockReader::ApproximateMemoryUsage() const {
   size_t usage = ApproximateFilterBlockMemoryUsage();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   usage += malloc_usable_size(const_cast<BlockBasedFilterBlockReader*>(this));
 #else
   usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
   return usage;
 }
 
@@ -336,7 +336,7 @@ std::string BlockBasedFilterBlockReader::ToString() const {
   result.reserve(1024);
 
   std::string s_bo("Block offset"), s_hd("Hex dump"), s_fb("# filter blocks");
-  AppendItem(&result, s_fb, ROCKSDB_NAMESPACE::ToString(num));
+  AppendItem(&result, s_fb, MIZAR_NAMESPACE::ToString(num));
   AppendItem(&result, s_bo, s_hd);
 
   for (size_t index = 0; index < num; index++) {
@@ -345,7 +345,7 @@ std::string BlockBasedFilterBlockReader::ToString() const {
 
     if (start != limit) {
       result.append(" filter block # " +
-                    ROCKSDB_NAMESPACE::ToString(index + 1) + "\n");
+                    MIZAR_NAMESPACE::ToString(index + 1) + "\n");
       Slice filter = Slice(data + start, limit - start);
       AppendItem(&result, start, filter.ToString(true));
     }
@@ -353,4 +353,4 @@ std::string BlockBasedFilterBlockReader::ToString() const {
   return result;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

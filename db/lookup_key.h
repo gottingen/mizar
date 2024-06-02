@@ -10,10 +10,10 @@
 #pragma once
 #include <string>
 #include <utility>
-#include "rocksdb/slice.h"
-#include "rocksdb/types.h"
+#include "mizar/slice.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A helper class useful for DBImpl::Get()
 class LookupKey {
@@ -62,4 +62,4 @@ inline LookupKey::~LookupKey() {
   if (start_ != space_) delete[] start_;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

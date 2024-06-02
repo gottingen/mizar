@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/wal_manager.h"
 
@@ -16,16 +16,16 @@
 #include "db/version_set.h"
 #include "env/mock_env.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/write_batch.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/file_system.h"
+#include "mizar/write_batch.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/mock_table.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TODO(icanadi) mock out VersionSet
 // TODO(icanadi) move other WalManager-specific tests from db_test here
@@ -325,7 +325,7 @@ TEST_F(WalManagerTest, TransactionLogIteratorNewFileWhileScanning) {
   ASSERT_TRUE(iter->status().ok());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -336,8 +336,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as WalManager is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as WalManager is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

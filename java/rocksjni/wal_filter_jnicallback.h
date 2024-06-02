@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::WalFilter.
+// MIZAR_NAMESPACE::WalFilter.
 
 #ifndef JAVA_ROCKSJNI_WAL_FILTER_JNICALLBACK_H_
 #define JAVA_ROCKSJNI_WAL_FILTER_JNICALLBACK_H_
@@ -14,10 +14,10 @@
 #include <memory>
 #include <string>
 
-#include "rocksdb/wal_filter.h"
+#include "mizar/wal_filter.h"
 #include "rocksjni/jnicallback.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WalFilterJniCallback : public JniCallback, public WalFilter {
  public:
@@ -37,6 +37,6 @@ class WalFilterJniCallback : public JniCallback, public WalFilter {
     jmethodID m_log_record_found_proxy_mid;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // JAVA_ROCKSJNI_WAL_FILTER_JNICALLBACK_H_

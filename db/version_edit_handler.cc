@@ -17,7 +17,7 @@
 #include "logging/logging.h"
 #include "monitoring/persistent_stats_history.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void VersionEditHandlerBase::Iterate(log::Reader& reader,
                                      Status* log_read_status) {
@@ -978,4 +978,4 @@ void DumpManifestHandler::CheckIterationResult(const log::Reader& reader,
           version_set_->min_log_number_to_keep_2pc());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

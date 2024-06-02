@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <limits>
 #include <string>
@@ -14,13 +14,13 @@
 #include "memtable/skiplist.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/comparator.h"
+#include "mizar/iterator.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/utilities/write_batch_with_index.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MergeContext;
 class WBWIIteratorImpl;
@@ -323,5 +323,5 @@ class WriteBatchWithIndexInternal {
   MergeContext merge_context_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

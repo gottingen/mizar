@@ -10,26 +10,26 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/table.h"
+#include "mizar/utilities/options_util.h"
 
-using ROCKSDB_NAMESPACE::BlockBasedTableOptions;
-using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
-using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
-using ROCKSDB_NAMESPACE::ColumnFamilyOptions;
-using ROCKSDB_NAMESPACE::CompactionFilter;
-using ROCKSDB_NAMESPACE::ConfigOptions;
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::DBOptions;
-using ROCKSDB_NAMESPACE::NewLRUCache;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::Status;
+using MIZAR_NAMESPACE::BlockBasedTableOptions;
+using MIZAR_NAMESPACE::ColumnFamilyDescriptor;
+using MIZAR_NAMESPACE::ColumnFamilyHandle;
+using MIZAR_NAMESPACE::ColumnFamilyOptions;
+using MIZAR_NAMESPACE::CompactionFilter;
+using MIZAR_NAMESPACE::ConfigOptions;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::DBOptions;
+using MIZAR_NAMESPACE::NewLRUCache;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::Status;
 
 #if defined(OS_WIN)
 std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_options_file_example";
@@ -57,7 +57,7 @@ int main() {
 
   std::vector<ColumnFamilyDescriptor> cf_descs;
   cf_descs.push_back(
-      {ROCKSDB_NAMESPACE::kDefaultColumnFamilyName, ColumnFamilyOptions()});
+      {MIZAR_NAMESPACE::kDefaultColumnFamilyName, ColumnFamilyOptions()});
   cf_descs.push_back({"new_cf", ColumnFamilyOptions()});
 
   // initialize BlockBasedTableOptions
@@ -75,7 +75,7 @@ int main() {
 
   // destroy and open DB
   DB* db;
-  Status s = ROCKSDB_NAMESPACE::DestroyDB(kDBPath,
+  Status s = MIZAR_NAMESPACE::DestroyDB(kDBPath,
                                           Options(db_opt, cf_descs[0].options));
   assert(s.ok());
   s = DB::Open(Options(db_opt, cf_descs[0].options), kDBPath, &db);

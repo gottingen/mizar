@@ -11,17 +11,17 @@
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -31,9 +31,9 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class EventListenerTest : public DBTestBase {
  public:
@@ -51,26 +51,26 @@ class EventListenerTest : public DBTestBase {
 };
 
 struct TestPropertiesCollector
-    : public ROCKSDB_NAMESPACE::TablePropertiesCollector {
-  ROCKSDB_NAMESPACE::Status AddUserKey(
-      const ROCKSDB_NAMESPACE::Slice& /*key*/,
-      const ROCKSDB_NAMESPACE::Slice& /*value*/,
-      ROCKSDB_NAMESPACE::EntryType /*type*/,
-      ROCKSDB_NAMESPACE::SequenceNumber /*seq*/,
+    : public MIZAR_NAMESPACE::TablePropertiesCollector {
+  MIZAR_NAMESPACE::Status AddUserKey(
+      const MIZAR_NAMESPACE::Slice& /*key*/,
+      const MIZAR_NAMESPACE::Slice& /*value*/,
+      MIZAR_NAMESPACE::EntryType /*type*/,
+      MIZAR_NAMESPACE::SequenceNumber /*seq*/,
       uint64_t /*file_size*/) override {
     return Status::OK();
   }
-  ROCKSDB_NAMESPACE::Status Finish(
-      ROCKSDB_NAMESPACE::UserCollectedProperties* properties) override {
+  MIZAR_NAMESPACE::Status Finish(
+      MIZAR_NAMESPACE::UserCollectedProperties* properties) override {
     properties->insert({"0", "1"});
     return Status::OK();
   }
 
   const char* Name() const override { return "TestTablePropertiesCollector"; }
 
-  ROCKSDB_NAMESPACE::UserCollectedProperties GetReadableProperties()
+  MIZAR_NAMESPACE::UserCollectedProperties GetReadableProperties()
       const override {
-    ROCKSDB_NAMESPACE::UserCollectedProperties ret;
+    MIZAR_NAMESPACE::UserCollectedProperties ret;
     ret["2"] = "3";
     return ret;
   }
@@ -951,10 +951,10 @@ TEST_F(EventListenerTest, BackgroundErrorListenerFailedFlushTest) {
 
   // the usual TEST_WaitForFlushMemTable() doesn't work for failed flushes, so
   // forge a custom one for the failed flush case.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::BGWorkFlush:done",
         "EventListenerTest:BackgroundErrorListenerFailedFlushTest:1"}});
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   env_->drop_writes_.store(true, std::memory_order_release);
   env_->SetMockSleep();
@@ -1561,9 +1561,9 @@ TEST_F(EventListenerTest, BlobDBFileTest) {
   blob_event_listener->CheckCounters();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

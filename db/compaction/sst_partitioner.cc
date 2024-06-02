@@ -4,22 +4,22 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 
 #include <algorithm>
 
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 static std::unordered_map<std::string, OptionTypeInfo>
     sst_fixed_prefix_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"length",
          {0, OptionType::kSizeT, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 SstPartitionerFixedPrefixFactory::SstPartitionerFixedPrefixFactory(size_t len)
@@ -58,7 +58,7 @@ std::shared_ptr<SstPartitionerFactory> NewSstPartitionerFixedPrefixFactory(
   return std::make_shared<SstPartitionerFixedPrefixFactory>(prefix_len);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 static int RegisterSstPartitionerFactories(ObjectLibrary& library,
                                            const std::string& /*arg*/) {
@@ -73,18 +73,18 @@ static int RegisterSstPartitionerFactories(ObjectLibrary& library,
   return 1;
 }
 }  // namespace
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status SstPartitionerFactory::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<SstPartitionerFactory>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterSstPartitionerFactories(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   return LoadSharedObject<SstPartitionerFactory>(options, value, nullptr,
                                                  result);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -13,7 +13,7 @@
 #include "test_util/testharness.h"
 #include "util/random.h"
 
-using ROCKSDB_NAMESPACE::Random;
+using MIZAR_NAMESPACE::Random;
 
 TEST(RandomTest, Uniform) {
   const int average = 20;

@@ -13,15 +13,15 @@
 #include "file/filename.h"
 #include "monitoring/statistics.h"
 #include "options/cf_options.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/file_system.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "test_util/sync_point.h"
 #include "util/compression.h"
 #include "util/crc32c.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status BlobFileReader::Create(
     const ImmutableOptions& immutable_options, const FileOptions& file_options,
@@ -579,4 +579,4 @@ void BlobFileReader::SaveValue(const Slice& src, PinnableSlice* dst) {
   dst->PinSelf(src);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

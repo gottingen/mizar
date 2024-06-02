@@ -23,9 +23,9 @@
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "util/random.h"
@@ -34,7 +34,7 @@
 void RegisterCustomObjects(int /*argc*/, char** /*argv*/) {}
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace test {
 
 const uint32_t kDefaultFormatVersion = BlockBasedTableOptions().format_version;
@@ -292,7 +292,7 @@ BlockBasedTableOptions RandomBlockBasedTableOptions(Random* rnd) {
 }
 
 TableFactory* RandomTableFactory(Random* rnd, int pre_defined) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   int random_num = pre_defined >= 0 ? pre_defined : rnd->Uniform(4);
   switch (random_num) {
     case 0:
@@ -306,7 +306,7 @@ TableFactory* RandomTableFactory(Random* rnd, int pre_defined) {
   (void)rnd;
   (void)pre_defined;
   return NewBlockBasedTableFactory();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 MergeOperator* RandomMergeOperator(Random* rnd) {
@@ -557,7 +557,7 @@ Status CorruptFile(Env* env, const std::string& fname, int offset,
     s = WriteStringToFile(env, contents, fname);
   }
   if (s.ok() && verify_checksum) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     Options options;
     options.env = env;
     EnvOptions env_options;
@@ -676,7 +676,7 @@ class SpecialMemTableRep : public MemTableRep {
 };
 class SpecialSkipListFactory : public MemTableRepFactory {
  public:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static bool Register(ObjectLibrary& library, const std::string& /*arg*/) {
     library.AddFactory<MemTableRepFactory>(
         ObjectLibrary::PatternEntry(SpecialSkipListFactory::kClassName(), true)
@@ -694,7 +694,7 @@ class SpecialSkipListFactory : public MemTableRepFactory {
         });
     return true;
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   // After number of inserts exceeds `num_entries_flush` in a mem table, trigger
   // flush.
   explicit SpecialSkipListFactory(int num_entries_flush)
@@ -714,7 +714,7 @@ class SpecialSkipListFactory : public MemTableRepFactory {
   std::string GetId() const override {
     std::string id = Name();
     if (num_entries_flush_ > 0) {
-      id.append(":").append(ROCKSDB_NAMESPACE::ToString(num_entries_flush_));
+      id.append(":").append(MIZAR_NAMESPACE::ToString(num_entries_flush_));
     }
     return id;
   }
@@ -734,7 +734,7 @@ MemTableRepFactory* NewSpecialSkipListFactory(int num_entries_per_flush) {
   return new SpecialSkipListFactory(num_entries_per_flush);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // This method loads existing test classes into the ObjectRegistry
 int RegisterTestObjects(ObjectLibrary& library, const std::string& arg) {
   size_t num_types;
@@ -777,18 +777,18 @@ int RegisterTestObjects(ObjectLibrary& library, const std::string& arg) {
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 void RegisterTestLibrary(const std::string& arg) {
   static bool registered = false;
   if (!registered) {
     registered = true;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     ObjectRegistry::Default()->AddLibrary("test", RegisterTestObjects, arg);
 #else
     (void)arg;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 }
 }  // namespace test
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

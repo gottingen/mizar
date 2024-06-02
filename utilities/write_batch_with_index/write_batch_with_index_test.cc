@@ -7,9 +7,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 
 #include <map>
 #include <memory>
@@ -23,7 +23,7 @@
 #include "utilities/merge_operators/string_append/stringappend.h"
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 class ColumnFamilyHandleImplDummy : public ColumnFamilyHandleImpl {
@@ -2255,10 +2255,10 @@ TEST_F(WBWIOverwriteTest, TestBadMergeOperator) {
 }
 
 INSTANTIATE_TEST_CASE_P(WBWI, WriteBatchWithIndexTest, testing::Bool());
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -2271,4 +2271,4 @@ int main() {
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

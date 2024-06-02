@@ -12,7 +12,7 @@
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 TEST(WalSet, AddDeleteReset) {
   WalSet wals;
@@ -205,10 +205,10 @@ TEST_F(WalSetTest, CheckWalsWithShrinkedSize) {
       << s.ToString();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

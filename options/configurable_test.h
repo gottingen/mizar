@@ -13,10 +13,10 @@
 #include <unordered_map>
 
 #include "options/configurable_helper.h"
-#include "rocksdb/configurable.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/configurable.h"
+#include "mizar/utilities/options_type.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct ColumnFamilyOptions;
 struct DBOptions;
 
@@ -38,7 +38,7 @@ struct TestOptions {
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> simple_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"int",
      {offsetof(struct TestOptions, i), OptionType::kInt,
       OptionVerificationType::kNormal, OptionTypeFlags::kMutable}},
@@ -48,37 +48,37 @@ static std::unordered_map<std::string, OptionTypeInfo> simple_option_info = {
     {"string",
      {offsetof(struct TestOptions, s), OptionType::kString,
       OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> enum_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"enum",
      OptionTypeInfo::Enum(offsetof(struct TestOptions, e), &test_enum_map)}
 #endif
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> unique_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"unique",
      {0, OptionType::kConfigurable, OptionVerificationType::kNormal,
       (OptionTypeFlags::kUnique | OptionTypeFlags::kMutable)}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> shared_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"shared",
      {0, OptionType::kConfigurable, OptionVerificationType::kNormal,
       (OptionTypeFlags::kShared)}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo> pointer_option_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"pointer",
      {0, OptionType::kConfigurable, OptionVerificationType::kNormal,
       OptionTypeFlags::kRawPointer}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 enum TestConfigMode {
@@ -123,4 +123,4 @@ class TestConfigurable : public Configurable {
 };
 
 }  // namespace test
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

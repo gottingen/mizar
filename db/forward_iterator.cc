@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "db/forward_iterator.h"
 
 #include <limits>
@@ -17,14 +17,14 @@
 #include "db/job_context.h"
 #include "db/range_del_aggregator.h"
 #include "db/range_tombstone_fragmenter.h"
-#include "rocksdb/env.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/env.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "table/merging_iterator.h"
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Usage:
 //     ForwardLevelIterator iter;
@@ -1019,6 +1019,6 @@ void ForwardIterator::DeleteIterator(InternalIterator* iter, bool is_arena) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

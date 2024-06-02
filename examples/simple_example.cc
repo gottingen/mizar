@@ -6,17 +6,17 @@
 #include <cstdio>
 #include <string>
 
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/options.h"
 
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::PinnableSlice;
-using ROCKSDB_NAMESPACE::ReadOptions;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::WriteBatch;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::PinnableSlice;
+using MIZAR_NAMESPACE::ReadOptions;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::WriteBatch;
+using MIZAR_NAMESPACE::WriteOptions;
 
 #if defined(OS_WIN)
 std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_simple_example";

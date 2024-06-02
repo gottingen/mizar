@@ -15,10 +15,10 @@
 #include <deque>
 #include <string>
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class StringAppendTESTOperator : public MergeOperator {
  public:
@@ -49,4 +49,4 @@ class StringAppendTESTOperator : public MergeOperator {
   std::string delim_;  // The delimiter is inserted between elements
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

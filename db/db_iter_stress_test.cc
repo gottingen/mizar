@@ -5,9 +5,9 @@
 
 #include "db/db_iter.h"
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/comparator.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "util/string_util.h"
@@ -29,7 +29,7 @@ bool FLAGS_verbose = false;
 
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBIteratorStressTest : public testing::Test {
  public:
@@ -648,7 +648,7 @@ TEST_F(DBIteratorStressTest, StressTest) {
             << "\n  mutated on the fly: " << num_recently_removed << std::endl;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -20,12 +20,12 @@
 #include "logging/logging.h"
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
-#include "rocksdb/table.h"
-#include "rocksdb/wal_filter.h"
+#include "mizar/table.h"
+#include "mizar/wal_filter.h"
 #include "test_util/sync_point.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Options SanitizeOptions(const std::string& dbname, const Options& src,
                         bool read_only) {
   auto db_options = SanitizeOptions(dbname, DBOptions(src), read_only);
@@ -153,7 +153,7 @@ DBOptions SanitizeOptions(const std::string& dbname, const DBOptions& src,
     result.avoid_flush_during_recovery = false;
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ImmutableDBOptions immutable_db_options(result);
   if (!immutable_db_options.IsWalDirSameAsDBPath()) {
     // Either the WAL dir and db_paths[0]/db_name are not the same, or we
@@ -192,7 +192,7 @@ DBOptions SanitizeOptions(const std::string& dbname, const DBOptions& src,
         NewSstFileManager(result.env, result.info_log));
     result.sst_file_manager = sst_file_manager;
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   if (!result.paranoid_checks) {
     result.skip_checking_sst_file_sizes_on_db_open = true;
@@ -844,7 +844,7 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& wal_numbers,
     stream.EndArray();
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (immutable_db_options_.wal_filter != nullptr) {
     std::map<std::string, uint32_t> cf_name_id_map;
     std::map<uint32_t, uint64_t> cf_lognumber_map;
@@ -975,7 +975,7 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& wal_numbers,
         }
       }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (immutable_db_options_.wal_filter != nullptr) {
         WriteBatch new_batch;
         bool batch_changed = false;
@@ -1051,7 +1051,7 @@ Status DBImpl::RecoverLogFiles(const std::vector<uint64_t>& wal_numbers,
           batch = new_batch;
         }
       }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
       // If column family was not found, it might mean that the WAL write
       // batch references to the column family that was dropped after the
@@ -1788,7 +1788,7 @@ Status DBImpl::Open(const DBOptions& db_options, const std::string& dbname,
   }
   impl->mutex_.Unlock();
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   auto sfm = static_cast<SstFileManagerImpl*>(
       impl->immutable_db_options_.sst_file_manager.get());
   if (s.ok() && sfm) {
@@ -1865,7 +1865,7 @@ Status DBImpl::Open(const DBOptions& db_options, const std::string& dbname,
                            impl->immutable_db_options_.db_paths[0].path);
   }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   if (s.ok()) {
     ROCKS_LOG_HEADER(impl->immutable_db_options_.info_log, "DB pointer %p",
@@ -1896,4 +1896,4 @@ Status DBImpl::Open(const DBOptions& db_options, const std::string& dbname,
   }
   return s;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -18,11 +18,11 @@
 #include "db/compaction/compaction.h"
 #include "db/version_set.h"
 #include "options/cf_options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // The file contains an abstract class CompactionPicker, and its two
 // sub-classes LevelCompactionPicker and NullCompactionPicker, as
@@ -91,11 +91,11 @@ class CompactionPicker {
 // files.  If it's not possible to conver an invalid input_files
 // into a valid one by adding more files, the function will return a
 // non-ok status with specific reason.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Status SanitizeCompactionInputFiles(std::unordered_set<uint64_t>* input_files,
                                       const ColumnFamilyMetaData& cf_meta,
                                       const int output_level) const;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Free up the files that participated in a compaction
   //
@@ -222,11 +222,11 @@ class CompactionPicker {
 
 // A helper function to SanitizeCompactionInputFiles() that
 // sanitizes "input_files" by adding necessary files.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   virtual Status SanitizeCompactionInputFilesForAllLevels(
       std::unordered_set<uint64_t>* input_files,
       const ColumnFamilyMetaData& cf_meta, const int output_level) const;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // Keeps track of all compactions that are running on Level0.
   // Protected by DB mutex
@@ -239,7 +239,7 @@ class CompactionPicker {
   const InternalKeyComparator* const icmp_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // A dummy compaction that never triggers any automatic
 // compaction.
 class NullCompactionPicker : public CompactionPicker {
@@ -280,7 +280,7 @@ class NullCompactionPicker : public CompactionPicker {
     return false;
   }
 };
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Attempts to find an intra L0 compaction conforming to the given parameters.
 //
@@ -315,4 +315,4 @@ CompressionOptions GetCompressionOptions(
     const VersionStorageInfo* vstorage, int level,
     const bool enable_compression = true);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -8,10 +8,10 @@
 #include <array>
 #include <ratio>
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 class TimeSetClock : public SystemClockWrapper {
  public:
@@ -239,7 +239,7 @@ TEST_F(WriteControllerTest, CreditAccumulation) {
   ASSERT_EQ(10 SECS, controller.GetDelay(clock_.get(), 10 MB));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

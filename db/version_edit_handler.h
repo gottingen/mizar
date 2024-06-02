@@ -13,7 +13,7 @@
 #include "db/version_edit.h"
 #include "db/version_set.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct FileMetaData;
 
@@ -306,4 +306,4 @@ class DumpManifestHandler : public VersionEditHandler {
   int count_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

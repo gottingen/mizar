@@ -10,13 +10,13 @@
 
 #include "db/blob/blob_file_reader.h"
 #include "options/cf_options.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/slice.h"
+#include "mizar/cache.h"
+#include "mizar/slice.h"
 #include "test_util/sync_point.h"
 #include "trace_replay/io_tracer.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 BlobFileCache::BlobFileCache(Cache* cache,
                              const ImmutableOptions* immutable_options,
@@ -99,4 +99,4 @@ Status BlobFileCache::GetBlobFileReader(
   return Status::OK();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

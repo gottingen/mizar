@@ -6,10 +6,10 @@
 #include "monitoring/thread_status_util.h"
 
 #include "monitoring/thread_status_updater.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
 __thread ThreadStatusUpdater* ThreadStatusUtil::thread_updater_local_cache_ =
@@ -204,4 +204,4 @@ AutoThreadOperationStageUpdater::~AutoThreadOperationStageUpdater() {}
 
 #endif  // ROCKSDB_USING_THREAD_STATUS
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

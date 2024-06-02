@@ -12,14 +12,14 @@
 #include "db/db_test_util.h"
 #include "options/options_helper.h"
 #include "port/stack_trace.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/merge_operator.h"
+#include "mizar/perf_context.h"
+#include "mizar/table.h"
+#include "mizar/utilities/debug.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 #include "test_util/sync_point.h"
 #endif
 #include "util/file_checksum_helper.h"
@@ -28,7 +28,7 @@
 #include "utilities/merge_operators.h"
 #include "utilities/merge_operators/string_append/stringappend.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBBasicTest : public DBTestBase {
  public:
@@ -75,7 +75,7 @@ TEST_F(DBBasicTest, UniqueSession) {
   EXPECT_MATCHES_REGEX(sid2, expected);
   EXPECT_MATCHES_REGEX(sid3, expected);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   Close();
   ASSERT_OK(ReadOnlyReopen(options));
   ASSERT_OK(db_->GetDbSessionId(sid1));
@@ -90,7 +90,7 @@ TEST_F(DBBasicTest, UniqueSession) {
   ASSERT_NE(sid1, sid2);
 
   ASSERT_EQ(sid2, sid3);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   CreateAndReopenWithCF({"goku"}, options);
   ASSERT_OK(db_->GetDbSessionId(sid1));
@@ -107,7 +107,7 @@ TEST_F(DBBasicTest, UniqueSession) {
   ASSERT_NE(sid1, sid4);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBasicTest, ReadOnlyDB) {
   ASSERT_OK(Put("foo", "v1"));
   ASSERT_OK(Put("bar", "v2"));
@@ -319,7 +319,7 @@ TEST_F(DBBasicTest, LevelLimitReopen) {
   options.max_bytes_for_level_multiplier_additional.resize(10, 1);
   ASSERT_OK(TryReopenWithColumnFamilies({"default", "pikachu"}, options));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBBasicTest, PutDeleteGet) {
   do {
@@ -381,7 +381,7 @@ TEST_F(DBBasicTest, GetFromVersions) {
   } while (ChangeOptions());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBasicTest, GetSnapshot) {
   anon::OptionsOverride options_override;
   options_override.skip_policy = kSkipNoSnapshot;
@@ -402,7 +402,7 @@ TEST_F(DBBasicTest, GetSnapshot) {
     }
   } while (ChangeOptions());
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBBasicTest, CheckLock) {
   do {
@@ -605,7 +605,7 @@ TEST_F(DBBasicTest, IdentityAcrossRestarts2) {
   } while (ChangeCompactOptions());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBasicTest, Snapshot) {
   env_->SetMockSleep();
   anon::OptionsOverride options_override;
@@ -677,7 +677,7 @@ TEST_F(DBBasicTest, Snapshot) {
   } while (ChangeOptions());
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class DBBasicMultiConfigs : public DBBasicTest,
                             public ::testing::WithParamInterface<int> {
@@ -1183,8 +1183,8 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCF) {
   }
 
   int get_sv_count = 0;
-  ROCKSDB_NAMESPACE::DBImpl* db = static_cast_with_check<DBImpl>(db_);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::DBImpl* db = static_cast_with_check<DBImpl>(db_);
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::MultiGet::AfterRefSV", [&](void* /*arg*/) {
         if (++get_sv_count == 2) {
           // After MultiGet refs a couple of CFs, flush all CFs so MultiGet
@@ -1208,7 +1208,7 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCF) {
           }
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::vector<int> cfs;
   std::vector<std::string> keys;
@@ -1275,12 +1275,12 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCFMutex) {
   int get_sv_count = 0;
   int retries = 0;
   bool last_try = false;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::MultiGet::LastTry", [&](void* /*arg*/) {
         last_try = true;
-        ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+        MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::MultiGet::AfterRefSV", [&](void* /*arg*/) {
         if (last_try) {
           return;
@@ -1296,7 +1296,7 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCFMutex) {
           }
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::vector<int> cfs;
   std::vector<std::string> keys;
@@ -1335,8 +1335,8 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCFSnapshot) {
   }
 
   int get_sv_count = 0;
-  ROCKSDB_NAMESPACE::DBImpl* db = static_cast_with_check<DBImpl>(db_);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::DBImpl* db = static_cast_with_check<DBImpl>(db_);
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::MultiGet::AfterRefSV", [&](void* /*arg*/) {
         if (++get_sv_count == 2) {
           for (int i = 0; i < 8; ++i) {
@@ -1356,7 +1356,7 @@ TEST_P(DBMultiGetTestWithParam, MultiGetMultiCFSnapshot) {
           }
         }
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::vector<int> cfs;
   std::vector<std::string> keys;
@@ -1923,7 +1923,7 @@ TEST_F(DBBasicTest, MultiGetStats) {
   options.create_if_missing = true;
   options.disable_auto_compactions = true;
   options.env = env_;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.block_size = 1;
   table_options.index_type =
@@ -2068,7 +2068,7 @@ TEST_P(MultiGetPrefixExtractorTest, Batched) {
 INSTANTIATE_TEST_CASE_P(MultiGetPrefix, MultiGetPrefixExtractorTest,
                         ::testing::Bool());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class DBMultiGetRowCacheTest : public DBBasicTest,
                                public ::testing::WithParamInterface<bool> {};
 
@@ -2076,7 +2076,7 @@ TEST_P(DBMultiGetRowCacheTest, MultiGetBatched) {
   do {
     option_config_ = kRowCache;
     Options options = CurrentOptions();
-    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
     CreateAndReopenWithCF({"pikachu"}, options);
     SetPerfLevel(kEnableCount);
     ASSERT_OK(Put(1, "k1", "v1"));
@@ -2182,11 +2182,11 @@ TEST_F(DBBasicTest, GetAllKeyVersions) {
     ASSERT_OK(Delete(std::to_string(i)));
   }
   std::vector<KeyVersion> key_versions;
-  ASSERT_OK(ROCKSDB_NAMESPACE::GetAllKeyVersions(
+  ASSERT_OK(MIZAR_NAMESPACE::GetAllKeyVersions(
       db_, Slice(), Slice(), std::numeric_limits<size_t>::max(),
       &key_versions));
   ASSERT_EQ(kNumInserts + kNumDeletes + kNumUpdates, key_versions.size());
-  ASSERT_OK(ROCKSDB_NAMESPACE::GetAllKeyVersions(
+  ASSERT_OK(MIZAR_NAMESPACE::GetAllKeyVersions(
       db_, handles_[0], Slice(), Slice(), std::numeric_limits<size_t>::max(),
       &key_versions));
   ASSERT_EQ(kNumInserts + kNumDeletes + kNumUpdates, key_versions.size());
@@ -2201,12 +2201,12 @@ TEST_F(DBBasicTest, GetAllKeyVersions) {
   for (size_t i = 0; i + 1 != kNumDeletes; ++i) {
     ASSERT_OK(Delete(1, std::to_string(i)));
   }
-  ASSERT_OK(ROCKSDB_NAMESPACE::GetAllKeyVersions(
+  ASSERT_OK(MIZAR_NAMESPACE::GetAllKeyVersions(
       db_, handles_[1], Slice(), Slice(), std::numeric_limits<size_t>::max(),
       &key_versions));
   ASSERT_EQ(kNumInserts + kNumDeletes + kNumUpdates - 3, key_versions.size());
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBBasicTest, MultiGetIOBufferOverrun) {
   Options options = CurrentOptions();
@@ -2307,7 +2307,7 @@ TEST_F(DBBasicTest, BestEffortsRecoveryWithVersionBuildingFailure) {
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 class TableFileListener : public EventListener {
  public:
@@ -2582,7 +2582,7 @@ TEST_F(DBBasicTest, DisableTrackWal) {
   ASSERT_TRUE(dbfull()->GetVersionSet()->GetWalSet().GetWals().empty());
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBBasicTest, ManifestChecksumMismatch) {
   Options options = CurrentOptions();
@@ -2626,7 +2626,7 @@ TEST_F(DBBasicTest, ConcurrentlyCloseDB) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class DBBasicTestTrackWal : public DBTestBase,
                             public testing::WithParamInterface<bool> {
  public:
@@ -2682,7 +2682,7 @@ TEST_P(DBBasicTestTrackWal, DoNotTrackObsoleteWal) {
 
 INSTANTIATE_TEST_CASE_P(DBBasicTestTrackWal, DBBasicTestTrackWal,
                         testing::Bool());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class DBBasicTestMultiGet : public DBTestBase {
  public:
@@ -2708,7 +2708,7 @@ class DBBasicTestMultiGet : public DBTestBase {
     Random rnd(301);
     BlockBasedTableOptions table_options;
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (compression_enabled_) {
       std::vector<CompressionType> compression_types;
       compression_types = GetSupportedCompressions();
@@ -2732,7 +2732,7 @@ class DBBasicTestMultiGet : public DBTestBase {
     if (!Snappy_Supported()) {
       compression_enabled_ = false;
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
     table_options.block_cache = uncompressed_cache_;
     if (table_options.block_cache == nullptr) {
@@ -3055,7 +3055,7 @@ TEST_P(DBBasicTestWithParallelIO, MultiGet) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(DBBasicTestWithParallelIO, MultiGetDirectIO) {
   class FakeDirectIOEnv : public EnvWrapper {
     class FakeDirectIOSequentialFile;
@@ -3172,7 +3172,7 @@ TEST_P(DBBasicTestWithParallelIO, MultiGetDirectIO) {
   }
   Close();
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_P(DBBasicTestWithParallelIO, MultiGetWithChecksumMismatch) {
   std::vector<std::string> key_data(10);
@@ -3658,7 +3658,7 @@ TEST_F(DBBasicTest, DestroyDefaultCfHandle) {
   ASSERT_TRUE(db_->DestroyColumnFamilyHandle(default_cf).IsInvalidArgument());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBasicTest, VerifyFileChecksums) {
   Options options = GetDefaultOptions();
   options.create_if_missing = true;
@@ -3701,7 +3701,7 @@ TEST_F(DBBasicTest, VerifyFileChecksums) {
   Reopen(options);
   ASSERT_TRUE(db_->VerifyFileChecksums(ReadOptions()).IsInvalidArgument());
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // A test class for intercepting random reads and injecting artificial
 // delays. Used for testing the deadline/timeout feature
@@ -3896,10 +3896,10 @@ INSTANTIATE_TEST_CASE_P(DBBasicTestDeadline, DBBasicTestDeadline,
                         ::testing::Values(std::make_tuple(true, false),
                                           std::make_tuple(false, true),
                                           std::make_tuple(true, true)));
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

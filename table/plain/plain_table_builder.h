@@ -5,21 +5,21 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <stdint.h>
 #include <string>
 #include <vector>
 #include "db/version_edit.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/plain/plain_table_bloom.h"
 #include "table/plain/plain_table_index.h"
 #include "table/plain/plain_table_key_coding.h"
 #include "table/table_builder.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBuilder;
 class BlockHandle;
@@ -148,6 +148,6 @@ class PlainTableBuilder: public TableBuilder {
   bool IsTotalOrderMode() const { return (prefix_extractor_ == nullptr); }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

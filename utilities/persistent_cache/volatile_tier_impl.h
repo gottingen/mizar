@@ -5,7 +5,7 @@
 //
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <atomic>
 #include <limits>
@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 #include "utilities/persistent_cache/hash_table.h"
 #include "utilities/persistent_cache/hash_table_evictable.h"
 #include "utilities/persistent_cache/persistent_cache_tier.h"
@@ -38,7 +38,7 @@
 // implementation is not concurrent at this point though.
 //
 // The eviction algorithm is LRU
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class VolatileCacheTier : public PersistentCacheTier {
  public:
@@ -137,6 +137,6 @@ class VolatileCacheTier : public PersistentCacheTier {
   Statistics stats_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

@@ -10,12 +10,12 @@
 
 #include "monitoring/instrumented_mutex.h"
 #include "port/lang.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/options.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/file_system.h"
+#include "mizar/options.h"
+#include "mizar/trace_record.h"
 #include "trace_replay/trace_replay.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class SystemClock;
 class TraceReader;
 class TraceWriter;
@@ -182,4 +182,4 @@ class IOTracer {
   bool tracing_enabled;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

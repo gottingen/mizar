@@ -7,11 +7,11 @@
 // for more comprehensive, please check the dedicate util/filter_bench.
 #include <benchmark/benchmark.h>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static void DBOpen(benchmark::State& state) {
   // create DB
@@ -129,6 +129,6 @@ static void DBClose(benchmark::State& state) {
 BENCHMARK(DBClose)->Iterations(200);  // specify iteration number as the db size
                                       // is impacted by iteration number
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 BENCHMARK_MAIN();

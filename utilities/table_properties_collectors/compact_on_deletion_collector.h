@@ -5,9 +5,9 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/table_properties_collectors.h"
-namespace ROCKSDB_NAMESPACE {
+#ifndef MIZAR_LITE
+#include "mizar/utilities/table_properties_collectors.h"
+namespace MIZAR_NAMESPACE {
 
 class CompactOnDeletionCollector : public TablePropertiesCollector {
  public:
@@ -68,5 +68,5 @@ class CompactOnDeletionCollector : public TablePropertiesCollector {
   bool need_compaction_;
   bool finished_;
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

@@ -15,10 +15,10 @@
 #include "port/lang.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/secondary_cache.h"
+#include "mizar/secondary_cache.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // LRU cache implementation. This class is not thread-safe.
 
@@ -213,7 +213,7 @@ struct LRUHandle {
       CacheMetadataChargePolicy metadata_charge_policy) {
     size_t meta_charge = 0;
     if (metadata_charge_policy == kFullChargeCacheMetadata) {
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
       meta_charge += malloc_usable_size(static_cast<void*>(this));
 #else
       // This is the size that is used when a new handle is created
@@ -478,4 +478,4 @@ class LRUCache
   std::shared_ptr<SecondaryCache> secondary_cache_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

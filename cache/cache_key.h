@@ -7,10 +7,10 @@
 
 #include <cstdint>
 
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/slice.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/slice.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Cache;
 
@@ -129,4 +129,4 @@ class OffsetableCacheKey : private CacheKey {
 #endif
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

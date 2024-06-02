@@ -59,7 +59,7 @@
 //   Store per-table metadata (smallest, largest, largest-seq#, ...)
 //   in the table's meta section to speed up ScanTable.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <cinttypes>
 
@@ -76,15 +76,15 @@
 #include "file/writable_file_writer.h"
 #include "logging/logging.h"
 #include "options/cf_options.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/scoped_arena_iterator.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -743,6 +743,6 @@ Status RepairDB(const std::string& dbname, const Options& options) {
   return status;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <stdlib.h>
 #include <algorithm>
@@ -20,16 +20,16 @@
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/transaction_log.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ObsoleteFilesTest : public DBTestBase {
  public:
@@ -306,10 +306,10 @@ TEST_F(ObsoleteFilesTest, BlobFiles) {
   ASSERT_EQ(deleted_files, expected_deleted_files);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -320,8 +320,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
+          "SKIPPED as DBImpl::DeleteFile is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

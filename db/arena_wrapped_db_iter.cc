@@ -9,14 +9,14 @@
 
 #include "db/arena_wrapped_db_iter.h"
 #include "memory/arena.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
 #include "table/internal_iterator.h"
 #include "table/iterator_wrapper.h"
 #include "util/user_comparator_wrapper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status ArenaWrappedDBIter::GetProperty(std::string prop_name,
                                        std::string* prop) {
@@ -103,4 +103,4 @@ ArenaWrappedDBIter* NewArenaWrappedDbIterator(
   return iter;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

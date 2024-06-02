@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/pessimistic_transaction.h"
 
@@ -15,18 +15,18 @@
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/snapshot.h"
+#include "mizar/status.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct WriteOptions;
 
@@ -748,6 +748,6 @@ Status PessimisticTransaction::SetName(const TransactionName& name) {
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

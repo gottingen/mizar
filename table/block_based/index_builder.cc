@@ -15,12 +15,12 @@
 #include <list>
 #include <string>
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/flush_block_policy.h"
+#include "mizar/comparator.h"
+#include "mizar/flush_block_policy.h"
 #include "table/block_based/partitioned_filter_block.h"
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Create a index builder based on its type.
 IndexBuilder* IndexBuilder::CreateIndexBuilder(
@@ -244,4 +244,4 @@ Status PartitionedIndexBuilder::Finish(
 }
 
 size_t PartitionedIndexBuilder::NumPartitions() const { return partition_cnt_; }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

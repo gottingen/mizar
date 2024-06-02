@@ -8,19 +8,19 @@
 
 #include <mutex>
 #include <string>
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 
-using ROCKSDB_NAMESPACE::ColumnFamilyMetaData;
-using ROCKSDB_NAMESPACE::CompactionOptions;
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::EventListener;
-using ROCKSDB_NAMESPACE::FlushJobInfo;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::ReadOptions;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::ColumnFamilyMetaData;
+using MIZAR_NAMESPACE::CompactionOptions;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::EventListener;
+using MIZAR_NAMESPACE::FlushJobInfo;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::ReadOptions;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::WriteOptions;
 
 #if defined(OS_WIN)
 std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_compact_files_example";
@@ -150,7 +150,7 @@ int main() {
   Options options;
   options.create_if_missing = true;
   // Disable RocksDB background compaction.
-  options.compaction_style = ROCKSDB_NAMESPACE::kCompactionStyleNone;
+  options.compaction_style = MIZAR_NAMESPACE::kCompactionStyleNone;
   // Small slowdown and stop trigger for experimental purpose.
   options.level0_slowdown_writes_trigger = 3;
   options.level0_stop_writes_trigger = 5;
@@ -158,7 +158,7 @@ int main() {
   options.listeners.emplace_back(new FullCompactor(options));
 
   DB* db = nullptr;
-  ROCKSDB_NAMESPACE::DestroyDB(kDBPath, options);
+  MIZAR_NAMESPACE::DestroyDB(kDBPath, options);
   Status s = DB::Open(options, kDBPath, &db);
   assert(s.ok());
   assert(db);

@@ -14,13 +14,13 @@
 
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/options.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/file_system.h"
+#include "mizar/listener.h"
+#include "mizar/options.h"
+#include "mizar/rate_limiter.h"
 #include "util/aligned_buffer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Statistics;
 class HistogramImpl;
 class SystemClock;
@@ -46,7 +46,7 @@ bool TryMerge(FSReadRequest* dest, const FSReadRequest& src);
 // - Updating IO stats.
 class RandomAccessFileReader {
  private:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void NotifyOnFileReadFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
@@ -77,7 +77,7 @@ class RandomAccessFileReader {
     io_status.PermitUncheckedError();
   }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
 
@@ -110,14 +110,14 @@ class RandomAccessFileReader {
         rate_limiter_(rate_limiter),
         listeners_(),
         file_temperature_(file_temperature) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::for_each(listeners.begin(), listeners.end(),
                   [this](const std::shared_ptr<EventListener>& e) {
                     if (e->ShouldBeNotifiedOnFileIO()) {
                       listeners_.emplace_back(e);
                     }
                   });
-#else  // !ROCKSDB_LITE
+#else  // !MIZAR_LITE
     (void)listeners;
 #endif
   }
@@ -163,4 +163,4 @@ class RandomAccessFileReader {
 
   IOStatus PrepareIOOptions(const ReadOptions& ro, IOOptions& opts);
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

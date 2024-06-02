@@ -15,14 +15,14 @@
 #include <deque>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
 #include "util/mutexlock.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class GenericRateLimiter : public RateLimiter {
  public:
@@ -160,4 +160,4 @@ class GenericRateLimiter : public RateLimiter {
   std::chrono::microseconds tuned_time_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

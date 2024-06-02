@@ -14,11 +14,11 @@
 #include <vector>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A Timer class to handle repeated work.
 //
@@ -328,4 +328,4 @@ class Timer {
   std::unordered_map<std::string, std::unique_ptr<FunctionInfo>> map_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

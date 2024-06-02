@@ -13,7 +13,7 @@
 #include "table/block_based/block_prefetcher.h"
 #include "table/block_based/reader_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Iterator that iterates over partitioned index.
 // Some upper and lower bound tricks played in block based table iterators
 // could be played here, but it's too complicated to reason about index
@@ -156,4 +156,4 @@ class PartitionedIndexIterator : public InternalIteratorBase<IndexValue> {
   void FindBlockForward();
   void FindKeyBackward();
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

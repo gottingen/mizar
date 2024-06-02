@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 #include "utilities/merge_operators/sortlist.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "utilities/merge_operators.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 bool SortList::FullMergeV2(const MergeOperationInput& merge_in,
                            MergeOperationOutput* merge_out) const {
@@ -92,4 +92,4 @@ std::vector<int> SortList::Merge(std::vector<int>& left,
 std::shared_ptr<MergeOperator> MergeOperators::CreateSortOperator() {
   return std::make_shared<SortList>();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

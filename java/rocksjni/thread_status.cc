@@ -4,13 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ and enables
-// calling c++ ROCKSDB_NAMESPACE::ThreadStatus methods from Java side.
+// calling c++ MIZAR_NAMESPACE::ThreadStatus methods from Java side.
 
 #include <jni.h>
 
 #include "portal.h"
 #include "include/org_rocksdb_ThreadStatus.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/thread_status.h"
 
 /*
  * Class:     org_rocksdb_ThreadStatus
@@ -19,9 +19,9 @@
  */
 jstring Java_org_rocksdb_ThreadStatus_getThreadTypeName(
     JNIEnv* env, jclass, jbyte jthread_type_value) {
-  auto name = ROCKSDB_NAMESPACE::ThreadStatus::GetThreadTypeName(
-      ROCKSDB_NAMESPACE::ThreadTypeJni::toCppThreadType(jthread_type_value));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &name, true);
+  auto name = MIZAR_NAMESPACE::ThreadStatus::GetThreadTypeName(
+      MIZAR_NAMESPACE::ThreadTypeJni::toCppThreadType(jthread_type_value));
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &name, true);
 }
 
 /*
@@ -31,10 +31,10 @@ jstring Java_org_rocksdb_ThreadStatus_getThreadTypeName(
  */
 jstring Java_org_rocksdb_ThreadStatus_getOperationName(
     JNIEnv* env, jclass, jbyte joperation_type_value) {
-  auto name = ROCKSDB_NAMESPACE::ThreadStatus::GetOperationName(
-      ROCKSDB_NAMESPACE::OperationTypeJni::toCppOperationType(
+  auto name = MIZAR_NAMESPACE::ThreadStatus::GetOperationName(
+      MIZAR_NAMESPACE::OperationTypeJni::toCppOperationType(
           joperation_type_value));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &name, true);
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &name, true);
 }
 
 /*
@@ -44,9 +44,9 @@ jstring Java_org_rocksdb_ThreadStatus_getOperationName(
  */
 jstring Java_org_rocksdb_ThreadStatus_microsToStringNative(
     JNIEnv* env, jclass, jlong jmicros) {
-  auto str = ROCKSDB_NAMESPACE::ThreadStatus::MicrosToString(
+  auto str = MIZAR_NAMESPACE::ThreadStatus::MicrosToString(
       static_cast<uint64_t>(jmicros));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &str, true);
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &str, true);
 }
 
 /*
@@ -56,10 +56,10 @@ jstring Java_org_rocksdb_ThreadStatus_microsToStringNative(
  */
 jstring Java_org_rocksdb_ThreadStatus_getOperationStageName(
     JNIEnv* env, jclass, jbyte joperation_stage_value) {
-  auto name = ROCKSDB_NAMESPACE::ThreadStatus::GetOperationStageName(
-      ROCKSDB_NAMESPACE::OperationStageJni::toCppOperationStage(
+  auto name = MIZAR_NAMESPACE::ThreadStatus::GetOperationStageName(
+      MIZAR_NAMESPACE::OperationStageJni::toCppOperationStage(
           joperation_stage_value));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &name, true);
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &name, true);
 }
 
 /*
@@ -69,11 +69,11 @@ jstring Java_org_rocksdb_ThreadStatus_getOperationStageName(
  */
 jstring Java_org_rocksdb_ThreadStatus_getOperationPropertyName(
     JNIEnv* env, jclass, jbyte joperation_type_value, jint jindex) {
-  auto name = ROCKSDB_NAMESPACE::ThreadStatus::GetOperationPropertyName(
-      ROCKSDB_NAMESPACE::OperationTypeJni::toCppOperationType(
+  auto name = MIZAR_NAMESPACE::ThreadStatus::GetOperationPropertyName(
+      MIZAR_NAMESPACE::OperationTypeJni::toCppOperationType(
           joperation_type_value),
       static_cast<int>(jindex));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &name, true);
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &name, true);
 }
 
 /*
@@ -99,11 +99,11 @@ jobject Java_org_rocksdb_ThreadStatus_interpretOperationProperties(
   env->ReleaseLongArrayElements(joperation_properties, jop, JNI_ABORT);
 
   // call the function
-  auto result = ROCKSDB_NAMESPACE::ThreadStatus::InterpretOperationProperties(
-      ROCKSDB_NAMESPACE::OperationTypeJni::toCppOperationType(
+  auto result = MIZAR_NAMESPACE::ThreadStatus::InterpretOperationProperties(
+      MIZAR_NAMESPACE::OperationTypeJni::toCppOperationType(
           joperation_type_value),
       op_properties.get());
-  jobject jresult = ROCKSDB_NAMESPACE::HashMapJni::fromCppMap(env, &result);
+  jobject jresult = MIZAR_NAMESPACE::HashMapJni::fromCppMap(env, &result);
   if (env->ExceptionCheck()) {
     // exception occurred
     return nullptr;
@@ -119,7 +119,7 @@ jobject Java_org_rocksdb_ThreadStatus_interpretOperationProperties(
  */
 jstring Java_org_rocksdb_ThreadStatus_getStateName(
   JNIEnv* env, jclass, jbyte jstate_type_value) {
-  auto name = ROCKSDB_NAMESPACE::ThreadStatus::GetStateName(
-      ROCKSDB_NAMESPACE::StateTypeJni::toCppStateType(jstate_type_value));
-  return ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &name, true);
+  auto name = MIZAR_NAMESPACE::ThreadStatus::GetStateName(
+      MIZAR_NAMESPACE::StateTypeJni::toCppStateType(jstate_type_value));
+  return MIZAR_NAMESPACE::JniUtil::toJavaString(env, &name, true);
 }

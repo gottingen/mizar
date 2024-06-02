@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "db/compaction/compaction_picker_fifo.h"
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <cinttypes>
 #include <string>
@@ -19,7 +19,7 @@
 #include "logging/logging.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 uint64_t GetTotalFilesSize(const std::vector<FileMetaData*>& files) {
   uint64_t total_size = 0;
@@ -364,5 +364,5 @@ Compaction* FIFOCompactionPicker::CompactRange(
   return c;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

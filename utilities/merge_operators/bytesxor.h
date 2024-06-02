@@ -8,13 +8,13 @@
 #include <algorithm>
 #include <memory>
 #include <string>
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "util/coding.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A 'model' merge operator that XORs two (same sized) array of bytes.
 // Implemented as an AssociativeMergeOperator for simplicity and example.
@@ -38,4 +38,4 @@ class BytesXOROperator : public AssociativeMergeOperator {
           std::string* new_value) const;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

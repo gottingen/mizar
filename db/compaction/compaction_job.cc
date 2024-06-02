@@ -52,13 +52,13 @@
 #include "options/configurable_helper.h"
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/sst_partitioner.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/sst_partitioner.h"
+#include "mizar/statistics.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/utilities/options_type.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/merging_iterator.h"
@@ -71,7 +71,7 @@
 #include "util/stop_watch.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const char* GetCompactionReasonString(CompactionReason compaction_reason) {
   switch (compaction_reason) {
@@ -1022,7 +1022,7 @@ Status CompactionJob::Install(const MutableCFOptions& mutable_cf_options) {
   return status;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 CompactionServiceJobStatus
 CompactionJob::ProcessKeyValueCompactionWithCompactionService(
     SubcompactionState* sub_compact) {
@@ -1209,13 +1209,13 @@ CompactionJob::ProcessKeyValueCompactionWithCompactionService(
              compaction_result.bytes_written);
   return CompactionServiceJobStatus::kSuccess;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
   assert(sub_compact);
   assert(sub_compact->compaction);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (db_options_.compaction_service) {
     CompactionServiceJobStatus comp_status =
         ProcessKeyValueCompactionWithCompactionService(sub_compact);
@@ -1226,7 +1226,7 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
     // fallback to local compaction
     assert(comp_status == CompactionServiceJobStatus::kUseLocal);
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   uint64_t prev_cpu_micros = db_options_.clock->CPUNanos() / 1000;
 
@@ -1591,7 +1591,7 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
       SetPerfLevel(prev_perf_level);
     }
   }
-#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+#ifdef MIZAR_ASSERT_STATUS_CHECKED
   if (!status.ok()) {
     if (sub_compact->c_iter) {
       sub_compact->c_iter->status().PermitUncheckedError();
@@ -1600,7 +1600,7 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
       input->status().PermitUncheckedError();
     }
   }
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+#endif  // MIZAR_ASSERT_STATUS_CHECKED
 
   sub_compact->c_iter.reset();
   blob_counter.reset();
@@ -1957,7 +1957,7 @@ Status CompactionJob::FinishCompactionOutputFile(
       TableFileCreationReason::kCompaction, s, file_checksum,
       file_checksum_func_name);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Report new file to SstFileManagerImpl
   auto sfm =
       static_cast<SstFileManagerImpl*>(db_options_.sst_file_manager.get());
@@ -2080,11 +2080,11 @@ Status CompactionJob::OpenCompactionOutputFile(
   std::string fname = GetTableFileName(file_number);
   // Fire events.
   ColumnFamilyData* cfd = sub_compact->compaction->column_family_data();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   EventHelpers::NotifyTableFileCreationStarted(
       cfd->ioptions()->listeners, dbname_, cfd->GetName(), fname, job_id_,
       TableFileCreationReason::kCompaction);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   // Make the output file
   std::unique_ptr<FSWritableFile> writable_file;
 #ifndef NDEBUG
@@ -2223,7 +2223,7 @@ void CompactionJob::CleanupCompaction() {
   compact_ = nullptr;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 void CopyPrefix(const Slice& src, size_t prefix_length, std::string* dst) {
   assert(prefix_length > 0);
@@ -2232,7 +2232,7 @@ void CopyPrefix(const Slice& src, size_t prefix_length, std::string* dst) {
 }
 }  // namespace
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 void CompactionJob::UpdateCompactionStats() {
   assert(compact_);
@@ -2288,7 +2288,7 @@ void CompactionJob::UpdateCompactionInputStatsHelper(int* num_files,
 
 void CompactionJob::UpdateCompactionJobStats(
     const InternalStats::CompactionStats& stats) const {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   compaction_job_stats_->elapsed_micros = stats.micros;
 
   // input information
@@ -2317,7 +2317,7 @@ void CompactionJob::UpdateCompactionJobStats(
   }
 #else
   (void)stats;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 void CompactionJob::LogCompaction() {
@@ -2360,7 +2360,7 @@ std::string CompactionJob::GetTableFileName(uint64_t file_number) {
                        file_number, compact_->compaction->output_path_id());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::string CompactionServiceCompactionJob::GetTableFileName(
     uint64_t file_number) {
   return MakeTableFileName(output_path_, file_number);
@@ -2978,6 +2978,6 @@ bool CompactionServiceInput::TEST_Equals(CompactionServiceInput* other,
                                        mismatch);
 }
 #endif  // NDEBUG
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

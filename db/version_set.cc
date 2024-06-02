@@ -46,9 +46,9 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/format.h"
 #include "table/get_context.h"
 #include "table/internal_iterator.h"
@@ -65,7 +65,7 @@
 #include "util/string_util.h"
 #include "util/user_comparator_wrapper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -2097,7 +2097,7 @@ void Version::Get(const ReadOptions& read_options, const LookupKey& k,
         ROCKS_LOG_ERROR(info_log_, "Encounter unexpected blob index.");
         *status = Status::NotSupported(
             "Encounter unexpected blob index. Please open DB with "
-            "ROCKSDB_NAMESPACE::blob_db::BlobDB instead.");
+            "MIZAR_NAMESPACE::blob_db::BlobDB instead.");
         return;
     }
     f = fp.GetNextFile();
@@ -2308,7 +2308,7 @@ void Version::MultiGet(const ReadOptions& read_options, MultiGetRange* range,
           ROCKS_LOG_ERROR(info_log_, "Encounter unexpected blob index.");
           *status = Status::NotSupported(
               "Encounter unexpected blob index. Please open DB with "
-              "ROCKSDB_NAMESPACE::blob_db::BlobDB instead.");
+              "MIZAR_NAMESPACE::blob_db::BlobDB instead.");
           file_range.MarkKeyDone(iter);
           continue;
       }
@@ -5122,7 +5122,7 @@ Status VersionSet::ListColumnFamilies(std::vector<std::string>* column_families,
   return handler.status();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status VersionSet::ReduceNumberOfLevels(const std::string& dbname,
                                         const Options* options,
                                         const FileOptions& file_options,
@@ -5313,7 +5313,7 @@ Status VersionSet::DumpManifest(Options& options, std::string& dscname,
 
   return handler.status();
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 void VersionSet::MarkFileNumberUsed(uint64_t number) {
   // only called during recovery and repair which are single threaded, so this
@@ -6124,4 +6124,4 @@ std::vector<VersionEdit>& ReactiveVersionSet::replay_buffer() {
   return manifest_tailer_->GetReadBuffer().replay_buffer();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -10,8 +10,8 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
 #include "table/block_based/binary_search_index_reader.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -20,7 +20,7 @@
 #include "test_util/testharness.h"
 #include "utilities/memory_allocators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 struct MemcpyStats {
   int num_stack_buf_memcpy;
@@ -363,7 +363,7 @@ class BlockFetcherTest : public testing::Test {
 };
 
 // Skip the following tests in lite mode since direct I/O is unsupported.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 // Fetch index block under both direct IO and non-direct IO.
 // Expects:
@@ -509,13 +509,13 @@ TEST_F(BlockFetcherTest, FetchAndUncompressCompressedDataBlock) {
                      expected_stats_by_mode);
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 }  // namespace
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

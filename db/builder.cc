@@ -29,18 +29,18 @@
 #include "monitoring/iostats_context_imp.h"
 #include "monitoring/thread_status_util.h"
 #include "options/options_helper.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/format.h"
 #include "table/internal_iterator.h"
 #include "test_util/sync_point.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TableFactory;
 
@@ -104,11 +104,11 @@ Status BuildTable(
   std::vector<std::string> blob_file_paths;
   std::string file_checksum = kUnknownFileChecksum;
   std::string file_checksum_func_name = kUnknownFileChecksumFuncName;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   EventHelpers::NotifyTableFileCreationStarted(ioptions.listeners, dbname,
                                                tboptions.column_family_name,
                                                fname, job_id, tboptions.reason);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   Env* env = db_options.env;
   assert(env);
   FileSystem* fs = db_options.fs.get();
@@ -397,4 +397,4 @@ Status BuildTable(
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

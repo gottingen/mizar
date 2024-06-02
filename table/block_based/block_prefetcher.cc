@@ -10,7 +10,7 @@
 
 #include "table/block_based/block_based_table_reader.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 void BlockPrefetcher::PrefetchIfNeeded(const BlockBasedTable::Rep* rep,
                                        const BlockHandle& handle,
                                        size_t readahead_size,
@@ -97,4 +97,4 @@ void BlockPrefetcher::PrefetchIfNeeded(const BlockBasedTable::Rep* rep,
   // max_auto_readahead_size.
   readahead_size_ = std::min(max_auto_readahead_size, readahead_size_ * 2);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

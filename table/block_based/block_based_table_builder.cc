@@ -28,14 +28,14 @@
 #include "index_builder.h"
 #include "logging/logging.h"
 #include "memory/memory_allocator.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/table.h"
-#include "rocksdb/types.h"
+#include "mizar/cache.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/merge_operator.h"
+#include "mizar/table.h"
+#include "mizar/types.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_filter_block.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -55,7 +55,7 @@
 #include "util/string_util.h"
 #include "util/work_queue.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const std::string kHashIndexPrefixesBlock;
 extern const std::string kHashIndexPrefixesMetadataBlock;
@@ -2076,4 +2076,4 @@ const std::string BlockBasedTable::kFilterBlockPrefix = "filter.";
 const std::string BlockBasedTable::kFullFilterBlockPrefix = "fullfilter.";
 const std::string BlockBasedTable::kPartitionedFilterBlockPrefix =
     "partitionedfilter.";
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

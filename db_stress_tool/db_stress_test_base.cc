@@ -13,18 +13,18 @@
 #include "db_stress_tool/db_stress_compaction_filter.h"
 #include "db_stress_tool/db_stress_driver.h"
 #include "db_stress_tool/db_stress_table_properties_collector.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/sst_file_manager.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/filter_policy.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/sst_file_manager.h"
+#include "mizar/types.h"
+#include "mizar/utilities/object_registry.h"
 #include "util/cast_util.h"
 #include "utilities/backupable/backupable_db_impl.h"
 #include "utilities/fault_injection_fs.h"
 #include "utilities/fault_injection_secondary_cache.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -59,7 +59,7 @@ StressTest::StressTest()
       compressed_cache_(NewLRUCache(FLAGS_compressed_cache_size)),
       filter_policy_(CreateFilterPolicy()),
       db_(nullptr),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       txn_db_(nullptr),
 #endif
       clock_(db_stress_env->GetSystemClock().get()),
@@ -80,14 +80,14 @@ StressTest::StressTest()
     Options options;
     options.env = db_stress_env;
     // Remove files without preserving manfiest files
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     const Status s = !FLAGS_use_blob_db
                          ? DestroyDB(FLAGS_db, options)
                          : blob_db::DestroyBlobDB(FLAGS_db, options,
                                                   blob_db::BlobDBOptions());
 #else
     const Status s = DestroyDB(FLAGS_db, options);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
     if (!s.ok()) {
       fprintf(stderr, "Cannot destroy original db: %s\n", s.ToString().c_str());
@@ -138,7 +138,7 @@ std::shared_ptr<Cache> StressTest::NewCache(size_t capacity,
     LRUCacheOptions opts;
     opts.capacity = capacity;
     opts.num_shard_bits = num_shard_bits;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::shared_ptr<SecondaryCache> secondary_cache;
     if (!FLAGS_secondary_cache_uri.empty()) {
       Status s = SecondaryCache::CreateFromString(
@@ -336,7 +336,7 @@ void StressTest::FinishInitDb(SharedState* shared) {
 }
 
 bool StressTest::VerifySecondaries() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (FLAGS_test_secondary) {
     uint64_t now = clock_->NowMicros();
     fprintf(stdout, "%s Start to verify secondaries against primary\n",
@@ -386,7 +386,7 @@ bool StressTest::VerifySecondaries() {
     fprintf(stdout, "%s Verification of secondaries succeeded\n",
             clock_->TimeToString(static_cast<uint64_t>(now) / 1000000).c_str());
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   return true;
 }
 
@@ -495,7 +495,7 @@ void StressTest::PreloadDbAndReopenAsReadOnly(int64_t number_of_keys,
         if (!FLAGS_use_txn) {
           s = db_->Merge(write_opts, cfh, key, v);
         } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
           Transaction* txn;
           s = NewTxn(write_opts, &txn);
           if (s.ok()) {
@@ -517,7 +517,7 @@ void StressTest::PreloadDbAndReopenAsReadOnly(int64_t number_of_keys,
           }
           s = db_->Put(write_opts, cfh, key, v);
         } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
           Transaction* txn;
           s = NewTxn(write_opts, &txn);
           if (s.ok()) {
@@ -550,7 +550,7 @@ void StressTest::PreloadDbAndReopenAsReadOnly(int64_t number_of_keys,
     column_families_.clear();
     delete db_;
     db_ = nullptr;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     txn_db_ = nullptr;
 #endif
 
@@ -593,7 +593,7 @@ Status StressTest::SetOptions(ThreadState* thread) {
   return db_->SetOptions(cfh, opts);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status StressTest::NewTxn(WriteOptions& write_opts, Transaction** txn) {
   if (!FLAGS_use_txn) {
     return Status::InvalidArgument("NewTxn when FLAGS_use_txn is not set");
@@ -766,7 +766,7 @@ void StressTest::OperateDb(ThreadState* thread) {
         }
       }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       // Verify GetLiveFiles with a 1 in N chance.
       if (thread->rand.OneInOpt(FLAGS_get_live_files_one_in) &&
           !FLAGS_write_fault_one_in) {
@@ -793,7 +793,7 @@ void StressTest::OperateDb(ThreadState* thread) {
                             status);
         }
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
       if (thread->rand.OneInOpt(FLAGS_pause_background_one_in)) {
         Status status = TestPauseBackground(thread);
@@ -803,7 +803,7 @@ void StressTest::OperateDb(ThreadState* thread) {
         }
       }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (thread->rand.OneInOpt(FLAGS_verify_checksum_one_in)) {
         Status status = db_->VerifyChecksum();
         if (!status.ok()) {
@@ -850,7 +850,7 @@ void StressTest::OperateDb(ThreadState* thread) {
         }
       }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       if (thread->rand.OneInOpt(FLAGS_approximate_size_one_in)) {
         Status s =
             TestApproximateSize(thread, i, rand_column_families, rand_keys);
@@ -858,7 +858,7 @@ void StressTest::OperateDb(ThreadState* thread) {
           VerificationAbort(shared, "ApproximateSize Failed", s);
         }
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       if (thread->rand.OneInOpt(FLAGS_acquire_snapshot_one_in)) {
         TestAcquireSnapshot(thread, rand_column_family, keystr, i);
       }
@@ -942,7 +942,7 @@ void StressTest::OperateDb(ThreadState* thread) {
         TestCustomOperations(thread, rand_column_families);
       }
       thread->stats.FinishedSingleOp();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       uint32_t tid = thread->tid;
       assert(secondaries_.empty() ||
              static_cast<size_t>(tid) < secondaries_.size());
@@ -965,7 +965,7 @@ void StressTest::OperateDb(ThreadState* thread) {
   thread->stats.Stop();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Generated a list of keys that close to boundaries of SST keys.
 // If there isn't any SST file in the DB, return empty list.
 std::vector<std::string> StressTest::GetWhiteBoxKeys(ThreadState* thread,
@@ -1024,7 +1024,7 @@ std::vector<std::string> StressTest::GetWhiteBoxKeys(ThreadState* thread,
   }
   return ret;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Given a key K, this creates an iterator which scans to K and then
 // does a random sequence of Next/Prev operations.
@@ -1210,7 +1210,7 @@ Status StressTest::TestIterate(ThreadState* thread,
   return s;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Test the return status of GetLiveFiles.
 Status StressTest::VerifyGetLiveFiles() const {
   std::vector<std::string> live_file;
@@ -1229,7 +1229,7 @@ Status StressTest::VerifyGetCurrentWalFile() const {
   std::unique_ptr<LogFile> cur_wal_file;
   return db_->GetCurrentWalFile(&cur_wal_file);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // Compare the two iterator, iter and cmp_iter are in the same position,
 // unless iter might be made invalidate or undefined because of
@@ -1372,7 +1372,7 @@ void StressTest::VerifyIterator(ThreadState* thread,
   }
 }
 
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
 Status StressTest::TestBackupRestore(
     ThreadState* /* thread */,
     const std::vector<int>& /* rand_column_families */,
@@ -1403,7 +1403,7 @@ void StressTest::TestCompactFiles(ThreadState* /* thread */,
           "CompactFiles\n");
   std::terminate();
 }
-#else   // ROCKSDB_LITE
+#else   // MIZAR_LITE
 Status StressTest::TestBackupRestore(
     ThreadState* thread, const std::vector<int>& rand_column_families,
     const std::vector<int64_t>& rand_keys) {
@@ -1838,7 +1838,7 @@ void StressTest::TestGetProperty(ThreadState* thread) const {
     }
   }
 
-  ROCKSDB_NAMESPACE::ColumnFamilyMetaData cf_meta_data;
+  MIZAR_NAMESPACE::ColumnFamilyMetaData cf_meta_data;
   db_->GetColumnFamilyMetaData(&cf_meta_data);
   int level_size = static_cast<int>(cf_meta_data.levels.size());
   for (int level = 0; level < level_size; level++) {
@@ -1863,7 +1863,7 @@ void StressTest::TestGetProperty(ThreadState* thread) const {
 
 void StressTest::TestCompactFiles(ThreadState* thread,
                                   ColumnFamilyHandle* column_family) {
-  ROCKSDB_NAMESPACE::ColumnFamilyMetaData cf_meta_data;
+  MIZAR_NAMESPACE::ColumnFamilyMetaData cf_meta_data;
   db_->GetColumnFamilyMetaData(column_family, &cf_meta_data);
 
   if (cf_meta_data.levels.empty()) {
@@ -1911,7 +1911,7 @@ void StressTest::TestCompactFiles(ThreadState* thread,
     }
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status StressTest::TestFlush(const std::vector<int>& rand_column_families) {
   FlushOptions flush_opts;
@@ -1946,7 +1946,7 @@ void StressTest::TestAcquireSnapshot(ThreadState* thread,
   Slice key = keystr;
   ColumnFamilyHandle* column_family = column_families_[rand_column_family];
   ReadOptions ropt;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   auto db_impl = static_cast_with_check<DBImpl>(db_->GetRootDB());
   const bool ww_snapshot = thread->rand.OneIn(10);
   const Snapshot* snapshot =
@@ -1954,7 +1954,7 @@ void StressTest::TestAcquireSnapshot(ThreadState* thread,
                   : db_->GetSnapshot();
 #else
   const Snapshot* snapshot = db_->GetSnapshot();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   ropt.snapshot = snapshot;
 
   // Ideally, we want snapshot taking and timestamp generation to be atomic
@@ -2133,10 +2133,10 @@ void StressTest::PrintEnv() const {
   fprintf(stdout, "Format version            : %d\n", FLAGS_format_version);
   fprintf(stdout, "TransactionDB             : %s\n",
           FLAGS_use_txn ? "true" : "false");
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   fprintf(stdout, "Stacked BlobDB            : %s\n",
           FLAGS_use_blob_db ? "true" : "false");
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   fprintf(stdout, "Read only mode            : %s\n",
           FLAGS_read_only ? "true" : "false");
   fprintf(stdout, "Atomic flush              : %s\n",
@@ -2250,7 +2250,7 @@ void StressTest::PrintEnv() const {
 
 void StressTest::Open() {
   assert(db_ == nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   assert(txn_db_ == nullptr);
 #endif
   if (FLAGS_options_file.empty()) {
@@ -2297,7 +2297,7 @@ void StressTest::Open() {
     options_.max_background_compactions = FLAGS_max_background_compactions;
     options_.max_background_flushes = FLAGS_max_background_flushes;
     options_.compaction_style =
-        static_cast<ROCKSDB_NAMESPACE::CompactionStyle>(FLAGS_compaction_style);
+        static_cast<MIZAR_NAMESPACE::CompactionStyle>(FLAGS_compaction_style);
     if (FLAGS_prefix_size >= 0) {
       options_.prefix_extractor.reset(
           NewFixedPrefixTransform(FLAGS_prefix_size));
@@ -2382,7 +2382,7 @@ void StressTest::Open() {
     options_.blob_compaction_readahead_size =
         FLAGS_blob_compaction_readahead_size;
   } else {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
     fprintf(stderr, "--options_file not supported in lite mode\n");
     exit(1);
 #else
@@ -2397,7 +2397,7 @@ void StressTest::Open() {
       exit(1);
     }
     options_ = Options(db_options, cf_descriptors[0].options);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   if (FLAGS_rate_limiter_bytes_per_sec > 0) {
@@ -2440,7 +2440,7 @@ void StressTest::Open() {
     case kSkipList:
       // no need to do anything
       break;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     case kHashSkipList:
       options_.memtable_factory.reset(NewHashSkipListRepFactory(10000));
       break;
@@ -2452,7 +2452,7 @@ void StressTest::Open() {
       fprintf(stderr,
               "RocksdbLite only supports skip list mem table. Skip "
               "--rep_factory\n");
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   if (FLAGS_use_full_merge_v1) {
@@ -2550,10 +2550,10 @@ void StressTest::Open() {
       column_family_names_.push_back(name);
     }
     options_.listeners.clear();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     options_.listeners.emplace_back(
         new DbStressListener(FLAGS_db, options_.db_paths, cf_descriptors));
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
     options_.create_missing_column_families = true;
     if (!FLAGS_use_txn) {
 #ifndef NDEBUG
@@ -2599,7 +2599,7 @@ void StressTest::Open() {
       }
       while (true) {
 #endif  // NDEBUG
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         // StackableDB-based BlobDB
         if (FLAGS_use_blob_db) {
           blob_db::BlobDBOptions blob_db_options;
@@ -2617,7 +2617,7 @@ void StressTest::Open() {
             db_ = blob_db;
           }
         } else
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
         {
           if (db_preload_finished_.load() && FLAGS_read_only) {
             s = DB::OpenForReadOnly(DBOptions(options_), FLAGS_db,
@@ -2675,7 +2675,7 @@ void StressTest::Open() {
       }
 #endif  // NDEBUG
     } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       TransactionDBOptions txn_db_options;
       assert(FLAGS_txn_write_policy <= TxnDBWritePolicy::WRITE_UNPREPARED);
       txn_db_options.write_policy =
@@ -2718,7 +2718,7 @@ void StressTest::Open() {
                           static_cast<size_t>(FLAGS_column_families));
 
     if (s.ok() && FLAGS_test_secondary) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       secondaries_.resize(FLAGS_threads);
       std::fill(secondaries_.begin(), secondaries_.end(), nullptr);
       secondary_cfh_lists_.clear();
@@ -2755,7 +2755,7 @@ void StressTest::Open() {
              cmp_cfhs_.size() == static_cast<size_t>(FLAGS_column_families));
     }
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     DBWithTTL* db_with_ttl;
     s = DBWithTTL::Open(options_, FLAGS_db, &db_with_ttl, FLAGS_ttl);
     db_ = db_with_ttl;
@@ -2788,7 +2788,7 @@ void StressTest::Open() {
 }
 
 void StressTest::Reopen(ThreadState* thread) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // BG jobs in WritePrepared must be canceled first because i) they can access
   // the db via a callbac ii) they hold on to a snapshot and the upcoming
   // ::Close would complain about it.
@@ -2810,7 +2810,7 @@ void StressTest::Reopen(ThreadState* thread) {
   }
   column_families_.clear();
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (thread->rand.OneIn(2)) {
     Status s = db_->Close();
     if (!s.ok()) {
@@ -2822,7 +2822,7 @@ void StressTest::Reopen(ThreadState* thread) {
 #endif
   delete db_;
   db_ = nullptr;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   txn_db_ = nullptr;
 #endif
 
@@ -2891,12 +2891,12 @@ void StressTest::CheckAndSetOptionsForUserTimestamp() {
             FLAGS_checkpoint_one_in);
     exit(1);
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (FLAGS_enable_blob_files || FLAGS_use_blob_db) {
     fprintf(stderr, "BlobDB not supported with timestamp.\n");
     exit(1);
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   if (FLAGS_enable_compaction_filter) {
     fprintf(stderr, "CompactionFilter not supported with timestamp.\n");
     exit(1);
@@ -2913,5 +2913,5 @@ void StressTest::CheckAndSetOptionsForUserTimestamp() {
   }
   options_.comparator = cmp;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

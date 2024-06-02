@@ -10,19 +10,19 @@
 #include <unordered_set>
 
 #include "file/filename.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/unique_id.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
+#include "mizar/listener.h"
+#include "mizar/table_properties.h"
+#include "mizar/unique_id.h"
 #include "util/gflags_compat.h"
 #include "util/random.h"
 
 DECLARE_int32(compact_files_one_in);
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // Verify across process executions that all seen IDs are unique
 class UniqueIdVerifier {
  public:
@@ -263,6 +263,6 @@ class DbStressListener : public EventListener {
   std::atomic<int> num_pending_file_creations_;
   UniqueIdVerifier unique_ids_;
 };
-#endif  // !ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // !MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

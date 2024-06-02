@@ -9,14 +9,14 @@
 
 #include "file/filename.h"
 #include "logging/logging.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // -- AutoRollLogger
 
 AutoRollLogger::AutoRollLogger(const std::shared_ptr<FileSystem>& fs,
@@ -257,7 +257,7 @@ bool AutoRollLogger::LogExpired() {
   ++cached_now_access_count;
   return cached_now >= ctime_ + kLogFileTimeToRoll;
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status CreateLoggerFromOptions(const std::string& dbname,
                                const DBOptions& options,
@@ -280,7 +280,7 @@ Status CreateLoggerFromOptions(const std::string& dbname,
   env->CreateDirIfMissing(dbname)
       .PermitUncheckedError();  // In case it does not exist
   // Currently we only support roll by time-to-roll and log size
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (options.log_file_time_to_roll > 0 || options.max_log_file_size > 0) {
     AutoRollLogger* result = new AutoRollLogger(
         env->GetFileSystem(), clock, dbname, options.db_log_dir,
@@ -294,7 +294,7 @@ Status CreateLoggerFromOptions(const std::string& dbname,
     }
     return s;
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   // Open a log file in the same directory as the db
   s = env->FileExists(fname);
   if (s.ok()) {
@@ -314,4 +314,4 @@ Status CreateLoggerFromOptions(const std::string& dbname,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

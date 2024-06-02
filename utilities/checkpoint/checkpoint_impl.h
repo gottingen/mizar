@@ -4,15 +4,15 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/checkpoint.h"
+#include "mizar/utilities/checkpoint.h"
 
 #include <string>
 #include "file/filename.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CheckpointImpl : public Checkpoint {
  public:
@@ -60,6 +60,6 @@ class CheckpointImpl : public Checkpoint {
   DB* db_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

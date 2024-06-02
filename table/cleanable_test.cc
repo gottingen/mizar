@@ -7,12 +7,12 @@
 
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/iostats_context.h"
-#include "rocksdb/perf_context.h"
+#include "mizar/iostats_context.h"
+#include "mizar/perf_context.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CleanableTest : public testing::Test {};
 
@@ -268,10 +268,10 @@ TEST_F(CleanableTest, PinnableSlice) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -5,15 +5,15 @@
 
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/options.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 #include "utilities/compaction_filters/remove_emptyvalue_compactionfilter.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 static int RegisterBuiltinCompactionFilters(ObjectLibrary& library,
                                             const std::string& /*arg*/) {
   library.AddFactory<CompactionFilter>(
@@ -25,16 +25,16 @@ static int RegisterBuiltinCompactionFilters(ObjectLibrary& library,
       });
   return 1;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 Status CompactionFilter::CreateFromString(const ConfigOptions& config_options,
                                           const std::string& value,
                                           const CompactionFilter** result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinCompactionFilters(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   CompactionFilter* filter = const_cast<CompactionFilter*>(*result);
   Status status = LoadStaticObject<CompactionFilter>(config_options, value,
                                                      nullptr, &filter);
@@ -53,4 +53,4 @@ Status CompactionFilterFactory::CreateFromString(
       config_options, value, nullptr, result);
   return status;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

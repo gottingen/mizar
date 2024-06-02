@@ -16,12 +16,12 @@
 #include "db/version_set.h"
 #include "env/mock_env.h"
 #include "file/filename.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/table.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/table.h"
+#include "mizar/write_batch.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -32,7 +32,7 @@
 #include "utilities/fault_injection_fs.h"
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const int kValueSize = 1000;
 static const int kMaxNumValues = 2000;
@@ -91,8 +91,8 @@ class FaultInjectionTest
   }
 
   ~FaultInjectionTest() override {
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
   }
 
   bool ChangeOptions() {
@@ -447,14 +447,14 @@ TEST_P(FaultInjectionTest, UninstalledCompaction) {
   OpenDB();
 
   if (!sequential_order_) {
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {"FaultInjectionTest::FaultTest:0", "DBImpl::BGWorkCompaction"},
         {"CompactionJob::Run():End", "FaultInjectionTest::FaultTest:1"},
         {"FaultInjectionTest::FaultTest:2",
          "DBImpl::BackgroundCompaction:NonTrivial:AfterRun"},
     });
   }
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   int kNumKeys = 1000;
   Build(WriteOptions(), 0, kNumKeys);
@@ -467,22 +467,22 @@ TEST_P(FaultInjectionTest, UninstalledCompaction) {
   env_->SetFilesystemActive(false);
   TEST_SYNC_POINT("FaultInjectionTest::FaultTest:2");
   CloseDB();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ResetDBState(kResetDropUnsyncedData);
 
   std::atomic<bool> opened(false);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::Open:Opened", [&](void* /*arg*/) { opened.store(true); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BGWorkCompaction",
       [&](void* /*arg*/) { ASSERT_TRUE(opened.load()); });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(OpenDB());
   ASSERT_OK(Verify(0, kNumKeys, FaultInjectionTest::kValExpectFound));
   WaitCompactionFinish();
   ASSERT_OK(Verify(0, kNumKeys, FaultInjectionTest::kValExpectFound));
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_P(FaultInjectionTest, ManualLogSyncTest) {
@@ -628,7 +628,7 @@ INSTANTIATE_TEST_CASE_P(
                       std::make_tuple(false, kSyncWal, kEnd),
                       std::make_tuple(true, kSyncWal, kEnd)));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

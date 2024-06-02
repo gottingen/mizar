@@ -17,13 +17,13 @@
 
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/file_system.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/transaction_log.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Env;
 class Directory;
@@ -184,4 +184,4 @@ extern Status GetInfoLogFiles(const std::shared_ptr<FileSystem>& fs,
                               std::vector<std::string>* file_names);
 
 extern std::string NormalizePath(const std::string& path);
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

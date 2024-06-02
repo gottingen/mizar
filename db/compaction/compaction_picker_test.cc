@@ -16,7 +16,7 @@
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CountingLogger : public Logger {
  public:
@@ -449,8 +449,8 @@ TEST_F(CompactionPickerTest, LevelTriggerDynamic4) {
   ASSERT_EQ(num_levels - 1, compaction->output_level());
 }
 
-// Universal and FIFO Compactions are not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// Universal and FIFO Compactions are not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
 TEST_F(CompactionPickerTest, NeedsCompactionUniversal) {
   NewVersionStorage(1, kCompactionStyleUniversal);
   UniversalCompactionPicker universal_compaction_picker(
@@ -1213,7 +1213,7 @@ TEST_F(CompactionPickerTest, FIFOToWarmWithHotBetweenWarms) {
   ASSERT_EQ(2U, compaction->input(0, 0)->fd.GetNumber());
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(CompactionPickerTest, CompactionPriMinOverlapping1) {
   NewVersionStorage(6, kCompactionStyleLevel);
@@ -2368,7 +2368,7 @@ TEST_F(CompactionPickerTest, IntraL0ForEarliestSeqno) {
   ASSERT_EQ(0, compaction->output_level());
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(CompactionPickerTest, UniversalMarkedCompactionFullOverlap) {
   const uint64_t kFileSize = 100000;
 
@@ -2696,9 +2696,9 @@ TEST_F(CompactionPickerTest, UniversalMarkedManualCompaction) {
   ASSERT_EQ(0U, vstorage_->FilesMarkedForCompaction().size());
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <algorithm>
 #include <memory>
 #include <set>
@@ -14,11 +14,11 @@
 #include "memory/arena.h"
 #include "memtable/stl_wrappers.h"
 #include "port/port.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/memtablerep.h"
+#include "mizar/utilities/options_type.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 
 class VectorRep : public MemTableRep {
@@ -307,5 +307,5 @@ MemTableRep* VectorRepFactory::CreateMemTableRep(
     const SliceTransform*, Logger* /*logger*/) {
   return new VectorRep(compare, allocator, count_);
 }
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

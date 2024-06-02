@@ -11,13 +11,13 @@
 #include "db/dbformat.h"
 #include "db/lookup_key.h"
 #include "db/merge_context.h"
-#include "rocksdb/env.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/types.h"
+#include "mizar/env.h"
+#include "mizar/statistics.h"
+#include "mizar/types.h"
 #include "util/autovector.h"
 #include "util/math.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class GetContext;
 
 struct KeyContext {
@@ -286,4 +286,4 @@ class MultiGetContext {
   Range GetMultiGetRange() { return Range(this, num_keys_); }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

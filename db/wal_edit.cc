@@ -5,11 +5,11 @@
 
 #include "db/wal_edit.h"
 
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void WalAddition::EncodeTo(std::string* dst) const {
   PutVarint64(dst, number_);
@@ -201,4 +201,4 @@ Status WalSet::CheckWals(
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

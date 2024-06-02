@@ -11,7 +11,7 @@
 #include <sys/ioctl.h>
 #endif
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 #include <liburing.h>
 #include <sys/uio.h>
 #endif
@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
 #include <errno.h>
 #endif
 
@@ -47,12 +47,12 @@
 #include "port/malloc.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env.h"
-#include "rocksdb/env_encryption.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/env.h"
+#include "mizar/env_encryption.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
@@ -66,7 +66,7 @@
 #include "utilities/fault_injection_env.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 using port::kPageSize;
 
@@ -233,15 +233,15 @@ TEST_F(EnvPosixTest, DISABLED_FilePermission) {
 TEST_F(EnvPosixTest, LowerThreadPoolCpuPriority) {
   std::atomic<CpuPriority> from_priority(CpuPriority::kNormal);
   std::atomic<CpuPriority> to_priority(CpuPriority::kNormal);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ThreadPoolImpl::BGThread::BeforeSetCpuPriority", [&](void* pri) {
         from_priority.store(*reinterpret_cast<CpuPriority*>(pri));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ThreadPoolImpl::BGThread::AfterSetCpuPriority", [&](void* pri) {
         to_priority.store(*reinterpret_cast<CpuPriority*>(pri));
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   env_->SetBackgroundThreads(1, Env::BOTTOM);
   env_->SetBackgroundThreads(1, Env::HIGH);
@@ -304,8 +304,8 @@ TEST_F(EnvPosixTest, LowerThreadPoolCpuPriority) {
     ASSERT_EQ(to_priority, CpuPriority::kIdle);
   }
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 #endif
 
@@ -344,7 +344,7 @@ TEST_F(EnvPosixTest, MemoryMappedFileBuffer) {
   ASSERT_EQ(expected_data, actual_data);
 }
 
-#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
+#ifndef MIZAR_NO_DYNAMIC_EXTENSION
 TEST_F(EnvPosixTest, LoadRocksDBLibrary) {
   std::shared_ptr<DynamicLibrary> library;
   std::function<void*(void*, const char*)> function;
@@ -364,9 +364,9 @@ TEST_F(EnvPosixTest, LoadRocksDBLibrary) {
     ASSERT_EQ(nullptr, library.get());
   }
 }
-#endif  // !ROCKSDB_NO_DYNAMIC_EXTENSION
+#endif  // !MIZAR_NO_DYNAMIC_EXTENSION
 
-#if !defined(OS_WIN) && !defined(ROCKSDB_NO_DYNAMIC_EXTENSION)
+#if !defined(OS_WIN) && !defined(MIZAR_NO_DYNAMIC_EXTENSION)
 TEST_F(EnvPosixTest, LoadRocksDBLibraryWithSearchPath) {
   std::shared_ptr<DynamicLibrary> library;
   std::function<void*(void*, const char*)> function;
@@ -388,7 +388,7 @@ TEST_F(EnvPosixTest, LoadRocksDBLibraryWithSearchPath) {
     ASSERT_OK(env_->LoadLibrary(library->Name(), "", &library));
   }
 }
-#endif  // !OS_WIN && !ROCKSDB_NO_DYNAMIC_EXTENSION
+#endif  // !OS_WIN && !MIZAR_NO_DYNAMIC_EXTENSION
 
 TEST_P(EnvPosixTestWithParam, UnSchedule) {
   std::atomic<bool> called(false);
@@ -961,7 +961,7 @@ class IoctlFriendlyTmpdir {
   std::string dir_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(EnvPosixTest, PositionedAppend) {
   std::unique_ptr<WritableFile> writable_file;
   EnvOptions options;
@@ -993,7 +993,7 @@ TEST_F(EnvPosixTest, PositionedAppend) {
   ASSERT_EQ('a', result[kBlockSize - 1]);
   ASSERT_EQ('b', result[kBlockSize]);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 // `GetUniqueId()` temporarily returns zero on Windows. `BlockBasedTable` can
 // handle a return value of zero but this test case cannot.
@@ -1043,7 +1043,7 @@ TEST_P(EnvPosixTestWithParam, RandomAccessUniqueID) {
 #endif  // !defined(OS_WIN)
 
 // only works in linux platforms
-#ifdef ROCKSDB_FALLOCATE_PRESENT
+#ifdef MIZAR_FALLOCATE_PRESENT
 TEST_P(EnvPosixTestWithParam, AllocateTest) {
   if (env_ == Env::Default()) {
     IoctlFriendlyTmpdir ift;
@@ -1114,7 +1114,7 @@ TEST_P(EnvPosixTestWithParam, AllocateTest) {
               (unsigned int)f_stat.st_blocks);
   }
 }
-#endif  // ROCKSDB_FALLOCATE_PRESENT
+#endif  // MIZAR_FALLOCATE_PRESENT
 
 // Returns true if any of the strings in ss are the prefix of another string.
 bool HasPrefix(const std::unordered_set<std::string>& ss) {
@@ -1248,7 +1248,7 @@ TEST_P(EnvPosixTestWithParam, MultiRead) {
   for (uint32_t attempt = 0; attempt < 20; attempt++) {
     // Random Read
     Random rnd(301 + attempt);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "PosixRandomAccessFile::MultiRead:io_uring_result", [&](void* arg) {
           if (attempt > 0) {
             // No failure in the first attempt.
@@ -1261,7 +1261,7 @@ TEST_P(EnvPosixTestWithParam, MultiRead) {
             }
           }
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     std::unique_ptr<RandomAccessFile> file;
     std::vector<ReadRequest> reqs(3);
@@ -1287,7 +1287,7 @@ TEST_P(EnvPosixTestWithParam, MultiRead) {
       ASSERT_OK(reqs[i].status);
       ASSERT_EQ(memcmp(reqs[i].scratch, buf.get(), kSectorSize), 0);
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 }
 
@@ -1318,7 +1318,7 @@ TEST_F(EnvPosixTest, MultiReadNonAlignedLargeNum) {
     // too long, we can modify the io uring depth with SyncPoint here.
     const int num_reads = rnd.Uniform(512) + 1;
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "PosixRandomAccessFile::MultiRead:io_uring_result", [&](void* arg) {
           if (attempt > 5) {
             // Improve partial result rates in second half of the run to
@@ -1334,7 +1334,7 @@ TEST_F(EnvPosixTest, MultiReadNonAlignedLargeNum) {
             }
           }
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     // Generate (offset, len) pairs
     std::set<int> start_offsets;
@@ -1379,11 +1379,11 @@ TEST_F(EnvPosixTest, MultiReadNonAlignedLargeNum) {
                 reqs[i].result.ToString(true));
     }
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 }
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 void GenerateFilesAndRequest(Env* env, const std::string& fname,
                              std::vector<ReadRequest>* ret_reqs,
                              std::vector<std::string>* scratches) {
@@ -1496,7 +1496,7 @@ TEST_F(EnvPosixTest, MultiReadIOUringError2) {
   SyncPoint::GetInstance()->DisableProcessing();
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // ROCKSDB_IOURING_PRESENT
+#endif  // MIZAR_IOURING_PRESENT
 
 // Only works in linux platforms
 #ifdef OS_WIN
@@ -1504,7 +1504,7 @@ TEST_P(EnvPosixTestWithParam, DISABLED_InvalidateCache) {
 #else
 TEST_P(EnvPosixTestWithParam, InvalidateCache) {
 #endif
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   EnvOptions soptions;
   soptions.use_direct_reads = soptions.use_direct_writes = direct_io_;
   std::string fname = test::PerThreadDBPath(env_, "testfile");
@@ -1566,7 +1566,7 @@ TEST_P(EnvPosixTestWithParam, InvalidateCache) {
     }
     // Delete the file
     ASSERT_OK(env_->DeleteFile(fname));
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
 }
 #endif  // not TRAVIS
 #endif  // OS_LINUX || OS_WIN
@@ -1689,14 +1689,14 @@ TEST_P(EnvPosixTestWithParam, LogBufferMaxSizeTest) {
 }
 
 TEST_P(EnvPosixTestWithParam, Preallocation) {
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   const std::string src = test::PerThreadDBPath(env_, "testfile");
   std::unique_ptr<WritableFile> srcfile;
   EnvOptions soptions;
   soptions.use_direct_reads = soptions.use_direct_writes = direct_io_;
 #if !defined(OS_MACOSX) && !defined(OS_WIN) && !defined(OS_SOLARIS) && !defined(OS_AIX) && !defined(OS_OPENBSD) && !defined(OS_FREEBSD)
     if (soptions.use_direct_writes) {
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
           "NewWritableFile:O_DIRECT", [&](void* arg) {
             int* val = static_cast<int*>(arg);
             *val &= ~O_DIRECT;
@@ -1739,13 +1739,13 @@ TEST_P(EnvPosixTestWithParam, Preallocation) {
       srcfile->GetPreallocationStatus(&block_size, &last_allocated_block);
       ASSERT_EQ(last_allocated_block, 7UL);
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
 }
 
 // Test that the two ways to get children file attributes (in bulk or
 // individually) behave consistently.
 TEST_P(EnvPosixTestWithParam, ConsistentChildrenAttributes) {
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   EnvOptions soptions;
   soptions.use_direct_reads = soptions.use_direct_writes = direct_io_;
   const int kNumChildren = 10;
@@ -1758,7 +1758,7 @@ TEST_P(EnvPosixTestWithParam, ConsistentChildrenAttributes) {
     std::unique_ptr<WritableFile> file;
 #if !defined(OS_MACOSX) && !defined(OS_WIN) && !defined(OS_SOLARIS) && !defined(OS_AIX) && !defined(OS_OPENBSD) && !defined(OS_FREEBSD)
       if (soptions.use_direct_writes) {
-        ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+        MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
             "NewWritableFile:O_DIRECT", [&](void* arg) {
               int* val = static_cast<int*>(arg);
               *val &= ~O_DIRECT;
@@ -1787,7 +1787,7 @@ TEST_P(EnvPosixTestWithParam, ConsistentChildrenAttributes) {
       ASSERT_EQ(size, 4096 * i);
       ASSERT_EQ(size, file_attrs_iter->size_bytes);
     }
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
 }
 
 // Test that all WritableFileWrapper forwards all calls to WritableFile.
@@ -2230,13 +2230,13 @@ TEST_F(EnvTest, LogvWithInfoLogLevel) {
 INSTANTIATE_TEST_CASE_P(DefaultEnvWithoutDirectIO, EnvPosixTestWithParam,
                         ::testing::Values(std::pair<Env*, bool>(Env::Default(),
                                                                 false)));
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 INSTANTIATE_TEST_CASE_P(DefaultEnvWithDirectIO, EnvPosixTestWithParam,
                         ::testing::Values(std::pair<Env*, bool>(Env::Default(),
                                                                 true)));
-#endif  // !defined(ROCKSDB_LITE)
+#endif  // !defined(MIZAR_LITE)
 
-#if !defined(ROCKSDB_LITE) && !defined(OS_WIN)
+#if !defined(MIZAR_LITE) && !defined(OS_WIN)
 static Env* GetChrootEnv() {
   static std::unique_ptr<Env> chroot_env(
       NewChrootEnv(Env::Default(), test::TmpDir(Env::Default())));
@@ -2248,7 +2248,7 @@ INSTANTIATE_TEST_CASE_P(ChrootEnvWithoutDirectIO, EnvPosixTestWithParam,
 INSTANTIATE_TEST_CASE_P(ChrootEnvWithDirectIO, EnvPosixTestWithParam,
                         ::testing::Values(std::pair<Env*, bool>(GetChrootEnv(),
                                                                 true)));
-#endif  // !defined(ROCKSDB_LITE) && !defined(OS_WIN)
+#endif  // !defined(MIZAR_LITE) && !defined(OS_WIN)
 
 class EnvFSTestWithParam
     : public ::testing::Test,
@@ -2413,7 +2413,7 @@ class CreateEnvTest : public testing::Test {
   ConfigOptions config_options_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(CreateEnvTest, LoadCTRProvider) {
   config_options_.invoke_prepare_options = false;
   std::string CTR = CTREncryptionProvider::kClassName();
@@ -2472,7 +2472,7 @@ TEST_F(CreateEnvTest, LoadROT13Cipher) {
   ASSERT_NE(cipher, nullptr);
   ASSERT_STREQ(cipher->Name(), "ROT13");
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(CreateEnvTest, CreateDefaultSystemClock) {
   std::shared_ptr<SystemClock> clock, copy;
@@ -2480,15 +2480,15 @@ TEST_F(CreateEnvTest, CreateDefaultSystemClock) {
                                           SystemClock::kDefaultName(), &clock));
   ASSERT_NE(clock, nullptr);
   ASSERT_EQ(clock, SystemClock::Default());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string opts_str = clock->ToString(config_options_);
   std::string mismatch;
   ASSERT_OK(SystemClock::CreateFromString(config_options_, opts_str, &copy));
   ASSERT_TRUE(clock->AreEquivalent(config_options_, copy.get(), &mismatch));
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(CreateEnvTest, CreateMockSystemClock) {
   std::shared_ptr<SystemClock> mock, copy;
 
@@ -2672,7 +2672,7 @@ TEST_F(CreateEnvTest, CreateEncryptedFileSystem) {
   ASSERT_TRUE(fs->AreEquivalent(config_options_, copy.get(), &mismatch));
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 namespace {
 
@@ -2920,17 +2920,17 @@ TEST_F(EnvTest, CreateDefaultEnv) {
   ASSERT_EQ(env, Env::Default());
   ASSERT_EQ(guard, nullptr);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::string opt_str = env->ToString(options);
   ASSERT_OK(Env::CreateFromString(options, opt_str, &env));
   ASSERT_EQ(env, Env::Default());
   ASSERT_OK(Env::CreateFromString(options, opt_str, &env, &guard));
   ASSERT_EQ(env, Env::Default());
   ASSERT_EQ(guard, nullptr);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 class WrappedEnv : public EnvWrapper {
  public:
@@ -3070,12 +3070,12 @@ TEST_F(EnvTest, CreateCompositeEnv) {
   ASSERT_NE(env, Env::Default());
   ASSERT_TRUE(guard->AreEquivalent(options, copy.get(), &mismatch));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -10,7 +10,7 @@
 #include "table/block_based/cachable_entry.h"
 #include "table/block_based/filter_block.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBasedTable;
 class FilePrefetchBuffer;
@@ -52,4 +52,4 @@ class FilterBlockReaderCommon : public FilterBlockReader {
   CachableEntry<TBlocklike> filter_block_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

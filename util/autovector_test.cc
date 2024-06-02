@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/autovector.h"
@@ -17,7 +17,7 @@
 using std::cout;
 using std::endl;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class AutoVectorTest : public testing::Test {};
 const unsigned long kSize = 8;
@@ -25,12 +25,12 @@ const unsigned long kSize = 8;
 namespace {
 template <class T>
 void AssertAutoVectorOnlyInStack(autovector<T, kSize>* vec, bool result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_EQ(vec->only_in_stack(), result);
 #else
   (void) vec;
   (void) result;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 }  // namespace
 
@@ -113,9 +113,9 @@ void AssertEqual(
     const autovector<size_t, kSize>& a, const autovector<size_t, kSize>& b) {
   ASSERT_EQ(a.size(), b.size());
   ASSERT_EQ(a.empty(), b.empty());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_EQ(a.only_in_stack(), b.only_in_stack());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   for (size_t i = 0; i < a.size(); ++i) {
     ASSERT_EQ(a[i], b[i]);
   }
@@ -208,7 +208,7 @@ std::vector<std::string> GetTestKeys(size_t size) {
 
   int index = 0;
   for (auto& key : keys) {
-    key = "item-" + ROCKSDB_NAMESPACE::ToString(index++);
+    key = "item-" + MIZAR_NAMESPACE::ToString(index++);
   }
   return keys;
 }
@@ -322,7 +322,7 @@ TEST_F(AutoVectorTest, PerfBench) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

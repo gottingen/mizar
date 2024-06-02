@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/write_unprepared_txn_db.h"
 #include "db/arena_wrapped_db_iter.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Instead of reconstructing a Transaction object, and calling rollback on it,
 // we can be more efficient with RollbackRecoveredTransaction by skipping
@@ -466,5 +466,5 @@ Iterator* WriteUnpreparedTxnDB::NewIterator(const ReadOptions& options,
   return db_iter;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

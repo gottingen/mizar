@@ -15,15 +15,15 @@
 #include "file/read_write_util.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/options.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "util/compression.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -966,7 +966,7 @@ TEST_P(BlobFileReaderDecodingErrorTest, DecodingError) {
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

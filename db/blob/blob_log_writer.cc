@@ -11,12 +11,12 @@
 #include "db/blob/blob_log_format.h"
 #include "file/writable_file_writer.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 BlobLogWriter::BlobLogWriter(std::unique_ptr<WritableFileWriter>&& dest,
                              SystemClock* clock, Statistics* statistics,
@@ -169,4 +169,4 @@ Status BlobLogWriter::EmitPhysicalRecord(const std::string& headerbuf,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

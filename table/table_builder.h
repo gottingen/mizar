@@ -19,11 +19,11 @@
 #include "db/table_properties_collector.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/options.h"
+#include "mizar/table_properties.h"
 #include "trace_replay/block_cache_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Slice;
 class Status;
@@ -224,4 +224,4 @@ class TableBuilder {
   virtual const char* GetFileChecksumFuncName() const = 0;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

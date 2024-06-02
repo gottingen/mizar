@@ -4,13 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <unordered_map>
 
 #include "file/random_access_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/utilities/cache_dump_load.h"
+#include "mizar/utilities/cache_dump_load.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_like_traits.h"
 #include "table/block_based/block_type.h"
@@ -18,7 +18,7 @@
 #include "table/block_based/parsed_full_filter_block.h"
 #include "table/block_based/reader_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // the read buffer size of for the default CacheDumpReader
 const unsigned int kDumpReaderBufferSize = 1024;  // 1KB
@@ -361,5 +361,5 @@ class CacheDumperHelper {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

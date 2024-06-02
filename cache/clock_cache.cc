@@ -11,7 +11,7 @@
 
 #ifndef SUPPORT_CLOCK_CACHE
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::shared_ptr<Cache> NewClockCache(
     size_t /*capacity*/, int /*num_shard_bits*/, bool /*strict_capacity_limit*/,
@@ -20,7 +20,7 @@ std::shared_ptr<Cache> NewClockCache(
   return nullptr;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #else
 
@@ -30,7 +30,7 @@ std::shared_ptr<Cache> NewClockCache(
 
 // "tbb/concurrent_hash_map.h" requires RTTI if exception is enabled.
 // Disable it so users can chooose to disable RTTI.
-#ifndef ROCKSDB_USE_RTTI
+#ifndef MIZAR_USE_RTTI
 #define TBB_USE_EXCEPTIONS 0
 #endif
 #include "cache/sharded_cache.h"
@@ -41,7 +41,7 @@ std::shared_ptr<Cache> NewClockCache(
 #include "util/autovector.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -213,7 +213,7 @@ struct CacheHandle {
     size_t meta_charge = 0;
     if (metadata_charge_policy == kFullChargeCacheMetadata) {
       meta_charge += sizeof(CacheHandle);
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
       meta_charge +=
           malloc_usable_size(static_cast<void*>(const_cast<char*>(key.data())));
 #else
@@ -834,6 +834,6 @@ std::shared_ptr<Cache> NewClockCache(
       capacity, num_shard_bits, strict_capacity_limit, metadata_charge_policy);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // SUPPORT_CLOCK_CACHE

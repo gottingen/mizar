@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -16,8 +16,8 @@ int main() {
 #include <cstdio>
 
 #include "db/write_batch_internal.h"
-#include "rocksdb/db.h"
-#include "rocksdb/types.h"
+#include "mizar/db.h"
+#include "mizar/types.h"
 #include "test_util/testutil.h"
 #include "util/gflags_compat.h"
 
@@ -35,17 +35,17 @@ DEFINE_uint64(wal_size_limit_MB, 10,
               "the wal size limit for the run"
               "(in MB)");
 
-using ROCKSDB_NAMESPACE::BatchResult;
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::DestroyDB;
-using ROCKSDB_NAMESPACE::Env;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::Random;
-using ROCKSDB_NAMESPACE::SequenceNumber;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::TransactionLogIterator;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::BatchResult;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::DestroyDB;
+using MIZAR_NAMESPACE::Env;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::Random;
+using MIZAR_NAMESPACE::SequenceNumber;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::TransactionLogIterator;
+using MIZAR_NAMESPACE::WriteOptions;
 
 using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 using GFLAGS_NAMESPACE::SetUsageMessage;
@@ -131,10 +131,10 @@ int main(int argc, const char** argv) {
 
 #endif  // GFLAGS
 
-#else  // ROCKSDB_LITE
+#else  // MIZAR_LITE
 #include <stdio.h>
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "Not supported in lite mode.\n");
   return 1;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

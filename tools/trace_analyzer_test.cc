@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -24,16 +24,16 @@ int main() {
 
 #include "db/db_test_util.h"
 #include "file/line_file_reader.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/trace_reader_writer.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "tools/trace_analyzer_tool.h"
 #include "trace_replay/trace_replay.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 static const int kMaxArgCount = 100;
@@ -50,7 +50,7 @@ class TraceAnalyzerTest : public testing::Test {
   TraceAnalyzerTest() : rnd_(0xFB) {
     // test_path_ = test::TmpDir() + "trace_analyzer_test";
     test_path_ = test::PerThreadDBPath("trace_analyzer_test");
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
     env_->CreateDir(test_path_).PermitUncheckedError();
     dbname_ = test_path_ + "/db";
   }
@@ -143,7 +143,7 @@ class TraceAnalyzerTest : public testing::Test {
       cursor += static_cast<int>(arg.size()) + 1;
     }
 
-    ASSERT_EQ(0, ROCKSDB_NAMESPACE::trace_analyzer_tool(argc, argv));
+    ASSERT_EQ(0, MIZAR_NAMESPACE::trace_analyzer_tool(argc, argv));
   }
 
   void CheckFileContent(const std::vector<std::string>& cnt,
@@ -202,7 +202,7 @@ class TraceAnalyzerTest : public testing::Test {
     RunTraceAnalyzer(paras);
   }
 
-  ROCKSDB_NAMESPACE::Env* env_;
+  MIZAR_NAMESPACE::Env* env_;
   EnvOptions env_options_;
   std::string test_path_;
   std::string dbname_;
@@ -870,7 +870,7 @@ TEST_F(TraceAnalyzerTest, MultiGet) {
   */
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -881,8 +881,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "Trace_analyzer test is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "Trace_analyzer test is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE  return RUN_ALL_TESTS();
+#endif  // !MIZAR_LITE  return RUN_ALL_TESTS();

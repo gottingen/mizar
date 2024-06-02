@@ -5,26 +5,26 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <stack>
 #include <string>
 #include <vector>
 
 #include "db/write_batch_internal.h"
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/snapshot.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/autovector.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 #include "utilities/transactions/transaction_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TransactionBaseImpl : public Transaction {
  public:
@@ -369,6 +369,6 @@ class TransactionBaseImpl : public Transaction {
   void SetSnapshotInternal(const Snapshot* snapshot);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -16,7 +16,7 @@
 #include "file/filename.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"
 #include "util/cast_util.h"
@@ -24,7 +24,7 @@
 #include "utilities/fault_injection_env.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // This is a static filter used for filtering
 // kvs during the compaction process.
@@ -73,9 +73,9 @@ TEST_F(DBFlushTest, FlushWhileWritingManifest) {
   ASSERT_OK(dbfull()->Flush(no_wait));
   // If the issue is hit we will wait here forever.
   ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_EQ(2, TotalTableFiles());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 // Disable this test temporarily on Travis as it fails intermittently.
@@ -105,9 +105,9 @@ TEST_F(DBFlushTest, SyncFail) {
   // Now the background job will do the flush; wait for it.
   // Returns the IO error happend during flush.
   ASSERT_NOK(dbfull()->TEST_WaitForFlushMemTable());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ASSERT_EQ("", FilesPerLevel());  // flush failed.
-#endif                             // ROCKSDB_LITE
+#endif                             // MIZAR_LITE
   Destroy(options);
 }
 
@@ -664,7 +664,7 @@ TEST_F(DBFlushTest, StatisticsGarbageRangeDeletes) {
   Close();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // This simple Listener can only handle one flush at a time.
 class TestFlushListener : public EventListener {
  public:
@@ -743,7 +743,7 @@ class TestFlushListener : public EventListener {
   Env* env_;
   DBFlushTest* test_;
 };
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBFlushTest, MemPurgeBasic) {
   Options options = CurrentOptions();
@@ -778,19 +778,19 @@ TEST_F(DBFlushTest, MemPurgeBasic) {
   options.write_buffer_size = 1 << 20;
   // Activate the MemPurge prototype.
   options.experimental_mempurge_threshold = 1.0;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TestFlushListener* listener = new TestFlushListener(options.env, this);
   options.listeners.emplace_back(listener);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   ASSERT_OK(TryReopen(options));
   std::atomic<uint32_t> mempurge_count{0};
   std::atomic<uint32_t> sst_count{0};
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:MemPurgeSuccessful",
       [&](void* /*arg*/) { mempurge_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:SSTFileCreated", [&](void* /*arg*/) { sst_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::string KEY1 = "IamKey1";
   std::string KEY2 = "IamKey2";
@@ -922,10 +922,10 @@ TEST_F(DBFlushTest, MemPurgeDeleteAndDeleteRange) {
   options.compression = kNoCompression;
   options.inplace_update_support = false;
   options.allow_concurrent_memtable_write = true;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TestFlushListener* listener = new TestFlushListener(options.env, this);
   options.listeners.emplace_back(listener);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   // Enforce size of a single MemTable to 64MB (64MB = 67108864 bytes).
   options.write_buffer_size = 1 << 20;
   // Activate the MemPurge prototype.
@@ -935,12 +935,12 @@ TEST_F(DBFlushTest, MemPurgeDeleteAndDeleteRange) {
 
   std::atomic<uint32_t> mempurge_count{0};
   std::atomic<uint32_t> sst_count{0};
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:MemPurgeSuccessful",
       [&](void* /*arg*/) { mempurge_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:SSTFileCreated", [&](void* /*arg*/) { sst_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   std::string KEY1 = "ThisIsKey1";
   std::string KEY2 = "ThisIsKey2";
@@ -1123,10 +1123,10 @@ TEST_F(DBFlushTest, MemPurgeAndCompactionFilter) {
   options.compression = kNoCompression;
   options.inplace_update_support = false;
   options.allow_concurrent_memtable_write = true;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   TestFlushListener* listener = new TestFlushListener(options.env, this);
   options.listeners.emplace_back(listener);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   // Create a ConditionalUpdate compaction filter
   // that will update all the values of the KV pairs
   // where the keys are "lower" than KEY4.
@@ -1142,12 +1142,12 @@ TEST_F(DBFlushTest, MemPurgeAndCompactionFilter) {
 
   std::atomic<uint32_t> mempurge_count{0};
   std::atomic<uint32_t> sst_count{0};
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:MemPurgeSuccessful",
       [&](void* /*arg*/) { mempurge_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::FlushJob:SSTFileCreated", [&](void* /*arg*/) { sst_count++; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   Random rnd(53);
   const size_t NUM_REPEAT = 1000;
@@ -1233,12 +1233,12 @@ TEST_F(DBFlushTest, DISABLED_MemPurgeWALSupport) {
     ASSERT_OK(Put(1, "foo", "v3"));
     std::atomic<uint32_t> mempurge_count{0};
     std::atomic<uint32_t> sst_count{0};
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "DBImpl::FlushJob:MemPurgeSuccessful",
         [&](void* /*arg*/) { mempurge_count++; });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "DBImpl::FlushJob:SSTFileCreated", [&](void* /*arg*/) { sst_count++; });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     std::vector<std::string> keys;
     for (size_t k = 0; k < KVSIZE; k++) {
@@ -1444,12 +1444,12 @@ TEST_F(DBFlushTest, ManualFlushFailsInReadOnlyMode) {
   ASSERT_OK(db_->ContinueBackgroundWork());
   // We ingested the error to env, so the returned status is not OK.
   ASSERT_NOK(dbfull()->TEST_WaitForFlushMemTable());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   uint64_t num_bg_errors;
   ASSERT_TRUE(db_->GetIntProperty(DB::Properties::kBackgroundErrors,
                                   &num_bg_errors));
   ASSERT_GT(num_bg_errors, 0);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   // In the bug scenario, triggering another flush would cause the second flush
   // to hang forever. After the fix we expect it to return an error.
@@ -1491,7 +1491,7 @@ TEST_F(DBFlushTest, CFDropRaceWithWaitForFlushMemTables) {
   SyncPoint::GetInstance()->DisableProcessing();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBFlushTest, FireOnFlushCompletedAfterCommittedResult) {
   class TestListener : public EventListener {
    public:
@@ -1579,7 +1579,7 @@ TEST_F(DBFlushTest, FireOnFlushCompletedAfterCommittedResult) {
   SyncPoint::GetInstance()->DisableProcessing();
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 TEST_F(DBFlushTest, FlushWithBlob) {
   constexpr uint64_t min_blob_size = 10;
@@ -1641,7 +1641,7 @@ TEST_F(DBFlushTest, FlushWithBlob) {
 
   ASSERT_EQ(blob_file->GetTotalBlobCount(), 1);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const InternalStats* const internal_stats = cfd->internal_stats();
   assert(internal_stats);
 
@@ -1657,7 +1657,7 @@ TEST_F(DBFlushTest, FlushWithBlob) {
   ASSERT_EQ(cf_stats_value[InternalStats::BYTES_FLUSHED],
             compaction_stats[0].bytes_written +
                 compaction_stats[0].bytes_written_blob);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 TEST_F(DBFlushTest, FlushWithChecksumHandoff1) {
@@ -1694,7 +1694,7 @@ TEST_F(DBFlushTest, FlushWithChecksumHandoff1) {
   SyncPoint::GetInstance()->EnableProcessing();
   Status s = Flush();
   ASSERT_EQ(s.severity(),
-            ROCKSDB_NAMESPACE::Status::Severity::kUnrecoverableError);
+            MIZAR_NAMESPACE::Status::Severity::kUnrecoverableError);
   SyncPoint::GetInstance()->DisableProcessing();
   Destroy(options);
   Reopen(options);
@@ -1718,7 +1718,7 @@ TEST_F(DBFlushTest, FlushWithChecksumHandoff1) {
   SyncPoint::GetInstance()->EnableProcessing();
   s = Flush();
   ASSERT_EQ(s.severity(),
-            ROCKSDB_NAMESPACE::Status::Severity::kUnrecoverableError);
+            MIZAR_NAMESPACE::Status::Severity::kUnrecoverableError);
   SyncPoint::GetInstance()->DisableProcessing();
 
   Destroy(options);
@@ -1813,7 +1813,7 @@ TEST_F(DBFlushTest, FlushWithChecksumHandoffManifest1) {
   ASSERT_OK(Put("key4", "value4"));
   SyncPoint::GetInstance()->EnableProcessing();
   Status s = Flush();
-  ASSERT_EQ(s.severity(), ROCKSDB_NAMESPACE::Status::Severity::kFatalError);
+  ASSERT_EQ(s.severity(), MIZAR_NAMESPACE::Status::Severity::kFatalError);
   SyncPoint::GetInstance()->DisableProcessing();
   Destroy(options);
 }
@@ -1852,7 +1852,7 @@ TEST_F(DBFlushTest, FlushWithChecksumHandoffManifest2) {
   ASSERT_OK(Put("key8", "value8"));
   SyncPoint::GetInstance()->EnableProcessing();
   Status s = Flush();
-  ASSERT_EQ(s.severity(), ROCKSDB_NAMESPACE::Status::Severity::kFatalError);
+  ASSERT_EQ(s.severity(), MIZAR_NAMESPACE::Status::Severity::kFatalError);
   SyncPoint::GetInstance()->DisableProcessing();
 
   Destroy(options);
@@ -1971,7 +1971,7 @@ TEST_P(DBFlushTestBlobError, FlushError) {
     ASSERT_NE(type, kBlobFile);
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const InternalStats* const internal_stats = cfd->internal_stats();
   assert(internal_stats);
 
@@ -1995,10 +1995,10 @@ TEST_P(DBFlushTestBlobError, FlushError) {
   ASSERT_EQ(cf_stats_value[InternalStats::BYTES_FLUSHED],
             compaction_stats[0].bytes_written +
                 compaction_stats[0].bytes_written_blob);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_P(DBAtomicFlushTest, ManualFlushUnder2PC) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
@@ -2086,7 +2086,7 @@ TEST_P(DBAtomicFlushTest, ManualFlushUnder2PC) {
   ASSERT_TRUE(db_impl->allow_2pc());
   ASSERT_NE(db_impl->MinLogNumberToKeep(), 0);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_P(DBAtomicFlushTest, ManualAtomicFlush) {
   Options options = CurrentOptions();
@@ -2603,10 +2603,10 @@ INSTANTIATE_TEST_CASE_P(DBFlushDirectIOTest, DBFlushDirectIOTest,
 
 INSTANTIATE_TEST_CASE_P(DBAtomicFlushTest, DBAtomicFlushTest, testing::Bool());
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

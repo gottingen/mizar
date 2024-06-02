@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <list>
 #include <map>
@@ -13,13 +13,13 @@
 #include <utility>
 #include <vector>
 
-#include "rocksdb/env.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/env.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
+#include "mizar/write_batch.h"
 #include "trace_replay/trace_replay.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Value sizes may be used as denominators. Replacing 0 value sizes with this
 // positive integer avoids division error.
@@ -120,17 +120,17 @@ struct TraceStats {
   std::vector<std::pair<uint64_t, uint64_t>> correlation_output;
   std::map<uint32_t, uint64_t> uni_key_num;
 
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> time_series_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_key_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_count_dist_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_prefix_cut_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_value_size_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_key_size_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_key_num_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_qps_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> a_top_qps_prefix_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> w_key_f;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> w_prefix_cut_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> time_series_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_key_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_count_dist_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_prefix_cut_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_value_size_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_key_size_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_key_num_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_qps_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> a_top_qps_prefix_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> w_key_f;
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> w_prefix_cut_f;
 
   TraceStats();
   ~TraceStats();
@@ -259,7 +259,7 @@ class TraceAnalyzer : private TraceRecord::Handler,
                               uint32_t cf_id, const Slice& key,
                               size_t value_size);
 
-  ROCKSDB_NAMESPACE::Env* env_;
+  MIZAR_NAMESPACE::Env* env_;
   EnvOptions env_options_;
   std::unique_ptr<TraceReader> trace_reader_;
   size_t offset_;
@@ -282,10 +282,10 @@ class TraceAnalyzer : private TraceRecord::Handler,
   uint64_t time_series_start_;
   uint32_t sample_max_;
   uint32_t cur_time_sec_;
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile>
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile>
       trace_sequence_f_;                                    // readable trace
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> qps_f_;  // overall qps
-  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile>
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> qps_f_;  // overall qps
+  std::unique_ptr<MIZAR_NAMESPACE::WritableFile>
       cf_qps_f_;              // The qps of each CF>
   std::vector<TypeUnit> ta_;  // The main statistic collecting data structure
   std::map<uint32_t, CfUnit> cfs_;  // All the cf_id appears in this trace;
@@ -304,12 +304,12 @@ class TraceAnalyzer : private TraceRecord::Handler,
   Status CreateOutputFile(
       const std::string& type, const std::string& cf_name,
       const std::string& ending,
-      std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile>* f_ptr);
+      std::unique_ptr<MIZAR_NAMESPACE::WritableFile>* f_ptr);
   Status CloseOutputFiles();
 
   void PrintStatistics();
   Status TraceUnitWriter(
-      std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile>& f_ptr, TraceUnit& unit);
+      std::unique_ptr<MIZAR_NAMESPACE::WritableFile>& f_ptr, TraceUnit& unit);
   Status WriteTraceSequence(const uint32_t& type, const uint32_t& cf_id,
                             const Slice& key, const size_t value_size,
                             const uint64_t ts);
@@ -321,6 +321,6 @@ class TraceAnalyzer : private TraceRecord::Handler,
 
 int trace_analyzer_tool(int argc, char** argv);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

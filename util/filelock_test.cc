@@ -3,8 +3,8 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#include "rocksdb/status.h"
-#include "rocksdb/env.h"
+#include "mizar/status.h"
+#include "mizar/env.h"
 
 #include <fcntl.h>
 #ifdef __FreeBSD__
@@ -16,17 +16,17 @@
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class LockTest : public testing::Test {
  public:
   static LockTest* current_;
   std::string file_;
-  ROCKSDB_NAMESPACE::Env* env_;
+  MIZAR_NAMESPACE::Env* env_;
 
   LockTest()
       : file_(test::PerThreadDBPath("db_testlock_file")),
-        env_(ROCKSDB_NAMESPACE::Env::Default()) {
+        env_(MIZAR_NAMESPACE::Env::Default()) {
     current_ = this;
   }
 
@@ -144,7 +144,7 @@ TEST_F(LockTest, LockBySameThread) {
 
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

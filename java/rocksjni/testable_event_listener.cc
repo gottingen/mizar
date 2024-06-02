@@ -7,29 +7,29 @@
 #include <utility>
 
 #include "include/org_rocksdb_test_TestableEventListener.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/listener.h"
+#include "mizar/status.h"
+#include "mizar/table_properties.h"
 
-using ROCKSDB_NAMESPACE::BackgroundErrorReason;
-using ROCKSDB_NAMESPACE::CompactionJobInfo;
-using ROCKSDB_NAMESPACE::CompactionJobStats;
-using ROCKSDB_NAMESPACE::CompactionReason;
-using ROCKSDB_NAMESPACE::CompressionType;
-using ROCKSDB_NAMESPACE::ExternalFileIngestionInfo;
-using ROCKSDB_NAMESPACE::FileOperationInfo;
-using ROCKSDB_NAMESPACE::FileOperationType;
-using ROCKSDB_NAMESPACE::FlushJobInfo;
-using ROCKSDB_NAMESPACE::FlushReason;
-using ROCKSDB_NAMESPACE::MemTableInfo;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::TableFileCreationBriefInfo;
-using ROCKSDB_NAMESPACE::TableFileCreationInfo;
-using ROCKSDB_NAMESPACE::TableFileCreationReason;
-using ROCKSDB_NAMESPACE::TableFileDeletionInfo;
-using ROCKSDB_NAMESPACE::TableProperties;
-using ROCKSDB_NAMESPACE::WriteStallCondition;
-using ROCKSDB_NAMESPACE::WriteStallInfo;
+using MIZAR_NAMESPACE::BackgroundErrorReason;
+using MIZAR_NAMESPACE::CompactionJobInfo;
+using MIZAR_NAMESPACE::CompactionJobStats;
+using MIZAR_NAMESPACE::CompactionReason;
+using MIZAR_NAMESPACE::CompressionType;
+using MIZAR_NAMESPACE::ExternalFileIngestionInfo;
+using MIZAR_NAMESPACE::FileOperationInfo;
+using MIZAR_NAMESPACE::FileOperationType;
+using MIZAR_NAMESPACE::FlushJobInfo;
+using MIZAR_NAMESPACE::FlushReason;
+using MIZAR_NAMESPACE::MemTableInfo;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::TableFileCreationBriefInfo;
+using MIZAR_NAMESPACE::TableFileCreationInfo;
+using MIZAR_NAMESPACE::TableFileCreationReason;
+using MIZAR_NAMESPACE::TableFileDeletionInfo;
+using MIZAR_NAMESPACE::TableProperties;
+using MIZAR_NAMESPACE::WriteStallCondition;
+using MIZAR_NAMESPACE::WriteStallInfo;
 
 static TableProperties newTablePropertiesForTest() {
   TableProperties table_properties;
@@ -79,7 +79,7 @@ static TableProperties newTablePropertiesForTest() {
 void Java_org_rocksdb_test_TestableEventListener_invokeAllCallbacks(
     JNIEnv *, jclass, jlong jhandle) {
   const auto &el =
-      *reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::EventListener> *>(
+      *reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::EventListener> *>(
           jhandle);
 
   TableProperties table_properties = newTablePropertiesForTest();

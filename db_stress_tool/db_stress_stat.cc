@@ -7,11 +7,11 @@
 
 #include "db_stress_tool/db_stress_stat.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-std::shared_ptr<ROCKSDB_NAMESPACE::Statistics> dbstats;
-std::shared_ptr<ROCKSDB_NAMESPACE::Statistics> dbstats_secondaries;
+std::shared_ptr<MIZAR_NAMESPACE::Statistics> dbstats;
+std::shared_ptr<MIZAR_NAMESPACE::Statistics> dbstats_secondaries;
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // GFLAGS

@@ -5,12 +5,12 @@
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBRangeDelTest : public DBTestBase {
  public:
@@ -26,8 +26,8 @@ class DBRangeDelTest : public DBTestBase {
 };
 
 // PlainTableFactory, WriteBatchWithIndex, and NumTableFilesAtLevel() are not
-// supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// supported in MIZAR_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBRangeDelTest, NonBlockBasedTableNotSupported) {
   // TODO: figure out why MmapReads trips the iterator pinning assertion in
   // RangeDelAggregator. Ideally it would be supported; otherwise it should at
@@ -294,7 +294,7 @@ TEST_F(DBRangeDelTest, CompactRangeDelsSameStartKey) {
     ASSERT_TRUE(db_->Get(ReadOptions(), "b1", &value).IsNotFound());
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBRangeDelTest, FlushRemovesCoveredKeys) {
   const int kNum = 300, kRangeBegin = 50, kRangeEnd = 250;
@@ -331,8 +331,8 @@ TEST_F(DBRangeDelTest, FlushRemovesCoveredKeys) {
   db_->ReleaseSnapshot(snapshot);
 }
 
-// NumTableFilesAtLevel() is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// NumTableFilesAtLevel() is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBRangeDelTest, CompactionRemovesCoveredKeys) {
   const int kNumPerFile = 100, kNumFiles = 4;
   Options opts = CurrentOptions();
@@ -502,7 +502,7 @@ TEST_F(DBRangeDelTest, ValidUniversalSubcompactionBoundaries) {
       true /* disallow_trivial_move */,
       port::kMaxUint64 /* max_file_num_to_ignore */));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBRangeDelTest, CompactionRemovesCoveredMergeOperands) {
   const int kNumPerFile = 3, kNumFiles = 3;
@@ -574,8 +574,8 @@ TEST_F(DBRangeDelTest, PutDeleteRangeMergeFlush) {
   ASSERT_EQ(expected, actual);
 }
 
-// NumTableFilesAtLevel() is not supported in ROCKSDB_LITE
-#ifndef ROCKSDB_LITE
+// NumTableFilesAtLevel() is not supported in MIZAR_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBRangeDelTest, ObsoleteTombstoneCleanup) {
   // During compaction to bottommost level, verify range tombstones older than
   // the oldest snapshot are removed, while others are preserved.
@@ -907,7 +907,7 @@ TEST_F(DBRangeDelTest, IteratorIgnoresRangeDeletions) {
   db_->ReleaseSnapshot(snapshot);
 }
 
-#ifndef ROCKSDB_UBSAN_RUN
+#ifndef MIZAR_UBSAN_RUN
 TEST_F(DBRangeDelTest, TailingIteratorRangeTombstoneUnsupported) {
   ASSERT_OK(db_->Put(WriteOptions(), "key", "val"));
   // snapshot prevents key from being deleted during flush
@@ -935,7 +935,7 @@ TEST_F(DBRangeDelTest, TailingIteratorRangeTombstoneUnsupported) {
   }
   db_->ReleaseSnapshot(snapshot);
 }
-#endif  // !ROCKSDB_UBSAN_RUN
+#endif  // !MIZAR_UBSAN_RUN
 
 TEST_F(DBRangeDelTest, SubcompactionHasEmptyDedicatedRangeDelFile) {
   const int kNumFiles = 2, kNumKeysPerFile = 4;
@@ -994,7 +994,7 @@ TEST_F(DBRangeDelTest, MemtableBloomFilter) {
   options.memtable_prefix_bloom_size_ratio =
       static_cast<double>(kMemtablePrefixFilterSize) / kMemtableSize;
   options.prefix_extractor.reset(
-      ROCKSDB_NAMESPACE::NewFixedPrefixTransform(kPrefixLen));
+      MIZAR_NAMESPACE::NewFixedPrefixTransform(kPrefixLen));
   options.write_buffer_size = kMemtableSize;
   Reopen(options);
 
@@ -1147,7 +1147,7 @@ TEST_F(DBRangeDelTest, RangeTombstoneEndKeyAsSstableUpperBound) {
     // endpoint (key000002#6,1) to disappear.
     ASSERT_EQ(value, Get(Key(2)));
     auto begin_str = Key(3);
-    const ROCKSDB_NAMESPACE::Slice begin = begin_str;
+    const MIZAR_NAMESPACE::Slice begin = begin_str;
     ASSERT_OK(dbfull()->TEST_CompactRange(1, &begin, nullptr));
     ASSERT_EQ(1, NumTableFilesAtLevel(1));
     ASSERT_EQ(2, NumTableFilesAtLevel(2));
@@ -1166,7 +1166,7 @@ TEST_F(DBRangeDelTest, RangeTombstoneEndKeyAsSstableUpperBound) {
     //     [key000001#5,1, key000002#72057594037927935,15]
     //     [key000002#6,1, key000004#72057594037927935,15]
     auto begin_str = Key(0);
-    const ROCKSDB_NAMESPACE::Slice begin = begin_str;
+    const MIZAR_NAMESPACE::Slice begin = begin_str;
     ASSERT_OK(dbfull()->TEST_CompactRange(1, &begin, &begin));
     ASSERT_EQ(0, NumTableFilesAtLevel(1));
     ASSERT_EQ(3, NumTableFilesAtLevel(2));
@@ -1724,12 +1724,12 @@ TEST_F(DBRangeDelTest, OverlappedKeys) {
   ASSERT_EQ(0, NumTableFilesAtLevel(1));
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

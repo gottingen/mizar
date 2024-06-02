@@ -5,13 +5,13 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
 #include <vector>
 #include "db/db_impl/db_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBImplReadOnly : public DBImpl {
  public:
@@ -141,6 +141,6 @@ class DBImplReadOnly : public DBImpl {
       bool error_if_wal_file_exists = false);
   friend class DB;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

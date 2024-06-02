@@ -24,14 +24,14 @@
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/table.h"
+#include "mizar/system_clock.h"
+#include "mizar/table.h"
 #include "table/block_based/cachable_entry.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 const std::map<LevelStatType, LevelStat> InternalStats::compaction_level_stats =
     {
@@ -695,17 +695,17 @@ void InternalStats::CacheEntryRoleStats::ToMap(
   values->clear();
   auto& v = *values;
   v["id"] = cache_id;
-  v["capacity"] = ROCKSDB_NAMESPACE::ToString(cache_capacity);
+  v["capacity"] = MIZAR_NAMESPACE::ToString(cache_capacity);
   v["secs_for_last_collection"] =
-      ROCKSDB_NAMESPACE::ToString(GetLastDurationMicros() / 1000000.0);
-  v["secs_since_last_collection"] = ROCKSDB_NAMESPACE::ToString(
+      MIZAR_NAMESPACE::ToString(GetLastDurationMicros() / 1000000.0);
+  v["secs_since_last_collection"] = MIZAR_NAMESPACE::ToString(
       (clock->NowMicros() - last_end_time_micros_) / 1000000U);
   for (size_t i = 0; i < kNumCacheEntryRoles; ++i) {
     std::string role = kCacheEntryRoleToHyphenString[i];
-    v["count." + role] = ROCKSDB_NAMESPACE::ToString(entry_counts[i]);
-    v["bytes." + role] = ROCKSDB_NAMESPACE::ToString(total_charges[i]);
+    v["count." + role] = MIZAR_NAMESPACE::ToString(entry_counts[i]);
+    v["bytes." + role] = MIZAR_NAMESPACE::ToString(total_charges[i]);
     v["percent." + role] =
-        ROCKSDB_NAMESPACE::ToString(100.0 * total_charges[i] / cache_capacity);
+        MIZAR_NAMESPACE::ToString(100.0 * total_charges[i] / cache_capacity);
   }
 }
 
@@ -1818,6 +1818,6 @@ const DBPropertyInfo* GetPropertyInfo(const Slice& /*property*/) {
   return nullptr;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

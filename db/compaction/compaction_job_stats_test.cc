@@ -27,22 +27,22 @@
 #include "monitoring/statistics.h"
 #include "monitoring/thread_status_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/experimental.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/thread_status.h"
-#include "rocksdb/utilities/checkpoint.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/experimental.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
+#include "mizar/thread_status.h"
+#include "mizar/utilities/checkpoint.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/mock_table.h"
 #include "table/plain/plain_table_factory.h"
@@ -59,8 +59,8 @@
 #include "utilities/merge_operators.h"
 
 #if !defined(IOS_CROSS_COMPILE)
-#ifndef ROCKSDB_LITE
-namespace ROCKSDB_NAMESPACE {
+#ifndef MIZAR_LITE
+namespace MIZAR_NAMESPACE {
 
 static std::string RandomString(Random* rnd, int len, double ratio) {
   std::string r;
@@ -109,9 +109,9 @@ class CompactionJobStatsTest : public testing::Test,
   }
 
   ~CompactionJobStatsTest() override {
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
     Close();
     Options options;
     options.db_paths.emplace_back(dbname_, 0);
@@ -799,7 +799,7 @@ TEST_P(CompactionJobStatsTest, CompactionJobStatsTest) {
 
     stats_checker->set_verify_next_comp_io_stats(true);
     std::atomic<bool> first_prepare_write(true);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WritableFileWriter::Append:BeforePrepareWrite", [&](void* /*arg*/) {
           if (first_prepare_write.load()) {
             options.env->SleepForMicroseconds(3);
@@ -808,7 +808,7 @@ TEST_P(CompactionJobStatsTest, CompactionJobStatsTest) {
         });
 
     std::atomic<bool> first_flush(true);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WritableFileWriter::Flush:BeforeAppend", [&](void* /*arg*/) {
           if (first_flush.load()) {
             options.env->SleepForMicroseconds(3);
@@ -817,7 +817,7 @@ TEST_P(CompactionJobStatsTest, CompactionJobStatsTest) {
         });
 
     std::atomic<bool> first_sync(true);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WritableFileWriter::SyncInternal:0", [&](void* /*arg*/) {
           if (first_sync.load()) {
             options.env->SleepForMicroseconds(3);
@@ -826,14 +826,14 @@ TEST_P(CompactionJobStatsTest, CompactionJobStatsTest) {
         });
 
     std::atomic<bool> first_range_sync(true);
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) {
           if (first_range_sync.load()) {
             options.env->SleepForMicroseconds(3);
             first_range_sync.store(false);
           }
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     Compact(1, smallest_key, largest_key);
 
@@ -842,7 +842,7 @@ TEST_P(CompactionJobStatsTest, CompactionJobStatsTest) {
     ASSERT_TRUE(!first_flush.load());
     ASSERT_TRUE(!first_sync.load());
     ASSERT_TRUE(!first_range_sync.load());
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
   ASSERT_EQ(stats_checker->NumberOfUnverifiedStats(), 0U);
 }
@@ -1012,10 +1012,10 @@ TEST_P(CompactionJobStatsTest, UniversalCompactionTest) {
 
 INSTANTIATE_TEST_CASE_P(CompactionJobStatsTest, CompactionJobStatsTest,
                         ::testing::Values(1, 4));
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -1024,11 +1024,11 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED, not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED, not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 #else
 

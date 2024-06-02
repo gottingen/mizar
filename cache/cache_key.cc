@@ -8,12 +8,12 @@
 #include <algorithm>
 #include <atomic>
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 #include "table/unique_id_impl.h"
 #include "util/hash.h"
 #include "util/math.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Value space plan for CacheKey:
 //
@@ -268,4 +268,4 @@ OffsetableCacheKey::OffsetableCacheKey(const std::string &db_id,
   assert(session_etc64_ != 0);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
@@ -11,14 +11,14 @@
 #include "db/db_impl/db_impl.h"
 #include "db/merge_context.h"
 #include "db/merge_helper.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/cast_util.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 BaseDeltaIterator::BaseDeltaIterator(ColumnFamilyHandle* column_family,
                                      Iterator* base_iterator,
                                      WBWIIteratorImpl* delta_iterator,
@@ -698,6 +698,6 @@ WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetFromBatch(
   return result;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

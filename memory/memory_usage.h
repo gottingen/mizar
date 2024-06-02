@@ -8,9 +8,9 @@
 #include <cstddef>
 #include <unordered_map>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Helper methods to estimate memroy usage by std containers.
 
@@ -25,4 +25,4 @@ size_t ApproximateMemoryUsage(
          umap.bucket_count() * sizeof(void*);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

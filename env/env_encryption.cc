@@ -3,9 +3,9 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/env_encryption.h"
+#include "mizar/env_encryption.h"
 
 #include <algorithm>
 #include <cassert>
@@ -15,19 +15,19 @@
 #include "env/composite_env_wrapper.h"
 #include "env/env_encryption_ctr.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/io_status.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "util/aligned_buffer.h"
 #include "util/coding.h"
 #include "util/random.h"
 #include "util/string_util.h"
 
 #endif
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 std::shared_ptr<EncryptionProvider> EncryptionProvider::NewCTRProvider(
     const std::shared_ptr<BlockCipher>& cipher) {
   return std::make_shared<CTREncryptionProvider>(cipher);
@@ -1335,6 +1335,6 @@ Status EncryptionProvider::CreateFromString(
                                               result);
 }
 
-#endif // ROCKSDB_LITE
+#endif // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

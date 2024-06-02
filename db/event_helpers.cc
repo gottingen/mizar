@@ -5,18 +5,18 @@
 
 #include "db/event_helpers.h"
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/utilities/customizable_util.h"
+#include "mizar/convenience.h"
+#include "mizar/listener.h"
+#include "mizar/utilities/customizable_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 Status EventListener::CreateFromString(const ConfigOptions& config_options,
                                        const std::string& id,
                                        std::shared_ptr<EventListener>* result) {
   return LoadSharedObject<EventListener>(config_options, id, nullptr, result);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 namespace {
 template <class T>
@@ -32,7 +32,7 @@ void EventHelpers::AppendCurrentTime(JSONWriter* jwriter) {
                   .count();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void EventHelpers::NotifyTableFileCreationStarted(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const std::string& db_name, const std::string& cf_name,
@@ -50,13 +50,13 @@ void EventHelpers::NotifyTableFileCreationStarted(
     listener->OnTableFileCreationStarted(info);
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 void EventHelpers::NotifyOnBackgroundError(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     BackgroundErrorReason reason, Status* bg_error, InstrumentedMutex* db_mutex,
     bool* auto_recovery) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (listeners.empty()) {
     return;
   }
@@ -77,7 +77,7 @@ void EventHelpers::NotifyOnBackgroundError(
   (void)bg_error;
   (void)db_mutex;
   (void)auto_recovery;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 void EventHelpers::LogAndNotifyTableFileCreationFinished(
@@ -165,7 +165,7 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
     event_logger->Log(jwriter);
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (listeners.empty()) {
     return;
   }
@@ -190,7 +190,7 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
   (void)cf_name;
   (void)file_path;
   (void)reason;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 void EventHelpers::LogAndNotifyTableFileDeletion(
@@ -212,7 +212,7 @@ void EventHelpers::LogAndNotifyTableFileDeletion(
 
   event_logger->Log(jwriter);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (listeners.empty()) {
     return;
   }
@@ -229,14 +229,14 @@ void EventHelpers::LogAndNotifyTableFileDeletion(
   (void)file_path;
   (void)dbname;
   (void)listeners;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 void EventHelpers::NotifyOnErrorRecoveryEnd(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const Status& old_bg_error, const Status& new_bg_error,
     InstrumentedMutex* db_mutex) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (!listeners.empty()) {
     db_mutex->AssertHeld();
     // release lock while notifying events
@@ -257,10 +257,10 @@ void EventHelpers::NotifyOnErrorRecoveryEnd(
   (void)old_bg_error;
   (void)new_bg_error;
   (void)db_mutex;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void EventHelpers::NotifyBlobFileCreationStarted(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const std::string& db_name, const std::string& cf_name,
@@ -275,7 +275,7 @@ void EventHelpers::NotifyBlobFileCreationStarted(
     listener->OnBlobFileCreationStarted(info);
   }
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 void EventHelpers::LogAndNotifyBlobFileCreationFinished(
     EventLogger* event_logger,
@@ -300,7 +300,7 @@ void EventHelpers::LogAndNotifyBlobFileCreationFinished(
     event_logger->Log(jwriter);
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (listeners.empty()) {
     return;
   }
@@ -338,7 +338,7 @@ void EventHelpers::LogAndNotifyBlobFileDeletion(
     jwriter.EndObject();
     event_logger->Log(jwriter);
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (listeners.empty()) {
     return;
   }
@@ -351,7 +351,7 @@ void EventHelpers::LogAndNotifyBlobFileDeletion(
   (void)listeners;
   (void)dbname;
   (void)file_path;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

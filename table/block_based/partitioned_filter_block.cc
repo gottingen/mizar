@@ -12,12 +12,12 @@
 #include "monitoring/perf_context_imp.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 PartitionedFilterBlockBuilder::PartitionedFilterBlockBuilder(
     const SliceTransform* _prefix_extractor, bool whole_key_filtering,
@@ -424,11 +424,11 @@ void PartitionedFilterBlockReader::MayMatchPartition(
 
 size_t PartitionedFilterBlockReader::ApproximateMemoryUsage() const {
   size_t usage = ApproximateFilterBlockMemoryUsage();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
   usage += malloc_usable_size(const_cast<PartitionedFilterBlockReader*>(this));
 #else
   usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
   return usage;
   // TODO(myabandeh): better estimation for filter_map_ size
 }
@@ -541,4 +541,4 @@ bool PartitionedFilterBlockReader::index_value_is_full() const {
   return table()->get_rep()->index_value_is_full;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

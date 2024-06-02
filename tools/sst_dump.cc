@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/sst_dump_tool.h"
+#include "mizar/sst_dump_tool.h"
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::SSTDumpTool tool;
+  MIZAR_NAMESPACE::SSTDumpTool tool;
   return tool.Run(argc, argv);
 }
 #else
@@ -17,4 +17,4 @@ int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "Not supported in lite mode.\n");
   return 1;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

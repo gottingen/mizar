@@ -10,19 +10,19 @@
 #ifdef GFLAGS
 #include "db_stress_tool/multi_ops_txns_stress.h"
 
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/defer.h"
 #ifndef NDEBUG
 #include "utilities/fault_injection_fs.h"
 #endif  // NDEBUG
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TODO: move these to gflags.
 static constexpr uint32_t kInitNumC = 1000;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static constexpr uint32_t kInitialCARatio = 3;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 static constexpr bool kDoPreload = true;
 
 std::string MultiOpsTxnsStressTest::Record::EncodePrimaryKey(uint32_t a) {
@@ -230,7 +230,7 @@ void MultiOpsTxnsStressTest::FinishInitDb(SharedState* shared) {
 
 void MultiOpsTxnsStressTest::ReopenAndPreloadDb(SharedState* shared) {
   (void)shared;
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   std::vector<ColumnFamilyDescriptor> cf_descs;
   for (const auto* handle : column_families_) {
     cf_descs.emplace_back(handle->GetName(), ColumnFamilyOptions(options_));
@@ -273,7 +273,7 @@ void MultiOpsTxnsStressTest::ReopenAndPreloadDb(SharedState* shared) {
   txn_db_ = nullptr;
 
   Open();
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 // Used for point-lookup transaction
@@ -381,7 +381,7 @@ Status MultiOpsTxnsStressTest::TestCheckpoint(
   return Status::OK();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status MultiOpsTxnsStressTest::TestApproximateSize(
     ThreadState* thread, uint64_t iteration,
     const std::vector<int>& rand_column_families,
@@ -392,7 +392,7 @@ Status MultiOpsTxnsStressTest::TestApproximateSize(
   (void)rand_column_families;
   return Status::OK();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 Status MultiOpsTxnsStressTest::TestCustomOperations(
     ThreadState* thread, const std::vector<int>& rand_column_families) {
@@ -435,7 +435,7 @@ Status MultiOpsTxnsStressTest::TestCustomOperations(
 Status MultiOpsTxnsStressTest::PrimaryKeyUpdateTxn(ThreadState* thread,
                                                    uint32_t old_a,
                                                    uint32_t new_a) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)thread;
   (void)old_a;
   (void)new_a;
@@ -528,13 +528,13 @@ Status MultiOpsTxnsStressTest::PrimaryKeyUpdateTxn(ThreadState* thread,
 
   s = CommitTxn(txn);
   return s;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 Status MultiOpsTxnsStressTest::SecondaryKeyUpdateTxn(ThreadState* thread,
                                                      uint32_t old_c,
                                                      uint32_t new_c) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)thread;
   (void)old_c;
   (void)new_c;
@@ -678,13 +678,13 @@ Status MultiOpsTxnsStressTest::SecondaryKeyUpdateTxn(ThreadState* thread,
   s = CommitTxn(txn);
 
   return s;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 Status MultiOpsTxnsStressTest::UpdatePrimaryIndexValueTxn(ThreadState* thread,
                                                           uint32_t a,
                                                           uint32_t b_delta) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)thread;
   (void)a;
   (void)b_delta;
@@ -742,12 +742,12 @@ Status MultiOpsTxnsStressTest::UpdatePrimaryIndexValueTxn(ThreadState* thread,
   }
   s = CommitTxn(txn);
   return s;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 Status MultiOpsTxnsStressTest::PointLookupTxn(ThreadState* thread,
                                               ReadOptions ropts, uint32_t a) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)thread;
   (void)ropts;
   (void)a;
@@ -785,12 +785,12 @@ Status MultiOpsTxnsStressTest::PointLookupTxn(ThreadState* thread,
     s = txn->Commit();
   }
   return s;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 Status MultiOpsTxnsStressTest::RangeScanTxn(ThreadState* thread,
                                             ReadOptions ropts, uint32_t c) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)thread;
   (void)ropts;
   (void)c;
@@ -826,7 +826,7 @@ Status MultiOpsTxnsStressTest::RangeScanTxn(ThreadState* thread,
   }
   // TODO (yanqin) more Seek/SeekForPrev/Next/Prev/SeekToFirst/SeekToLast
   return s;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 void MultiOpsTxnsStressTest::VerifyDb(ThreadState* thread) const {
@@ -948,7 +948,7 @@ uint32_t MultiOpsTxnsStressTest::GenerateNextA() {
 }
 
 void MultiOpsTxnsStressTest::PreloadDb(SharedState* shared, size_t num_c) {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   (void)shared;
   (void)num_c;
 #else
@@ -987,7 +987,7 @@ void MultiOpsTxnsStressTest::PreloadDb(SharedState* shared, size_t num_c) {
   next_a_.store(static_cast<uint32_t>((num_c + 1) * kInitialCARatio));
   fprintf(stdout, "DB preloaded with %d entries\n",
           static_cast<int>(num_c * kInitialCARatio));
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 StressTest* CreateMultiOpsTxnsStressTest() {
@@ -995,7 +995,7 @@ StressTest* CreateMultiOpsTxnsStressTest() {
 }
 
 void CheckAndSetOptionsForMultiOpsTxnStressTest() {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (FLAGS_test_batches_snapshots || FLAGS_test_cf_consistency) {
     fprintf(stderr,
             "-test_multi_ops_txns is not compatible with "
@@ -1028,10 +1028,10 @@ void CheckAndSetOptionsForMultiOpsTxnStressTest() {
     exit(1);
   }
 #else
-  fprintf(stderr, "-test_multi_ops_txns not supported in ROCKSDB_LITE mode\n");
+  fprintf(stderr, "-test_multi_ops_txns not supported in MIZAR_LITE mode\n");
   exit(1);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // GFLAGS

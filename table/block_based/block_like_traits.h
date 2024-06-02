@@ -12,7 +12,7 @@
 #include "table/block_based/parsed_full_filter_block.h"
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 template <typename TBlocklike>
 class BlocklikeTraits;
@@ -222,4 +222,4 @@ Cache::CacheItemHelper* GetCacheItemHelperForRole() {
   return &cache_helper;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

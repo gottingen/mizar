@@ -11,13 +11,13 @@
 #if !defined(OS_WIN)
 
 #include <dirent.h>
-#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
+#ifndef MIZAR_NO_DYNAMIC_EXTENSION
 #include <dlfcn.h>
 #endif
 #include <errno.h>
 #include <fcntl.h>
 
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 #include <liburing.h>
 #endif
 #include <pthread.h>
@@ -33,7 +33,7 @@
 #include <sys/statvfs.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#if defined(ROCKSDB_IOURING_PRESENT)
+#if defined(MIZAR_IOURING_PRESENT)
 #include <sys/uio.h>
 #endif
 #include <time.h>
@@ -59,10 +59,10 @@
 #include "monitoring/iostats_context_imp.h"
 #include "monitoring/thread_status_updater.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/compression_context_cache.h"
@@ -81,7 +81,7 @@
 #define EXT4_SUPER_MAGIC 0xEF53
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 #if defined(OS_WIN)
 static const std::string kSharedLibExt = ".dll";
 static const char kPathSeparator = ';';
@@ -100,7 +100,7 @@ ThreadStatusUpdater* CreateThreadStatusUpdater() {
   return new ThreadStatusUpdater();
 }
 
-#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
+#ifndef MIZAR_NO_DYNAMIC_EXTENSION
 class PosixDynamicLibrary : public DynamicLibrary {
  public:
   PosixDynamicLibrary(const std::string& name, void* handle)
@@ -125,7 +125,7 @@ class PosixDynamicLibrary : public DynamicLibrary {
   std::string name_;
   void* handle_;
 };
-#endif  // !ROCKSDB_NO_DYNAMIC_EXTENSION
+#endif  // !MIZAR_NO_DYNAMIC_EXTENSION
 
 class PosixClock : public SystemClock {
  public:
@@ -235,7 +235,7 @@ class PosixEnv : public CompositeEnv {
     }
   }
 
-#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
+#ifndef MIZAR_NO_DYNAMIC_EXTENSION
   // Loads the named library into the result.
   // If the input name is empty, the current executable is loaded
   // On *nix systems, a "lib" prefix is added to the name if one is not supplied
@@ -288,7 +288,7 @@ class PosixEnv : public CompositeEnv {
     return Status::IOError(
         IOErrorMsg("Failed to open shared library: xs", name), dlerror());
   }
-#endif  // !ROCKSDB_NO_DYNAMIC_EXTENSION
+#endif  // !MIZAR_NO_DYNAMIC_EXTENSION
 
   void Schedule(void (*function)(void* arg1), void* arg, Priority pri = LOW,
                 void* tag = nullptr,
@@ -500,6 +500,6 @@ const std::shared_ptr<SystemClock>& SystemClock::Default() {
       std::make_shared<PosixClock>();
   return default_clock;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

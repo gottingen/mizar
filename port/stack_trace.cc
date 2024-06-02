@@ -5,13 +5,13 @@
 //
 #include "port/stack_trace.h"
 
-#if defined(ROCKSDB_LITE) ||                                                  \
+#if defined(MIZAR_LITE) ||                                                  \
     !(defined(ROCKSDB_BACKTRACE) || defined(OS_MACOSX)) || defined(CYGWIN) || \
     defined(OS_SOLARIS) || defined(OS_WIN)
 
 // noop
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace port {
 void InstallStackTraceHandler() {}
 void PrintStack(int /*first_frames_to_skip*/) {}
@@ -20,7 +20,7 @@ void* SaveStack(int* /*num_frames*/, int /*first_frames_to_skip*/) {
   return nullptr;
 }
 }  // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #else
 
@@ -38,7 +38,7 @@ void* SaveStack(int* /*num_frames*/, int /*first_frames_to_skip*/) {
 
 #include "port/lang.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace port {
 
 namespace {
@@ -190,6 +190,6 @@ void InstallStackTraceHandler() {
 }
 
 }  // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

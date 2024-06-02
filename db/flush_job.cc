@@ -34,11 +34,11 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/thread_status_util.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/statistics.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "table/merging_iterator.h"
 #include "table/table_builder.h"
 #include "table/two_level_iterator.h"
@@ -47,7 +47,7 @@
 #include "util/mutexlock.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const char* GetFlushReasonString (FlushReason flush_reason) {
   switch (flush_reason) {
@@ -571,12 +571,12 @@ Status FlushJob::MemPurge() {
         // we do not call SchedulePendingFlush().
         cfd_->imm()->Add(new_mem, &job_context_->memtables_to_free);
         new_mem->Ref();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         // Piggyback FlushJobInfo on the first flushed memtable.
         db_mutex_->AssertHeld();
         meta_.fd.file_size = 0;
         mems_[0]->SetFlushJobInfo(GetFlushJobInfo());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
         db_mutex_->Unlock();
       } else {
         s = Status::Aborted(Slice("Mempurge filled more than one memtable."));
@@ -968,10 +968,10 @@ Status FlushJob::WriteLevel0Table() {
 
     edit_->SetBlobFileAdditions(std::move(blob_file_additions));
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Piggyback FlushJobInfo on the first first flushed memtable.
   mems_[0]->SetFlushJobInfo(GetFlushJobInfo());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
   // Note that here we treat flush as level 0 compaction in internal stats
   InternalStats::CompactionStats stats(CompactionReason::kFlush, 1);
@@ -1008,7 +1008,7 @@ Status FlushJob::WriteLevel0Table() {
   return s;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::unique_ptr<FlushJobInfo> FlushJob::GetFlushJobInfo() const {
   db_mutex_->AssertHeld();
   std::unique_ptr<FlushJobInfo> info(new FlushJobInfo{});
@@ -1041,6 +1041,6 @@ std::unique_ptr<FlushJobInfo> FlushJob::GetFlushJobInfo() const {
   return info;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -26,5 +26,5 @@ void Java_org_rocksdb_RocksCallbackObject_disposeInternal(JNIEnv* /*env*/,
   //   JniCallback -> ComparatorJniCallback
   // I think this is okay, as Comparator and JniCallback both have virtual
   // destructors...
-  delete reinterpret_cast<ROCKSDB_NAMESPACE::JniCallback*>(handle);
+  delete reinterpret_cast<MIZAR_NAMESPACE::JniCallback*>(handle);
 }

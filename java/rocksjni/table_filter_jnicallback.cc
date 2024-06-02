@@ -4,12 +4,12 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::TableFilter.
+// MIZAR_NAMESPACE::TableFilter.
 
 #include "rocksjni/table_filter_jnicallback.h"
 #include "rocksjni/portal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 TableFilterJniCallback::TableFilterJniCallback(
     JNIEnv* env, jobject jtable_filter)
     : JniCallback(env, jtable_filter) {
@@ -27,7 +27,7 @@ TableFilterJniCallback::TableFilterJniCallback(
   it may be called from multiple threads
   */
   m_table_filter_function =
-      [this](const ROCKSDB_NAMESPACE::TableProperties& table_properties) {
+      [this](const MIZAR_NAMESPACE::TableProperties& table_properties) {
         jboolean attached_thread = JNI_FALSE;
         JNIEnv* thread_env = getJniEnv(&attached_thread);
         assert(thread_env != nullptr);
@@ -58,9 +58,9 @@ TableFilterJniCallback::TableFilterJniCallback(
       };
 }
 
-std::function<bool(const ROCKSDB_NAMESPACE::TableProperties&)>
+std::function<bool(const MIZAR_NAMESPACE::TableProperties&)>
 TableFilterJniCallback::GetTableFilterFunction() {
   return m_table_filter_function;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

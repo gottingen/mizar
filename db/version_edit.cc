@@ -12,12 +12,12 @@
 #include "db/blob/blob_index.h"
 #include "db/version_set.h"
 #include "logging/event_logger.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -1017,4 +1017,4 @@ std::string VersionEdit::DebugJSON(int edit_num, bool hex_key) const {
   return jw.Get();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -33,18 +33,18 @@
 #include "options/cf_options.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/compaction_job_stats.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/compaction_job_stats.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/memtablerep.h"
+#include "mizar/transaction_log.h"
 #include "table/scoped_arena_iterator.h"
 #include "util/autovector.h"
 #include "util/stop_watch.h"
 #include "util/thread_local.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Arena;
 class ErrorHandler;
@@ -362,4 +362,4 @@ class CompactionServiceCompactionJob : private CompactionJob {
   CompactionServiceResult* compaction_result_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -8,9 +8,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Prints logs to stderr for faster debugging
 class StderrLogger : public Logger {
@@ -28,4 +28,4 @@ class StderrLogger : public Logger {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

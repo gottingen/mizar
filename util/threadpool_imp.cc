@@ -34,7 +34,7 @@
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void ThreadPoolImpl::PthreadCall(const char* label, int result) {
   if (result != 0) {
@@ -504,4 +504,4 @@ ThreadPool* NewThreadPool(int num_threads) {
   return thread_pool;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

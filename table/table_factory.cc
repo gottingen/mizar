@@ -5,18 +5,18 @@
 
 #include <mutex>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/table.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/plain/plain_table_factory.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static void RegisterTableFactories(const std::string& /*arg*/) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag loaded;
   std::call_once(loaded, []() {
     auto library = ObjectLibrary::Default();
@@ -42,7 +42,7 @@ static void RegisterTableFactories(const std::string& /*arg*/) {
           return guard->get();
         });
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }
 
 static bool LoadFactory(const std::string& name,
@@ -62,4 +62,4 @@ Status TableFactory::CreateFromString(const ConfigOptions& config_options,
   return LoadSharedObject<TableFactory>(config_options, value, LoadFactory,
                                         factory);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

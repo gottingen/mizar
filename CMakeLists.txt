@@ -37,9 +37,9 @@ cmake_minimum_required(VERSION 3.10)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 include(ReadVersion)
 include(GoogleTest)
-get_rocksdb_version(rocksdb_VERSION)
-project(rocksdb
-        VERSION ${rocksdb_VERSION}
+get_rocksdb_version(mizar_VERSION)
+project(mizar
+        VERSION ${mizar_VERSION}
         LANGUAGES CXX C ASM)
 set(EA_INF /opt/EA/inf)
 list(APPEND CMAKE_PREFIX_PATH ${EA_INF})
@@ -78,7 +78,7 @@ option(WITH_ZLIB "build with zlib" ON)
 option(WITH_ZSTD "build with zstd" ON)
 option(WITH_WINDOWS_UTF8_FILENAMES "use UTF8 as characterset for opening files, regardles of the system code page" OFF)
 if (WITH_WINDOWS_UTF8_FILENAMES)
-    add_definitions(-DROCKSDB_WINDOWS_UTF8_FILENAMES)
+    add_definitions(-DMIZAR_WINDOWS_UTF8_FILENAMES)
 endif ()
 
 if ($ENV{CIRCLECI})
@@ -117,7 +117,7 @@ else ()
     else ()
         if (WITH_JEMALLOC)
             find_package(JeMalloc REQUIRED)
-            add_definitions(-DROCKSDB_JEMALLOC -DJEMALLOC_NO_DEMANGLE)
+            add_definitions(-DMIZAR_JEMALLOC -DJEMALLOC_NO_DEMANGLE)
             list(APPEND THIRDPARTY_LIBS JeMalloc::JeMalloc)
         endif ()
     endif ()
@@ -200,7 +200,7 @@ message(STATUS "Third-party include directories: ${THIRDPARTY_INCLUDE_DIRS}")
 include_directories(${THIRDPARTY_INCLUDE_DIRS})
 
 string(TIMESTAMP TS "%Y-%m-%d %H:%M:%S" UTC)
-set(BUILD_DATE "${TS}" CACHE STRING "the time we first built rocksdb")
+set(BUILD_DATE "${TS}" CACHE STRING "the time we first built mizar")
 
 find_package(Git)
 
@@ -378,7 +378,7 @@ endif ()
 if (WITH_LIBURING)
     find_package(uring)
     if (uring_FOUND)
-        add_definitions(-DROCKSDB_IOURING_PRESENT)
+        add_definitions(-DMIZAR_IOURING_PRESENT)
         list(APPEND THIRDPARTY_LIBS uring::uring)
     endif ()
 endif ()
@@ -396,7 +396,7 @@ int main() {
 }
 " HAVE_THREAD_LOCAL)
 if (HAVE_THREAD_LOCAL)
-    add_definitions(-DROCKSDB_SUPPORT_THREAD_LOCAL)
+    add_definitions(-DMIZAR_SUPPORT_THREAD_LOCAL)
 endif ()
 
 option(WITH_IOSTATS_CONTEXT "Enable IO stats context" ON)
@@ -440,7 +440,7 @@ endif ()
 
 option(WITH_UBSAN "build with UBSAN" OFF)
 if (WITH_UBSAN)
-    add_definitions(-DROCKSDB_UBSAN_RUN)
+    add_definitions(-DMIZAR_UBSAN_RUN)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined")
@@ -467,28 +467,28 @@ endif ()
 # Stall notifications eat some performance from inserts
 option(DISABLE_STALL_NOTIF "Build with stall notifications" OFF)
 if (DISABLE_STALL_NOTIF)
-    add_definitions(-DROCKSDB_DISABLE_STALL_NOTIFICATION)
+    add_definitions(-DMIZAR_DISABLE_STALL_NOTIFICATION)
 endif ()
 
 option(WITH_DYNAMIC_EXTENSION "build with dynamic extension support" OFF)
 if (NOT WITH_DYNAMIC_EXTENSION)
-    add_definitions(-DROCKSDB_NO_DYNAMIC_EXTENSION)
+    add_definitions(-DMIZAR_NO_DYNAMIC_EXTENSION)
 endif ()
 
 option(ASSERT_STATUS_CHECKED "build with assert status checked" OFF)
 if (ASSERT_STATUS_CHECKED)
     message(STATUS "Build with assert status checked")
-    add_definitions(-DROCKSDB_ASSERT_STATUS_CHECKED)
+    add_definitions(-DMIZAR_ASSERT_STATUS_CHECKED)
 endif ()
 option(USE_RTTI "build with RTTI" ON)
 if (USE_RTTI)
     message(STATUS "Enabling RTTI")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DROCKSDB_USE_RTTI")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DROCKSDB_USE_RTTI")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DMIZAR_USE_RTTI")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DMIZAR_USE_RTTI")
 else ()
     if (MSVC)
         message(STATUS "Disabling RTTI in Release builds. Always on in Debug.")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DROCKSDB_USE_RTTI")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DMIZAR_USE_RTTI")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GR-")
     else ()
         message(STATUS "Disabling RTTI in Release builds")
@@ -530,9 +530,9 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-memcmp")
 endif ()
 
-option(ROCKSDB_LITE "Build RocksDBLite version" OFF)
-if (ROCKSDB_LITE)
-    add_definitions(-DROCKSDB_LITE)
+option(MIZAR_LITE "Build mizarLite version" OFF)
+if (MIZAR_LITE)
+    add_definitions(-DMIZAR_LITE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -Os")
 endif ()
 
@@ -564,7 +564,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
 endif ()
 
 if (NOT WIN32)
-    add_definitions(-DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX)
+    add_definitions(-DMIZAR_PLATFORM_POSIX -DMIZAR_LIB_IO_POSIX)
 endif ()
 
 option(WITH_FALLOCATE "build with fallocate" ON)
@@ -578,7 +578,7 @@ int main() {
 }
 " HAVE_FALLOCATE)
     if (HAVE_FALLOCATE)
-        add_definitions(-DROCKSDB_FALLOCATE_PRESENT)
+        add_definitions(-DMIZAR_FALLOCATE_PRESENT)
     endif ()
 endif ()
 
@@ -590,7 +590,7 @@ int main() {
 }
 " HAVE_SYNC_FILE_RANGE_WRITE)
 if (HAVE_SYNC_FILE_RANGE_WRITE)
-    add_definitions(-DROCKSDB_RANGESYNC_PRESENT)
+    add_definitions(-DMIZAR_RANGESYNC_PRESENT)
 endif ()
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -600,7 +600,7 @@ int main() {
 }
 " HAVE_PTHREAD_MUTEX_ADAPTIVE_NP)
 if (HAVE_PTHREAD_MUTEX_ADAPTIVE_NP)
-    add_definitions(-DROCKSDB_PTHREAD_ADAPTIVE_MUTEX)
+    add_definitions(-DMIZAR_PTHREAD_ADAPTIVE_MUTEX)
 endif ()
 
 include(CheckCXXSymbolExists)
@@ -610,17 +610,17 @@ else ()
     check_cxx_symbol_exists(malloc_usable_size malloc.h HAVE_MALLOC_USABLE_SIZE)
 endif ()
 if (HAVE_MALLOC_USABLE_SIZE)
-    add_definitions(-DROCKSDB_MALLOC_USABLE_SIZE)
+    add_definitions(-DMIZAR_MALLOC_USABLE_SIZE)
 endif ()
 
 check_cxx_symbol_exists(sched_getcpu sched.h HAVE_SCHED_GETCPU)
 if (HAVE_SCHED_GETCPU)
-    add_definitions(-DROCKSDB_SCHED_GETCPU_PRESENT)
+    add_definitions(-DMIZAR_SCHED_GETCPU_PRESENT)
 endif ()
 
 check_cxx_symbol_exists(getauxval auvx.h HAVE_AUXV_GETAUXVAL)
 if (HAVE_AUXV_GETAUXVAL)
-    add_definitions(-DROCKSDB_AUXV_GETAUXVAL_PRESENT)
+    add_definitions(-DMIZAR_AUXV_GETAUXVAL_PRESENT)
 endif ()
 
 check_cxx_symbol_exists(F_FULLFSYNC "fcntl.h" HAVE_FULLFSYNC)
@@ -944,9 +944,9 @@ list(APPEND SOURCES
         utilities/transactions/lock/range/range_tree/lib/util/dbt.cc
         utilities/transactions/lock/range/range_tree/lib/util/memarena.cc)
 
-message(STATUS "ROCKSDB_PLUGINS: ${ROCKSDB_PLUGINS}")
-if (ROCKSDB_PLUGINS)
-    string(REPLACE " " ";" PLUGINS ${ROCKSDB_PLUGINS})
+message(STATUS "MIZAR_PLUGINS: ${MIZAR_PLUGINS}")
+if (MIZAR_PLUGINS)
+    string(REPLACE " " ";" PLUGINS ${MIZAR_PLUGINS})
     foreach (plugin ${PLUGINS})
         add_subdirectory("plugin/${plugin}")
         foreach (src ${${plugin}_SOURCES})
@@ -1021,10 +1021,10 @@ if (WITH_FOLLY_DISTRIBUTED_MUTEX)
             third-party/folly/folly/synchronization/WaitOptions.cpp)
 endif ()
 
-set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
-set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
+set(MIZAR_STATIC_LIB mizar${ARTIFACT_SUFFIX})
+set(MIZAR_SHARED_LIB mizar-shared${ARTIFACT_SUFFIX})
 
-option(ROCKSDB_BUILD_SHARED "Build shared versions of the RocksDB libraries" ON)
+option(MIZAR_BUILD_SHARED "Build shared versions of the mizar libraries" ON)
 
 option(WITH_LIBRADOS "Build with librados" OFF)
 if (WITH_LIBRADOS)
@@ -1039,37 +1039,37 @@ else ()
     set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
 endif ()
 
-add_library(${ROCKSDB_STATIC_LIB} STATIC ${SOURCES} ${BUILD_VERSION_CC})
-target_link_libraries(${ROCKSDB_STATIC_LIB} PRIVATE
+add_library(${MIZAR_STATIC_LIB} STATIC ${SOURCES} ${BUILD_VERSION_CC})
+target_link_libraries(${MIZAR_STATIC_LIB} PRIVATE
         ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 
-if (ROCKSDB_BUILD_SHARED)
-    add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES} ${BUILD_VERSION_CC})
-    target_link_libraries(${ROCKSDB_SHARED_LIB} PRIVATE
+if (MIZAR_BUILD_SHARED)
+    add_library(${MIZAR_SHARED_LIB} SHARED ${SOURCES} ${BUILD_VERSION_CC})
+    target_link_libraries(${MIZAR_SHARED_LIB} PRIVATE
             ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
 
     if (WIN32)
-        set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
-                COMPILE_DEFINITIONS "ROCKSDB_DLL;ROCKSDB_LIBRARY_EXPORTS")
+        set_target_properties(${MIZAR_SHARED_LIB} PROPERTIES
+                COMPILE_DEFINITIONS "MIZAR_DLL;MIZAR_LIBRARY_EXPORTS")
         if (MSVC)
-            set_target_properties(${ROCKSDB_STATIC_LIB} PROPERTIES
-                    COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${ROCKSDB_STATIC_LIB}.pdb")
-            set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
-                    COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${ROCKSDB_SHARED_LIB}.pdb")
+            set_target_properties(${MIZAR_STATIC_LIB} PROPERTIES
+                    COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${MIZAR_STATIC_LIB}.pdb")
+            set_target_properties(${MIZAR_SHARED_LIB} PROPERTIES
+                    COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/${MIZAR_SHARED_LIB}.pdb")
         endif ()
     else ()
-        set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
+        set_target_properties(${MIZAR_SHARED_LIB} PROPERTIES
                 LINKER_LANGUAGE CXX
-                VERSION ${rocksdb_VERSION}
-                SOVERSION ${rocksdb_VERSION_MAJOR}
-                OUTPUT_NAME "rocksdb${ARTIFACT_SUFFIX}")
+                VERSION ${mizar_VERSION}
+                SOVERSION ${mizar_VERSION_MAJOR}
+                OUTPUT_NAME "mizar${ARTIFACT_SUFFIX}")
     endif ()
 endif ()
 
-if (ROCKSDB_BUILD_SHARED AND NOT WIN32)
-    set(ROCKSDB_LIB ${ROCKSDB_SHARED_LIB})
+if (MIZAR_BUILD_SHARED AND NOT WIN32)
+    set(MIZAR_LIB ${MIZAR_SHARED_LIB})
 else ()
-    set(ROCKSDB_LIB ${ROCKSDB_STATIC_LIB})
+    set(MIZAR_LIB ${MIZAR_STATIC_LIB})
 endif ()
 
 option(WITH_JNI "build with JNI" OFF)
@@ -1089,9 +1089,9 @@ endif ()
 
 # Installation and packaging
 if (WIN32)
-    option(ROCKSDB_INSTALL_ON_WINDOWS "Enable install target on Windows" OFF)
+    option(MIZAR_INSTALL_ON_WINDOWS "Enable install target on Windows" OFF)
 endif ()
-if (NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
+if (NOT WIN32 OR MIZAR_INSTALL_ON_WINDOWS)
     if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
             # Change default installation prefix on Linux to /usr
@@ -1102,35 +1102,35 @@ if (NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 
-    set(package_config_destination ${CMAKE_INSTALL_LIBDIR}/cmake/rocksdb)
+    set(package_config_destination ${CMAKE_INSTALL_LIBDIR}/cmake/mizar)
 
     configure_package_config_file(
-            ${CMAKE_CURRENT_LIST_DIR}/cmake/RocksDBConfig.cmake.in RocksDBConfig.cmake
+            ${CMAKE_CURRENT_LIST_DIR}/cmake/mizarConfig.cmake.in mizarConfig.cmake
             INSTALL_DESTINATION ${package_config_destination}
     )
 
     write_basic_package_version_file(
-            RocksDBConfigVersion.cmake
-            VERSION ${rocksdb_VERSION}
+            mizarConfigVersion.cmake
+            VERSION ${mizar_VERSION}
             COMPATIBILITY SameMajorVersion
     )
 
-    install(DIRECTORY include/rocksdb COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    install(DIRECTORY include/mizar COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/cmake/modules" COMPONENT devel DESTINATION ${package_config_destination})
 
     install(
-            TARGETS ${ROCKSDB_STATIC_LIB}
-            EXPORT RocksDBTargets
+            TARGETS ${MIZAR_STATIC_LIB}
+            EXPORT mizarTargets
             COMPONENT devel
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
             INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
     )
 
-    if (ROCKSDB_BUILD_SHARED)
+    if (MIZAR_BUILD_SHARED)
         install(
-                TARGETS ${ROCKSDB_SHARED_LIB}
-                EXPORT RocksDBTargets
+                TARGETS ${MIZAR_SHARED_LIB}
+                EXPORT mizarTargets
                 COMPONENT runtime
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
                 RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -1140,16 +1140,16 @@ if (NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
     endif ()
 
     install(
-            EXPORT RocksDBTargets
+            EXPORT mizarTargets
             COMPONENT devel
             DESTINATION ${package_config_destination}
-            NAMESPACE RocksDB::
+            NAMESPACE mizar::
     )
 
     install(
             FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfig.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfigVersion.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/mizarConfig.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/mizarConfigVersion.cmake
             COMPONENT devel
             DESTINATION ${package_config_destination}
     )
@@ -1373,7 +1373,7 @@ if (WITH_TESTS)
     add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
     set(TESTUTILLIB testutillib${ARTIFACT_SUFFIX})
     add_library(${TESTUTILLIB} STATIC ${TESTUTIL_SOURCE})
-    target_link_libraries(${TESTUTILLIB} ${ROCKSDB_LIB})
+    target_link_libraries(${TESTUTILLIB} ${MIZAR_LIB})
     if (MSVC)
         set_target_properties(${TESTUTILLIB} PROPERTIES COMPILE_FLAGS "/Fd${CMAKE_CFG_INTDIR}/testutillib${ARTIFACT_SUFFIX}.pdb")
     endif ()
@@ -1392,7 +1392,7 @@ if (WITH_TESTS)
                 EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
                 OUTPUT_NAME ${exename}${ARTIFACT_SUFFIX}
         )
-        target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness GTest::gtest ${THIRDPARTY_LIBS} ${ROCKSDB_LIB})
+        target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} testharness GTest::gtest ${THIRDPARTY_LIBS} ${MIZAR_LIB})
         if (NOT "${exename}" MATCHES "db_sanity_test")
             gtest_discover_tests(${exename} DISCOVERY_TIMEOUT 120)
             add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
@@ -1405,19 +1405,19 @@ if (WITH_TESTS)
 
     if (WIN32)
         # C executables must link to a shared object
-        if (ROCKSDB_BUILD_SHARED)
-            set(ROCKSDB_LIB_FOR_C ${ROCKSDB_SHARED_LIB})
+        if (MIZAR_BUILD_SHARED)
+            set(MIZAR_LIB_FOR_C ${MIZAR_SHARED_LIB})
         else ()
-            set(ROCKSDB_LIB_FOR_C OFF)
+            set(MIZAR_LIB_FOR_C OFF)
         endif ()
     else ()
-        set(ROCKSDB_LIB_FOR_C ${ROCKSDB_LIB})
+        set(MIZAR_LIB_FOR_C ${MIZAR_LIB})
     endif ()
 
-    if (ROCKSDB_LIB_FOR_C)
+    if (MIZAR_LIB_FOR_C)
         set(C_TESTS db/c_test.c)
         add_executable(c_test db/c_test.c)
-        target_link_libraries(c_test ${ROCKSDB_LIB_FOR_C} testharness)
+        target_link_libraries(c_test ${MIZAR_LIB_FOR_C} testharness)
         add_test(NAME c_test COMMAND c_test${ARTIFACT_SUFFIX})
         add_dependencies(check c_test)
     endif ()
@@ -1429,38 +1429,38 @@ if (WITH_BENCHMARK_TOOLS)
             tools/db_bench.cc
             tools/db_bench_tool.cc)
     target_link_libraries(db_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${THIRDPARTY_LIBS})
+            ${MIZAR_LIB} ${THIRDPARTY_LIBS})
 
     add_executable(cache_bench${ARTIFACT_SUFFIX}
             cache/cache_bench.cc
             cache/cache_bench_tool.cc)
     target_link_libraries(cache_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${GFLAGS_LIB})
+            ${MIZAR_LIB} ${GFLAGS_LIB})
 
     add_executable(memtablerep_bench${ARTIFACT_SUFFIX}
             memtable/memtablerep_bench.cc)
     target_link_libraries(memtablerep_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${GFLAGS_LIB})
+            ${MIZAR_LIB} ${GFLAGS_LIB})
 
     add_executable(range_del_aggregator_bench${ARTIFACT_SUFFIX}
             db/range_del_aggregator_bench.cc)
     target_link_libraries(range_del_aggregator_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${GFLAGS_LIB})
+            ${MIZAR_LIB} ${GFLAGS_LIB})
 
     add_executable(table_reader_bench${ARTIFACT_SUFFIX}
             table/table_reader_bench.cc)
     target_link_libraries(table_reader_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} testharness ${GFLAGS_LIB})
+            ${MIZAR_LIB} testharness ${GFLAGS_LIB})
 
     add_executable(filter_bench${ARTIFACT_SUFFIX}
             util/filter_bench.cc)
     target_link_libraries(filter_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${GFLAGS_LIB})
+            ${MIZAR_LIB} ${GFLAGS_LIB})
 
     add_executable(hash_table_bench${ARTIFACT_SUFFIX}
             utilities/persistent_cache/hash_table_bench.cc)
     target_link_libraries(hash_table_bench${ARTIFACT_SUFFIX}
-            ${ROCKSDB_LIB} ${GFLAGS_LIB})
+            ${MIZAR_LIB} ${GFLAGS_LIB})
 endif ()
 
 if (WITH_CORE_TOOLS OR WITH_TOOLS)

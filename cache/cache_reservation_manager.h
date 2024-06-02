@@ -16,13 +16,13 @@
 #include <vector>
 
 #include "cache/cache_entry_roles.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/cache.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 template <CacheEntryRole R>
 class CacheReservationHandle;
@@ -188,4 +188,4 @@ class CacheReservationHandle {
   std::size_t incremental_memory_used_;
   std::shared_ptr<CacheReservationManager> cache_res_mgr_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

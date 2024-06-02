@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "table/plain/plain_table_reader.h"
 
@@ -12,12 +12,12 @@
 
 #include "db/dbformat.h"
 
-#include "rocksdb/cache.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/statistics.h"
+#include "mizar/cache.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/statistics.h"
 
 #include "table/block_based/block.h"
 #include "table/block_based/filter_block.h"
@@ -39,7 +39,7 @@
 #include "util/stop_watch.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -772,5 +772,5 @@ Status PlainTableIterator::status() const {
   return status_;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

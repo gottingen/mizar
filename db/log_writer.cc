@@ -11,11 +11,11 @@
 
 #include <stdint.h>
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace log {
 
 Writer::Writer(std::unique_ptr<WritableFileWriter>&& dest, uint64_t log_number,
@@ -162,4 +162,4 @@ IOStatus Writer::EmitPhysicalRecord(RecordType t, const char* ptr, size_t n) {
 }
 
 }  // namespace log
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

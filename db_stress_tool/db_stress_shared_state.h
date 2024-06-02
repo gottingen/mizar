@@ -37,7 +37,7 @@ DECLARE_int32(open_read_fault_one_in);
 
 DECLARE_int32(injest_error_severity);
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class StressTest;
 
 // State shared by all concurrent executions of the same benchmark.
@@ -53,7 +53,7 @@ class SharedState {
   // local variable updated via sync points to keep track of errors injected
   // while reading filter blocks in order to ignore the Get/MultiGet result
   // for those calls
-#if defined(ROCKSDB_SUPPORT_THREAD_LOCAL)
+#if defined(MIZAR_SUPPORT_THREAD_LOCAL)
 #if defined(OS_SOLARIS)
   static __thread bool ignore_read_error;
 #else
@@ -61,7 +61,7 @@ class SharedState {
 #endif // OS_SOLARIS
 #else
   static bool ignore_read_error;
-#endif // ROCKSDB_SUPPORT_THREAD_LOCAL
+#endif // MIZAR_SUPPORT_THREAD_LOCAL
 
   SharedState(Env* /*env*/, StressTest* stress_test)
       : cv_(&mu_),
@@ -395,5 +395,5 @@ struct ThreadState {
   ThreadState(uint32_t index, SharedState* _shared)
       : tid(index), rand(1000 + index + _shared->GetSeed()), shared(_shared) {}
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

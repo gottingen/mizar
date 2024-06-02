@@ -4,11 +4,11 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/backupable_db.h"
+#include "mizar/utilities/backupable_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct TEST_FutureSchemaVersion2Options {
   std::string version = "2";
@@ -25,5 +25,5 @@ struct TEST_FutureSchemaVersion2Options {
 void TEST_EnableWriteFutureSchemaVersion2(
     BackupEngine *engine, const TEST_FutureSchemaVersion2Options &options);
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

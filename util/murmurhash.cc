@@ -21,7 +21,7 @@
 //
 // 64-bit hash for 64-bit platforms
 
-#ifdef ROCKSDB_UBSAN_RUN
+#ifdef MIZAR_UBSAN_RUN
 #if defined(__clang__)
 __attribute__((__no_sanitize__("alignment")))
 #elif defined(__GNUC__)

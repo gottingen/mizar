@@ -15,9 +15,9 @@ int main() {
   return 1;
 }
 #else
-#include "rocksdb/db_stress_tool.h"
+#include "mizar/db_stress_tool.h"
 
 int main(int argc, char** argv) {
-  return ROCKSDB_NAMESPACE::db_stress_tool(argc, argv);
+  return MIZAR_NAMESPACE::db_stress_tool(argc, argv);
 }
 #endif  // GFLAGS

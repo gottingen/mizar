@@ -30,14 +30,14 @@
 
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // We want to give users opportunity to default all the mutexes to adaptive if
 // not specified otherwise. This enables a quick way to conduct various
 // performance related experiements.
 //
 // NB! Support for adaptive mutexes is turned on by definining
-// ROCKSDB_PTHREAD_ADAPTIVE_MUTEX during the compilation. If you use RocksDB
+// MIZAR_PTHREAD_ADAPTIVE_MUTEX during the compilation. If you use RocksDB
 // build environment then this happens automatically; otherwise it's up to the
 // consumer to define the identifier.
 #ifdef ROCKSDB_DEFAULT_TO_ADAPTIVE_MUTEX
@@ -58,7 +58,7 @@ static int PthreadCall(const char* label, int result) {
 
 Mutex::Mutex(bool adaptive) {
   (void) adaptive;
-#ifdef ROCKSDB_PTHREAD_ADAPTIVE_MUTEX
+#ifdef MIZAR_PTHREAD_ADAPTIVE_MUTEX
   if (!adaptive) {
     PthreadCall("init mutex", pthread_mutex_init(&mu_, nullptr));
   } else {
@@ -73,7 +73,7 @@ Mutex::Mutex(bool adaptive) {
   }
 #else
   PthreadCall("init mutex", pthread_mutex_init(&mu_, nullptr));
-#endif // ROCKSDB_PTHREAD_ADAPTIVE_MUTEX
+#endif // MIZAR_PTHREAD_ADAPTIVE_MUTEX
 }
 
 Mutex::~Mutex() { PthreadCall("destroy mutex", pthread_mutex_destroy(&mu_)); }
@@ -169,7 +169,7 @@ void RWMutex::ReadUnlock() { PthreadCall("read unlock", pthread_rwlock_unlock(&m
 void RWMutex::WriteUnlock() { PthreadCall("write unlock", pthread_rwlock_unlock(&mu_)); }
 
 int PhysicalCoreID() {
-#if defined(ROCKSDB_SCHED_GETCPU_PRESENT) && defined(__x86_64__) && \
+#if defined(MIZAR_SCHED_GETCPU_PRESENT) && defined(__x86_64__) && \
     (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 22))
   // sched_getcpu uses VDSO getcpu() syscall since 2.22. I believe Linux offers VDSO
   // support only on x86_64. This is the fastest/preferred method if available.
@@ -290,6 +290,6 @@ bool GenerateRfcUuid(std::string* output) {
 }
 
 }  // namespace port
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

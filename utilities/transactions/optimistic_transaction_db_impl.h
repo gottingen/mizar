@@ -4,17 +4,17 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <mutex>
 #include <vector>
 #include <algorithm>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class OptimisticTransactionDBImpl : public OptimisticTransactionDB {
  public:
@@ -83,5 +83,5 @@ class OptimisticTransactionDBImpl : public OptimisticTransactionDB {
                                    OptimisticTransactionOptions());
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

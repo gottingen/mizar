@@ -25,7 +25,7 @@
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 uint64_t TotalCompensatedFileSize(const std::vector<FileMetaData*>& files) {
@@ -835,7 +835,7 @@ Compaction* CompactionPicker::CompactRange(
   return compaction;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 namespace {
 // Test whether two files have overlapping key-ranges.
 bool HaveOverlappingKeyRanges(const Comparator* c, const SstFileMetaData& a,
@@ -1070,7 +1070,7 @@ Status CompactionPicker::SanitizeCompactionInputFiles(
 
   return Status::OK();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 void CompactionPicker::RegisterCompaction(Compaction* c) {
   if (c == nullptr) {
@@ -1173,4 +1173,4 @@ bool CompactionPicker::GetOverlappingL0Files(
   return true;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

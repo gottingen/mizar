@@ -9,10 +9,10 @@
 // list of sorted ints and merges them to form a large sorted list.
 #pragma once
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SortList : public MergeOperator {
  public:
@@ -39,4 +39,4 @@ class SortList : public MergeOperator {
   std::vector<int> Merge(std::vector<int>& left, std::vector<int>& right) const;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

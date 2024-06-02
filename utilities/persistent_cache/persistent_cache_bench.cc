@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #ifndef GFLAGS
 #include <cstdio>
@@ -17,8 +17,8 @@ int main() { fprintf(stderr, "Please install gflags to run tools\n"); }
 
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 #include "table/block_based/block_builder.h"
 #include "util/gflags_compat.h"
 #include "util/mutexlock.h"
@@ -42,7 +42,7 @@ DEFINE_string(cache_type, "block_cache",
 DEFINE_bool(benchmark, false, "Benchmark mode");
 DEFINE_int32(volatile_cache_pct, 10, "Percentage of cache in memory tier.");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::unique_ptr<PersistentCacheTier> NewVolatileCache() {
   assert(FLAGS_cache_size != std::numeric_limits<uint64_t>::max());
@@ -300,7 +300,7 @@ class CacheTierBenchmark {
   mutable Stats stats_;                         // Stats
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 //
 // main
@@ -328,16 +328,16 @@ int main(int argc, char** argv) {
 
   fprintf(stderr, "%s\n", msg.str().c_str());
 
-  std::shared_ptr<ROCKSDB_NAMESPACE::PersistentCacheTier> cache;
+  std::shared_ptr<MIZAR_NAMESPACE::PersistentCacheTier> cache;
   if (FLAGS_cache_type == "block_cache") {
     fprintf(stderr, "Using block cache implementation\n");
-    cache = ROCKSDB_NAMESPACE::NewBlockCache();
+    cache = MIZAR_NAMESPACE::NewBlockCache();
   } else if (FLAGS_cache_type == "volatile") {
     fprintf(stderr, "Using volatile cache implementation\n");
-    cache = ROCKSDB_NAMESPACE::NewVolatileCache();
+    cache = MIZAR_NAMESPACE::NewVolatileCache();
   } else if (FLAGS_cache_type == "tiered") {
     fprintf(stderr, "Using tiered cache implementation\n");
-    cache = ROCKSDB_NAMESPACE::NewTieredCache();
+    cache = MIZAR_NAMESPACE::NewTieredCache();
   } else {
     fprintf(stderr, "Unknown option for cache\n");
   }
@@ -348,8 +348,8 @@ int main(int argc, char** argv) {
     abort();
   }
 
-  std::unique_ptr<ROCKSDB_NAMESPACE::CacheTierBenchmark> benchmark(
-      new ROCKSDB_NAMESPACE::CacheTierBenchmark(std::move(cache)));
+  std::unique_ptr<MIZAR_NAMESPACE::CacheTierBenchmark> benchmark(
+      new MIZAR_NAMESPACE::CacheTierBenchmark(std::move(cache)));
 
   return 0;
 }

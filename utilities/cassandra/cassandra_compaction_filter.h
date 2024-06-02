@@ -6,11 +6,11 @@
 #pragma once
 #include <string>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/slice.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/slice.h"
 #include "utilities/cassandra/cassandra_options.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 
 /**
@@ -54,4 +54,4 @@ class CassandraCompactionFilterFactory : public CompactionFilterFactory {
   CassandraOptions options_;
 };
 }  // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

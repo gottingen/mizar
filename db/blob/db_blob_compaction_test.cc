@@ -9,14 +9,14 @@
 #include "port/stack_trace.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBBlobCompactionTest : public DBTestBase {
  public:
   explicit DBBlobCompactionTest()
       : DBTestBase("db_blob_compaction_test", /*env_do_fsync=*/false) {}
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const std::vector<InternalStats::CompactionStats>& GetCompactionStats() {
     VersionSet* const versions = dbfull()->GetVersionSet();
     assert(versions);
@@ -30,7 +30,7 @@ class DBBlobCompactionTest : public DBTestBase {
 
     return internal_stats->TEST_GetCompactionStats();
   }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 namespace {
@@ -230,7 +230,7 @@ TEST_F(DBBlobCompactionTest, FilterByKeyLength) {
   ASSERT_OK(db_->Get(ReadOptions(), long_key, &value));
   ASSERT_EQ("value", value);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const auto& compaction_stats = GetCompactionStats();
   ASSERT_GE(compaction_stats.size(), 2);
 
@@ -238,7 +238,7 @@ TEST_F(DBBlobCompactionTest, FilterByKeyLength) {
   // this involves neither reading nor writing blobs
   ASSERT_EQ(compaction_stats[1].bytes_read_blob, 0);
   ASSERT_EQ(compaction_stats[1].bytes_written_blob, 0);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   Close();
 }
@@ -266,7 +266,7 @@ TEST_F(DBBlobCompactionTest, BlindWriteFilter) {
     ASSERT_EQ(new_blob_value, Get(key));
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const auto& compaction_stats = GetCompactionStats();
   ASSERT_GE(compaction_stats.size(), 2);
 
@@ -274,7 +274,7 @@ TEST_F(DBBlobCompactionTest, BlindWriteFilter) {
   // this involves writing but not reading blobs
   ASSERT_EQ(compaction_stats[1].bytes_read_blob, 0);
   ASSERT_GT(compaction_stats[1].bytes_written_blob, 0);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   Close();
 }
@@ -393,7 +393,7 @@ TEST_F(DBBlobCompactionTest, CompactionFilter) {
     ASSERT_EQ(kv.second + std::string(padding), Get(kv.first));
   }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const auto& compaction_stats = GetCompactionStats();
   ASSERT_GE(compaction_stats.size(), 2);
 
@@ -401,7 +401,7 @@ TEST_F(DBBlobCompactionTest, CompactionFilter) {
   // this involves reading and writing blobs
   ASSERT_GT(compaction_stats[1].bytes_read_blob, 0);
   ASSERT_GT(compaction_stats[1].bytes_written_blob, 0);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   Close();
 }
@@ -445,7 +445,7 @@ TEST_F(DBBlobCompactionTest, CompactionFilterReadBlobAndKeep) {
                               /*end=*/nullptr));
   ASSERT_EQ(blob_files, GetBlobFileNumbers());
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const auto& compaction_stats = GetCompactionStats();
   ASSERT_GE(compaction_stats.size(), 2);
 
@@ -453,7 +453,7 @@ TEST_F(DBBlobCompactionTest, CompactionFilterReadBlobAndKeep) {
   // this involves reading but not writing blobs
   ASSERT_GT(compaction_stats[1].bytes_read_blob, 0);
   ASSERT_EQ(compaction_stats[1].bytes_written_blob, 0);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   Close();
 }
@@ -708,10 +708,10 @@ TEST_F(DBBlobCompactionTest, CompactionReadaheadMerge) {
   Close();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

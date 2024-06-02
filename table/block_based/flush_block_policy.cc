@@ -3,21 +3,21 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/flush_block_policy.h"
+#include "mizar/flush_block_policy.h"
 
 #include <cassert>
 #include <mutex>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/customizable_util.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/customizable_util.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
 #include "table/block_based/flush_block_policy.h"
 #include "table/format.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Flush block by size
 class FlushBlockBySizePolicy : public FlushBlockPolicy {
@@ -91,7 +91,7 @@ FlushBlockPolicy* FlushBlockBySizePolicyFactory::NewFlushBlockPolicy(
   return new FlushBlockBySizePolicy(size, deviation, false, data_block_builder);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterFlushBlockPolicyFactories(ObjectLibrary& library,
                                              const std::string& /*arg*/) {
   library.AddFactory<FlushBlockPolicyFactory>(
@@ -112,18 +112,18 @@ static int RegisterFlushBlockPolicyFactories(ObjectLibrary& library,
       });
   return 2;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 static bool LoadFlushPolicyFactory(
     const std::string& id, std::shared_ptr<FlushBlockPolicyFactory>* result) {
   if (id.empty()) {
     result->reset(new FlushBlockBySizePolicyFactory());
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   } else if (id == FlushBlockBySizePolicyFactory::kClassName()) {
     result->reset(new FlushBlockBySizePolicyFactory());
   } else if (id == FlushBlockEveryKeyPolicyFactory::kClassName()) {
     result->reset(new FlushBlockEveryKeyPolicyFactory());
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   } else {
     return false;
   }
@@ -136,13 +136,13 @@ FlushBlockBySizePolicyFactory::FlushBlockBySizePolicyFactory()
 Status FlushBlockPolicyFactory::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::shared_ptr<FlushBlockPolicyFactory>* factory) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterFlushBlockPolicyFactories(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   return LoadSharedObject<FlushBlockPolicyFactory>(
       config_options, value, LoadFlushPolicyFactory, factory);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

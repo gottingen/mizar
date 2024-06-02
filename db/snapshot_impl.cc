@@ -3,11 +3,11 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/snapshot.h"
+#include "mizar/snapshot.h"
 
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 ManagedSnapshot::ManagedSnapshot(DB* db) : db_(db),
                                            snapshot_(db->GetSnapshot()) {}
@@ -23,4 +23,4 @@ ManagedSnapshot::~ManagedSnapshot() {
 
 const Snapshot* ManagedSnapshot::snapshot() { return snapshot_;}
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

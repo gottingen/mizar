@@ -7,7 +7,7 @@
 #include "table/block_based/block_based_table_reader.h"
 #include "table/format.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const PersistentCacheOptions PersistentCacheOptions::kEmpty;
 
@@ -106,4 +106,4 @@ Status PersistentCacheHelper::LookupUncompressedPage(
   return Status::OK();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

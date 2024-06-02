@@ -7,9 +7,9 @@
 
 #include <array>
 
-#include "rocksdb/unique_id.h"
+#include "mizar/unique_id.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 using UniqueId64x3 = std::array<uint64_t, 3>;
 
@@ -56,4 +56,4 @@ std::string EncodeSessionId(uint64_t upper, uint64_t lower);
 Status DecodeSessionId(const std::string &db_session_id, uint64_t *upper,
                        uint64_t *lower);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

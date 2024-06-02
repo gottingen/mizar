@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -18,17 +18,17 @@ int main() {
 #include <map>
 #include <vector>
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "tools/block_cache_analyzer/block_cache_trace_analyzer.h"
 #include "trace_replay/block_cache_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 const uint64_t kBlockSize = 1024;
@@ -47,7 +47,7 @@ class BlockCacheTracerTest : public testing::Test {
  public:
   BlockCacheTracerTest() {
     test_path_ = test::PerThreadDBPath("block_cache_trace_analyzer_test");
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
     EXPECT_OK(env_->CreateDir(test_path_));
     trace_file_path_ = test_path_ + "/block_cache_trace";
     block_cache_sim_config_path_ = test_path_ + "/block_cache_sim_config";
@@ -199,7 +199,7 @@ class BlockCacheTracerTest : public testing::Test {
       cursor += static_cast<int>(arg.size()) + 1;
     }
     ASSERT_EQ(0,
-              ROCKSDB_NAMESPACE::block_cache_trace_analyzer_tool(argc, argv));
+              MIZAR_NAMESPACE::block_cache_trace_analyzer_tool(argc, argv));
   }
 
   Env* env_;
@@ -708,7 +708,7 @@ TEST_F(BlockCacheTracerTest, MixedBlocks) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -719,7 +719,7 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "block_cache_trace_analyzer_test is not supported in ROCKSDB_LITE\n");
+          "block_cache_trace_analyzer_test is not supported in MIZAR_LITE\n");
   return 0;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

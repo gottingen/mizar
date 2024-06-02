@@ -4,13 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ and enables
-// calling C++ ROCKSDB_NAMESPACE::ConfigOptions methods
+// calling C++ MIZAR_NAMESPACE::ConfigOptions methods
 // from Java side.
 
 #include <jni.h>
 
 #include "include/org_rocksdb_ConfigOptions.h"
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -20,7 +20,7 @@
  */
 void Java_org_rocksdb_ConfigOptions_disposeInternal(JNIEnv *, jobject,
                                                     jlong jhandle) {
-  auto *co = reinterpret_cast<ROCKSDB_NAMESPACE::ConfigOptions *>(jhandle);
+  auto *co = reinterpret_cast<MIZAR_NAMESPACE::ConfigOptions *>(jhandle);
   assert(co != nullptr);
   delete co;
 }
@@ -31,7 +31,7 @@ void Java_org_rocksdb_ConfigOptions_disposeInternal(JNIEnv *, jobject,
  * Signature: ()J
  */
 jlong Java_org_rocksdb_ConfigOptions_newConfigOptions(JNIEnv *, jclass) {
-  auto *cfg_opt = new ROCKSDB_NAMESPACE::ConfigOptions();
+  auto *cfg_opt = new MIZAR_NAMESPACE::ConfigOptions();
   return reinterpret_cast<jlong>(cfg_opt);
 }
 
@@ -42,7 +42,7 @@ jlong Java_org_rocksdb_ConfigOptions_newConfigOptions(JNIEnv *, jclass) {
  */
 void Java_org_rocksdb_ConfigOptions_setDelimiter(JNIEnv *env, jclass,
                                                  jlong handle, jstring s) {
-  auto *cfg_opt = reinterpret_cast<ROCKSDB_NAMESPACE::ConfigOptions *>(handle);
+  auto *cfg_opt = reinterpret_cast<MIZAR_NAMESPACE::ConfigOptions *>(handle);
   const char *delim = env->GetStringUTFChars(s, nullptr);
   if (delim == nullptr) {
     // exception thrown: OutOfMemoryError
@@ -60,7 +60,7 @@ void Java_org_rocksdb_ConfigOptions_setDelimiter(JNIEnv *env, jclass,
 void Java_org_rocksdb_ConfigOptions_setIgnoreUnknownOptions(JNIEnv *, jclass,
                                                             jlong handle,
                                                             jboolean b) {
-  auto *cfg_opt = reinterpret_cast<ROCKSDB_NAMESPACE::ConfigOptions *>(handle);
+  auto *cfg_opt = reinterpret_cast<MIZAR_NAMESPACE::ConfigOptions *>(handle);
   cfg_opt->ignore_unknown_options = static_cast<bool>(b);
 }
 
@@ -72,7 +72,7 @@ void Java_org_rocksdb_ConfigOptions_setIgnoreUnknownOptions(JNIEnv *, jclass,
 void Java_org_rocksdb_ConfigOptions_setInputStringsEscaped(JNIEnv *, jclass,
                                                            jlong handle,
                                                            jboolean b) {
-  auto *cfg_opt = reinterpret_cast<ROCKSDB_NAMESPACE::ConfigOptions *>(handle);
+  auto *cfg_opt = reinterpret_cast<MIZAR_NAMESPACE::ConfigOptions *>(handle);
   cfg_opt->input_strings_escaped = static_cast<bool>(b);
 }
 
@@ -83,6 +83,6 @@ void Java_org_rocksdb_ConfigOptions_setInputStringsEscaped(JNIEnv *, jclass,
  */
 void Java_org_rocksdb_ConfigOptions_setSanityLevel(JNIEnv *, jclass,
                                                    jlong handle, jbyte level) {
-  auto *cfg_opt = reinterpret_cast<ROCKSDB_NAMESPACE::ConfigOptions *>(handle);
-  cfg_opt->sanity_level = ROCKSDB_NAMESPACE::SanityLevelJni::toCppSanityLevel(level);
+  auto *cfg_opt = reinterpret_cast<MIZAR_NAMESPACE::ConfigOptions *>(handle);
+  cfg_opt->sanity_level = MIZAR_NAMESPACE::SanityLevelJni::toCppSanityLevel(level);
 }

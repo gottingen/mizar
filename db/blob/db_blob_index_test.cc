@@ -23,7 +23,7 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // kTypeBlobIndex is a value type used by BlobDB only. The base rocksdb
 // should accept the value type on write, and report not supported value
@@ -130,9 +130,9 @@ class DBBlobIndexTest : public DBTestBase {
         ASSERT_OK(Flush());
         ASSERT_OK(
             dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr));
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         ASSERT_EQ("0,1", FilesPerLevel());
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
         break;
     }
   }
@@ -429,7 +429,7 @@ TEST_F(DBBlobIndexTest, Iterate) {
     verify(15, Status::kOk, get_value(16, 0), get_value(14, 0),
            create_blob_iterator, check_is_blob(false));
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     // Iterator with blob support and using seek.
     ASSERT_OK(dbfull()->SetOptions(
         cfh(), {{"max_sequential_skip_in_iterations", "0"}}));
@@ -454,7 +454,7 @@ TEST_F(DBBlobIndexTest, Iterate) {
            create_blob_iterator, check_is_blob(false));
     verify(15, Status::kOk, get_value(16, 0), get_value(14, 0),
            create_blob_iterator, check_is_blob(false));
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
     for (auto* snapshot : snapshots) {
       dbfull()->ReleaseSnapshot(snapshot);
@@ -554,18 +554,18 @@ TEST_F(DBBlobIndexTest, IntegratedBlobIterate) {
   Status expected_status;
   verify(1, expected_status, expected_value);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   // Test DBIter::FindValueForCurrentKeyUsingSeek flow.
   ASSERT_OK(dbfull()->SetOptions(cfh(),
                                  {{"max_sequential_skip_in_iterations", "0"}}));
   verify(1, expected_status, expected_value);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

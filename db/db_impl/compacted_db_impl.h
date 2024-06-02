@@ -4,12 +4,12 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <string>
 #include <vector>
 #include "db/db_impl/db_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class CompactedDBImpl : public DBImpl {
  public:
@@ -114,5 +114,5 @@ class CompactedDBImpl : public DBImpl {
   const Comparator* user_comparator_;
   LevelFilesBrief files_;
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

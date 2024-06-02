@@ -8,10 +8,10 @@
 #include <ctime>
 #include "memory/arena.h"
 #include "port/sys_time.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Logger;
 
@@ -53,4 +53,4 @@ extern void LogToBuffer(LogBuffer* log_buffer, size_t max_log_size,
 // Same as previous function, but with default max log size.
 extern void LogToBuffer(LogBuffer* log_buffer, const char* format, ...);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

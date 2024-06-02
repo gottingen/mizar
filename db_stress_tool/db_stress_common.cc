@@ -16,23 +16,23 @@
 #include "util/file_checksum_helper.h"
 #include "util/xxhash.h"
 
-ROCKSDB_NAMESPACE::Env* db_stress_env = nullptr;
+MIZAR_NAMESPACE::Env* db_stress_env = nullptr;
 #ifndef NDEBUG
 // If non-null, injects read error at a rate specified by the
 // read_fault_one_in or write_fault_one_in flag
-std::shared_ptr<ROCKSDB_NAMESPACE::FaultInjectionTestFS> fault_fs_guard;
+std::shared_ptr<MIZAR_NAMESPACE::FaultInjectionTestFS> fault_fs_guard;
 #endif // NDEBUG
-enum ROCKSDB_NAMESPACE::CompressionType compression_type_e =
-    ROCKSDB_NAMESPACE::kSnappyCompression;
-enum ROCKSDB_NAMESPACE::CompressionType bottommost_compression_type_e =
-    ROCKSDB_NAMESPACE::kSnappyCompression;
-enum ROCKSDB_NAMESPACE::ChecksumType checksum_type_e =
-    ROCKSDB_NAMESPACE::kCRC32c;
+enum MIZAR_NAMESPACE::CompressionType compression_type_e =
+    MIZAR_NAMESPACE::kSnappyCompression;
+enum MIZAR_NAMESPACE::CompressionType bottommost_compression_type_e =
+    MIZAR_NAMESPACE::kSnappyCompression;
+enum MIZAR_NAMESPACE::ChecksumType checksum_type_e =
+    MIZAR_NAMESPACE::kCRC32c;
 enum RepFactory FLAGS_rep_factory = kSkipList;
 std::vector<double> sum_probs(100001);
 constexpr int64_t zipf_sum_size = 100000;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Zipfian distribution is generated based on a pre-calculated array.
 // It should be used before start the stress test.
@@ -114,7 +114,7 @@ void PoolSizeChangeThread(void* v) {
       new_thread_pool_size = 1;
     }
     db_stress_env->SetBackgroundThreads(new_thread_pool_size,
-                                        ROCKSDB_NAMESPACE::Env::Priority::LOW);
+                                        MIZAR_NAMESPACE::Env::Priority::LOW);
     // Sleep up to 3 seconds
     db_stress_env->SleepForMicroseconds(
         thread->rand.Next() % FLAGS_compaction_thread_pool_adjust_interval *
@@ -349,5 +349,5 @@ std::shared_ptr<FileChecksumGenFactory> GetFileChecksumImpl(
   return std::make_shared<DbStressChecksumGenFactory>(internal_name);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS

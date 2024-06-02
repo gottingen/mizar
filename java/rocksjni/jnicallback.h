@@ -11,9 +11,9 @@
 
 #include <jni.h>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class JniCallback {
  public:
   JniCallback(JNIEnv* env, jobject jcallback_obj);
@@ -27,6 +27,6 @@ class JniCallback {
   JNIEnv* getJniEnv(jboolean* attached) const;
   void releaseJniEnv(jboolean& attached) const;
   };
-  }  // namespace ROCKSDB_NAMESPACE
+  }  // namespace MIZAR_NAMESPACE
 
 #endif  // JAVA_ROCKSJNI_JNICALLBACK_H_

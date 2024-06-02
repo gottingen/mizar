@@ -9,13 +9,13 @@
 #include <cinttypes>
 #include <cstdio>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/statistics.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // The order of items listed in  Tickers should be the same as
 // the order listed in TickersNameMap
@@ -285,7 +285,7 @@ std::shared_ptr<Statistics> CreateDBStatistics() {
   return std::make_shared<StatisticsImpl>(nullptr);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinStatistics(ObjectLibrary& library,
                                      const std::string& /*arg*/) {
   library.AddFactory<Statistics>(
@@ -297,17 +297,17 @@ static int RegisterBuiltinStatistics(ObjectLibrary& library,
       });
   return 1;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status Statistics::CreateFromString(const ConfigOptions& config_options,
                                     const std::string& id,
                                     std::shared_ptr<Statistics>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinStatistics(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   Status s;
   if (id == "" || id == StatisticsImpl::kClassName()) {
     result->reset(new StatisticsImpl(nullptr));
@@ -320,11 +320,11 @@ Status Statistics::CreateFromString(const ConfigOptions& config_options,
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> stats_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"inner", OptionTypeInfo::AsCustomSharedPtr<Statistics>(
                   0, OptionVerificationType::kByNameAllowFromNull,
                   OptionTypeFlags::kCompareNever)},
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 };
 
 StatisticsImpl::StatisticsImpl(std::shared_ptr<Statistics> stats)
@@ -505,4 +505,4 @@ bool StatisticsImpl::HistEnabledForType(uint32_t type) const {
   return type < HISTOGRAM_ENUM_MAX;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

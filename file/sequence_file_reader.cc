@@ -21,7 +21,7 @@
 #include "util/random.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 IOStatus SequentialFileReader::Create(
     const std::shared_ptr<FileSystem>& fs, const std::string& fname,
     const FileOptions& file_opts, std::unique_ptr<SequentialFileReader>* reader,
@@ -37,7 +37,7 @@ IOStatus SequentialFileReader::Create(
 IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
   IOStatus io_s;
   if (use_direct_io()) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     size_t offset = offset_.fetch_add(n);
     size_t alignment = file_->GetRequiredBufferAlignment();
     size_t aligned_offset = TruncateToPageBoundary(alignment, offset);
@@ -68,7 +68,7 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
       NotifyOnFileReadFinish(orig_offset, tmp.size(), start_ts, finish_ts,
                              io_s);
     }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   } else {
     // To be paranoid, modify scratch a little bit, so in case underlying
     // FileSystem doesn't fill the buffer but return succee and `scratch`
@@ -79,7 +79,7 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
       scratch[0]++;
     }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     FileOperationInfo::StartTimePoint start_ts;
     if (ShouldNotifyListeners()) {
       start_ts = FileOperationInfo::StartNow();
@@ -88,7 +88,7 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
 
     io_s = file_->Read(n, IOOptions(), result, scratch, nullptr);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (ShouldNotifyListeners()) {
       auto finish_ts = FileOperationInfo::FinishNow();
       size_t offset = offset_.fetch_add(result->size());
@@ -101,12 +101,12 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
 }
 
 IOStatus SequentialFileReader::Skip(uint64_t n) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   if (use_direct_io()) {
     offset_ += static_cast<size_t>(n);
     return IOStatus::OK();
   }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   return file_->Skip(n);
 }
 
@@ -282,4 +282,4 @@ SequentialFileReader::NewReadaheadSequentialFile(
       new ReadaheadSequentialFile(std::move(file), readahead_size));
   return result;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

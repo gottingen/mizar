@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/blob_db/blob_compaction_filter.h"
 
@@ -11,10 +11,10 @@
 
 #include "db/dbformat.h"
 #include "logging/logging.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace blob_db {
 
 BlobIndexCompactionFilterBase::~BlobIndexCompactionFilterBase() {
@@ -486,5 +486,5 @@ BlobIndexCompactionFilterFactoryGC::CreateCompactionFilter(
 }
 
 }  // namespace blob_db
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

@@ -49,11 +49,11 @@
 #include "memory/allocator.h"
 #include "port/likely.h"
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/coding.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 template <class Comparator>
 class InlineSkipList {
@@ -1047,4 +1047,4 @@ void InlineSkipList<Comparator>::TEST_Validate() const {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 
 #include "env/composite_env_wrapper.h"
 #include "env/env_chroot.h"
@@ -11,14 +11,14 @@
 #include "env/fs_readonly.h"
 #include "env/mock_env.h"
 #include "options/db_options.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 #include "utilities/env_timed.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 FileSystem::FileSystem() {}
 
@@ -29,7 +29,7 @@ Status FileSystem::Load(const std::string& value,
   return CreateFromString(ConfigOptions(), value, result);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinFileSystems(ObjectLibrary& library,
                                       const std::string& /*arg*/) {
   library.AddFactory<FileSystem>(
@@ -75,7 +75,7 @@ static int RegisterBuiltinFileSystems(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status FileSystem::CreateFromString(const ConfigOptions& config_options,
                                     const std::string& value,
@@ -85,12 +85,12 @@ Status FileSystem::CreateFromString(const ConfigOptions& config_options,
     *result = default_fs;
     return Status::OK();
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     static std::once_flag once;
     std::call_once(once, [&]() {
       RegisterBuiltinFileSystems(*(ObjectLibrary::Default().get()), "");
     });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     return LoadSharedObject<FileSystem>(config_options, value, nullptr, result);
   }
 }
@@ -208,11 +208,11 @@ IOStatus ReadFileToString(FileSystem* fs, const std::string& fname,
 
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> fs_wrapper_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     {"target",
      OptionTypeInfo::AsCustomSharedPtr<FileSystem>(
          0, OptionVerificationType::kByName, OptionTypeFlags::kDontSerialize)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 }  // namespace
 FileSystemWrapper::FileSystemWrapper(const std::shared_ptr<FileSystem>& t)
@@ -227,7 +227,7 @@ Status FileSystemWrapper::PrepareOptions(const ConfigOptions& options) {
   return FileSystem::PrepareOptions(options);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 std::string FileSystemWrapper::SerializeOptions(
     const ConfigOptions& config_options, const std::string& header) const {
   auto parent = FileSystem::SerializeOptions(config_options, "");
@@ -247,7 +247,7 @@ std::string FileSystemWrapper::SerializeOptions(
     return result;
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 DirFsyncOptions::DirFsyncOptions() { reason = kDefault; }
 
@@ -260,4 +260,4 @@ DirFsyncOptions::DirFsyncOptions(FsyncReason fsync_reason) {
   assert(fsync_reason != kFileRenamed);
   reason = fsync_reason;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

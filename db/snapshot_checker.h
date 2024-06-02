@@ -4,9 +4,9 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 enum class SnapshotCheckerResult : int {
   kInSnapshot = 0,
@@ -53,9 +53,9 @@ class WritePreparedSnapshotChecker : public SnapshotChecker {
       SequenceNumber sequence, SequenceNumber snapshot_sequence) const override;
 
  private:
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   const WritePreparedTxnDB* const txn_db_;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

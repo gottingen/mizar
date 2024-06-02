@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <list>
 #include <memory>
@@ -13,8 +13,8 @@
 
 #include "file/random_access_file_reader.h"
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
 
 #include "utilities/persistent_cache/block_cache_tier_file_buffer.h"
 #include "utilities/persistent_cache/lrulist.h"
@@ -46,7 +46,7 @@
 //
 // Write IO code path :
 //
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WriteableCacheFile;
 struct BlockInfo;
@@ -291,6 +291,6 @@ class ThreadedWriter : public Writer {
   std::vector<port::Thread> threads_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

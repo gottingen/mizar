@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "hdfs/env_hdfs.h"
 
 #ifdef USE_HDFS
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include "logging/logging.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include "util/string_util.h"
 
 #define HDFS_EXISTS 0
@@ -30,7 +30,7 @@
 // will reside on the same HDFS cluster.
 //
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -628,14 +628,14 @@ Status NewHdfsEnv(Env** hdfs_env, const std::string& fsname) {
   *hdfs_env = new HdfsEnv(fsname);
   return Status::OK();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif // ROCKSDB_HDFS_FILE_C
 
 #else // USE_HDFS
 
 // dummy placeholders used when HDFS is not available
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Status HdfsEnv::NewSequentialFile(const std::string& /*fname*/,
                                   std::unique_ptr<SequentialFile>* /*result*/,
                                   const EnvOptions& /*options*/) {
@@ -645,6 +645,6 @@ Status HdfsEnv::NewSequentialFile(const std::string& /*fname*/,
  Status NewHdfsEnv(Env** /*hdfs_env*/, const std::string& /*fsname*/) {
    return Status::NotSupported("Not compiled with hdfs support");
  }
- }  // namespace ROCKSDB_NAMESPACE
+ }  // namespace MIZAR_NAMESPACE
 
 #endif

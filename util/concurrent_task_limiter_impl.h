@@ -11,10 +11,10 @@
 #include <atomic>
 #include <memory>
 
-#include "rocksdb/env.h"
-#include "rocksdb/concurrent_task_limiter.h"
+#include "mizar/env.h"
+#include "mizar/concurrent_task_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TaskLimiterToken;
 
@@ -64,4 +64,4 @@ class TaskLimiterToken {
   void operator=(const TaskLimiterToken&) = delete;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

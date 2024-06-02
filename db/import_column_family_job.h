@@ -7,12 +7,12 @@
 #include "db/external_sst_file_ingestion_job.h"
 #include "db/snapshot_impl.h"
 #include "options/db_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/metadata.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/db.h"
+#include "mizar/metadata.h"
+#include "mizar/sst_file_writer.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct EnvOptions;
 class SystemClock;
 
@@ -73,4 +73,4 @@ class ImportColumnFamilyJob {
   const std::shared_ptr<IOTracer> io_tracer_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

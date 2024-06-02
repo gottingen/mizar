@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 
 #include <stdint.h>
 
@@ -16,12 +16,12 @@
 #include <mutex>
 
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 class BytewiseComparatorImpl : public Comparator {
@@ -228,7 +228,7 @@ const Comparator* ReverseBytewiseComparator() {
   return &rbytewise;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinComparators(ObjectLibrary& library,
                                       const std::string& /*arg*/) {
   library.AddFactory<const Comparator>(
@@ -243,17 +243,17 @@ static int RegisterBuiltinComparators(ObjectLibrary& library,
          std::string* /* errmsg */) { return ReverseBytewiseComparator(); });
   return 2;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status Comparator::CreateFromString(const ConfigOptions& config_options,
                                     const std::string& value,
                                     const Comparator** result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinComparators(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   std::string id;
   std::unordered_map<std::string, std::string> opt_map;
   Status status = Customizable::GetOptionsMap(config_options, *result, value,
@@ -272,11 +272,11 @@ Status Comparator::CreateFromString(const ConfigOptions& config_options,
   } else if (id.empty()) {  // We have no Id but have options.  Not good
     return Status::NotSupported("Cannot reset object ", id);
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     status = config_options.registry->NewStaticObject(id, result);
 #else
     status = Status::NotSupported("Cannot load object in LITE mode ", id);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     if (!status.ok()) {
       if (config_options.ignore_unsupported_options &&
           status.IsNotSupported()) {
@@ -291,4 +291,4 @@ Status Comparator::CreateFromString(const ConfigOptions& config_options,
   }
   return status;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

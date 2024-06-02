@@ -8,11 +8,11 @@
 #include <memory>
 
 #include "db/blob/blob_log_format.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #define MAX_HEADER_SIZE(a, b, c) (a > b ? (a > c ? a : c) : (b > c ? b : c))
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class RandomAccessFileReader;
 class Env;
@@ -78,6 +78,6 @@ class BlobLogSequentialReader {
   uint64_t next_byte_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #undef MAX_HEADER_SIZE

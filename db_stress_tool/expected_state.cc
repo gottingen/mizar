@@ -9,10 +9,10 @@
 
 #include "db_stress_tool/db_stress_common.h"
 #include "db_stress_tool/db_stress_shared_state.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record_result.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record_result.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 ExpectedState::ExpectedState(size_t max_key, size_t num_column_families)
     : max_key_(max_key),
@@ -252,7 +252,7 @@ Status FileExpectedStateManager::Open() {
   return s;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status FileExpectedStateManager::SaveAtAndAfter(DB* db) {
   SequenceNumber seqno = db->GetLatestSequenceNumber();
 
@@ -320,17 +320,17 @@ Status FileExpectedStateManager::SaveAtAndAfter(DB* db) {
   }
   return s;
 }
-#else   // ROCKSDB_LITE
+#else   // MIZAR_LITE
 Status FileExpectedStateManager::SaveAtAndAfter(DB* /* db */) {
   return Status::NotSupported();
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 bool FileExpectedStateManager::HasHistory() {
   return saved_seqno_ != kMaxSequenceNumber;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 namespace {
 
@@ -538,11 +538,11 @@ Status FileExpectedStateManager::Restore(DB* db) {
   }
   return s;
 }
-#else   // ROCKSDB_LITE
+#else   // MIZAR_LITE
 Status FileExpectedStateManager::Restore(DB* /* db */) {
   return Status::NotSupported();
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status FileExpectedStateManager::Clean() {
   std::vector<std::string> expected_state_dir_children;
@@ -611,6 +611,6 @@ Status AnonExpectedStateManager::Open() {
   return latest_->Open(true /* create */);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif  // GFLAGS

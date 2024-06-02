@@ -4,14 +4,14 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 
 #include "db/db_impl/db_impl.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void CancelAllBackgroundWork(DB* db, bool wait) {
   (static_cast_with_check<DBImpl>(db->GetRootDB()))
@@ -73,6 +73,6 @@ Status VerifySstFileChecksum(const Options& options,
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

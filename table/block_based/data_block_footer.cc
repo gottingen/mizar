@@ -9,9 +9,9 @@
 
 #include "table/block_based/data_block_footer.h"
 
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const int kDataBlockIndexTypeBitShift = 31;
 
@@ -56,4 +56,4 @@ void UnPackIndexTypeAndNumRestarts(
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <memory>
 #include <string>
@@ -13,14 +13,14 @@
 #include <vector>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/utilities/transaction.h"
 #include "util/autovector.h"
 #include "util/hash_map.h"
 #include "util/thread_local.h"
 #include "utilities/transactions/lock/lock_manager.h"
 #include "utilities/transactions/lock/point/point_lock_tracker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ColumnFamilyHandle;
 struct LockInfo;
@@ -219,5 +219,5 @@ class PointLockManager : public LockManager {
                             const autovector<TransactionID>& wait_ids);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

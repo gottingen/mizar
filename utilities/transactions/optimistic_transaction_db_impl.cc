@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/optimistic_transaction_db_impl.h"
 
@@ -11,12 +11,12 @@
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 #include "utilities/transactions/optimistic_transaction.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Transaction* OptimisticTransactionDBImpl::BeginTransaction(
     const WriteOptions& write_options,
@@ -107,5 +107,5 @@ void OptimisticTransactionDBImpl::ReinitializeTransaction(
   txn_impl->Reinitialize(this, write_options, txn_options);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

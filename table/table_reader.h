@@ -10,13 +10,13 @@
 #pragma once
 #include <memory>
 #include "db/range_tombstone_fragmenter.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/slice_transform.h"
 #include "table/get_context.h"
 #include "table/internal_iterator.h"
 #include "table/multiget_context.h"
 #include "table/table_reader_caller.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Iterator;
 struct ParsedInternalKey;
@@ -144,4 +144,4 @@ class TableReader {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

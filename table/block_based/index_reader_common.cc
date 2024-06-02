@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #include "table/block_based/index_reader_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Status BlockBasedTable::IndexReaderCommon::ReadIndexBlock(
     const BlockBasedTable* table, FilePrefetchBuffer* prefetch_buffer,
     const ReadOptions& read_options, bool use_cache, GetContext* get_context,
@@ -52,4 +52,4 @@ Status BlockBasedTable::IndexReaderCommon::GetOrReadIndexBlock(
                         cache_index_blocks(), get_context, lookup_context,
                         index_block);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "table/cuckoo/cuckoo_table_reader.h"
 
 #include <algorithm>
@@ -18,15 +18,15 @@
 
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/table.h"
+#include "mizar/iterator.h"
+#include "mizar/table.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/get_context.h"
 #include "table/internal_iterator.h"
 #include "table/meta_blocks.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 const uint64_t CACHE_LINE_MASK = ~((uint64_t)CACHE_LINE_SIZE - 1);
 const uint32_t kInvalidIndex = std::numeric_limits<uint32_t>::max();
@@ -404,5 +404,5 @@ InternalIterator* CuckooTableReader::NewIterator(
 
 size_t CuckooTableReader::ApproximateMemoryUsage() const { return 0; }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif

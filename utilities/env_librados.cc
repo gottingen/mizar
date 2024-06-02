@@ -1,12 +1,12 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
 // Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-#include "rocksdb/utilities/env_librados.h"
+#include "mizar/utilities/env_librados.h"
 #include "util/random.h"
 #include <mutex>
 #include <cstdlib>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 /* GLOBAL DIFINE */
 // #define DEBUG
 #ifdef DEBUG
@@ -1464,4 +1464,4 @@ EnvLibrados* EnvLibrados::Default() {
   return &default_env;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

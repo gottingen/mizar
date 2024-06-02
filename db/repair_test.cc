@@ -3,8 +3,8 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/options.h"
-#ifndef ROCKSDB_LITE
+#include "mizar/options.h"
+#ifndef MIZAR_LITE
 
 #include <algorithm>
 #include <string>
@@ -13,14 +13,14 @@
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "file/file_util.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/transaction_log.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class RepairTest : public DBTestBase {
  public:
   RepairTest() : DBTestBase("repair_test", /*env_do_fsync=*/true) {}
@@ -401,8 +401,8 @@ TEST_F(RepairTest, DbNameContainsTrailingSlash) {
   Reopen(CurrentOptions());
   ASSERT_EQ(Get("key"), "val");
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -413,8 +413,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as RepairDB is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as RepairDB is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

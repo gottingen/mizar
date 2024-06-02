@@ -11,14 +11,14 @@
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/env.h"
+#include "mizar/sst_file_manager.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 SstFileManagerImpl::SstFileManagerImpl(
     const std::shared_ptr<SystemClock>& clock,
     const std::shared_ptr<FileSystem>& fs,
@@ -516,11 +516,11 @@ SstFileManager* NewSstFileManager(Env* /*env*/,
                                   uint64_t /*bytes_max_delete_chunk*/) {
   if (status) {
     *status =
-        Status::NotSupported("SstFileManager is not supported in ROCKSDB_LITE");
+        Status::NotSupported("SstFileManager is not supported in MIZAR_LITE");
   }
   return nullptr;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

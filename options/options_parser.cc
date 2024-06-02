@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "options/options_parser.h"
 
@@ -19,14 +19,14 @@
 #include "options/db_options.h"
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/utilities/options_type.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const std::string option_file_header =
     "# This is a RocksDB option file.\n"
@@ -721,6 +721,6 @@ Status RocksDBOptionsParser::VerifyTableFactory(
   }
   return Status::OK();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

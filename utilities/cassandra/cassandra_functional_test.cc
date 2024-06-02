@@ -6,10 +6,10 @@
 #include <iostream>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/testharness.h"
 #include "util/cast_util.h"
 #include "util/random.h"
@@ -19,7 +19,7 @@
 #include "utilities/merge_operators.h"
 
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 
 // Path to the database on file system
@@ -325,7 +325,7 @@ TEST_F(CassandraFunctionalTest, CompactionShouldRemoveTombstoneFromPut) {
   ASSERT_FALSE(std::get<0>(store.Get("k1")));
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(CassandraFunctionalTest, LoadMergeOperator) {
   ConfigOptions config_options;
   std::shared_ptr<MergeOperator> mo;
@@ -416,10 +416,10 @@ TEST_F(CassandraFunctionalTest, LoadCompactionFilterFactory) {
   ASSERT_EQ(opts->gc_grace_period_in_seconds, 42);
   ASSERT_TRUE(opts->purge_ttl_on_expiration);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 } // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

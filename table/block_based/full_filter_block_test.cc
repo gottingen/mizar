@@ -7,8 +7,8 @@
 
 #include <set>
 
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/status.h"
+#include "mizar/filter_policy.h"
+#include "mizar/status.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/mock_block_based_table.h"
@@ -19,7 +19,7 @@
 #include "util/hash.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TestFilterBitsBuilder : public FilterBitsBuilder {
  public:
@@ -330,7 +330,7 @@ TEST_F(FullFilterBlockTest, SingleChunk) {
       /*lookup_context=*/nullptr));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

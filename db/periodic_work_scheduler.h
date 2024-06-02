@@ -5,12 +5,12 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/db_impl/db_impl.h"
 #include "util/timer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class SystemClock;
 
 // PeriodicWorkScheduler is a singleton object, which is scheduling/running
@@ -73,6 +73,6 @@ class PeriodicWorkTestScheduler : public PeriodicWorkScheduler {
 };
 #endif  // !NDEBUG
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

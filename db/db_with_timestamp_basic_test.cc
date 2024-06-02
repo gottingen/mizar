@@ -9,17 +9,17 @@
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/perf_context.h"
+#include "mizar/utilities/debug.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 #include "test_util/sync_point.h"
 #endif
 #include "test_util/testutil.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class DBBasicTestWithTimestampBase : public DBTestBase {
  public:
   explicit DBBasicTestWithTimestampBase(const std::string& dbname)
@@ -640,7 +640,7 @@ TEST_F(DBBasicTestWithTimestamp, SimpleIterate) {
   Close();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBBasicTestWithTimestamp, GetTimestampTableProperties) {
   Options options = CurrentOptions();
   const size_t kTimestampSize = Timestamp(0, 0).size();
@@ -673,7 +673,7 @@ TEST_F(DBBasicTestWithTimestamp, GetTimestampTableProperties) {
   }
   Close();
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 class DBBasicTestWithTimestampTableOptions
     : public DBBasicTestWithTimestampBase,
@@ -947,7 +947,7 @@ TEST_F(DBBasicTestWithTimestamp, ChangeIterationDirection) {
   TestComparator test_cmp(kTimestampSize);
   options.comparator = &test_cmp;
   options.prefix_extractor.reset(NewFixedPrefixTransform(1));
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   const std::vector<std::string> timestamps = {Timestamp(1, 1), Timestamp(0, 2),
                                                Timestamp(4, 3)};
@@ -1219,7 +1219,7 @@ TEST_F(DBBasicTestWithTimestamp, ReseekToTargetTimestamp) {
   options.create_if_missing = true;
   constexpr size_t kNumKeys = 16;
   options.max_sequential_skip_in_iterations = kNumKeys / 2;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   const size_t kTimestampSize = Timestamp(0, 0).size();
   TestComparator test_cmp(kTimestampSize);
   options.comparator = &test_cmp;
@@ -1264,7 +1264,7 @@ TEST_F(DBBasicTestWithTimestamp, ReseekToNextUserKey) {
   options.create_if_missing = true;
   constexpr size_t kNumKeys = 16;
   options.max_sequential_skip_in_iterations = kNumKeys / 2;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   const size_t kTimestampSize = Timestamp(0, 0).size();
   TestComparator test_cmp(kTimestampSize);
   options.comparator = &test_cmp;
@@ -1321,7 +1321,7 @@ TEST_F(DBBasicTestWithTimestamp, ReseekToUserKeyBeforeSavedKey) {
   options.create_if_missing = true;
   constexpr size_t kNumKeys = 16;
   options.max_sequential_skip_in_iterations = kNumKeys / 2;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   const size_t kTimestampSize = Timestamp(0, 0).size();
   TestComparator test_cmp(kTimestampSize);
   options.comparator = &test_cmp;
@@ -2639,7 +2639,7 @@ TEST_P(DBBasicTestWithTimestampCompressionSettings, PutDeleteGet) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 // A class which remembers the name of each flushed file.
 class FlushedFileCollector : public EventListener {
  public:
@@ -2938,7 +2938,7 @@ TEST_F(DBBasicTestWithTimestamp, MultiGetNoReturnTs) {
   Close();
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 INSTANTIATE_TEST_CASE_P(
     Timestamp, DBBasicTestWithTimestampCompressionSettings,
@@ -3207,10 +3207,10 @@ INSTANTIATE_TEST_CASE_P(
             BlockBasedTableOptions::IndexType::kBinarySearchWithFirstKey)));
 #endif  // !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

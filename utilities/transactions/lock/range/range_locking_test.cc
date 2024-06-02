@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef OS_WIN
 
 #include <algorithm>
@@ -13,18 +13,18 @@
 
 #include "db/db_impl/db_impl.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 #include "utilities/transactions/lock/point/point_lock_manager_test.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_test.h"
 
 using std::string;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class RangeLockingTest : public ::testing::Test {
  public:
@@ -117,18 +117,18 @@ TEST_F(RangeLockingTest, MyRocksLikeUpdate) {
 
   bool try_range_lock_called = false;
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "RangeTreeLockManager::TryRangeLock:enter",
       [&](void* /*arg*/) { try_range_lock_called = true; });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // For performance reasons, the following must NOT call lock_mgr->TryLock():
   // We verify that by checking the value of try_range_lock_called.
   ASSERT_OK(txn0->Put(cf, Slice("b"), Slice("value"),
                       /*assume_tracked=*/true));
 
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
   ASSERT_FALSE(try_range_lock_called);
 
   txn0->Rollback();
@@ -392,10 +392,10 @@ void PointLockManagerTestExternalSetup(PointLockManagerTest* self) {
 INSTANTIATE_TEST_CASE_P(RangeLockManager, AnyLockManagerTest,
                         ::testing::Values(PointLockManagerTestExternalSetup));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -419,4 +419,4 @@ int main(int /*argc*/, char** /*argv*/) {
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

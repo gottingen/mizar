@@ -10,13 +10,13 @@
 // Introduction of SyncPoint effectively disabled building and running this test
 // in Release build.
 // which is a pity, it is a good test
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 
 #include "db/db_test_util.h"
 #include "env/mock_env.h"
 #include "port/stack_trace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBTestXactLogIterator : public DBTestBase {
  public:
@@ -104,14 +104,14 @@ TEST_F(DBTestXactLogIterator, TransactionLogIteratorRace) {
   for (int test = 0; test < LOG_ITERATOR_RACE_TEST_COUNT; ++test) {
     // Setup sync point dependency to reproduce the race condition of
     // a log file moved to archived dir, in the middle of GetSortedWalFiles
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {sync_points[test][0], sync_points[test][1]},
         {sync_points[test][2], sync_points[test][3]},
     });
 
     do {
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearTrace();
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
       Options options = OptionsForLogIterTest();
       DestroyAndReopen(options);
       ASSERT_OK(Put("key1", DummyString(1024)));
@@ -129,7 +129,7 @@ TEST_F(DBTestXactLogIterator, TransactionLogIteratorRace) {
         ExpectRecords(4, iter);
       }
 
-      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+      MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
       // trigger async flush, and log move. Well, log move will
       // wait until the GetSortedWalFiles:1 to reproduce the race
       // condition
@@ -290,13 +290,13 @@ TEST_F(DBTestXactLogIterator, TransactionLogIteratorBlobs) {
       "Delete(0, key2)",
       handler.seen);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !defined(ROCKSDB_LITE)
+#endif  // !defined(MIZAR_LITE)
 
 int main(int argc, char** argv) {
-#if !defined(ROCKSDB_LITE)
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+#if !defined(MIZAR_LITE)
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 #else

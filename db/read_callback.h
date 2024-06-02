@@ -6,9 +6,9 @@
 #pragma once
 
 #include "db/dbformat.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ReadCallback {
  public:
@@ -51,4 +51,4 @@ class ReadCallback {
   const SequenceNumber min_uncommitted_ = kMinUnCommittedSeq;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

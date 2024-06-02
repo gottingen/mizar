@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/external_sst_file_ingestion_job.h"
 
@@ -25,7 +25,7 @@
 #include "test_util/sync_point.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status ExternalSstFileIngestionJob::Prepare(
     const std::vector<std::string>& external_files_paths,
@@ -960,6 +960,6 @@ Status ExternalSstFileIngestionJob::SyncIngestedFile(TWritableFile* file) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

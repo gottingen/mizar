@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct CustomDeleter {
   CustomDeleter(MemoryAllocator* a = nullptr) : allocator(a) {}
@@ -35,4 +35,4 @@ inline CacheAllocationPtr AllocateBlock(size_t size,
   return CacheAllocationPtr(new char[size]);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

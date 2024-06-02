@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 
 #include <cassert>
 #include <string>
@@ -16,7 +16,7 @@
 #include <map>
 #include <mutex>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class HistogramBucketMapper {
  public:
@@ -145,4 +145,4 @@ class HistogramImpl : public Histogram {
   std::mutex mutex_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

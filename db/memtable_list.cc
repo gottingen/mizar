@@ -18,14 +18,14 @@
 #include "logging/log_buffer.h"
 #include "logging/logging.h"
 #include "monitoring/thread_status_util.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
 #include "table/merging_iterator.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class InternalKeyComparator;
 class Mutex;
@@ -479,14 +479,14 @@ Status MemTableList::TryInstallMemtableFlushResults(
 
         edit_list.push_back(&m->edit_);
         memtables_to_flush.push_back(m);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         std::unique_ptr<FlushJobInfo> info = m->ReleaseFlushJobInfo();
         if (info != nullptr) {
           committed_flush_jobs_info->push_back(std::move(info));
         }
 #else
         (void)committed_flush_jobs_info;
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       }
       batch_count++;
     }
@@ -775,7 +775,7 @@ Status InstallMemtableAtomicFlushResults(
       (*mems_list[k])[i]->SetFlushCompleted(true);
       (*mems_list[k])[i]->SetFileNumber(file_metas[k]->fd.GetNumber());
     }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (committed_flush_jobs_info[k]) {
       assert(!mems_list[k]->empty());
       assert((*mems_list[k])[0]);
@@ -783,9 +783,9 @@ Status InstallMemtableAtomicFlushResults(
           (*mems_list[k])[0]->ReleaseFlushJobInfo();
       committed_flush_jobs_info[k]->push_back(std::move(flush_job_info));
     }
-#else   //! ROCKSDB_LITE
+#else   //! MIZAR_LITE
     (void)committed_flush_jobs_info;
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   Status s;
@@ -941,4 +941,4 @@ void MemTableList::RemoveOldMemTables(uint64_t log_number,
   ResetTrimHistoryNeeded();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

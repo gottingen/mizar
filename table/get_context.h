@@ -7,9 +7,9 @@
 #include <string>
 
 #include "db/read_callback.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class BlobFetcher;
 class Comparator;
 class Logger;
@@ -216,4 +216,4 @@ void replayGetContextLog(const Slice& replay_log, const Slice& user_key,
                          GetContext* get_context,
                          Cleanable* value_pinner = nullptr);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

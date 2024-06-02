@@ -12,12 +12,12 @@
 #include <stdio.h>
 #include "file/sequence_file_reader.h"
 #include "port/lang.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace log {
 
 Reader::Reporter::~Reporter() {
@@ -651,4 +651,4 @@ bool FragmentBufferedReader::TryReadFragment(
 }
 
 }  // namespace log
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

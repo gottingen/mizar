@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include "table/plain/plain_table_index.h"
 
 #include <cinttypes>
@@ -12,7 +12,7 @@
 #include "util/coding.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 inline uint32_t GetBucketIdFromHash(uint32_t hash, uint32_t num_buckets) {
@@ -207,6 +207,6 @@ Slice PlainTableIndexBuilder::FillIndexes(
 
 const std::string PlainTableIndexBuilder::kPlainTableIndexBlock =
     "PlainTableIndexBlock";
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

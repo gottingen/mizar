@@ -3,7 +3,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/blob_db/blob_db_impl.h"
 #include <algorithm>
@@ -23,11 +23,11 @@
 #include "logging/logging.h"
 #include "monitoring/instrumented_mutex.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/utilities/stackable_db.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/convenience.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/utilities/stackable_db.h"
+#include "mizar/utilities/transaction.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_builder.h"
@@ -47,7 +47,7 @@ namespace {
 int kBlockBasedTableVersionFormat = 2;
 }  // end namespace
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace blob_db {
 
 bool BlobFileComparator::operator()(
@@ -2172,5 +2172,5 @@ void BlobDBImpl::TEST_ProcessCompactionJobInfo(const CompactionJobInfo& info) {
 #endif  //  !NDEBUG
 
 }  // namespace blob_db
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

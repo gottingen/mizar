@@ -3,11 +3,11 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/lock/point/point_lock_manager_test.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // This test is not applicable for Range Lock manager as Range Lock Manager
 // operates on Column Families, not their ids.
@@ -161,10 +161,10 @@ TEST_F(PointLockManagerTest, DeadlockDepthExceeded) {
 INSTANTIATE_TEST_CASE_P(PointLockManager, AnyLockManagerTest,
                         ::testing::Values(nullptr));
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -174,8 +174,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED because Transactions are not supported in ROCKSDB_LITE\n");
+          "SKIPPED because Transactions are not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -33,10 +33,10 @@
 #include <type_traits>
 
 #include "db/dbformat.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 template <typename T>
 class ProtectionInfo;
@@ -391,4 +391,4 @@ void ProtectionInfoKVOS<T>::UpdateS(SequenceNumber old_sequence_number,
   SetVal(val);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

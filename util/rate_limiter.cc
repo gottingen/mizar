@@ -13,16 +13,16 @@
 
 #include "monitoring/statistics.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "test_util/sync_point.h"
 #include "util/aligned_buffer.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 size_t RateLimiter::RequestToken(size_t bytes, size_t alignment,
                                  Env::IOPriority io_priority, Statistics* stats,
                                  RateLimiter::OpType op_type) {
@@ -52,7 +52,7 @@ struct GenericRateLimiter::Req {
 
 static std::unordered_map<std::string, OptionTypeInfo>
     generic_rate_limiter_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"rate_bytes_per_sec",
          {offsetof(struct GenericRateLimiter::GenericRateLimiterOptions,
                    max_bytes_per_sec),
@@ -75,7 +75,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
                       clock),
              OptionVerificationType::kByNameAllowFromNull,
              OptionTypeFlags::kAllowNull)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 GenericRateLimiter::GenericRateLimiter(
@@ -428,7 +428,7 @@ RateLimiter* NewGenericRateLimiter(
   }
 }
 namespace {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinRateLimiters(ObjectLibrary& library,
                                        const std::string& /*arg*/) {
   library.AddFactory<RateLimiter>(
@@ -448,7 +448,7 @@ static std::unordered_map<std::string, RateLimiter::Mode>
         {"kWritesOnly", RateLimiter::Mode::kWritesOnly},
         {"kAllIo", RateLimiter::Mode::kAllIo},
 };
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 static bool LoadRateLimiter(const std::string& name,
                             std::shared_ptr<RateLimiter>* limiter) {
   auto plen = strlen(GenericRateLimiter::kClassName());
@@ -464,10 +464,10 @@ static bool LoadRateLimiter(const std::string& name,
 
 static std::unordered_map<std::string, OptionTypeInfo> rate_limiter_type_info =
     {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"mode",
          OptionTypeInfo::Enum<RateLimiter::Mode>(0, &rate_limiter_mode_map)},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 }  // namespace
 
@@ -482,15 +482,15 @@ Status RateLimiter::CreateFromString(const ConfigOptions& config_options,
     result->reset();
     return Status::OK();
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     static std::once_flag once;
     std::call_once(once, [&]() {
       RegisterBuiltinRateLimiters(*(ObjectLibrary::Default().get()), "");
     });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
     return LoadSharedObject<RateLimiter>(config_options, value, LoadRateLimiter,
                                          result);
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

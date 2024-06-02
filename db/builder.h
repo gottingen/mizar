@@ -13,16 +13,16 @@
 #include "db/table_properties_collector.h"
 #include "logging/event_logger.h"
 #include "options/cf_options.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/types.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/listener.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table_properties.h"
+#include "mizar/types.h"
 #include "table/scoped_arena_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct FileMetaData;
 
@@ -71,4 +71,4 @@ extern Status BuildTable(
     uint64_t* memtable_payload_bytes = nullptr,
     uint64_t* memtable_garbage_bytes = nullptr);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

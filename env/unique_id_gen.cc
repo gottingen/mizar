@@ -11,11 +11,11 @@
 #include <random>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/version.h"
+#include "mizar/env.h"
+#include "mizar/version.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -161,4 +161,4 @@ void SemiStructuredUniqueIdGen::GenerateNext(uint64_t* upper, uint64_t* lower) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

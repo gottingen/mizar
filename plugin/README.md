@@ -21,7 +21,7 @@ For make, files in the plugin directory ending in the .mk extension can define t
 * `$(PLUGIN_NAME)_LDFLAGS`: these flags will be passed to the final link step. For example, library dependencies can be propagated here, or symbols can be forcibly included, e.g., for static registration.
 * `$(PLUGIN_NAME)_CXXFLAGS`: these flags will be passed to the compiler. For example, they can specify locations of header files in non-standard locations.
 
-Users will run the usual make commands from the RocksDB directory, specifying the plugins to include in a space-separated list in the variable `ROCKSDB_PLUGINS`.
+Users will run the usual make commands from the RocksDB directory, specifying the plugins to include in a space-separated list in the variable `MIZAR_PLUGINS`.
 
 For CMake, the CMakeLists.txt file in the plugin directory can define the following variables.
 
@@ -33,9 +33,9 @@ For CMake, the CMakeLists.txt file in the plugin directory can define the follow
 * `${PLUGIN_NAME}_CMAKE_SHARED_LINKER_FLAGS` additional linker flags used to generate shared libraries. For example, symbols can be forcibly included, e.g., for static registration.
 * `${PLUGIN_NAME}_CMAKE_EXE_LINKER_FLAGS`: additional linker flags used to generate executables. For example, symbols can be forcibly included, e.g., for static registration.
 
-Users will run the usual cmake commands, specifying the plugins to include in a space-separated list in the command line variable `ROCKSDB_PLUGINS` when invoking cmake.
+Users will run the usual cmake commands, specifying the plugins to include in a space-separated list in the command line variable `MIZAR_PLUGINS` when invoking cmake.
 ```
-cmake .. -DROCKSDB_PLUGINS="dedupfs hdfs rados"
+cmake .. -DMIZAR_PLUGINS="dedupfs hdfs rados"
 ```
 
 ### Example

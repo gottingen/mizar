@@ -7,10 +7,10 @@
 
 #ifdef OS_LINUX
 #include "env/io_posix.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class EnvWithCustomLogicalBlockSizeCache : public EnvWrapper {
  public:
   EnvWithCustomLogicalBlockSizeCache(Env* env, LogicalBlockSizeCache* cache)
@@ -72,7 +72,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenClose) {
       printf("Open\n");
       ASSERT_OK(DB::Open(options, dbname_, &db));
     } else {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -104,7 +104,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenDelete) {
       printf("Open\n");
       ASSERT_OK(DB::Open(options, dbname_, &db));
     } else {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -254,7 +254,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenWithColumnFamilies) {
                           {"default", ColumnFamilyOptions()}},
                          &cfs, &db));
     } else {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -353,7 +353,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, DestroyColumnFamilyHandle) {
           options, dbname_,
           {{"cf", cf_options}, {"default", ColumnFamilyOptions()}}, &cfs, &db));
     } else {
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -504,7 +504,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, MultiDBWithSamePaths) {
   ASSERT_OK(DestroyDB(dbname_ + "/db1", options, {{"cf", cf_options}}));
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // OS_LINUX
 
 int main(int argc, char** argv) {

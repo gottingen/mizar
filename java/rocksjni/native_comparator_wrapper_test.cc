@@ -6,12 +6,12 @@
 #include <jni.h>
 #include <string>
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
 
 #include "include/org_rocksdb_NativeComparatorWrapperTest_NativeStringComparatorWrapper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class NativeComparatorWrapperTestStringComparator : public Comparator {
   const char* Name() const {
@@ -29,7 +29,7 @@ class NativeComparatorWrapperTestStringComparator : public Comparator {
 
   void FindShortSuccessor(std::string* /*key*/) const { return; }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 /*
  * Class: org_rocksdb_NativeComparatorWrapperTest_NativeStringComparatorWrapper
@@ -39,6 +39,6 @@ class NativeComparatorWrapperTestStringComparator : public Comparator {
 jlong Java_org_rocksdb_NativeComparatorWrapperTest_00024NativeStringComparatorWrapper_newStringComparator(
     JNIEnv* /*env*/, jobject /*jobj*/) {
   auto* comparator =
-      new ROCKSDB_NAMESPACE::NativeComparatorWrapperTestStringComparator();
+      new MIZAR_NAMESPACE::NativeComparatorWrapperTestStringComparator();
   return reinterpret_cast<jlong>(comparator);
 }

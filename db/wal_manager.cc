@@ -23,18 +23,18 @@
 #include "file/sequence_file_reader.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/write_batch.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/coding.h"
 #include "util/mutexlock.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 Status WalManager::DeleteFile(const std::string& fname, uint64_t number) {
   auto s = env_->DeleteFile(wal_dir_ + "/" + fname);
@@ -510,5 +510,5 @@ Status WalManager::ReadFirstLine(const std::string& fname,
   return status;
 }
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

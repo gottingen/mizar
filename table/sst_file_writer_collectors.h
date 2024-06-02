@@ -7,11 +7,11 @@
 #include <string>
 
 #include "db/table_properties_collector.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Table Properties that are specific to tables created by SstFileWriter.
 struct ExternalSstFilePropertyNames {
@@ -92,4 +92,4 @@ class SstFileWriterPropertiesCollectorFactory
   SequenceNumber global_seqno_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

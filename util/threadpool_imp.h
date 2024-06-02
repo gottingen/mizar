@@ -8,13 +8,13 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 
-#include "rocksdb/threadpool.h"
-#include "rocksdb/env.h"
+#include "mizar/threadpool.h"
+#include "mizar/env.h"
 
 #include <memory>
 #include <functional>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class ThreadPoolImpl : public ThreadPool {
  public:
@@ -109,4 +109,4 @@ class ThreadPoolImpl : public ThreadPool {
    std::unique_ptr<Impl>   impl_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

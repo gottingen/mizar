@@ -5,11 +5,11 @@
 
 #pragma once
 
-#if !defined(ROCKSDB_LITE)
+#if !defined(MIZAR_LITE)
 
-#include "rocksdb/env_encryption.h"
+#include "mizar/env_encryption.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // CTRCipherStream implements BlockAccessCipherStream using an
 // Counter operations mode.
 // See https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
@@ -111,6 +111,6 @@ Status NewEncryptedFileSystemImpl(
     const std::shared_ptr<EncryptionProvider>& provider,
     std::unique_ptr<FileSystem>* fs);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !defined(ROCKSDB_LITE)
+#endif  // !defined(MIZAR_LITE)

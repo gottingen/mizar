@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#if !defined(OS_WIN) && !defined(ROCKSDB_LITE)
+#if !defined(OS_WIN) && !defined(MIZAR_LITE)
 
 #ifndef GFLAGS
 #include <cstdio>
@@ -19,7 +19,7 @@ int main() { fprintf(stderr, "Please install gflags to run tools\n"); }
 #include <sys/time.h>
 
 #include "port/port_posix.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/gflags_compat.h"
 #include "util/mutexlock.h"
 #include "util/random.h"
@@ -32,7 +32,7 @@ DEFINE_int32(nthread_write, 1, "insert %");
 DEFINE_int32(nthread_read, 1, "lookup %");
 DEFINE_int32(nthread_erase, 1, "erase %");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 //
 // HashTableImpl interface
@@ -269,7 +269,7 @@ class GranularLockImpl : public HashTableImpl<size_t, string> {
   HashTable<Node, Hash, Equal> impl_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 //
 // main
@@ -284,8 +284,8 @@ int main(int argc, char** argv) {
   //
   printf("Micro benchmarking std::unordered_map \n");
   {
-    ROCKSDB_NAMESPACE::SimpleImpl impl;
-    ROCKSDB_NAMESPACE::HashTableBenchmark _(
+    MIZAR_NAMESPACE::SimpleImpl impl;
+    MIZAR_NAMESPACE::HashTableBenchmark _(
         &impl, FLAGS_nsec, FLAGS_nthread_write, FLAGS_nthread_read,
         FLAGS_nthread_erase);
   }
@@ -294,8 +294,8 @@ int main(int argc, char** argv) {
   //
   printf("Micro benchmarking scalable hash map \n");
   {
-    ROCKSDB_NAMESPACE::GranularLockImpl impl;
-    ROCKSDB_NAMESPACE::HashTableBenchmark _(
+    MIZAR_NAMESPACE::GranularLockImpl impl;
+    MIZAR_NAMESPACE::HashTableBenchmark _(
         &impl, FLAGS_nsec, FLAGS_nthread_write, FLAGS_nthread_read,
         FLAGS_nthread_erase);
   }

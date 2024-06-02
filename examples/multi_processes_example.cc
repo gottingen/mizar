@@ -33,21 +33,21 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 
-using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
-using ROCKSDB_NAMESPACE::ColumnFamilyHandle;
-using ROCKSDB_NAMESPACE::ColumnFamilyOptions;
-using ROCKSDB_NAMESPACE::DB;
-using ROCKSDB_NAMESPACE::FlushOptions;
-using ROCKSDB_NAMESPACE::Iterator;
-using ROCKSDB_NAMESPACE::Options;
-using ROCKSDB_NAMESPACE::ReadOptions;
-using ROCKSDB_NAMESPACE::Slice;
-using ROCKSDB_NAMESPACE::Status;
-using ROCKSDB_NAMESPACE::WriteOptions;
+using MIZAR_NAMESPACE::ColumnFamilyDescriptor;
+using MIZAR_NAMESPACE::ColumnFamilyHandle;
+using MIZAR_NAMESPACE::ColumnFamilyOptions;
+using MIZAR_NAMESPACE::DB;
+using MIZAR_NAMESPACE::FlushOptions;
+using MIZAR_NAMESPACE::Iterator;
+using MIZAR_NAMESPACE::Options;
+using MIZAR_NAMESPACE::ReadOptions;
+using MIZAR_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::Status;
+using MIZAR_NAMESPACE::WriteOptions;
 
 const std::string kDBPath = "/tmp/rocksdb_multi_processes_example";
 const std::string kPrimaryStatusFile =
@@ -58,7 +58,7 @@ const size_t kNumKeysPerFlush = 1000;
 
 const std::vector<std::string>& GetColumnFamilyNames() {
   static std::vector<std::string> column_family_names = {
-      ROCKSDB_NAMESPACE::kDefaultColumnFamilyName, "pikachu"};
+      MIZAR_NAMESPACE::kDefaultColumnFamilyName, "pikachu"};
   return column_family_names;
 }
 
@@ -140,7 +140,7 @@ static bool ShouldCloseDB() { return true; }
 void CreateDB() {
   long my_pid = static_cast<long>(getpid());
   Options options;
-  Status s = ROCKSDB_NAMESPACE::DestroyDB(kDBPath, options);
+  Status s = MIZAR_NAMESPACE::DestroyDB(kDBPath, options);
   if (!s.ok()) {
     fprintf(stderr, "[process %ld] Failed to destroy DB: %s\n", my_pid,
             s.ToString().c_str());
@@ -157,7 +157,7 @@ void CreateDB() {
   std::vector<ColumnFamilyHandle*> handles;
   ColumnFamilyOptions cf_opts(options);
   for (const auto& cf_name : GetColumnFamilyNames()) {
-    if (ROCKSDB_NAMESPACE::kDefaultColumnFamilyName != cf_name) {
+    if (MIZAR_NAMESPACE::kDefaultColumnFamilyName != cf_name) {
       ColumnFamilyHandle* handle = nullptr;
       s = db->CreateColumnFamily(cf_opts, cf_name, &handle);
       if (!s.ok()) {

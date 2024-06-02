@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
 #include <vector>
@@ -13,7 +13,7 @@
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A wrapper class to hold log reader, log reporter, log status.
 class LogReaderContainer {
@@ -364,6 +364,6 @@ class DBImplSecondary : public DBImpl {
   const std::string secondary_path_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

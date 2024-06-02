@@ -14,14 +14,14 @@
 #include <cmath>
 
 #include "port/port.h"  // for PREFETCH
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/hash.h"
 
 #ifdef HAVE_AVX2
 #include <immintrin.h>
 #endif
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BloomMath {
  public:
@@ -482,4 +482,4 @@ class LegacyLocalityBloomImpl {
   }
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef OS_WIN
 
 // For DeadlockInfoBuffer:
@@ -17,7 +17,7 @@
 #include "utilities/transactions/lock/range/range_tree/lib/locktree/locktree.h"
 #include "utilities/transactions/lock/range/range_tree/range_tree_lock_tracker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 typedef DeadlockInfoBufferTempl<RangeDeadlockPath> RangeDeadlockInfoBuffer;
 
@@ -132,6 +132,6 @@ class RangeTreeLockManager : public RangeLockManagerBase,
 void serialize_endpoint(const Endpoint& endp, std::string* buf);
 void wait_callback_for_locktree(void* cdata, toku::lock_wait_infos* infos);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // OS_WIN
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

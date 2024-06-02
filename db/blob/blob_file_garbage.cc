@@ -9,12 +9,12 @@
 #include <sstream>
 
 #include "logging/event_logger.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Tags for custom fields. Note that these get persisted in the manifest,
 // so existing tags should not be modified.
@@ -131,4 +131,4 @@ JSONWriter& operator<<(JSONWriter& jw,
   return jw;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

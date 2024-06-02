@@ -15,14 +15,14 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
 #include "port/likely.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/system_clock.h"
 #include "table/format.h"
 #include "table/internal_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 MergeHelper::MergeHelper(Env* env, const Comparator* user_comparator,
                          const MergeOperator* user_merge_operator,
@@ -461,4 +461,4 @@ CompactionFilter::Decision MergeHelper::FilterMerge(const Slice& user_key,
   return ret;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

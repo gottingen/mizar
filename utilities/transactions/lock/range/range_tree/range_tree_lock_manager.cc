@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifndef OS_WIN
 
 #include "utilities/transactions/lock/range/range_tree/range_tree_lock_manager.h"
@@ -13,8 +13,8 @@
 #include <mutex>
 
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/transaction_db_mutex.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/transaction_db_mutex.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/hash.h"
@@ -23,7 +23,7 @@
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 RangeLockManagerHandle* NewRangeLockManager(
     std::shared_ptr<TransactionDBMutexFactory> mutex_factory) {
@@ -498,6 +498,6 @@ LockManager::RangeLockStatus RangeTreeLockManager::GetRangeLockStatus() {
   return data;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // OS_WIN
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #ifndef GFLAGS
 #include <cstdio>
@@ -19,14 +19,14 @@ int main() {
 
 #include "db/db_impl/db_impl.h"
 #include "monitoring/histogram.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/filter_policy.h"
+#include "mizar/memtablerep.h"
+#include "mizar/perf_context.h"
+#include "mizar/slice_transform.h"
+#include "mizar/system_clock.h"
+#include "mizar/table.h"
 #include "test_util/testharness.h"
 #include "util/cast_util.h"
 #include "util/coding.h"
@@ -56,9 +56,9 @@ DEFINE_bool(enable_print, false, "Print options generated to console.");
 
 // Path to the database on file system
 const std::string kDbName =
-    ROCKSDB_NAMESPACE::test::PerThreadDBPath("prefix_test");
+    MIZAR_NAMESPACE::test::PerThreadDBPath("prefix_test");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct TestKey {
   uint64_t prefix;
@@ -887,7 +887,7 @@ TEST_F(PrefixTest, PrefixSeekModePrev3) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -903,8 +903,8 @@ int main(int argc, char** argv) {
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
           "SKIPPED as HashSkipList and HashLinkList are not supported in "
-          "ROCKSDB_LITE\n");
+          "MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

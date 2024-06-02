@@ -12,20 +12,20 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/port.h"
-#include "rocksdb/configurable.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/sst_file_manager.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/utilities/options_type.h"
-#include "rocksdb/wal_filter.h"
+#include "mizar/configurable.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/listener.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/sst_file_manager.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
+#include "mizar/utilities/options_type.h"
+#include "mizar/wal_filter.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 static std::unordered_map<std::string, WALRecoveryMode>
     wal_recovery_mode_string_map = {
         {"kTolerateCorruptedTailRecords",
@@ -650,7 +650,7 @@ std::unique_ptr<Configurable> DBOptionsAsConfigurable(
   std::unique_ptr<Configurable> ptr(new DBOptionsConfigurable(opts, opt_map));
   return ptr;
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 ImmutableDBOptions::ImmutableDBOptions() : ImmutableDBOptions(Options()) {}
 
@@ -715,9 +715,9 @@ ImmutableDBOptions::ImmutableDBOptions(const DBOptions& options)
       wal_recovery_mode(options.wal_recovery_mode),
       allow_2pc(options.allow_2pc),
       row_cache(options.row_cache),
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       wal_filter(options.wal_filter),
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
       fail_if_options_file_error(options.fail_if_options_file_error),
       dump_malloc_stats(options.dump_malloc_stats),
       avoid_flush_during_recovery(options.avoid_flush_during_recovery),
@@ -876,7 +876,7 @@ void ImmutableDBOptions::Dump(Logger* log) const {
     ROCKS_LOG_HEADER(log,
                      "                              Options.row_cache: None");
   }
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   ROCKS_LOG_HEADER(log, "                             Options.wal_filter: %s",
                    wal_filter ? wal_filter->Name() : "None");
 #endif  // ROCKDB_LITE
@@ -1039,7 +1039,7 @@ void MutableDBOptions::Dump(Logger* log) const {
                           max_background_flushes);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status GetMutableDBOptionsFromStrings(
     const MutableDBOptions& base_options,
     const std::unordered_map<std::string, std::string>& options_map,
@@ -1070,5 +1070,5 @@ Status GetStringFromMutableDBOptions(const ConfigOptions& config_options,
   return OptionTypeInfo::SerializeType(
       config_options, db_mutable_options_type_info, &mutable_opts, opt_string);
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

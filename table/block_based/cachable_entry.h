@@ -11,10 +11,10 @@
 
 #include <cassert>
 #include "port/likely.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/cleanable.h"
+#include "mizar/cache.h"
+#include "mizar/cleanable.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // CachableEntry is a handle to an object that may or may not be in the block
 // cache. It is used in a variety of ways:
@@ -232,4 +232,4 @@ private:
   bool own_value_ = false;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

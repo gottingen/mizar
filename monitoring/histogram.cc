@@ -19,7 +19,7 @@
 #include "port/port.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 HistogramBucketMapper::HistogramBucketMapper() {
   // If you change this, you also need to change
@@ -277,4 +277,4 @@ void HistogramImpl::Data(HistogramData * const data) const {
   stats_.Data(data);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -23,18 +23,18 @@
 
 #include "db/db_impl/db_impl.h"
 #include "file/filename.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/sst_file_writer.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/checkpoint.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/sst_file_writer.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
+#include "mizar/utilities/checkpoint.h"
 #include "table/mock_table.h"
 #include "table/scoped_arena_iterator.h"
 #include "test_util/sync_point.h"
@@ -45,7 +45,7 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class MockEnv;
 
 namespace anon {
@@ -686,7 +686,7 @@ class SpecialEnv : public EnvWrapper {
   bool no_slowdown_;
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class OnFileDeletionListener : public EventListener {
  public:
   OnFileDeletionListener() : matched_count_(0), expected_file_name_("") {}
@@ -1051,7 +1051,7 @@ class DBTestBase : public testing::Test {
 
   std::string AllEntriesFor(const Slice& user_key, int cf = 0);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   int NumSortedRuns(int cf = 0);
 
   uint64_t TotalSize(int cf = 0);
@@ -1067,7 +1067,7 @@ class DBTestBase : public testing::Test {
   double CompressionRatioAtLevel(int level, int cf = 0);
 
   int TotalTableFiles(int cf = 0, int levels = -1);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   std::vector<uint64_t> GetBlobFileNumbers();
 
@@ -1103,9 +1103,9 @@ class DBTestBase : public testing::Test {
 
   void MoveFilesToLevel(int level, int cf = 0);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   void DumpFileCounts(const char* label);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   std::string DumpSSTableList();
 
@@ -1174,10 +1174,10 @@ class DBTestBase : public testing::Test {
   void VerifyDBInternal(
       std::vector<std::pair<std::string, std::string>> true_data);
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   uint64_t GetNumberOfSstFilesForColumnFamily(DB* db,
                                               std::string column_family_name);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
   uint64_t TestGetTickerCount(const Options& options, Tickers ticker_type) {
     return options.statistics->getTickerCount(ticker_type);
@@ -1202,4 +1202,4 @@ class DBTestBase : public testing::Test {
 // unique ids.
 void VerifySstUniqueIds(const TablePropertiesCollection& props);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

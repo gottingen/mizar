@@ -16,8 +16,8 @@
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/table.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/table.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/meta_blocks.h"
 #include "table/plain/plain_table_factory.h"
@@ -26,7 +26,7 @@
 #include "test_util/testutil.h"
 #include "util/coding.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TablePropertiesTest : public testing::Test,
                             public testing::WithParamInterface<bool> {
@@ -355,7 +355,7 @@ TEST_P(TablePropertiesTest, CustomizedTablePropertiesCollector) {
                                            kBlockBasedTableMagicNumber,
                                            encode_as_internal, options, ikc);
 
-#ifndef ROCKSDB_LITE  // PlainTable is not supported in Lite
+#ifndef MIZAR_LITE  // PlainTable is not supported in Lite
     // test plain table
     PlainTableOptions plain_table_options;
     plain_table_options.user_key_len = 8;
@@ -367,7 +367,7 @@ TEST_P(TablePropertiesTest, CustomizedTablePropertiesCollector) {
     TestCustomizedTablePropertiesCollector(backward_mode_,
                                            kPlainTableMagicNumber,
                                            encode_as_internal, options, ikc);
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
   }
 }
 
@@ -486,7 +486,7 @@ TEST_P(TablePropertiesTest, InternalKeyPropertiesCollector) {
         std::make_shared<BlockBasedTableFactory>());
   }
 
-#ifndef ROCKSDB_LITE  // PlainTable is not supported in Lite
+#ifndef MIZAR_LITE  // PlainTable is not supported in Lite
   PlainTableOptions plain_table_options;
   plain_table_options.user_key_len = 8;
   plain_table_options.bloom_bits_per_key = 8;
@@ -495,7 +495,7 @@ TEST_P(TablePropertiesTest, InternalKeyPropertiesCollector) {
   TestInternalKeyPropertiesCollector(
       backward_mode_, kPlainTableMagicNumber, false /* not sanitize */,
       std::make_shared<PlainTableFactory>(plain_table_options));
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 }
 
 INSTANTIATE_TEST_CASE_P(InternalKeyPropertiesCollector, TablePropertiesTest,
@@ -504,7 +504,7 @@ INSTANTIATE_TEST_CASE_P(InternalKeyPropertiesCollector, TablePropertiesTest,
 INSTANTIATE_TEST_CASE_P(CustomizedTablePropertiesCollector, TablePropertiesTest,
                         ::testing::Bool());
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -14,16 +14,16 @@
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/perf_level.h"
-#include "rocksdb/table.h"
+#include "mizar/listener.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/perf_level.h"
+#include "mizar/table.h"
 #include "test_util/mock_time_env.h"
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBPropertiesTest : public DBTestBase {
  public:
@@ -50,7 +50,7 @@ class DBPropertiesTest : public DBTestBase {
   }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBPropertiesTest, Empty) {
   do {
     Options options;
@@ -413,16 +413,16 @@ TEST_F(DBPropertiesTest, ReadLatencyHistogramByLevel) {
   options.max_bytes_for_level_base = 4500 << 10;
   options.target_file_size_base = 98 << 10;
   options.max_write_buffer_number = 2;
-  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   options.max_open_files = 11;  // Make sure no proloading of table readers
 
   // RocksDB sanitize max open files to at least 20. Modify it back.
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "SanitizeOptions::AfterChangeMaxOpenFiles", [&](void* arg) {
         int* max_open_files = static_cast<int*>(arg);
         *max_open_files = 11;
       });
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   BlockBasedTableOptions table_options;
   table_options.no_block_cache = true;
@@ -470,7 +470,7 @@ TEST_F(DBPropertiesTest, ReadLatencyHistogramByLevel) {
 
   // Reopen and issue iterating. See thee latency tracked
   ReopenWithColumnFamilies({"default", "pikachu"}, options);
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_TRUE(dbfull()->GetProperty("rocksdb.cf-file-histogram", &prop));
   ASSERT_EQ(std::string::npos, prop.find("** Level 0 read latency histogram"));
   ASSERT_EQ(std::string::npos, prop.find("** Level 1 read latency histogram"));
@@ -1101,7 +1101,7 @@ TEST_F(DBPropertiesTest, EstimateCompressionRatio) {
   ASSERT_GT(CompressionRatioAtLevel(1), 10.0);
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 class CountingUserTblPropCollector : public TablePropertiesCollector {
  public:
@@ -1251,7 +1251,7 @@ class BlockCountingTablePropertiesCollectorFactory
   }
 };
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBPropertiesTest, GetUserDefinedTableProperties) {
   Options options = CurrentOptions();
   options.level0_file_num_compaction_trigger = (1 << 30);
@@ -1290,7 +1290,7 @@ TEST_F(DBPropertiesTest, GetUserDefinedTableProperties) {
   ASSERT_OK(dbfull()->TEST_CompactRange(0, nullptr, nullptr));
   ASSERT_GT(collector_factory->num_created_, 0U);
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 TEST_F(DBPropertiesTest, UserDefinedTablePropertiesContext) {
   Options options = CurrentOptions();
@@ -1352,7 +1352,7 @@ TEST_F(DBPropertiesTest, UserDefinedTablePropertiesContext) {
   ASSERT_GT(collector_factory->num_created_, 0U);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(DBPropertiesTest, TablePropertiesNeedCompactTest) {
   Random rnd(301);
 
@@ -1988,12 +1988,12 @@ TEST_F(DBPropertiesTest, GetMapPropertyDbStats) {
   Close();
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -20,7 +20,7 @@
 #include "util/random.h"
 #include "util/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Status FilePrefetchBuffer::Prefetch(const IOOptions& opts,
                                     RandomAccessFileReader* reader,
                                     uint64_t offset, size_t n,
@@ -173,4 +173,4 @@ bool FilePrefetchBuffer::TryReadFromCache(const IOOptions& opts,
   *result = Slice(buffer_.BufferStart() + offset_in_buffer, n);
   return true;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

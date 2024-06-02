@@ -11,16 +11,16 @@
 
 #include "db/dbformat.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "table/plain/plain_table_builder.h"
 #include "table/plain/plain_table_reader.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 static std::unordered_map<std::string, OptionTypeInfo> plain_table_type_info = {
     {"user_key_len",
      {offsetof(struct PlainTableOptions, user_key_len), OptionType::kUInt32T,
@@ -153,9 +153,9 @@ Status GetPlainTableOptionsFromString(const ConfigOptions& config_options,
     return Status::InvalidArgument(s.getState());
   }
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 static int RegisterBuiltinMemTableRepFactory(ObjectLibrary& library,
                                              const std::string& /*arg*/) {
   // The MemTableRepFactory built-in classes will be either a class
@@ -232,7 +232,7 @@ static int RegisterBuiltinMemTableRepFactory(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 Status GetMemTableRepFactoryFromString(
     const std::string& opts_str, std::unique_ptr<MemTableRepFactory>* result) {
@@ -245,12 +245,12 @@ Status GetMemTableRepFactoryFromString(
 Status MemTableRepFactory::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::unique_ptr<MemTableRepFactory>* result) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinMemTableRepFactory(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   std::string id;
   std::unordered_map<std::string, std::string> opt_map;
   Status status = Customizable::GetOptionsMap(config_options, result->get(),
@@ -264,7 +264,7 @@ Status MemTableRepFactory::CreateFromString(
   } else if (id.empty()) {  // We have no Id but have options.  Not good
     return Status::NotSupported("Cannot reset object ", id);
   } else {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     status = NewUniqueObject<MemTableRepFactory>(config_options, id, opt_map,
                                                  result);
 #else
@@ -288,12 +288,12 @@ Status MemTableRepFactory::CreateFromString(
     } else if (!config_options.ignore_unsupported_options) {
       status = Status::NotSupported("Cannot load object in LITE mode ", id);
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
   return status;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status GetPlainTableOptionsFromMap(
     const PlainTableOptions& table_options,
     const std::unordered_map<std::string, std::string>& opts_map,
@@ -335,5 +335,5 @@ const std::string PlainTablePropertyNames::kBloomVersion =
 const std::string PlainTablePropertyNames::kNumBloomBlocks =
     "rocksdb.plain.table.bloom.numblocks";
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

@@ -19,15 +19,15 @@
 #include "file/filename.h"
 #include "file/random_access_file_reader.h"
 #include "options/cf_options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/file_checksum.h"
+#include "mizar/options.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "util/compression.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TestFileNumberGenerator {
  public:
@@ -664,7 +664,7 @@ TEST_P(BlobFileBuilderIOErrorTest, IOError) {
   ASSERT_TRUE(blob_file_additions.empty());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

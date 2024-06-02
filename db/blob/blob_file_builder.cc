@@ -20,13 +20,13 @@
 #include "logging/logging.h"
 #include "options/cf_options.h"
 #include "options/options_helper.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "test_util/sync_point.h"
 #include "trace_replay/io_tracer.h"
 #include "util/compression.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 BlobFileBuilder::BlobFileBuilder(
     VersionSet* versions, FileSystem* fs,
@@ -372,4 +372,4 @@ void BlobFileBuilder::Abandon(const Status& s) {
   blob_count_ = 0;
   blob_bytes_ = 0;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

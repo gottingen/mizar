@@ -8,10 +8,10 @@
 #include <array>
 #include <memory>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 #include "util/math128.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace ribbon {
 
@@ -1222,4 +1222,4 @@ inline bool InterleavedFilterQuery(
 
 }  // namespace ribbon
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

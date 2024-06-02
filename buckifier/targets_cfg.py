@@ -23,7 +23,7 @@ ROCKSDB_COMPILER_FLAGS_0 = [
     "-Wno-expansion-to-defined",
     # Added missing flags from output of build_detect_platform
     "-Wnarrowing",
-    "-DROCKSDB_NO_DYNAMIC_EXTENSION",
+    "-DMIZAR_NO_DYNAMIC_EXTENSION",
 ]
 
 ROCKSDB_EXTERNAL_DEPS = [
@@ -55,17 +55,17 @@ ROCKSDB_OS_PREPROCESSOR_FLAGS_0 = [
         "linux",
         [
             "-DOS_LINUX",
-            "-DROCKSDB_FALLOCATE_PRESENT",
-            "-DROCKSDB_MALLOC_USABLE_SIZE",
-            "-DROCKSDB_PTHREAD_ADAPTIVE_MUTEX",
-            "-DROCKSDB_RANGESYNC_PRESENT",
-            "-DROCKSDB_SCHED_GETCPU_PRESENT",
-            "-DROCKSDB_IOURING_PRESENT",
+            "-DMIZAR_FALLOCATE_PRESENT",
+            "-DMIZAR_MALLOC_USABLE_SIZE",
+            "-DMIZAR_PTHREAD_ADAPTIVE_MUTEX",
+            "-DMIZAR_RANGESYNC_PRESENT",
+            "-DMIZAR_SCHED_GETCPU_PRESENT",
+            "-DMIZAR_IOURING_PRESENT",
             "-DHAVE_SSE42",
             "-DLIBURING",
             "-DNUMA",
-            "-DROCKSDB_PLATFORM_POSIX",
-            "-DROCKSDB_LIB_IO_POSIX",
+            "-DMIZAR_PLATFORM_POSIX",
+            "-DMIZAR_LIB_IO_POSIX",
             "-DTBB",
         ],
     ),
@@ -73,8 +73,8 @@ ROCKSDB_OS_PREPROCESSOR_FLAGS_0 = [
         "macos",
         [
             "-DOS_MACOSX",
-            "-DROCKSDB_PLATFORM_POSIX",
-            "-DROCKSDB_LIB_IO_POSIX",
+            "-DMIZAR_PLATFORM_POSIX",
+            "-DMIZAR_LIB_IO_POSIX",
             "-DTBB",
         ],
     ),
@@ -91,7 +91,7 @@ ROCKSDB_OS_PREPROCESSOR_FLAGS_0 = [
 ]
 
 ROCKSDB_PREPROCESSOR_FLAGS = [
-    "-DROCKSDB_SUPPORT_THREAD_LOCAL",
+    "-DMIZAR_SUPPORT_THREAD_LOCAL",
 
     # Flags to enable libs we include
     "-DSNAPPY",
@@ -132,7 +132,7 @@ sanitizer = read_config("fbcode", "sanitizer")
 # whether the binary is linked with jemalloc at runtime.
 ROCKSDB_OS_PREPROCESSOR_FLAGS = ROCKSDB_OS_PREPROCESSOR_FLAGS_0 + ([(
     "linux",
-    ["-DROCKSDB_JEMALLOC"],
+    ["-DMIZAR_JEMALLOC"],
 )] if sanitizer == "" else [])
 
 ROCKSDB_OS_DEPS = ROCKSDB_OS_DEPS_0 + ([(

@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/option_change_migration.h"
+#include "mizar/utilities/option_change_migration.h"
 
-#ifndef ROCKSDB_LITE
-#include "rocksdb/db.h"
+#ifndef MIZAR_LITE
+#include "mizar/db.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace {
 // Return a version of Options `opts` that allow us to open/write into a DB
 // without triggering an automatic compaction or stalling. This is guaranteed
@@ -156,13 +156,13 @@ Status OptionChangeMigration(std::string dbname, const Options& old_opts,
         "Do not how to migrate to this compaction style");
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #else
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 Status OptionChangeMigration(std::string /*dbname*/,
                              const Options& /*old_opts*/,
                              const Options& /*new_opts*/) {
   return Status::NotSupported();
 }
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

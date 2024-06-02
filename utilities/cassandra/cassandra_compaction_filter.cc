@@ -7,17 +7,17 @@
 
 #include <string>
 
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/cassandra/merge_operator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 static std::unordered_map<std::string, OptionTypeInfo>
     cassandra_filter_type_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"purge_ttl_on_expiration",
          {offsetof(struct CassandraOptions, purge_ttl_on_expiration),
           OptionType::kBoolean, OptionVerificationType::kNormal,
@@ -26,7 +26,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
          {offsetof(struct CassandraOptions, gc_grace_period_in_seconds),
           OptionType::kUInt32T, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 CassandraCompactionFilter::CassandraCompactionFilter(
@@ -77,7 +77,7 @@ CassandraCompactionFilterFactory::CreateCompactionFilter(
   return result;
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 int RegisterCassandraObjects(ObjectLibrary& library,
                              const std::string& /*arg*/) {
   library.AddFactory<MergeOperator>(
@@ -105,6 +105,6 @@ int RegisterCassandraObjects(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 }  // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

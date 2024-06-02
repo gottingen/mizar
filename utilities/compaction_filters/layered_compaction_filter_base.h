@@ -6,9 +6,9 @@
 #pragma once
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Abstract base class for building layered compaction filter on top of
 // user compaction filter.
@@ -38,4 +38,4 @@ class LayeredCompactionFilterBase : public CompactionFilter {
   std::unique_ptr<const CompactionFilter> user_comp_filter_from_factory_;
 };
 
-}  //  namespace ROCKSDB_NAMESPACE
+}  //  namespace MIZAR_NAMESPACE

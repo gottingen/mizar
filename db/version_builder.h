@@ -11,10 +11,10 @@
 
 #include <memory>
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/file_system.h"
+#include "mizar/slice_transform.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct ImmutableCFOptions;
 class TableCache;
@@ -66,4 +66,4 @@ class BaseReferencedVersionBuilder {
   Version* version_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

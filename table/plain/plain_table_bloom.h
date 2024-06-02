@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #include "port/port.h"
 #include "util/bloom_impl.h"
@@ -17,7 +17,7 @@
 
 #include <memory>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Slice;
 class Allocator;
 class Logger;
@@ -132,4 +132,4 @@ class BloomBlockBuilder {
   PlainTableBloomV1 bloom_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

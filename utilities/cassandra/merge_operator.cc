@@ -9,17 +9,17 @@
 
 #include <memory>
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 static std::unordered_map<std::string, OptionTypeInfo>
     merge_operator_options_info = {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
         {"gc_grace_period_in_seconds",
          {offsetof(struct CassandraOptions, gc_grace_period_in_seconds),
           OptionType::kUInt32T, OptionVerificationType::kNormal,
@@ -27,7 +27,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
         {"operands_limit",
          {offsetof(struct CassandraOptions, operands_limit), OptionType::kSizeT,
           OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 };
 
 CassandraValueMergeOperator::CassandraValueMergeOperator(
@@ -80,4 +80,4 @@ bool CassandraValueMergeOperator::PartialMergeMulti(
 
 } // namespace cassandra
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

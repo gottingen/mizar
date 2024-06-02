@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/checkpoint/checkpoint_impl.h"
 
@@ -23,18 +23,18 @@
 #include "file/filename.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/metadata.h"
-#include "rocksdb/options.h"
-#include "rocksdb/transaction_log.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/checkpoint.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/metadata.h"
+#include "mizar/options.h"
+#include "mizar/transaction_log.h"
+#include "mizar/types.h"
+#include "mizar/utilities/checkpoint.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/file_checksum_helper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status Checkpoint::Create(DB* db, Checkpoint** checkpoint_ptr) {
   *checkpoint_ptr = new CheckpointImpl(db);
@@ -310,7 +310,7 @@ Status CheckpointImpl::ExportColumnFamily(
   s = db_->GetEnv()->CreateDir(tmp_export_dir);
 
   if (s.ok()) {
-    s = db_->Flush(ROCKSDB_NAMESPACE::FlushOptions(), handle);
+    s = db_->Flush(MIZAR_NAMESPACE::FlushOptions(), handle);
   }
 
   ColumnFamilyMetaData db_metadata;
@@ -461,6 +461,6 @@ Status CheckpointImpl::ExportFilesInMetaData(
 
   return s;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

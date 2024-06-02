@@ -7,9 +7,9 @@
 
 #include <type_traits>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // The helper function to assert the move from dynamic_cast<> to
 // static_cast<> is correct. This function is to deal with legacy code.
 // It is not recommended to add new code to issue class casting. The preferred
@@ -17,7 +17,7 @@ namespace ROCKSDB_NAMESPACE {
 template <class DestClass, class SrcClass>
 inline DestClass* static_cast_with_check(SrcClass* x) {
   DestClass* ret = static_cast<DestClass*>(x);
-#ifdef ROCKSDB_USE_RTTI
+#ifdef MIZAR_USE_RTTI
   assert(ret == dynamic_cast<DestClass*>(x));
 #endif
   return ret;
@@ -39,4 +39,4 @@ inline To lossless_cast(From x) {
   return static_cast<To>(x);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

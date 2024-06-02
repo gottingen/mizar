@@ -10,7 +10,7 @@
 
 #include "table/block_based/index_reader_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Index that leverages an internal hash table to quicken the lookup for a given
 // key.
 class HashIndexReader : public BlockBasedTable::IndexReaderCommon {
@@ -29,14 +29,14 @@ class HashIndexReader : public BlockBasedTable::IndexReaderCommon {
 
   size_t ApproximateMemoryUsage() const override {
     size_t usage = ApproximateIndexBlockMemoryUsage();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
     usage += malloc_usable_size(const_cast<HashIndexReader*>(this));
 #else
     if (prefix_index_) {
       usage += prefix_index_->ApproximateMemoryUsage();
     }
     usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     return usage;
   }
 
@@ -46,4 +46,4 @@ class HashIndexReader : public BlockBasedTable::IndexReaderCommon {
 
   std::unique_ptr<BlockPrefixIndex> prefix_index_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

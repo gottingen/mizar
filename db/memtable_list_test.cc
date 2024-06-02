@@ -10,14 +10,14 @@
 #include "db/merge_context.h"
 #include "db/version_set.h"
 #include "db/write_controller.h"
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
+#include "mizar/write_buffer_manager.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MemTableListTest : public testing::Test {
  public:
@@ -65,11 +65,11 @@ class MemTableListTest : public testing::Test {
   ~MemTableListTest() override {
     if (db) {
       std::vector<ColumnFamilyDescriptor> cf_descs(handles.size());
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
       for (int i = 0; i != static_cast<int>(handles.size()); ++i) {
         EXPECT_OK(handles[i]->GetDescriptor(&cf_descs[i]));
       }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
       for (auto h : handles) {
         if (h) {
           EXPECT_OK(db->DestroyColumnFamilyHandle(h));
@@ -957,7 +957,7 @@ TEST_F(MemTableListTest, AtomicFlusTest) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

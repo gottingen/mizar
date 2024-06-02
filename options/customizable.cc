@@ -3,18 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/customizable.h"
+#include "mizar/customizable.h"
 
 #include <sstream>
 
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/status.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::string Customizable::GetOptionName(const std::string& long_name) const {
   const std::string& name = Name();
@@ -35,7 +35,7 @@ std::string Customizable::GenerateIndividualId() const {
   return ostr.str();
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 Status Customizable::GetOption(const ConfigOptions& config_options,
                                const std::string& opt_name,
                                std::string* value) const {
@@ -68,7 +68,7 @@ std::string Customizable::SerializeOptions(const ConfigOptions& config_options,
   return result;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
 bool Customizable::AreEquivalent(const ConfigOptions& config_options,
                                  const Configurable* other,
@@ -100,7 +100,7 @@ Status Customizable::GetOptionsMap(
   } else if (customizable != nullptr) {
     status =
         Configurable::GetOptionsMap(value, customizable->GetId(), id, props);
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
     (void)config_options;
 #else
     if (status.ok() && customizable->IsInstanceOf(*id)) {
@@ -116,7 +116,7 @@ Status Customizable::GetOptionsMap(
         }
       }
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   } else {
     status = Configurable::GetOptionsMap(value, "", id, props);
   }
@@ -134,4 +134,4 @@ Status Customizable::ConfigureNewObject(
   }
   return status;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

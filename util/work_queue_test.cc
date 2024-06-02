@@ -20,7 +20,7 @@
 #include <thread>
 #include <vector>
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Unit test for work_queue.h.
 //
@@ -260,7 +260,7 @@ TEST(WorkQueue, FailedPop) {
   EXPECT_EQ(5, x);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

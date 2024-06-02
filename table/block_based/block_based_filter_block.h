@@ -19,14 +19,14 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "table/block_based/filter_block_reader_common.h"
 #include "table/format.h"
 #include "util/hash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // A BlockBasedFilterBlockBuilder is used to construct all of the filters for a
 // particular Table.  It generates a single string which is stored as
@@ -121,4 +121,4 @@ class BlockBasedFilterBlockReader
                 BlockCacheLookupContext* lookup_context) const;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

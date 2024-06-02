@@ -4,17 +4,17 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ and enables
-// calling C++ ROCKSDB_NAMESPACE::SstFileManager methods
+// calling C++ MIZAR_NAMESPACE::SstFileManager methods
 // from Java side.
 
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 
 #include <jni.h>
 
 #include <memory>
 
 #include "include/org_rocksdb_SstPartitionerFixedPrefixFactory.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/sst_file_manager.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -24,8 +24,8 @@
  */
 jlong Java_org_rocksdb_SstPartitionerFixedPrefixFactory_newSstPartitionerFixedPrefixFactory0(
     JNIEnv*, jclass, jlong prefix_len) {
-  auto* ptr = new std::shared_ptr<ROCKSDB_NAMESPACE::SstPartitionerFactory>(
-      ROCKSDB_NAMESPACE::NewSstPartitionerFixedPrefixFactory(prefix_len));
+  auto* ptr = new std::shared_ptr<MIZAR_NAMESPACE::SstPartitionerFactory>(
+      MIZAR_NAMESPACE::NewSstPartitionerFixedPrefixFactory(prefix_len));
   return reinterpret_cast<jlong>(ptr);
 }
 
@@ -37,6 +37,6 @@ jlong Java_org_rocksdb_SstPartitionerFixedPrefixFactory_newSstPartitionerFixedPr
 void Java_org_rocksdb_SstPartitionerFixedPrefixFactory_disposeInternal(
     JNIEnv*, jobject, jlong jhandle) {
   auto* ptr = reinterpret_cast<
-      std::shared_ptr<ROCKSDB_NAMESPACE::SstPartitionerFactory>*>(jhandle);
+      std::shared_ptr<MIZAR_NAMESPACE::SstPartitionerFactory>*>(jhandle);
   delete ptr;  // delete std::shared_ptr
 }

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/blob_db/blob_db.h"
 
@@ -23,7 +23,7 @@
 #include "file/file_util.h"
 #include "file/sst_file_manager_impl.h"
 #include "port/port.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/utilities/debug.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
@@ -32,7 +32,7 @@
 #include "utilities/blob_db/blob_db_impl.h"
 #include "utilities/fault_injection_env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace blob_db {
 
 class BlobDBTest : public testing::Test {
@@ -773,7 +773,7 @@ TEST_F(BlobDBTest, SstFileManager) {
   Options db_options;
 
   int files_scheduled_to_delete = 0;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "SstFileManagerImpl::ScheduleFileDeletion", [&](void *arg) {
         assert(arg);
         const std::string *const file_path =
@@ -807,7 +807,7 @@ TEST_F(BlobDBTest, SstFileManager) {
 
 TEST_F(BlobDBTest, SstFileManagerRestart) {
   int files_scheduled_to_delete = 0;
-  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "SstFileManagerImpl::ScheduleFileDeletion", [&](void *arg) {
         assert(arg);
         const std::string *const file_path =
@@ -2382,7 +2382,7 @@ TEST_F(BlobDBTest, SyncBlobFileBeforeCloseIOError) {
 }
 
 }  //  namespace blob_db
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 // A black-box test for the ttl wrapper around rocksdb
 int main(int argc, char** argv) {
@@ -2394,8 +2394,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as BlobDB is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as BlobDB is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

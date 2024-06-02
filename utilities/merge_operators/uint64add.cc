@@ -6,18 +6,18 @@
 #include <memory>
 
 #include "logging/logging.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "util/coding.h"
 #include "utilities/merge_operators.h"
 
 namespace { // anonymous namespace
 
-using ROCKSDB_NAMESPACE::AssociativeMergeOperator;
-using ROCKSDB_NAMESPACE::InfoLogLevel;
-using ROCKSDB_NAMESPACE::Logger;
-using ROCKSDB_NAMESPACE::Slice;
+using MIZAR_NAMESPACE::AssociativeMergeOperator;
+using MIZAR_NAMESPACE::InfoLogLevel;
+using MIZAR_NAMESPACE::Logger;
+using MIZAR_NAMESPACE::Slice;
 
 // A 'model' merge operator with uint64 addition semantics
 // Implemented as an AssociativeMergeOperator for simplicity and example.
@@ -34,7 +34,7 @@ class UInt64AddOperator : public AssociativeMergeOperator {
 
     assert(new_value);
     new_value->clear();
-    ROCKSDB_NAMESPACE::PutFixed64(new_value, orig_value + operand);
+    MIZAR_NAMESPACE::PutFixed64(new_value, orig_value + operand);
 
     return true;  // Return true always since corruption will be treated as 0
   }
@@ -51,7 +51,7 @@ class UInt64AddOperator : public AssociativeMergeOperator {
     uint64_t result = 0;
 
     if (value.size() == sizeof(uint64_t)) {
-      result = ROCKSDB_NAMESPACE::DecodeFixed64(value.data());
+      result = MIZAR_NAMESPACE::DecodeFixed64(value.data());
     } else if (logger != nullptr) {
       // If value is corrupted, treat it as 0
       ROCKS_LOG_ERROR(logger,
@@ -66,10 +66,10 @@ class UInt64AddOperator : public AssociativeMergeOperator {
 
 }  // anonymous namespace
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 std::shared_ptr<MergeOperator> MergeOperators::CreateUInt64AddOperator() {
   return std::make_shared<UInt64AddOperator>();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

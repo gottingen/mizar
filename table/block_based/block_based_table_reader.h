@@ -14,8 +14,8 @@
 #include "cache/cache_key.h"
 #include "db/range_tombstone_fragmenter.h"
 #include "file/filename.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table_properties.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/block_based/block_type.h"
@@ -29,7 +29,7 @@
 #include "table/two_level_iterator.h"
 #include "trace_replay/block_cache_tracer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class Cache;
 class FilterBlockReader;
@@ -639,7 +639,7 @@ struct BlockBasedTable::Rep {
   uint64_t cf_id_for_tracing() const {
     return table_properties
                ? table_properties->column_family_id
-               : ROCKSDB_NAMESPACE::TablePropertiesCollectorFactory::Context::
+               : MIZAR_NAMESPACE::TablePropertiesCollectorFactory::Context::
                      kUnknownColumnFamily;
   }
 
@@ -717,4 +717,4 @@ class WritableFileStringStreamAdapter : public std::stringbuf {
   WritableFile* file_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

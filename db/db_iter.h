@@ -15,12 +15,12 @@
 #include "db/range_del_aggregator.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
 #include "table/iterator_wrapper.h"
 #include "util/autovector.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 class Version;
 
 // This file declares the factory functions of DBIter, in its original form
@@ -142,11 +142,11 @@ class DBIter final : public Iterator {
   ReadRangeDelAggregator* GetRangeDelAggregator() { return &range_del_agg_; }
 
   bool Valid() const override {
-#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+#ifdef MIZAR_ASSERT_STATUS_CHECKED
     if (valid_) {
       status_.PermitUncheckedError();
     }
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+#endif  // MIZAR_ASSERT_STATUS_CHECKED
     return valid_;
   }
   Slice key() const override {
@@ -363,11 +363,11 @@ class DBIter final : public Iterator {
   ReadRangeDelAggregator range_del_agg_;
   LocalStatistics local_stats_;
   PinnedIteratorsManager pinned_iters_mgr_;
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   ROCKSDB_FIELD_UNUSED
 #endif
   DBImpl* db_impl_;
-#ifdef ROCKSDB_LITE
+#ifdef MIZAR_LITE
   ROCKSDB_FIELD_UNUSED
 #endif
   ColumnFamilyData* cfd_;
@@ -392,4 +392,4 @@ extern Iterator* NewDBIterator(
     DBImpl* db_impl = nullptr, ColumnFamilyData* cfd = nullptr,
     bool expose_blob_index = false);
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

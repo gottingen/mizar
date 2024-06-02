@@ -22,12 +22,12 @@
 #include <string>
 
 #include "file/filename.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "util/mutexlock.h"
 #include "util/random.h"
 #include "util/thread_local.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class TestFSWritableFile;
 class FaultInjectionTestFS;
@@ -579,4 +579,4 @@ class FaultInjectionTestFS : public FileSystemWrapper {
                         FileType* type);
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

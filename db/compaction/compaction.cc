@@ -13,12 +13,12 @@
 #include <vector>
 
 #include "db/column_family.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/sst_partitioner.h"
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const uint64_t kRangeTombstoneSentinel =
     PackSequenceAndType(kMaxSequenceNumber, kTypeRangeDeletion);
@@ -639,4 +639,4 @@ int Compaction::GetInputBaseLevel() const {
   return input_vstorage_->base_level();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

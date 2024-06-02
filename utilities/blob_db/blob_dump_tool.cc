@@ -2,7 +2,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/blob_db/blob_dump_tool.h"
 
@@ -16,13 +16,13 @@
 #include "file/random_access_file_reader.h"
 #include "file/readahead_raf.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/file_system.h"
+#include "mizar/convenience.h"
+#include "mizar/file_system.h"
 #include "table/format.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace blob_db {
 
 BlobDumpTool::BlobDumpTool()
@@ -275,6 +275,6 @@ std::string BlobDumpTool::GetString(std::pair<T, T> p) {
 }
 
 }  // namespace blob_db
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

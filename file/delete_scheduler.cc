@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "file/delete_scheduler.h"
 
@@ -14,13 +14,13 @@
 #include "file/sst_file_manager_impl.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 DeleteScheduler::DeleteScheduler(SystemClock* clock, FileSystem* fs,
                                  int64_t rate_bytes_per_sec, Logger* info_log,
@@ -401,6 +401,6 @@ void DeleteScheduler::MaybeCreateBackgroundThread() {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

@@ -9,7 +9,7 @@
 #pragma once
 #include "table/block_based/index_reader_common.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Index that allows binary search lookup in a two-level index structure.
 class PartitionIndexReader : public BlockBasedTable::IndexReaderCommon {
  public:
@@ -32,11 +32,11 @@ class PartitionIndexReader : public BlockBasedTable::IndexReaderCommon {
   Status CacheDependencies(const ReadOptions& ro, bool pin) override;
   size_t ApproximateMemoryUsage() const override {
     size_t usage = ApproximateIndexBlockMemoryUsage();
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
     usage += malloc_usable_size(const_cast<PartitionIndexReader*>(this));
 #else
     usage += sizeof(*this);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     // TODO(myabandeh): more accurate estimate of partition_map_ mem usage
     return usage;
   }
@@ -51,4 +51,4 @@ class PartitionIndexReader : public BlockBasedTable::IndexReaderCommon {
   // all partitions to be saved here.
   std::unordered_map<uint64_t, CachableEntry<Block>> partition_map_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

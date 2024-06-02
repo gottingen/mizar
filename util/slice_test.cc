@@ -3,19 +3,19 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #include <gtest/gtest.h>
 
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/data_structure.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/regex.h"
+#include "mizar/data_structure.h"
+#include "mizar/types.h"
+#include "mizar/utilities/regex.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Use this to keep track of the cleanups that were actually performed
 void Multiplier(void* arg1, void* arg2) {
@@ -179,7 +179,7 @@ TEST_F(SmallEnumSetTest, SmallSetTest) {
 
 // ***************************************************************** //
 // Unit test for Regex
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST(RegexTest, ParseEtc) {
   Regex r;
   ASSERT_OK(Regex::Parse("[abc]{5}", &r));
@@ -204,12 +204,12 @@ TEST(RegexTest, ParseEtc) {
   ASSERT_TRUE(Regex::Parse("[abc", &r).IsInvalidArgument());
   ASSERT_TRUE(Regex::Parse("[abc]{1", &r).IsInvalidArgument());
 }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

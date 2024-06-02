@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #ifndef GFLAGS
 #include <cstdio>
@@ -19,7 +19,7 @@ int main() {
 #include <vector>
 
 #include "memory/arena.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 #include "table/cuckoo/cuckoo_table_builder.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
@@ -40,7 +40,7 @@ DEFINE_bool(write, false,
     "Should write new values to file in performance tests?");
 DEFINE_bool(identity_as_first_hash, true, "use identity as first hash");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 const uint32_t kNumHashFunc = 10;
@@ -550,10 +550,10 @@ TEST_F(CuckooReaderTest, TestReadPerformance) {
     fprintf(stderr, "\n");
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  if (ROCKSDB_NAMESPACE::port::kLittleEndian) {
+  if (MIZAR_NAMESPACE::port::kLittleEndian) {
     ::testing::InitGoogleTest(&argc, argv);
     ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
@@ -569,8 +569,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

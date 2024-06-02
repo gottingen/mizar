@@ -3,9 +3,9 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 
 #include <memory>
 
@@ -16,13 +16,13 @@
 #include "memory/arena.h"
 #include "memtable/skiplist.h"
 #include "options/db_options.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/iterator.h"
+#include "mizar/comparator.h"
+#include "mizar/iterator.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 struct WriteBatchWithIndex::Rep {
   explicit Rep(const Comparator* index_comparator, size_t reserved_bytes = 0,
                size_t max_bytes = 0, bool _overwrite_key = false)
@@ -628,5 +628,5 @@ size_t WriteBatchWithIndex::GetDataSize() const {
   return rep->write_batch.GetDataSize();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // !ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // !MIZAR_LITE

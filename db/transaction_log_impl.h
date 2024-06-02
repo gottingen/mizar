@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #include <vector>
 
 #include "db/log_reader.h"
@@ -13,12 +13,12 @@
 #include "logging/logging.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/transaction_log.h"
-#include "rocksdb/types.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/transaction_log.h"
+#include "mizar/types.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class LogFileImpl : public LogFile {
  public:
@@ -125,5 +125,5 @@ class TransactionLogIteratorImpl : public TransactionLogIterator {
   Status OpenLogReader(const LogFile* file);
   std::shared_ptr<IOTracer> io_tracer_;
 };
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

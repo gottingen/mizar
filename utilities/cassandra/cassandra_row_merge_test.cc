@@ -8,7 +8,7 @@
 #include "utilities/cassandra/format.h"
 #include "utilities/cassandra/test_utils.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 namespace cassandra {
 
 class RowValueMergeTest : public testing::Test {};
@@ -106,7 +106,7 @@ TEST(RowValueMergeTest, MergeWithRowTombstone) {
 }
 
 } // namespace cassandra
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

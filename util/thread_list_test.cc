@@ -7,12 +7,12 @@
 #include <condition_variable>
 
 #include "monitoring/thread_status_updater.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 #include "test_util/testharness.h"
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SimulatedBackgroundTask {
  public:
@@ -337,7 +337,7 @@ TEST_F(ThreadListTest, SimpleEventTest) {
                        ThreadStatus::NUM_OP_TYPES);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

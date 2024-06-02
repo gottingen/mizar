@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/transaction_log_impl.h"
 #include <cinttypes>
 #include "db/write_batch_internal.h"
 #include "file/sequence_file_reader.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 TransactionLogIteratorImpl::TransactionLogIteratorImpl(
     const std::string& dir, const ImmutableDBOptions* options,
@@ -318,5 +318,5 @@ Status TransactionLogIteratorImpl::OpenLogReader(const LogFile* log_file) {
                       read_options_.verify_checksums_, log_file->LogNumber()));
   return Status::OK();
 }
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

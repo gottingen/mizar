@@ -16,7 +16,7 @@
 jlong Java_org_rocksdb_RemoveEmptyValueCompactionFilter_createNewRemoveEmptyValueCompactionFilter0(
     JNIEnv* /*env*/, jclass /*jcls*/) {
   auto* compaction_filter =
-      new ROCKSDB_NAMESPACE::RemoveEmptyValueCompactionFilter();
+      new MIZAR_NAMESPACE::RemoveEmptyValueCompactionFilter();
 
   // set the native handle to our native compaction filter
   return reinterpret_cast<jlong>(compaction_filter);

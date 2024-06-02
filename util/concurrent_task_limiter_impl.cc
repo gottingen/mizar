@@ -8,9 +8,9 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "util/concurrent_task_limiter_impl.h"
-#include "rocksdb/concurrent_task_limiter.h"
+#include "mizar/concurrent_task_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 ConcurrentTaskLimiterImpl::ConcurrentTaskLimiterImpl(
     const std::string& name, int32_t max_outstanding_task)
@@ -64,4 +64,4 @@ TaskLimiterToken::~TaskLimiterToken() {
   assert(limiter_->outstanding_tasks_ >= 0);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

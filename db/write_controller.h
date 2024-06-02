@@ -9,9 +9,9 @@
 
 #include <atomic>
 #include <memory>
-#include "rocksdb/rate_limiter.h"
+#include "mizar/rate_limiter.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class SystemClock;
 class WriteControllerToken;
@@ -144,4 +144,4 @@ class CompactionPressureToken : public WriteControllerToken {
   virtual ~CompactionPressureToken();
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

@@ -11,9 +11,9 @@
 #include <chrono>
 
 #include "logging/log_buffer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class JSONWriter {
  public:
@@ -200,4 +200,4 @@ class EventLogger {
   Logger* logger_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

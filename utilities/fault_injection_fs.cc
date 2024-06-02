@@ -29,7 +29,7 @@
 #include "util/string_util.h"
 #include "util/xxhash.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 const std::string kNewFileNoOverwrite = "";
 
@@ -991,4 +991,4 @@ void FaultInjectionTestFS::PrintFaultBacktrace() {
 #endif
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

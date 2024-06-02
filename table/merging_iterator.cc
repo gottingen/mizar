@@ -14,9 +14,9 @@
 #include "db/pinned_iterators_manager.h"
 #include "memory/arena.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
+#include "mizar/comparator.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
 #include "table/internal_iterator.h"
 #include "table/iter_heap.h"
 #include "table/iterator_wrapper.h"
@@ -25,7 +25,7 @@
 #include "util/heap.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 // Without anonymous namespace here, we fail the warning -Wmissing-prototypes
 namespace {
 using MergerMaxIterHeap = BinaryHeap<IteratorWrapper*, MaxIteratorComparator>;
@@ -468,4 +468,4 @@ InternalIterator* MergeIteratorBuilder::Finish() {
   return ret;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

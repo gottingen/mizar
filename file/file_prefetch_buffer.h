@@ -15,11 +15,11 @@
 
 #include "file/readahead_file_info.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 #include "util/aligned_buffer.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #define DEAFULT_DECREMENT 8 * 1024
 
@@ -170,4 +170,4 @@ class FilePrefetchBuffer {
   size_t prev_len_;
   int64_t num_file_reads_;
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

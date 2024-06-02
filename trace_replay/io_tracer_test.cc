@@ -5,15 +5,15 @@
 
 #include "trace_replay/io_tracer.h"
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 const std::string kDummyFile = "/dummy/file";
@@ -24,7 +24,7 @@ class IOTracerTest : public testing::Test {
  public:
   IOTracerTest() {
     test_path_ = test::PerThreadDBPath("io_tracer_test");
-    env_ = ROCKSDB_NAMESPACE::Env::Default();
+    env_ = MIZAR_NAMESPACE::Env::Default();
     clock_ = env_->GetSystemClock().get();
     EXPECT_OK(env_->CreateDir(test_path_));
     trace_file_path_ = test_path_ + "/io_trace";
@@ -344,7 +344,7 @@ TEST_F(IOTracerTest, AtomicMultipleWrites) {
     ASSERT_NOK(reader.ReadIOOp(&record));
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

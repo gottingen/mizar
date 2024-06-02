@@ -16,7 +16,7 @@
 #include "monitoring/thread_status_updater.h"
 #include "util/cast_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 uint64_t DBImpl::TEST_GetLevel0TotalSize() {
   InstrumentedMutexLock l(&mutex_);
   return default_cf_handle_->cfd()->current()->storage_info()->NumLevelBytes(0);
@@ -298,7 +298,7 @@ size_t DBImpl::TEST_GetWalPreallocateBlockSize(
   return GetWalPreallocateBlockSize(write_buffer_size);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 void DBImpl::TEST_WaitForStatsDumpRun(std::function<void()> callback) const {
   if (periodic_work_scheduler_ != nullptr) {
     static_cast<PeriodicWorkTestScheduler*>(periodic_work_scheduler_)
@@ -309,10 +309,10 @@ void DBImpl::TEST_WaitForStatsDumpRun(std::function<void()> callback) const {
 PeriodicWorkTestScheduler* DBImpl::TEST_GetPeriodicWorkScheduler() const {
   return static_cast<PeriodicWorkTestScheduler*>(periodic_work_scheduler_);
 }
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE
 
 size_t DBImpl::TEST_EstimateInMemoryStatsHistorySize() const {
   return EstimateInMemoryStatsHistorySize();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // NDEBUG

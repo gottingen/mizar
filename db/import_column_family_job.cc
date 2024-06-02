@@ -1,4 +1,4 @@
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "db/import_column_family_job.h"
 
@@ -17,7 +17,7 @@
 #include "table/table_builder.h"
 #include "util/stop_watch.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status ImportColumnFamilyJob::Prepare(uint64_t next_file_number,
                                       SuperVersion* sv) {
@@ -287,6 +287,6 @@ Status ImportColumnFamilyJob::GetIngestedFileInfo(
   return status;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // !ROCKSDB_LITE
+#endif  // !MIZAR_LITE

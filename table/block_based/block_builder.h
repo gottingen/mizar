@@ -11,11 +11,11 @@
 #include <vector>
 
 #include <stdint.h>
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
+#include "mizar/slice.h"
+#include "mizar/table.h"
 #include "table/block_based/data_block_hash_index.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class BlockBuilder {
  public:
@@ -98,4 +98,4 @@ class BlockBuilder {
 #endif
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

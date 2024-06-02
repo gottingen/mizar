@@ -5,9 +5,9 @@
 #include <map>
 #include <node.h>
 
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/options.h"
 
 // Used to encapsulate a particular instance of an opened database.
 //
@@ -24,9 +24,9 @@ class DBWrapper : public node::ObjectWrap {
 
     // Helper methods
     static bool HasFamilyNamed(std::string& name, DBWrapper* db);
-    static bool AddToBatch(ROCKSDB_NAMESPACE::WriteBatch& batch, bool del,
+    static bool AddToBatch(MIZAR_NAMESPACE::WriteBatch& batch, bool del,
                            Handle<Array> array);
-    static bool AddToBatch(ROCKSDB_NAMESPACE::WriteBatch& batch, bool del,
+    static bool AddToBatch(MIZAR_NAMESPACE::WriteBatch& batch, bool del,
                            Handle<Array> array, DBWrapper* db_wrapper,
                            std::string cf);
     static Handle<Value> CompactRangeDefault(const v8::Arguments& args);
@@ -48,10 +48,10 @@ class DBWrapper : public node::ObjectWrap {
     static Handle<Value> Close(const Arguments& args);
 
     // Internal fields
-    ROCKSDB_NAMESPACE::Options options_;
-    ROCKSDB_NAMESPACE::Status status_;
-    ROCKSDB_NAMESPACE::DB* db_;
-    std::unordered_map<std::string, ROCKSDB_NAMESPACE::ColumnFamilyHandle*>
+    MIZAR_NAMESPACE::Options options_;
+    MIZAR_NAMESPACE::Status status_;
+    MIZAR_NAMESPACE::DB* db_;
+    std::unordered_map<std::string, MIZAR_NAMESPACE::ColumnFamilyHandle*>
         columnFamilies_;
 };
 

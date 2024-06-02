@@ -12,9 +12,9 @@
 #include "file/sequence_file_reader.h"
 #include "file/sst_file_manager_impl.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Utility function to copy a file up to a specified length
 IOStatus CopyFile(FileSystem* fs, const std::string& source,
@@ -94,7 +94,7 @@ IOStatus CreateFile(FileSystem* fs, const std::string& destination,
 Status DeleteDBFile(const ImmutableDBOptions* db_options,
                     const std::string& fname, const std::string& dir_to_sync,
                     const bool force_bg, const bool force_fg) {
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   SstFileManagerImpl* sfm =
       static_cast<SstFileManagerImpl*>(db_options->sst_file_manager.get());
   if (sfm && !force_fg) {
@@ -106,7 +106,7 @@ Status DeleteDBFile(const ImmutableDBOptions* db_options,
   (void)dir_to_sync;
   (void)force_bg;
   (void)force_fg;
-  // SstFileManager is not supported in ROCKSDB_LITE
+  // SstFileManager is not supported in MIZAR_LITE
   // Delete file immediately
   return db_options->env->DeleteFile(fname);
 #endif
@@ -255,4 +255,4 @@ Status DestroyDir(Env* env, const std::string& dir) {
   return s;
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

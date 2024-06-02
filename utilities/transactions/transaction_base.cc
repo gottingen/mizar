@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/transaction_base.h"
 
@@ -12,14 +12,14 @@
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 TransactionBaseImpl::TransactionBaseImpl(
     DB* db, const WriteOptions& write_options,
@@ -679,6 +679,6 @@ Status TransactionBaseImpl::RebuildFromWriteBatch(WriteBatch* src_batch) {
 WriteBatch* TransactionBaseImpl::GetCommitTimeWriteBatch() {
   return &commit_time_batch_;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

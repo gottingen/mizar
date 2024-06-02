@@ -10,14 +10,14 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"
 #include "util/vector_iterator.h"
 #include "utilities/merge_operators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class MergeHelperTest : public testing::Test {
  public:
@@ -288,7 +288,7 @@ TEST_F(MergeHelperTest, DontFilterMergeOperandsBeforeSnapshotTest) {
   ASSERT_FALSE(merge_output_iter.Valid());
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

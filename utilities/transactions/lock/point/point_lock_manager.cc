@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/lock/point/point_lock_manager.h"
 
@@ -12,8 +12,8 @@
 #include <mutex>
 
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/transaction_db_mutex.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/transaction_db_mutex.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/hash.h"
@@ -21,7 +21,7 @@
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 struct LockInfo {
   bool exclusive;
@@ -714,5 +714,5 @@ void PointLockManager::UnLock(PessimisticTransaction* /* txn */,
   // no-op
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

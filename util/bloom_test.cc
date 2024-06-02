@@ -23,7 +23,7 @@ int main() {
 #include "cache/cache_reservation_manager.h"
 #include "memory/arena.h"
 #include "port/jemalloc_helper.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -37,7 +37,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 // See also filter_bench.
 DEFINE_int32(bits_per_key, 10, "");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const int kVerbose = 1;
 
@@ -545,9 +545,9 @@ TEST_P(FullBloomTest, OptimizeForMemory) {
       total_size += size;
       // optimize_filters_for_memory currently depends on malloc_usable_size
       // but we run the rest of the test to ensure no bad behavior without it.
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
       size = malloc_usable_size(const_cast<char*>(FilterData().data()));
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
       total_mem += size;
       total_keys += nkeys;
       total_fp_rate += FalsePositiveRate();
@@ -587,15 +587,15 @@ TEST_P(FullBloomTest, OptimizeForMemory) {
       fprintf(stderr, "Internal fragmentation (not optimized): %g%%\n",
               (total_mem - total_size) * 100.0 / total_size);
       // TODO: add control checks for more allocators?
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
       fprintf(stderr, "Jemalloc detected? %d\n", HasJemalloc());
       if (HasJemalloc()) {
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
         // More than 5% internal fragmentation
         EXPECT_GE(total_mem, total_size * 105 / 100);
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
       }
-#endif  // ROCKSDB_JEMALLOC
+#endif  // MIZAR_JEMALLOC
       // No storage penalty, just usual overhead
       EXPECT_LE(static_cast<int64_t>(total_size),
                 ex_min_total_size + blocked_bloom_overhead);
@@ -1344,7 +1344,7 @@ TEST(RibbonTest, RibbonTestLevelThreshold) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

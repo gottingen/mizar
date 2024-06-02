@@ -5,15 +5,15 @@
 
 #include <sstream>
 #include "monitoring/iostats_context_imp.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 #ifdef NIOSTATS_CONTEXT
 // Should not be used because the counters are not thread-safe.
 // Put here just to make get_iostats_context() simple without ifdef.
 static IOStatsContext iostats_context;
-#elif defined(ROCKSDB_SUPPORT_THREAD_LOCAL)
+#elif defined(MIZAR_SUPPORT_THREAD_LOCAL)
 __thread IOStatsContext iostats_context;
 #else
 #error \
@@ -79,4 +79,4 @@ std::string IOStatsContext::ToString(bool exclude_zero_counters) const {
 #endif  //! NIOSTATS_CONTEXT
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

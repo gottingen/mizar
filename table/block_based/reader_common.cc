@@ -9,13 +9,13 @@
 #include "table/block_based/reader_common.h"
 
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 #include "table/format.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 void ForceReleaseCachedEntry(void* arg, void* h) {
   Cache* cache = reinterpret_cast<Cache*>(arg);
   Cache::Handle* handle = reinterpret_cast<Cache::Handle*>(h);
@@ -49,4 +49,4 @@ Status VerifyBlockChecksum(ChecksumType type, const char* data,
         ToString(block_size));
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

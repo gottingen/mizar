@@ -3,18 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 
 #include "db/version_edit.h"
 #include "db/version_set.h"
 #include "env/composite_env_wrapper.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/convenience.h"
+#include "mizar/file_checksum.h"
+#include "mizar/utilities/options_util.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -25,7 +25,7 @@ using std::string;
 using std::vector;
 using std::map;
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class LdbCmdTest : public testing::Test {
  public:
@@ -62,12 +62,12 @@ TEST_F(LdbCmdTest, HexToString) {
   };
 
   for (const auto& inPair : inputMap) {
-    auto actual = ROCKSDB_NAMESPACE::LDBCommand::HexToString(inPair.first);
+    auto actual = MIZAR_NAMESPACE::LDBCommand::HexToString(inPair.first);
     auto expected = inPair.second;
     for (unsigned int i = 0; i < actual.length(); i++) {
       EXPECT_EQ(expected[i], static_cast<int>((signed char) actual[i]));
     }
-    auto reverse = ROCKSDB_NAMESPACE::LDBCommand::StringToHex(actual);
+    auto reverse = MIZAR_NAMESPACE::LDBCommand::StringToHex(actual);
     EXPECT_STRCASEEQ(inPair.first.c_str(), reverse.c_str());
   }
 }
@@ -78,7 +78,7 @@ TEST_F(LdbCmdTest, HexToStringBadInputs) {
   };
   for (const auto& badInput : badInputs) {
     try {
-      ROCKSDB_NAMESPACE::LDBCommand::HexToString(badInput);
+      MIZAR_NAMESPACE::LDBCommand::HexToString(badInput);
       std::cerr << "Should fail on bad hex value: " << badInput << "\n";
       FAIL();
     } catch (...) {
@@ -632,7 +632,7 @@ TEST_F(LdbCmdTest, OptionParsing) {
     args.push_back("scan");
     args.push_back("--ttl");
     args.push_back("--timestamp");
-    LDBCommand* command = ROCKSDB_NAMESPACE::LDBCommand::InitFromCmdLineArgs(
+    LDBCommand* command = MIZAR_NAMESPACE::LDBCommand::InitFromCmdLineArgs(
         args, opts, LDBOptions(), nullptr);
     const std::vector<std::string> flags = command->TEST_GetFlags();
     EXPECT_EQ(flags.size(), 2);
@@ -649,7 +649,7 @@ TEST_F(LdbCmdTest, OptionParsing) {
         "--from='abcd/efg/hijk/lmn/"
         "opq:__rst.uvw.xyz?a=3+4+bcd+efghi&jk=lm_no&pq=rst-0&uv=wx-8&yz=a&bcd_"
         "ef=gh.ijk'");
-    LDBCommand* command = ROCKSDB_NAMESPACE::LDBCommand::InitFromCmdLineArgs(
+    LDBCommand* command = MIZAR_NAMESPACE::LDBCommand::InitFromCmdLineArgs(
         args, opts, LDBOptions(), nullptr);
     const std::map<std::string, std::string> option_map =
         command->TEST_GetOptionMap();
@@ -694,7 +694,7 @@ TEST_F(LdbCmdTest, ListFileTombstone) {
     char arg3[] = "list_file_range_deletes";
     char* argv[] = {arg1, arg2, arg3};
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "ListFileRangeDeletesCommand::DoCommand:BeforePrint", [&](void* arg) {
           std::string* out_str = reinterpret_cast<std::string*>(arg);
 
@@ -709,13 +709,13 @@ TEST_F(LdbCmdTest, ListFileTombstone) {
           }
           EXPECT_EQ(2, num_tb);
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     ASSERT_EQ(
         0, LDBCommandRunner::RunCommand(3, argv, opts, LDBOptions(), nullptr));
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 
   // Test the case of limiting tombstones
@@ -727,7 +727,7 @@ TEST_F(LdbCmdTest, ListFileTombstone) {
     char arg4[] = "--max_keys=1";
     char* argv[] = {arg1, arg2, arg3, arg4};
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "ListFileRangeDeletesCommand::DoCommand:BeforePrint", [&](void* arg) {
           std::string* out_str = reinterpret_cast<std::string*>(arg);
 
@@ -742,13 +742,13 @@ TEST_F(LdbCmdTest, ListFileTombstone) {
           }
           EXPECT_EQ(1, num_tb);
         });
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
     ASSERT_EQ(
         0, LDBCommandRunner::RunCommand(4, argv, opts, LDBOptions(), nullptr));
 
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
-    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 }
 
@@ -975,10 +975,10 @@ TEST_F(LdbCmdTest, RenameDbAndLoadOptions) {
       0, LDBCommandRunner::RunCommand(5, argv5, opts, LDBOptions(), nullptr));
   DestroyDB(new_dbname, opts);
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -987,8 +987,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as LDBCommand is not supported in ROCKSDB_LITE\n");
+  fprintf(stderr, "SKIPPED as LDBCommand is not supported in MIZAR_LITE\n");
   return 0;
 }
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

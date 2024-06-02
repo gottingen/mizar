@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "table/sst_file_dumper.h"
 
@@ -20,13 +20,13 @@
 #include "db/write_batch_internal.h"
 #include "options/cf_options.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/slice_transform.h"
+#include "mizar/status.h"
+#include "mizar/table_properties.h"
+#include "mizar/utilities/ldb_cmd.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -38,7 +38,7 @@
 #include "util/compression.h"
 #include "util/random.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 SstFileDumper::SstFileDumper(const Options& options,
                              const std::string& file_path,
@@ -263,12 +263,12 @@ Status SstFileDumper::ShowCompressionSize(
     size_t block_size, CompressionType compress_type,
     const CompressionOptions& compress_opt) {
   Options opts;
-  opts.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
+  opts.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
   opts.statistics->set_stats_level(StatsLevel::kAll);
   const ImmutableOptions imoptions(opts);
   const ColumnFamilyOptions cfo(opts);
   const MutableCFOptions moptions(cfo);
-  ROCKSDB_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
+  MIZAR_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
   IntTblPropCollectorFactories block_based_table_factories;
 
   std::string column_family_name;
@@ -339,7 +339,7 @@ Status SstFileDumper::ReadTableProperties(uint64_t table_magic_number,
                                           RandomAccessFileReader* file,
                                           uint64_t file_size,
                                           FilePrefetchBuffer* prefetch_buffer) {
-  Status s = ROCKSDB_NAMESPACE::ReadTableProperties(
+  Status s = MIZAR_NAMESPACE::ReadTableProperties(
       file, file_size, table_magic_number, ioptions_, &table_properties_,
       /* memory_allocator= */ nullptr, prefetch_buffer);
   if (!s.ok()) {
@@ -497,6 +497,6 @@ Status SstFileDumper::ReadTableProperties(
   *table_properties = table_reader_->GetTableProperties();
   return init_result_;
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

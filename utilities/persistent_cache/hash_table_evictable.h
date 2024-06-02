@@ -5,7 +5,7 @@
 //
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <functional>
 
@@ -13,7 +13,7 @@
 #include "utilities/persistent_cache/hash_table.h"
 #include "utilities/persistent_cache/lrulist.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // Evictable Hash Table
 //
@@ -163,6 +163,6 @@ class EvictableHashTable : private HashTable<T*, Hash, Equal> {
   std::unique_ptr<LRUListType[]> lru_lists_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 #endif

@@ -8,19 +8,19 @@
 
 #include "memory/jemalloc_nodump_allocator.h"
 #include "memory/memkind_kmem_allocator.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "test_util/testharness.h"
 #include "utilities/memory_allocators.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 // TODO: the tests do not work in LITE mode due to relying on
 // `CreateFromString()` to create non-default memory allocators.
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 class MemoryAllocatorTest
     : public testing::Test,
@@ -67,11 +67,11 @@ TEST_P(MemoryAllocatorTest, CreateAllocator) {
   } else {
     ASSERT_OK(s);
     ASSERT_NE(orig, nullptr);
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     std::string str = orig->ToString(config_options);
     ASSERT_OK(MemoryAllocator::CreateFromString(config_options, str, &copy));
     ASSERT_EQ(orig, copy);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 }
 
@@ -226,16 +226,16 @@ INSTANTIATE_TEST_CASE_P(
                                       MemkindKmemAllocator::IsSupported())));
 #endif  // MEMKIND
 
-#ifdef ROCKSDB_JEMALLOC
+#ifdef MIZAR_JEMALLOC
 INSTANTIATE_TEST_CASE_P(
     JemallocNodumpAllocator, MemoryAllocatorTest,
     ::testing::Values(std::make_tuple(JemallocNodumpAllocator::kClassName(),
                                       JemallocNodumpAllocator::IsSupported())));
-#endif  // ROCKSDB_JEMALLOC
+#endif  // MIZAR_JEMALLOC
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

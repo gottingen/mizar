@@ -9,7 +9,7 @@
 
 #include "db/column_family.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void FlushScheduler::ScheduleWork(ColumnFamilyData* cfd) {
 #ifndef NDEBUG
@@ -83,4 +83,4 @@ void FlushScheduler::Clear() {
   assert(head_.load(std::memory_order_relaxed) == nullptr);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

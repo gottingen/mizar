@@ -3,17 +3,17 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/utilities/object_registry.h"
 
 #include <ctype.h>
 
 #include "logging/logging.h"
-#include "rocksdb/customizable.h"
-#include "rocksdb/env.h"
+#include "mizar/customizable.h"
+#include "mizar/env.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
-#ifndef ROCKSDB_LITE
+namespace MIZAR_NAMESPACE {
+#ifndef MIZAR_LITE
 size_t ObjectLibrary::PatternEntry::MatchSeparatorAt(
     size_t start, Quantifier mode, const std::string &target, size_t tlen,
     const std::string &separator) const {
@@ -236,5 +236,5 @@ void ObjectRegistry::Dump(Logger *logger) const {
   }
 }
 
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE

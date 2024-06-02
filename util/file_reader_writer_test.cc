@@ -14,14 +14,14 @@
 #include "file/readahead_raf.h"
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/crc32c.h"
 #include "util/random.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class WritableFileWriterTest : public testing::Test {};
 
@@ -206,7 +206,7 @@ TEST_F(WritableFileWriterTest, IncrementalBuffer) {
         (attempt < kNumAttempts / 2) ? 512 * 1024 : 700 * 1024;
     std::string actual;
     std::unique_ptr<FakeWF> wf(new FakeWF(&actual,
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
                                           attempt % 2 == 1,
 #else
                                           false,
@@ -407,7 +407,7 @@ TEST_F(DBWritableFileWriterTest, AppendWithChecksumRateLimiter) {
   Destroy(options);
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 TEST_F(WritableFileWriterTest, AppendStatusReturn) {
   class FakeWF : public FSWritableFile {
    public:
@@ -772,7 +772,7 @@ TEST(LineFileReaderTest, LineFileReaderTest) {
   }
 }
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 class IOErrorEventListener : public EventListener {
  public:
   IOErrorEventListener() { notify_error_.store(0); }
@@ -886,8 +886,8 @@ TEST_F(DBWritableFileWriterTest, IOErrorNotification) {
   ASSERT_EQ(listener->NotifyErrorCount(), 2);
   fwf->CheckCounters(1, 1);
 }
-#endif  // ROCKSDB_LITE
-}  // namespace ROCKSDB_NAMESPACE
+#endif  // MIZAR_LITE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

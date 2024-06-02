@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include "utilities/transactions/write_prepared_txn_db.h"
 
@@ -16,9 +16,9 @@
 #include "db/arena_wrapped_db_iter.h"
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/mutexlock.h"
@@ -26,7 +26,7 @@
 #include "utilities/transactions/pessimistic_transaction.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 Status WritePreparedTxnDB::Initialize(
     const std::vector<size_t>& compaction_enabled_cf_indices,
@@ -994,5 +994,5 @@ void SubBatchCounter::AddKey(const uint32_t cf, const Slice& key) {
   }
 }
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

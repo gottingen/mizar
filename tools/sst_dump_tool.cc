@@ -3,18 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
-#include "rocksdb/sst_dump_tool.h"
+#include "mizar/sst_dump_tool.h"
 
 #include <cinttypes>
 #include <iostream>
 
 #include "port/port.h"
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 #include "table/sst_file_dumper.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 static const std::vector<std::pair<CompressionType, const char*>>
     kCompressions = {
@@ -169,11 +169,11 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
   int32_t compress_level_from = CompressionOptions::kDefaultCompressionLevel;
   int32_t compress_level_to = CompressionOptions::kDefaultCompressionLevel;
   uint32_t compression_max_dict_bytes =
-      ROCKSDB_NAMESPACE::CompressionOptions().max_dict_bytes;
+      MIZAR_NAMESPACE::CompressionOptions().max_dict_bytes;
   uint32_t compression_zstd_max_train_bytes =
-      ROCKSDB_NAMESPACE::CompressionOptions().zstd_max_train_bytes;
+      MIZAR_NAMESPACE::CompressionOptions().zstd_max_train_bytes;
   uint64_t compression_max_dict_buffer_bytes =
-      ROCKSDB_NAMESPACE::CompressionOptions().max_dict_buffer_bytes;
+      MIZAR_NAMESPACE::CompressionOptions().max_dict_buffer_bytes;
 
   int64_t tmp_val;
 
@@ -238,14 +238,14 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
     } else if (strncmp(argv[i], "--parse_internal_key=", 21) == 0) {
       std::string in_key(argv[i] + 21);
       try {
-        in_key = ROCKSDB_NAMESPACE::LDBCommand::HexToString(in_key);
+        in_key = MIZAR_NAMESPACE::LDBCommand::HexToString(in_key);
       } catch (...) {
         std::cerr << "ERROR: Invalid key input '"
           << in_key
           << "' Use 0x{hex representation of internal rocksdb key}" << std::endl;
         return -1;
       }
-      Slice sl_key = ROCKSDB_NAMESPACE::Slice(in_key);
+      Slice sl_key = MIZAR_NAMESPACE::Slice(in_key);
       ParsedInternalKey ikey;
       int retc = 0;
       Status pik_status =
@@ -328,10 +328,10 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
 
   if (input_key_hex) {
     if (has_from || use_from_as_prefix) {
-      from_key = ROCKSDB_NAMESPACE::LDBCommand::HexToString(from_key);
+      from_key = MIZAR_NAMESPACE::LDBCommand::HexToString(from_key);
     }
     if (has_to) {
-      to_key = ROCKSDB_NAMESPACE::LDBCommand::HexToString(to_key);
+      to_key = MIZAR_NAMESPACE::LDBCommand::HexToString(to_key);
     }
   }
 
@@ -341,7 +341,7 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
     exit(1);
   }
 
-  std::shared_ptr<ROCKSDB_NAMESPACE::Env> env_guard;
+  std::shared_ptr<MIZAR_NAMESPACE::Env> env_guard;
 
   // If caller of SSTDumpTool::Run(...) does not specify a different env other
   // than Env::Default(), then try to load custom env based on env_uri/fs_uri.
@@ -360,8 +360,8 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
   }
 
   std::vector<std::string> filenames;
-  ROCKSDB_NAMESPACE::Env* env = options.env;
-  ROCKSDB_NAMESPACE::Status st = env->GetChildren(dir_or_file, &filenames);
+  MIZAR_NAMESPACE::Env* env = options.env;
+  MIZAR_NAMESPACE::Status st = env->GetChildren(dir_or_file, &filenames);
   bool dir = true;
   if (!st.ok() || filenames.empty()) {
     // dir_or_file does not exist or does not contain children
@@ -398,7 +398,7 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
       filename = std::string(dir_or_file) + "/" + filename;
     }
 
-    ROCKSDB_NAMESPACE::SstFileDumper dumper(options, filename, readahead_size,
+    MIZAR_NAMESPACE::SstFileDumper dumper(options, filename, readahead_size,
                                             verify_checksum, output_hex,
                                             decode_blob_index);
     // Not a valid SST
@@ -414,8 +414,8 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
         // from_key and to_key are only used for "check", "scan", or ""
         if (command == "check" || command == "scan" || command == "") {
           fprintf(stdout, "from [%s] to [%s]\n",
-                  ROCKSDB_NAMESPACE::Slice(from_key).ToString(true).c_str(),
-                  ROCKSDB_NAMESPACE::Slice(to_key).ToString(true).c_str());
+                  MIZAR_NAMESPACE::Slice(from_key).ToString(true).c_str(),
+                  MIZAR_NAMESPACE::Slice(to_key).ToString(true).c_str());
         }
       }
     }
@@ -475,9 +475,9 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
     }
 
     if (show_properties || show_summary) {
-      const ROCKSDB_NAMESPACE::TableProperties* table_properties;
+      const MIZAR_NAMESPACE::TableProperties* table_properties;
 
-      std::shared_ptr<const ROCKSDB_NAMESPACE::TableProperties>
+      std::shared_ptr<const MIZAR_NAMESPACE::TableProperties>
           table_properties_from_reader;
       st = dumper.ReadTableProperties(&table_properties_from_reader);
       if (!st.ok()) {
@@ -557,6 +557,6 @@ int SSTDumpTool::Run(int argc, char const* const* argv, Options options) {
     return 0;
   }
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

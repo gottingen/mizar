@@ -8,7 +8,7 @@
 
 #include "utilities/fault_injection_secondary_cache.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 void FaultInjectionSecondaryCache::ResultHandle::UpdateHandleValue(
     FaultInjectionSecondaryCache::ResultHandle* handle) {
@@ -107,4 +107,4 @@ void FaultInjectionSecondaryCache::WaitAll(
   FaultInjectionSecondaryCache::ResultHandle::WaitAll(this, handles);
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

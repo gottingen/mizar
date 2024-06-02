@@ -13,8 +13,8 @@ int main() {
 
 #include "file/writable_file_writer.h"
 #include "monitoring/histogram.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/gflags_compat.h"
@@ -30,7 +30,7 @@ DEFINE_int32(record_interval, 10000, "Interval between records (microSec)");
 DEFINE_int32(bytes_per_sync, 0, "bytes_per_sync parameter in EnvOptions");
 DEFINE_bool(enable_sync, false, "sync after each write.");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 void RunBenchmark() {
   std::string file_name = test::PerThreadDBPath("log_write_benchmark.log");
   DBOptions options;
@@ -74,14 +74,14 @@ void RunBenchmark() {
   fprintf(stderr, "Distribution of latency of append+flush: \n%s",
           hist.ToString().c_str());
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 
 int main(int argc, char** argv) {
   SetUsageMessage(std::string("\nUSAGE:\n") + std::string(argv[0]) +
                   " [OPTIONS]...");
   ParseCommandLineFlags(&argc, &argv, true);
 
-  ROCKSDB_NAMESPACE::RunBenchmark();
+  MIZAR_NAMESPACE::RunBenchmark();
   return 0;
 }
 

@@ -3,7 +3,7 @@
 //    COPYING file in the root directory) and Apache 2.0 License
 //    (found in the LICENSE.Apache file in the root directory).
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 #ifdef GFLAGS
 #include "tools/io_tracer_parser_tool.h"
 
@@ -14,7 +14,7 @@
 #include <sstream>
 
 #include "port/lang.h"
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/trace_reader_writer.h"
 #include "trace_replay/io_tracer.h"
 #include "util/gflags_compat.h"
 
@@ -22,7 +22,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 
 DEFINE_string(io_trace_file, "", "The IO trace file path.");
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 IOTraceRecordParser::IOTraceRecordParser(const std::string& input_file)
     : input_file_(input_file) {}
@@ -139,6 +139,6 @@ int io_tracer_parser(int argc, char** argv) {
   return io_tracer_parser.ReadIOTraceRecords();
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
 #endif  // GFLAGS
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE

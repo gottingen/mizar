@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// ROCKSDB_NAMESPACE::Comparator.
+// MIZAR_NAMESPACE::Comparator.
 
 #include <jni.h>
 #include <stdio.h>
@@ -25,10 +25,10 @@
 jlong Java_org_rocksdb_AbstractComparator_createNewComparator(
     JNIEnv* env, jobject jcomparator, jlong copt_handle) {
   auto* copt =
-      reinterpret_cast<ROCKSDB_NAMESPACE::ComparatorJniCallbackOptions*>(
+      reinterpret_cast<MIZAR_NAMESPACE::ComparatorJniCallbackOptions*>(
           copt_handle);
   auto* c =
-      new ROCKSDB_NAMESPACE::ComparatorJniCallback(env, jcomparator, copt);
+      new MIZAR_NAMESPACE::ComparatorJniCallback(env, jcomparator, copt);
   return reinterpret_cast<jlong>(c);
 }
 
@@ -40,7 +40,7 @@ jlong Java_org_rocksdb_AbstractComparator_createNewComparator(
 jboolean Java_org_rocksdb_AbstractComparator_usingDirectBuffers(
     JNIEnv*, jobject, jlong jhandle) {
   auto* c =
-      reinterpret_cast<ROCKSDB_NAMESPACE::ComparatorJniCallback*>(jhandle);
+      reinterpret_cast<MIZAR_NAMESPACE::ComparatorJniCallback*>(jhandle);
   return static_cast<jboolean>(c->m_options->direct_buffer);
 }
 
@@ -52,6 +52,6 @@ jboolean Java_org_rocksdb_AbstractComparator_usingDirectBuffers(
 void Java_org_rocksdb_NativeComparatorWrapper_disposeInternal(
     JNIEnv* /*env*/, jobject /*jobj*/, jlong jcomparator_handle) {
   auto* comparator =
-      reinterpret_cast<ROCKSDB_NAMESPACE::Comparator*>(jcomparator_handle);
+      reinterpret_cast<MIZAR_NAMESPACE::Comparator*>(jcomparator_handle);
   delete comparator;
 }

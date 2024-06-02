@@ -21,9 +21,9 @@
 #include <mutex>
 #include <queue>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 /// Unbounded thread-safe work queue.
 //
@@ -147,4 +147,4 @@ class WorkQueue {
     }
   }
 };
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

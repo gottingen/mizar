@@ -27,20 +27,20 @@
 #include "logging/logging.h"
 #include "monitoring/perf_context_imp.h"
 #include "port/lang.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/cache.h"
+#include "mizar/comparator.h"
+#include "mizar/convenience.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/filter_policy.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/snapshot.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
+#include "mizar/trace_record.h"
 #include "table/block_based/binary_search_index_reader.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_filter_block.h"
@@ -70,7 +70,7 @@
 #include "util/stop_watch.h"
 #include "util/string_util.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 extern const uint64_t kBlockBasedTableMagicNumber;
 extern const std::string kHashIndexPrefixesBlock;
@@ -668,7 +668,7 @@ Status BlockBasedTable::Open(
     rep->table_prefix_extractor = prefix_extractor;
   } else {
     // Current prefix_extractor doesn't match table
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
     if (rep->table_properties) {
       //**TODO: If/When the DBOptions has a registry in it, the ConfigOptions
       // will need to use it
@@ -684,7 +684,7 @@ Status BlockBasedTable::Open(
                         st.ToString().c_str());
       }
     }
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
 
   // With properties loaded, we can set up portable/stable cache keys
@@ -2853,12 +2853,12 @@ void BlockBasedTable::MultiGet(const ReadOptions& read_options,
       }
       *(miter->s) = s;
     }
-#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+#ifdef MIZAR_ASSERT_STATUS_CHECKED
     // Not sure why we need to do it. Should investigate more.
     for (auto& st : statuses) {
       st.PermitUncheckedError();
     }
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+#endif  // MIZAR_ASSERT_STATUS_CHECKED
   }
 }
 
@@ -3362,7 +3362,7 @@ Status BlockBasedTable::DumpTable(WritableFile* out_file) {
   }
 
   // Output TableProperties
-  const ROCKSDB_NAMESPACE::TableProperties* table_properties;
+  const MIZAR_NAMESPACE::TableProperties* table_properties;
   table_properties = rep_->table_properties.get();
 
   if (table_properties != nullptr) {
@@ -3588,4 +3588,4 @@ void BlockBasedTable::DumpKeyValue(const Slice& key, const Slice& value,
   out_stream << "  ------\n";
 }
 
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE

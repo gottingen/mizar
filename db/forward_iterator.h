@@ -4,19 +4,19 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
 
 #include <string>
 #include <vector>
 #include <queue>
 
 #include "memory/arena.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
 #include "table/internal_iterator.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 class DBImpl;
 class Env;
@@ -160,5 +160,5 @@ class ForwardIterator : public InternalIterator {
   Arena arena_;
 };
 
-}  // namespace ROCKSDB_NAMESPACE
-#endif  // ROCKSDB_LITE
+}  // namespace MIZAR_NAMESPACE
+#endif  // MIZAR_LITE

@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 
 #include <array>
 #include <deque>
@@ -17,7 +17,7 @@
 #include "cache/cache_entry_roles.h"
 #include "cache/cache_reservation_manager.h"
 #include "logging/logging.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "table/block_based/block_based_filter_block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
@@ -29,7 +29,7 @@
 #include "util/ribbon_config.h"
 #include "util/ribbon_impl.h"
 
-namespace ROCKSDB_NAMESPACE {
+namespace MIZAR_NAMESPACE {
 
 namespace {
 
@@ -111,7 +111,7 @@ class XXPH3FilterBitsBuilder : public BuiltinFilterBitsBuilder {
                                std::unique_ptr<char[]>* buf) {
     // Return value set to a default; overwritten in some cases
     size_t rv = target_len_with_metadata;
-#ifdef ROCKSDB_MALLOC_USABLE_SIZE
+#ifdef MIZAR_MALLOC_USABLE_SIZE
     if (aggregate_rounding_balance_ != nullptr) {
       // Do optimize_filters_for_memory, using malloc_usable_size.
       // Approach: try to keep FP rate balance better than or on
@@ -199,7 +199,7 @@ class XXPH3FilterBitsBuilder : public BuiltinFilterBitsBuilder {
 #else
     (void)num_entries;
     buf->reset(new char[rv]());
-#endif  // ROCKSDB_MALLOC_USABLE_SIZE
+#endif  // MIZAR_MALLOC_USABLE_SIZE
     return rv;
   }
 
@@ -467,7 +467,7 @@ struct Standard128RibbonRehasherTypesAndSettings {
   static constexpr bool kHomogeneous = false;
   static constexpr bool kFirstCoeffAlwaysOne = true;
   static constexpr bool kUseSmash = false;
-  using CoeffRow = ROCKSDB_NAMESPACE::Unsigned128;
+  using CoeffRow = MIZAR_NAMESPACE::Unsigned128;
   using Hash = uint64_t;
   using Seed = uint32_t;
   // Changing these doesn't necessarily change underlying data,
@@ -1569,7 +1569,7 @@ Status FilterPolicy::CreateFromString(
   const std::string kRibbonName = "ribbonfilter:";
   if (value == kNullptrString || value == "rocksdb.BuiltinBloomFilter") {
     policy->reset();
-#ifndef ROCKSDB_LITE
+#ifndef MIZAR_LITE
   } else if (value.compare(0, kBloomName.size(), kBloomName) == 0) {
     size_t pos = value.find(':', kBloomName.size());
     if (pos == std::string::npos) {
@@ -1607,8 +1607,8 @@ Status FilterPolicy::CreateFromString(
   } else {
     return Status::NotSupported("Cannot load filter policy in LITE mode ",
                                 value);
-#endif  // ROCKSDB_LITE
+#endif  // MIZAR_LITE
   }
   return Status::OK();
 }
-}  // namespace ROCKSDB_NAMESPACE
+}  // namespace MIZAR_NAMESPACE
