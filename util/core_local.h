@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <thread>
 #include <utility>
@@ -13,7 +12,6 @@
 
 #include "port/likely.h"
 #include "port/port.h"
-#include "util/math.h"
 #include "util/random.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -71,7 +69,7 @@ std::pair<T*, size_t> CoreLocalArray<T>::AccessElementAndIndex() const {
     // cpu id unavailable, just pick randomly
     core_idx = Random::GetTLSInstance()->Uniform(1 << size_shift_);
   } else {
-    core_idx = static_cast<size_t>(BottomNBits(cpuid, size_shift_));
+    core_idx = static_cast<size_t>(cpuid & ((1 << size_shift_) - 1));
   }
   return {AccessAtCore(core_idx), core_idx};
 }

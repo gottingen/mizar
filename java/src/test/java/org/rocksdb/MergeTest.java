@@ -45,16 +45,14 @@ public class MergeTest {
     }
   }
 
-  static byte[] longToByteArray(final long l) {
-    final ByteBuffer buf =
-        ByteBuffer.allocate(Long.SIZE / Byte.SIZE).order(ByteOrder.LITTLE_ENDIAN);
+  private byte[] longToByteArray(long l) {
+    ByteBuffer buf = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).order(ByteOrder.LITTLE_ENDIAN);
     buf.putLong(l);
     return buf.array();
   }
 
-  static long longFromByteArray(final byte[] a) {
-    final ByteBuffer buf =
-        ByteBuffer.allocate(Long.SIZE / Byte.SIZE).order(ByteOrder.LITTLE_ENDIAN);
+  private long longFromByteArray(byte[] a) {
+    ByteBuffer buf = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).order(ByteOrder.LITTLE_ENDIAN);
     buf.put(a);
     buf.flip();
     return buf.getLong();
@@ -108,8 +106,9 @@ public class MergeTest {
           db.merge(columnFamilyHandleList.get(1),
               "cfkey".getBytes(), "bb".getBytes());
 
-          final byte[] value = db.get(columnFamilyHandleList.get(1), "cfkey".getBytes());
-          final String strValue = new String(value);
+          byte[] value = db.get(columnFamilyHandleList.get(1),
+              "cfkey".getBytes());
+          String strValue = new String(value);
           assertThat(strValue).isEqualTo("aa,bb");
         } finally {
           for (final ColumnFamilyHandle handle : columnFamilyHandleList) {
@@ -148,8 +147,9 @@ public class MergeTest {
           // merge (long)157 under key
           db.merge(columnFamilyHandleList.get(1), "cfkey".getBytes(), longToByteArray(157));
 
-          final byte[] value = db.get(columnFamilyHandleList.get(1), "cfkey".getBytes());
-          final long longValue = longFromByteArray(value);
+          byte[] value = db.get(columnFamilyHandleList.get(1),
+              "cfkey".getBytes());
+          long longValue = longFromByteArray(value);
           assertThat(longValue).isEqualTo(257);
         } finally {
           for (final ColumnFamilyHandle handle : columnFamilyHandleList) {
@@ -234,7 +234,7 @@ public class MergeTest {
               "cfkey".getBytes(), "bb".getBytes());
           byte[] value = db.get(columnFamilyHandleList.get(1),
               "cfkey".getBytes());
-          final String strValue = new String(value);
+          String strValue = new String(value);
 
           // Test also with createColumnFamily
           try (final ColumnFamilyOptions cfHandleOpts =
@@ -251,7 +251,7 @@ public class MergeTest {
             db.merge(cfHandle, new WriteOptions(), "cfkey2".getBytes(),
                 "yy".getBytes());
             value = db.get(cfHandle, "cfkey2".getBytes());
-            final String strValueTmpCf = new String(value);
+            String strValueTmpCf = new String(value);
 
             assertThat(strValue).isEqualTo("aa,bb");
             assertThat(strValueTmpCf).isEqualTo("xx,yy");
@@ -296,7 +296,7 @@ public class MergeTest {
               "cfkey".getBytes(), longToByteArray(1));
           byte[] value = db.get(columnFamilyHandleList.get(1),
               "cfkey".getBytes());
-          final long longValue = longFromByteArray(value);
+          long longValue = longFromByteArray(value);
 
           // Test also with createColumnFamily
           try (final ColumnFamilyOptions cfHandleOpts =
@@ -313,7 +313,7 @@ public class MergeTest {
             db.merge(cfHandle, new WriteOptions(), "cfkey2".getBytes(),
                 longToByteArray(50));
             value = db.get(cfHandle, "cfkey2".getBytes());
-            final long longValueTmpCf = longFromByteArray(value);
+            long longValueTmpCf = longFromByteArray(value);
 
             assertThat(longValue).isEqualTo(101);
             assertThat(longValueTmpCf).isEqualTo(250);

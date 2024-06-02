@@ -7,11 +7,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include <cstdlib>
+#ifndef ROCKSDB_LITE
+
+#include <stdlib.h>
 #include <map>
 #include <string>
 #include <vector>
-
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "db/version_set.h"
@@ -54,16 +55,18 @@ class DeleteFileTest : public DBTestBase {
     WriteOptions options;
     options.sync = false;
     ReadOptions roptions;
-    for (int i = startkey; i < (numkeys + startkey); i++) {
-      std::string temp = std::to_string(i);
+    for (int i = startkey; i < (numkeys + startkey) ; i++) {
+      std::string temp = ToString(i);
       Slice key(temp);
       Slice value(temp);
       ASSERT_OK(db_->Put(options, key, value));
     }
   }
 
-  int numKeysInLevels(std::vector<LiveFileMetaData>& metadata,
-                      std::vector<int>* keysperlevel = nullptr) {
+  int numKeysInLevels(
+    std::vector<LiveFileMetaData> &metadata,
+    std::vector<int> *keysperlevel = nullptr) {
+
     if (keysperlevel != nullptr) {
       keysperlevel->resize(numlevels_);
     }
@@ -79,7 +82,8 @@ class DeleteFileTest : public DBTestBase {
       }
       fprintf(stderr, "level %d name %s smallest %s largest %s\n",
               metadata[i].level, metadata[i].name.c_str(),
-              metadata[i].smallestkey.c_str(), metadata[i].largestkey.c_str());
+              metadata[i].smallestkey.c_str(),
+              metadata[i].largestkey.c_str());
     }
     return numKeys;
   }
@@ -104,7 +108,7 @@ class DeleteFileTest : public DBTestBase {
     ASSERT_OK(env_->GetChildren(dir, &filenames));
 
     int log_cnt = 0, sst_cnt = 0, manifest_cnt = 0;
-    for (const auto& file : filenames) {
+    for (auto file : filenames) {
       uint64_t number;
       FileType type;
       if (ParseFileName(file, &number, &type)) {
@@ -125,7 +129,7 @@ class DeleteFileTest : public DBTestBase {
   }
 
   static void DoSleep(void* arg) {
-    auto test = static_cast<DeleteFileTest*>(arg);
+    auto test = reinterpret_cast<DeleteFileTest*>(arg);
     test->env_->SleepForMicroseconds(2 * 1000 * 1000);
   }
 
@@ -146,9 +150,9 @@ TEST_F(DeleteFileTest, AddKeysAndQueryLevels) {
   std::vector<LiveFileMetaData> metadata;
   db_->GetLiveFilesMetaData(&metadata);
 
-  std::string level1file;
+  std::string level1file = "";
   int level1keycount = 0;
-  std::string level2file;
+  std::string level2file = "";
   int level2keycount = 0;
   int level1index = 0;
   int level2index = 1;
@@ -210,7 +214,7 @@ TEST_F(DeleteFileTest, PurgeObsoleteFilesTest) {
 
   // this time, we keep an iterator alive
   Reopen(options);
-  Iterator* itr = nullptr;
+  Iterator *itr = nullptr;
   CreateTwoLevels();
   itr = db_->NewIterator(ReadOptions());
   ASSERT_OK(itr->status());
@@ -220,49 +224,6 @@ TEST_F(DeleteFileTest, PurgeObsoleteFilesTest) {
   CheckFileTypeCounts(dbname_, 0, 3, 1);
   delete itr;
   // 1 sst after iterator deletion
-  CheckFileTypeCounts(dbname_, 0, 1, 1);
-}
-
-TEST_F(DeleteFileTest, WaitForCompactWithWaitForPurgeOptionTest) {
-  Options options = CurrentOptions();
-  SetOptions(&options);
-  Destroy(options);
-  options.create_if_missing = true;
-  Reopen(options);
-
-  std::string first("0"), last("999999");
-  CompactRangeOptions compact_options;
-  compact_options.change_level = true;
-  compact_options.target_level = 2;
-  Slice first_slice(first), last_slice(last);
-
-  CreateTwoLevels();
-  Iterator* itr = nullptr;
-  ReadOptions read_options;
-  read_options.background_purge_on_iterator_cleanup = true;
-  itr = db_->NewIterator(read_options);
-  ASSERT_OK(itr->status());
-  ASSERT_OK(db_->CompactRange(compact_options, &first_slice, &last_slice));
-  SyncPoint::GetInstance()->LoadDependency(
-      {{"DBImpl::BGWorkPurge:start", "DeleteFileTest::WaitForPurgeTest"},
-       {"DBImpl::WaitForCompact:InsideLoop",
-        "DBImpl::BackgroundCallPurge:beforeMutexLock"}});
-  SyncPoint::GetInstance()->EnableProcessing();
-
-  delete itr;
-
-  TEST_SYNC_POINT("DeleteFileTest::WaitForPurgeTest");
-  // At this point, purge got started, but can't finish due to sync points
-  // not purged yet
-  CheckFileTypeCounts(dbname_, 0, 3, 1);
-
-  // The sync point in WaitForCompact should unblock the purge
-  WaitForCompactOptions wait_for_compact_options;
-  wait_for_compact_options.wait_for_purge = true;
-  Status s = dbfull()->WaitForCompact(wait_for_compact_options);
-  ASSERT_OK(s);
-
-  // Now files should be purged
   CheckFileTypeCounts(dbname_, 0, 1, 1);
 }
 
@@ -520,12 +481,12 @@ TEST_F(DeleteFileTest, DeleteFileWithIterator) {
   }
 
   Status status = db_->DeleteFile(level2file);
-  fprintf(stdout, "Deletion status %s: %s\n", level2file.c_str(),
-          status.ToString().c_str());
+  fprintf(stdout, "Deletion status %s: %s\n",
+          level2file.c_str(), status.ToString().c_str());
   ASSERT_OK(status);
   it->SeekToFirst();
   int numKeysIterated = 0;
-  while (it->Valid()) {
+  while(it->Valid()) {
     numKeysIterated++;
     it->Next();
   }
@@ -616,7 +577,6 @@ TEST_F(DeleteFileTest, DeleteNonDefaultColumnFamily) {
       ASSERT_OK(itr->status());
       ++count;
     }
-    ASSERT_OK(itr->status());
     ASSERT_EQ(count, 1000);
   }
 
@@ -630,7 +590,6 @@ TEST_F(DeleteFileTest, DeleteNonDefaultColumnFamily) {
       ASSERT_OK(itr->status());
       ++count;
     }
-    ASSERT_OK(itr->status());
     ASSERT_EQ(count, 1000);
   }
 }
@@ -643,3 +602,14 @@ int main(int argc, char** argv) {
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
 }
+
+#else
+#include <stdio.h>
+
+int main(int /*argc*/, char** /*argv*/) {
+  fprintf(stderr,
+          "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
+  return 0;
+}
+
+#endif  // !ROCKSDB_LITE

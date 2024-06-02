@@ -34,7 +34,7 @@ class EmulatedSystemClock : public SystemClockWrapper {
   static const char* kClassName() { return "TimeEmulatedSystemClock"; }
   const char* Name() const override { return kClassName(); }
 
-  void SleepForMicroseconds(int micros) override {
+  virtual void SleepForMicroseconds(int micros) override {
     sleep_counter_++;
     if (no_slowdown_ || time_elapse_only_sleep_) {
       addon_microseconds_.fetch_add(micros);
@@ -70,7 +70,7 @@ class EmulatedSystemClock : public SystemClockWrapper {
 
   int GetSleepCounter() const { return sleep_counter_.load(); }
 
-  Status GetCurrentTime(int64_t* unix_time) override {
+  virtual Status GetCurrentTime(int64_t* unix_time) override {
     Status s;
     if (time_elapse_only_sleep_) {
       *unix_time = maybe_starting_time_;
@@ -84,22 +84,22 @@ class EmulatedSystemClock : public SystemClockWrapper {
     return s;
   }
 
-  uint64_t CPUNanos() override {
+  virtual uint64_t CPUNanos() override {
     cpu_counter_++;
     return SystemClockWrapper::CPUNanos();
   }
 
-  uint64_t CPUMicros() override {
+  virtual uint64_t CPUMicros() override {
     cpu_counter_++;
     return SystemClockWrapper::CPUMicros();
   }
 
-  uint64_t NowNanos() override {
+  virtual uint64_t NowNanos() override {
     return (time_elapse_only_sleep_ ? 0 : SystemClockWrapper::NowNanos()) +
            addon_microseconds_.load() * 1000;
   }
 
-  uint64_t NowMicros() override {
+  virtual uint64_t NowMicros() override {
     return (time_elapse_only_sleep_ ? 0 : SystemClockWrapper::NowMicros()) +
            addon_microseconds_.load();
   }

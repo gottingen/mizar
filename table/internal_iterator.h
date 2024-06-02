@@ -43,17 +43,6 @@ class InternalIteratorBase : public Cleanable {
 
   virtual ~InternalIteratorBase() {}
 
-  // This iterator will only process range tombstones with sequence
-  // number <= `read_seqno`.
-  // Noop for most child classes.
-  // For range tombstone iterators (TruncatedRangeDelIterator,
-  // FragmentedRangeTombstoneIterator), will only return range tombstones with
-  // sequence number <= `read_seqno`. For LevelIterator, it may open new table
-  // files and create new range tombstone iterators during scanning. It will use
-  // `read_seqno` as the sequence number for creating new range tombstone
-  // iterators.
-  virtual void SetRangeDelReadSeqno(SequenceNumber /* read_seqno */) {}
-
   // An iterator is either positioned at a key/value pair, or
   // not valid.  This method returns true iff the iterator is valid.
   // Always returns false if !status().ok().
@@ -115,14 +104,6 @@ class InternalIteratorBase : public Cleanable {
   // the iterator.
   // REQUIRES: Valid()
   virtual Slice key() const = 0;
-
-  // Returns the approximate write time of this entry, which is deduced from
-  // sequence number if sequence number to time mapping is available.
-  // The default implementation returns maximum uint64_t and that indicates the
-  // write time is unknown.
-  virtual uint64_t write_unix_time() const {
-    return std::numeric_limits<uint64_t>::max();
-  }
 
   // Return user key for the current entry.
   // REQUIRES: Valid()
@@ -205,15 +186,8 @@ class InternalIteratorBase : public Cleanable {
   // Default implementation is no-op and its implemented by iterators.
   virtual void SetReadaheadState(ReadaheadFileInfo* /*readahead_file_info*/) {}
 
-  // When used under merging iterator, LevelIterator treats file boundaries
-  // as sentinel keys to prevent it from moving to next SST file before range
-  // tombstones in the current SST file are no longer needed. This method makes
-  // it cheap to check if the current key is a sentinel key. This should only be
-  // used by MergingIterator and LevelIterator for now.
-  virtual bool IsDeleteRangeSentinelKey() const { return false; }
-
  protected:
-  void SeekForPrevImpl(const Slice& target, const CompareInterface* cmp) {
+  void SeekForPrevImpl(const Slice& target, const Comparator* cmp) {
     Seek(target);
     if (!Valid()) {
       SeekToLast();
@@ -222,21 +196,24 @@ class InternalIteratorBase : public Cleanable {
       Prev();
     }
   }
+
+  bool is_mutable_;
 };
 
 using InternalIterator = InternalIteratorBase<Slice>;
 
 // Return an empty iterator (yields nothing).
 template <class TValue = Slice>
-InternalIteratorBase<TValue>* NewEmptyInternalIterator();
+extern InternalIteratorBase<TValue>* NewEmptyInternalIterator();
 
 // Return an empty iterator with the specified status.
 template <class TValue = Slice>
-InternalIteratorBase<TValue>* NewErrorInternalIterator(const Status& status);
+extern InternalIteratorBase<TValue>* NewErrorInternalIterator(
+    const Status& status);
 
 // Return an empty iterator with the specified status, allocated arena.
 template <class TValue = Slice>
-InternalIteratorBase<TValue>* NewErrorInternalIterator(const Status& status,
-                                                       Arena* arena);
+extern InternalIteratorBase<TValue>* NewErrorInternalIterator(
+    const Status& status, Arena* arena);
 
 }  // namespace ROCKSDB_NAMESPACE

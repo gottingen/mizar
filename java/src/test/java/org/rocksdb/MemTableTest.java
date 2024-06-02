@@ -20,7 +20,8 @@ public class MemTableTest {
   public void hashSkipListMemTable() throws RocksDBException {
     try(final Options options = new Options()) {
       // Test HashSkipListMemTableConfig
-      final HashSkipListMemTableConfig memTableConfig = new HashSkipListMemTableConfig();
+      HashSkipListMemTableConfig memTableConfig =
+          new HashSkipListMemTableConfig();
       assertThat(memTableConfig.bucketCount()).
           isEqualTo(1000000);
       memTableConfig.setBucketCount(2000000);
@@ -43,7 +44,8 @@ public class MemTableTest {
   @Test
   public void skipListMemTable() throws RocksDBException {
     try(final Options options = new Options()) {
-      final SkipListMemTableConfig skipMemTableConfig = new SkipListMemTableConfig();
+      SkipListMemTableConfig skipMemTableConfig =
+          new SkipListMemTableConfig();
       assertThat(skipMemTableConfig.lookahead()).
           isEqualTo(0);
       skipMemTableConfig.setLookahead(20);
@@ -56,7 +58,7 @@ public class MemTableTest {
   @Test
   public void hashLinkedListMemTable() throws RocksDBException {
     try(final Options options = new Options()) {
-      final HashLinkedListMemTableConfig hashLinkedListMemTableConfig =
+      HashLinkedListMemTableConfig hashLinkedListMemTableConfig =
           new HashLinkedListMemTableConfig();
       assertThat(hashLinkedListMemTableConfig.bucketCount()).
           isEqualTo(50000);
@@ -96,7 +98,8 @@ public class MemTableTest {
   @Test
   public void vectorMemTable() throws RocksDBException {
     try(final Options options = new Options()) {
-      final VectorMemTableConfig vectorMemTableConfig = new VectorMemTableConfig();
+      VectorMemTableConfig vectorMemTableConfig =
+          new VectorMemTableConfig();
       assertThat(vectorMemTableConfig.reservedSize()).
           isEqualTo(0);
       vectorMemTableConfig.setReservedSize(123);

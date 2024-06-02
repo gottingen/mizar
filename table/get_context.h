@@ -15,7 +15,6 @@ class Comparator;
 class Logger;
 class MergeContext;
 class MergeOperator;
-class PinnableWideColumns;
 class PinnedIteratorsManager;
 class Statistics;
 class SystemClock;
@@ -54,6 +53,7 @@ struct GetContextStats {
   // MultiGet stats.
   uint64_t num_filter_read = 0;
   uint64_t num_index_read = 0;
+  uint64_t num_data_read = 0;
   uint64_t num_sst_read = 0;
 };
 
@@ -75,7 +75,6 @@ class GetContext {
     kCorrupt,
     kMerge,  // saver contains the current merge result (the operands)
     kUnexpectedBlobIndex,
-    kMergeOperatorFailed,
   };
   GetContextStats get_context_stats_;
 
@@ -101,8 +100,7 @@ class GetContext {
   // merge_context and they are never merged. The value pointer is untouched.
   GetContext(const Comparator* ucmp, const MergeOperator* merge_operator,
              Logger* logger, Statistics* statistics, GetState init_state,
-             const Slice& user_key, PinnableSlice* value,
-             PinnableWideColumns* columns, bool* value_found,
+             const Slice& user_key, PinnableSlice* value, bool* value_found,
              MergeContext* merge_context, bool do_merge,
              SequenceNumber* max_covering_tombstone_seq, SystemClock* clock,
              SequenceNumber* seq = nullptr,
@@ -112,8 +110,8 @@ class GetContext {
   GetContext(const Comparator* ucmp, const MergeOperator* merge_operator,
              Logger* logger, Statistics* statistics, GetState init_state,
              const Slice& user_key, PinnableSlice* value,
-             PinnableWideColumns* columns, std::string* timestamp,
-             bool* value_found, MergeContext* merge_context, bool do_merge,
+             std::string* timestamp, bool* value_found,
+             MergeContext* merge_context, bool do_merge,
              SequenceNumber* max_covering_tombstone_seq, SystemClock* clock,
              SequenceNumber* seq = nullptr,
              PinnedIteratorsManager* _pinned_iters_mgr = nullptr,
@@ -135,8 +133,7 @@ class GetContext {
   // Returns True if more keys need to be read (due to merges) or
   //         False if the complete value has been found.
   bool SaveValue(const ParsedInternalKey& parsed_key, const Slice& value,
-                 bool* matched, Status* read_status,
-                 Cleanable* value_pinner = nullptr);
+                 bool* matched, Cleanable* value_pinner = nullptr);
 
   // Simplified version of the previous function. Should only be used when we
   // know that the operation is a Put.
@@ -146,16 +143,6 @@ class GetContext {
 
   SequenceNumber* max_covering_tombstone_seq() {
     return max_covering_tombstone_seq_;
-  }
-
-  bool NeedTimestamp() { return timestamp_ != nullptr; }
-
-  inline size_t TimestampSize() { return ucmp_->timestamp_size(); }
-
-  void SetTimestampFromRangeTombstone(const Slice& timestamp) {
-    assert(timestamp_);
-    timestamp_->assign(timestamp.data(), timestamp.size());
-    ts_from_rangetombstone_ = true;
   }
 
   PinnedIteratorsManager* pinned_iters_mgr() { return pinned_iters_mgr_; }
@@ -181,33 +168,13 @@ class GetContext {
 
   bool has_callback() const { return callback_ != nullptr; }
 
-  const Slice& ukey_to_get_blob_value() const {
-    if (!ukey_with_ts_found_.empty()) {
-      return ukey_with_ts_found_;
-    } else {
-      return user_key_;
-    }
-  }
-
   uint64_t get_tracing_get_id() const { return tracing_get_id_; }
 
   void push_operand(const Slice& value, Cleanable* value_pinner);
 
  private:
-  // Helper method that postprocesses the results of merge operations, e.g. it
-  // sets the state correctly upon merge errors.
-  void PostprocessMerge(const Status& merge_status);
-
-  // The following methods perform the actual merge operation for the
-  // no base value/plain base value/wide-column base value cases.
-  void MergeWithNoBaseValue();
-  void MergeWithPlainBaseValue(const Slice& value);
-  void MergeWithWideColumnBaseValue(const Slice& entity);
-
-  bool GetBlobValue(const Slice& user_key, const Slice& blob_index,
-                    PinnableSlice* blob_value, Status* read_status);
-
-  void appendToReplayLog(ValueType type, Slice value, Slice ts);
+  void Merge(const Slice* value);
+  bool GetBlobValue(const Slice& blob_index, PinnableSlice* blob_value);
 
   const Comparator* ucmp_;
   const MergeOperator* merge_operator_;
@@ -217,14 +184,8 @@ class GetContext {
 
   GetState state_;
   Slice user_key_;
-  // When a blob index is found with the user key containing timestamp,
-  // this copies the corresponding user key on record in the sst file
-  // and is later used for blob verification.
-  PinnableSlice ukey_with_ts_found_;
   PinnableSlice* pinnable_val_;
-  PinnableWideColumns* columns_;
   std::string* timestamp_;
-  bool ts_from_rangetombstone_{false};
   bool* value_found_;  // Is value set correctly? Used by KeyMayExist
   MergeContext* merge_context_;
   SequenceNumber* max_covering_tombstone_seq_;
@@ -251,9 +212,8 @@ class GetContext {
 // Call this to replay a log and bring the get_context up to date. The replay
 // log must have been created by another GetContext object, whose replay log
 // must have been set by calling GetContext::SetReplayLog().
-Status replayGetContextLog(const Slice& replay_log, const Slice& user_key,
-                           GetContext* get_context,
-                           Cleanable* value_pinner = nullptr,
-                           SequenceNumber seq_no = kMaxSequenceNumber);
+void replayGetContextLog(const Slice& replay_log, const Slice& user_key,
+                         GetContext* get_context,
+                         Cleanable* value_pinner = nullptr);
 
 }  // namespace ROCKSDB_NAMESPACE

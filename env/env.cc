@@ -26,9 +26,11 @@
 #include "rocksdb/utilities/object_registry.h"
 #include "rocksdb/utilities/options_type.h"
 #include "util/autovector.h"
+#include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {
+#ifndef ROCKSDB_LITE
 static int RegisterBuiltinEnvs(ObjectLibrary& library,
                                const std::string& /*arg*/) {
   library.AddFactory<Env>(MockEnv::kClassName(), [](const std::string& /*uri*/,
@@ -47,12 +49,15 @@ static int RegisterBuiltinEnvs(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
+#endif  // ROCKSDB_LITE
 
 static void RegisterSystemEnvs() {
+#ifndef ROCKSDB_LITE
   static std::once_flag loaded;
   std::call_once(loaded, [&]() {
     RegisterBuiltinEnvs(*(ObjectLibrary::Default().get()), "");
   });
+#endif  // ROCKSDB_LITE
 }
 
 class LegacySystemClock : public SystemClock {
@@ -93,6 +98,7 @@ class LegacySystemClock : public SystemClock {
     return env_->TimeToString(time);
   }
 
+#ifndef ROCKSDB_LITE
   std::string SerializeOptions(const ConfigOptions& /*config_options*/,
                                const std::string& /*prefix*/) const override {
     // We do not want the LegacySystemClock to appear in the serialized output.
@@ -100,6 +106,7 @@ class LegacySystemClock : public SystemClock {
     // would be part of the Env.  As such, do not serialize it here.
     return "";
   }
+#endif  // ROCKSDB_LITE
 };
 
 class LegacySequentialFileWrapper : public FSSequentialFile {
@@ -159,7 +166,8 @@ class LegacyRandomAccessFileWrapper : public FSRandomAccessFile {
       req.len = fs_reqs[i].len;
       req.scratch = fs_reqs[i].scratch;
       req.status = Status::OK();
-      reqs.emplace_back(std::move(req));
+
+      reqs.emplace_back(req);
     }
     status = target_->MultiRead(reqs.data(), num_reqs);
     for (size_t i = 0; i < num_reqs; ++i) {
@@ -343,10 +351,6 @@ class LegacyDirectoryWrapper : public FSDirectory {
                  IODebugContext* /*dbg*/) override {
     return status_to_io_status(target_->Fsync());
   }
-  IOStatus Close(const IOOptions& /*options*/,
-                 IODebugContext* /*dbg*/) override {
-    return status_to_io_status(target_->Close());
-  }
   size_t GetUniqueId(char* id, size_t max_size) const override {
     return target_->GetUniqueId(id, max_size);
   }
@@ -359,7 +363,7 @@ class LegacyFileSystemWrapper : public FileSystem {
  public:
   // Initialize an EnvWrapper that delegates all calls to *t
   explicit LegacyFileSystemWrapper(Env* t) : target_(t) {}
-  ~LegacyFileSystemWrapper() override = default;
+  ~LegacyFileSystemWrapper() override {}
 
   static const char* kClassName() { return "LegacyFileSystem"; }
   const char* Name() const override { return kClassName(); }
@@ -598,6 +602,7 @@ class LegacyFileSystemWrapper : public FileSystem {
     return status_to_io_status(target_->IsDirectory(path, is_dir));
   }
 
+#ifndef ROCKSDB_LITE
   std::string SerializeOptions(const ConfigOptions& /*config_options*/,
                                const std::string& /*prefix*/) const override {
     // We do not want the LegacyFileSystem to appear in the serialized output.
@@ -605,6 +610,7 @@ class LegacyFileSystemWrapper : public FileSystem {
     // would be part of the Env.  As such, do not serialize it here.
     return "";
   }
+#endif  // ROCKSDB_LITE
  private:
   Env* target_;
 };
@@ -624,11 +630,16 @@ Env::Env(const std::shared_ptr<FileSystem>& fs,
          const std::shared_ptr<SystemClock>& clock)
     : thread_status_updater_(nullptr), file_system_(fs), system_clock_(clock) {}
 
-Env::~Env() = default;
+Env::~Env() {
+}
 
 Status Env::NewLogger(const std::string& fname,
                       std::shared_ptr<Logger>* result) {
   return NewEnvLogger(fname, this, result);
+}
+
+Status Env::LoadEnv(const std::string& value, Env** result) {
+  return CreateFromString(ConfigOptions(), value, result);
 }
 
 Status Env::CreateFromString(const ConfigOptions& config_options,
@@ -640,12 +651,17 @@ Status Env::CreateFromString(const ConfigOptions& config_options,
   } else {
     RegisterSystemEnvs();
     Env* env = *result;
-    Status s = LoadStaticObject<Env>(config_options, value, &env);
+    Status s = LoadStaticObject<Env>(config_options, value, nullptr, &env);
     if (s.ok()) {
       *result = env;
     }
     return s;
   }
+}
+
+Status Env::LoadEnv(const std::string& value, Env** result,
+                    std::shared_ptr<Env>* guard) {
+  return CreateFromString(ConfigOptions(), value, result, guard);
 }
 
 Status Env::CreateFromString(const ConfigOptions& config_options,
@@ -670,8 +686,17 @@ Status Env::CreateFromString(const ConfigOptions& config_options,
     status = Status::OK();
   } else {
     RegisterSystemEnvs();
-    // First, try to load the Env as a unique object.
-    status = config_options.registry->NewObject<Env>(id, &env, &uniq);
+#ifndef ROCKSDB_LITE
+    std::string errmsg;
+    env = config_options.registry->NewObject<Env>(id, &uniq, &errmsg);
+    if (!env) {
+      status = Status::NotSupported(
+          std::string("Cannot load environment[") + id + "]: ", errmsg);
+    }
+#else
+    status =
+        Status::NotSupported("Cannot load environment in LITE mode", value);
+#endif
   }
   if (config_options.ignore_unsupported_options && status.IsNotSupported()) {
     status = Status::OK();
@@ -797,7 +822,7 @@ std::string Env::GenerateUniqueId() {
 
     // Use 36 character format of RFC 4122
     result.resize(36U);
-    char* buf = result.data();
+    char* buf = &result[0];
     PutBaseChars<16>(&buf, 8, upper >> 32, /*!uppercase*/ false);
     *(buf++) = '-';
     PutBaseChars<16>(&buf, 4, upper >> 16, /*!uppercase*/ false);
@@ -817,24 +842,18 @@ std::string Env::GenerateUniqueId() {
   return result;
 }
 
-SequentialFile::~SequentialFile() = default;
+SequentialFile::~SequentialFile() {
+}
 
-RandomAccessFile::~RandomAccessFile() = default;
+RandomAccessFile::~RandomAccessFile() {
+}
 
-WritableFile::~WritableFile() = default;
+WritableFile::~WritableFile() {
+}
 
-MemoryMappedFileBuffer::~MemoryMappedFileBuffer() = default;
+MemoryMappedFileBuffer::~MemoryMappedFileBuffer() {}
 
-// This const variable can be used in public headers without introducing the
-// possibility of ODR violations due to varying macro definitions.
-const InfoLogLevel Logger::kDefaultLogLevel =
-#ifdef NDEBUG
-    INFO_LEVEL;
-#else
-    DEBUG_LEVEL;
-#endif  // NDEBUG
-
-Logger::~Logger() = default;
+Logger::~Logger() {}
 
 Status Logger::Close() {
   if (!closed_) {
@@ -847,15 +866,16 @@ Status Logger::Close() {
 
 Status Logger::CloseImpl() { return Status::NotSupported(); }
 
-FileLock::~FileLock() = default;
+FileLock::~FileLock() {
+}
 
-void LogFlush(Logger* info_log) {
+void LogFlush(Logger *info_log) {
   if (info_log) {
     info_log->Flush();
   }
 }
 
-static void Logv(Logger* info_log, const char* format, va_list ap) {
+static void Logv(Logger *info_log, const char* format, va_list ap) {
   if (info_log && info_log->GetInfoLogLevel() <= InfoLogLevel::INFO_LEVEL) {
     info_log->Logv(InfoLogLevel::INFO_LEVEL, format, ap);
   }
@@ -868,10 +888,9 @@ void Log(Logger* info_log, const char* format, ...) {
   va_end(ap);
 }
 
-void Logger::Logv(const InfoLogLevel log_level, const char* format,
-                  va_list ap) {
-  static const char* kInfoLogLevelNames[5] = {"DEBUG", "INFO", "WARN", "ERROR",
-                                              "FATAL"};
+void Logger::Logv(const InfoLogLevel log_level, const char* format, va_list ap) {
+  static const char* kInfoLogLevelNames[5] = { "DEBUG", "INFO", "WARN",
+    "ERROR", "FATAL" };
   if (log_level < log_level_) {
     return;
   }
@@ -888,7 +907,7 @@ void Logger::Logv(const InfoLogLevel log_level, const char* format,
   } else {
     char new_format[500];
     snprintf(new_format, sizeof(new_format) - 1, "[%s] %s",
-             kInfoLogLevelNames[log_level], format);
+      kInfoLogLevelNames[log_level], format);
     Logv(new_format, ap);
   }
 
@@ -901,8 +920,7 @@ void Logger::Logv(const InfoLogLevel log_level, const char* format,
   }
 }
 
-static void Logv(const InfoLogLevel log_level, Logger* info_log,
-                 const char* format, va_list ap) {
+static void Logv(const InfoLogLevel log_level, Logger *info_log, const char *format, va_list ap) {
   if (info_log && info_log->GetInfoLogLevel() <= log_level) {
     if (log_level == InfoLogLevel::HEADER_LEVEL) {
       info_log->LogHeader(format, ap);
@@ -920,7 +938,7 @@ void Log(const InfoLogLevel log_level, Logger* info_log, const char* format,
   va_end(ap);
 }
 
-static void Headerv(Logger* info_log, const char* format, va_list ap) {
+static void Headerv(Logger *info_log, const char *format, va_list ap) {
   if (info_log) {
     info_log->LogHeader(format, ap);
   }
@@ -1060,16 +1078,74 @@ void Log(const std::shared_ptr<Logger>& info_log, const char* format, ...) {
 }
 
 Status WriteStringToFile(Env* env, const Slice& data, const std::string& fname,
-                         bool should_sync, const IOOptions* io_options) {
+                         bool should_sync) {
   const auto& fs = env->GetFileSystem();
-  return WriteStringToFile(fs.get(), data, fname, should_sync,
-                           io_options ? *io_options : IOOptions());
+  return WriteStringToFile(fs.get(), data, fname, should_sync);
 }
 
 Status ReadFileToString(Env* env, const std::string& fname, std::string* data) {
   const auto& fs = env->GetFileSystem();
   return ReadFileToString(fs.get(), fname, data);
 }
+
+namespace {
+static std::unordered_map<std::string, OptionTypeInfo> env_wrapper_type_info = {
+#ifndef ROCKSDB_LITE
+    {"target",
+     {0, OptionType::kCustomizable, OptionVerificationType::kByName,
+      OptionTypeFlags::kDontSerialize | OptionTypeFlags::kRawPointer,
+      [](const ConfigOptions& opts, const std::string& /*name*/,
+         const std::string& value, void* addr) {
+        EnvWrapper::Target* target = static_cast<EnvWrapper::Target*>(addr);
+        return Env::CreateFromString(opts, value, &(target->env),
+                                     &(target->guard));
+      },
+      nullptr, nullptr}},
+#endif  // ROCKSDB_LITE
+};
+}  // namespace
+
+EnvWrapper::EnvWrapper(Env* t) : target_(t) {
+  RegisterOptions("", &target_, &env_wrapper_type_info);
+}
+
+EnvWrapper::EnvWrapper(std::unique_ptr<Env>&& t) : target_(std::move(t)) {
+  RegisterOptions("", &target_, &env_wrapper_type_info);
+}
+
+EnvWrapper::EnvWrapper(const std::shared_ptr<Env>& t) : target_(t) {
+  RegisterOptions("", &target_, &env_wrapper_type_info);
+}
+
+EnvWrapper::~EnvWrapper() {
+}
+
+Status EnvWrapper::PrepareOptions(const ConfigOptions& options) {
+  target_.Prepare();
+  return Env::PrepareOptions(options);
+}
+
+#ifndef ROCKSDB_LITE
+std::string EnvWrapper::SerializeOptions(const ConfigOptions& config_options,
+                                         const std::string& header) const {
+  auto parent = Env::SerializeOptions(config_options, "");
+  if (config_options.IsShallow() || target_.env == nullptr ||
+      target_.env == Env::Default()) {
+    return parent;
+  } else {
+    std::string result = header;
+    if (!StartsWith(parent, OptionTypeInfo::kIdPropName())) {
+      result.append(OptionTypeInfo::kIdPropName()).append("=");
+    }
+    result.append(parent);
+    if (!EndsWith(result, config_options.delimiter)) {
+      result.append(config_options.delimiter);
+    }
+    result.append("target=").append(target_.env->ToString(config_options));
+    return result;
+  }
+}
+#endif  // ROCKSDB_LITE
 
 namespace {  // anonymous namespace
 
@@ -1090,7 +1166,7 @@ void AssignEnvOptions(EnvOptions* env_options, const DBOptions& options) {
   options.env->SanitizeEnvOptions(env_options);
 }
 
-}  // namespace
+}
 
 EnvOptions Env::OptimizeForLogWrite(const EnvOptions& env_options,
                                     const DBOptions& db_options) const {
@@ -1173,9 +1249,11 @@ const std::shared_ptr<SystemClock>& Env::GetSystemClock() const {
 }
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo> sc_wrapper_type_info = {
+#ifndef ROCKSDB_LITE
     {"target",
      OptionTypeInfo::AsCustomSharedPtr<SystemClock>(
          0, OptionVerificationType::kByName, OptionTypeFlags::kDontSerialize)},
+#endif  // ROCKSDB_LITE
 };
 
 }  // namespace
@@ -1191,6 +1269,7 @@ Status SystemClockWrapper::PrepareOptions(const ConfigOptions& options) {
   return SystemClock::PrepareOptions(options);
 }
 
+#ifndef ROCKSDB_LITE
 std::string SystemClockWrapper::SerializeOptions(
     const ConfigOptions& config_options, const std::string& header) const {
   auto parent = SystemClock::SerializeOptions(config_options, "");
@@ -1210,7 +1289,9 @@ std::string SystemClockWrapper::SerializeOptions(
     return result;
   }
 }
+#endif  // ROCKSDB_LITE
 
+#ifndef ROCKSDB_LITE
 static int RegisterBuiltinSystemClocks(ObjectLibrary& library,
                                        const std::string& /*arg*/) {
   library.AddFactory<SystemClock>(
@@ -1223,6 +1304,7 @@ static int RegisterBuiltinSystemClocks(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
+#endif  // ROCKSDB_LITE
 
 Status SystemClock::CreateFromString(const ConfigOptions& config_options,
                                      const std::string& value,
@@ -1232,16 +1314,14 @@ Status SystemClock::CreateFromString(const ConfigOptions& config_options,
     *result = clock;
     return Status::OK();
   } else {
+#ifndef ROCKSDB_LITE
     static std::once_flag once;
     std::call_once(once, [&]() {
       RegisterBuiltinSystemClocks(*(ObjectLibrary::Default().get()), "");
     });
-    return LoadSharedObject<SystemClock>(config_options, value, result);
+#endif  // ROCKSDB_LITE
+    return LoadSharedObject<SystemClock>(config_options, value, nullptr,
+                                         result);
   }
-}
-
-bool SystemClock::TimedWait(port::CondVar* cv,
-                            std::chrono::microseconds deadline) {
-  return cv->TimedWait(deadline.count());
 }
 }  // namespace ROCKSDB_NAMESPACE

@@ -7,16 +7,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
+#ifndef ROCKSDB_LITE
+
 #include "rocksdb/utilities/write_batch_with_index.h"
 
 #include <map>
 #include <memory>
 
 #include "db/column_family.h"
-#include "db/wide/wide_columns_helper.h"
 #include "port/stack_trace.h"
 #include "test_util/testharness.h"
-#include "test_util/testutil.h"
 #include "util/random.h"
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
@@ -82,88 +82,41 @@ using KVMap = std::map<std::string, std::string>;
 class KVIter : public Iterator {
  public:
   explicit KVIter(const KVMap* map) : map_(map), iter_(map_->end()) {}
-
   bool Valid() const override { return iter_ != map_->end(); }
-
-  void SeekToFirst() override {
-    iter_ = map_->begin();
-
-    if (Valid()) {
-      Update();
-    }
-  }
-
+  void SeekToFirst() override { iter_ = map_->begin(); }
   void SeekToLast() override {
     if (map_->empty()) {
       iter_ = map_->end();
     } else {
       iter_ = map_->find(map_->rbegin()->first);
     }
-
-    if (Valid()) {
-      Update();
-    }
   }
-
   void Seek(const Slice& k) override {
     iter_ = map_->lower_bound(k.ToString());
-
-    if (Valid()) {
-      Update();
-    }
   }
-
   void SeekForPrev(const Slice& k) override {
     iter_ = map_->upper_bound(k.ToString());
     Prev();
-
-    if (Valid()) {
-      Update();
-    }
   }
-
-  void Next() override {
-    ++iter_;
-
-    if (Valid()) {
-      Update();
-    }
-  }
-
+  void Next() override { ++iter_; }
   void Prev() override {
     if (iter_ == map_->begin()) {
       iter_ = map_->end();
       return;
     }
     --iter_;
-
-    if (Valid()) {
-      Update();
-    }
   }
-
   Slice key() const override { return iter_->first; }
-  Slice value() const override { return value_; }
-  const WideColumns& columns() const override { return columns_; }
+  Slice value() const override { return iter_->second; }
   Status status() const override { return Status::OK(); }
 
  private:
-  void Update() {
-    assert(Valid());
-
-    value_ = iter_->second;
-    columns_ = WideColumns{{kDefaultWideColumnName, value_}};
-  }
-
   const KVMap* const map_;
   KVMap::const_iterator iter_;
-  Slice value_;
-  WideColumns columns_;
 };
 
 static std::string PrintContents(WriteBatchWithIndex* batch,
-                                 ColumnFamilyHandle* column_family,
-                                 bool hex = false) {
+                                 ColumnFamilyHandle* column_family) {
   std::string result;
 
   WBWIIterator* iter;
@@ -179,22 +132,22 @@ static std::string PrintContents(WriteBatchWithIndex* batch,
 
     if (e.type == kPutRecord) {
       result.append("PUT(");
-      result.append(e.key.ToString(hex));
+      result.append(e.key.ToString());
       result.append("):");
-      result.append(e.value.ToString(hex));
+      result.append(e.value.ToString());
     } else if (e.type == kMergeRecord) {
       result.append("MERGE(");
-      result.append(e.key.ToString(hex));
+      result.append(e.key.ToString());
       result.append("):");
-      result.append(e.value.ToString(hex));
+      result.append(e.value.ToString());
     } else if (e.type == kSingleDeleteRecord) {
       result.append("SINGLE-DEL(");
-      result.append(e.key.ToString(hex));
+      result.append(e.key.ToString());
       result.append(")");
     } else {
       assert(e.type == kDeleteRecord);
       result.append("DEL(");
-      result.append(e.key.ToString(hex));
+      result.append(e.key.ToString());
       result.append(")");
     }
 
@@ -268,7 +221,7 @@ void AssertItersEqual(Iterator* iter1, Iterator* iter2) {
 void AssertIterEqual(WBWIIteratorImpl* wbwii,
                      const std::vector<std::string>& keys) {
   wbwii->SeekToFirst();
-  for (const auto& k : keys) {
+  for (auto k : keys) {
     ASSERT_TRUE(wbwii->Valid());
     ASSERT_EQ(wbwii->Entry().key, k);
     wbwii->NextKey();
@@ -282,7 +235,7 @@ void AssertIterEqual(WBWIIteratorImpl* wbwii,
   }
   ASSERT_FALSE(wbwii->Valid());
 }
-}  // namespace
+}  // namespace anonymous
 
 class WBWIBaseTest : public testing::Test {
  public:
@@ -291,7 +244,7 @@ class WBWIBaseTest : public testing::Test {
         MergeOperators::CreateFromStringId("stringappend");
     options_.create_if_missing = true;
     dbname_ = test::PerThreadDBPath("write_batch_with_index_test");
-    EXPECT_OK(DestroyDB(dbname_, options_));
+    DestroyDB(dbname_, options_);
     batch_.reset(new WriteBatchWithIndex(BytewiseComparator(), 20, overwrite));
   }
 
@@ -299,7 +252,7 @@ class WBWIBaseTest : public testing::Test {
     if (db_ != nullptr) {
       ReleaseSnapshot();
       delete db_;
-      EXPECT_OK(DestroyDB(dbname_, options_));
+      DestroyDB(dbname_, options_);
     }
   }
 
@@ -307,20 +260,14 @@ class WBWIBaseTest : public testing::Test {
     std::string result;
     for (size_t i = 0; i < key.size(); i++) {
       if (key[i] == 'd') {
-        EXPECT_OK(batch_->Delete(cf, key));
+        batch_->Delete(cf, key);
         result = "";
       } else if (key[i] == 'p') {
-        result = key + std::to_string(i);
-        EXPECT_OK(batch_->Put(cf, key, result));
-      } else if (key[i] == 'e') {
-        const std::string suffix = std::to_string(i);
-        result = key + suffix;
-        const WideColumns columns{{kDefaultWideColumnName, result},
-                                  {key, suffix}};
-        EXPECT_OK(batch_->PutEntity(cf, key, columns));
+        result = key + ToString(i);
+        batch_->Put(cf, key, result);
       } else if (key[i] == 'm') {
-        std::string value = key + std::to_string(i);
-        EXPECT_OK(batch_->Merge(cf, key, value));
+        std::string value = key + ToString(i);
+        batch_->Merge(cf, key, value);
         if (result.empty()) {
           result = value;
         } else {
@@ -411,7 +358,7 @@ void TestValueAsSecondaryIndexHelper(std::vector<Entry> entries,
       } else {
         iter->Seek("");
       }
-      for (const auto& pair : data_map) {
+      for (auto pair : data_map) {
         for (auto v : pair.second) {
           ASSERT_OK(iter->status());
           ASSERT_TRUE(iter->Valid());
@@ -452,7 +399,7 @@ void TestValueAsSecondaryIndexHelper(std::vector<Entry> entries,
       } else {
         iter->Seek("");
       }
-      for (const auto& pair : index_map) {
+      for (auto pair : index_map) {
         for (auto v : pair.second) {
           ASSERT_OK(iter->status());
           ASSERT_TRUE(iter->Valid());
@@ -537,7 +484,7 @@ void TestValueAsSecondaryIndexHelper(std::vector<Entry> entries,
   {
     ASSERT_EQ(entries.size(), handler.seen[data.GetID()].size());
     size_t i = 0;
-    for (const auto& e : handler.seen[data.GetID()]) {
+    for (auto e : handler.seen[data.GetID()]) {
       auto write_entry = entries[i++];
       ASSERT_EQ(e.type, write_entry.type);
       ASSERT_EQ(e.key, write_entry.key);
@@ -551,7 +498,7 @@ void TestValueAsSecondaryIndexHelper(std::vector<Entry> entries,
   {
     ASSERT_EQ(entries.size(), handler.seen[index.GetID()].size());
     size_t i = 0;
-    for (const auto& e : handler.seen[index.GetID()]) {
+    for (auto e : handler.seen[index.GetID()]) {
       auto write_entry = entries[i++];
       ASSERT_EQ(e.key, write_entry.value);
       if (write_entry.type != kDeleteRecord) {
@@ -563,10 +510,14 @@ void TestValueAsSecondaryIndexHelper(std::vector<Entry> entries,
 
 TEST_F(WBWIKeepTest, TestValueAsSecondaryIndex) {
   Entry entries[] = {
-      {"aaa", "0005", kPutRecord},   {"b", "0002", kPutRecord},
-      {"cdd", "0002", kMergeRecord}, {"aab", "00001", kPutRecord},
-      {"cc", "00005", kPutRecord},   {"cdd", "0002", kPutRecord},
-      {"aab", "0003", kPutRecord},   {"cc", "00005", kDeleteRecord},
+      {"aaa", "0005", kPutRecord},
+      {"b", "0002", kPutRecord},
+      {"cdd", "0002", kMergeRecord},
+      {"aab", "00001", kPutRecord},
+      {"cc", "00005", kPutRecord},
+      {"cdd", "0002", kPutRecord},
+      {"aab", "0003", kPutRecord},
+      {"cc", "00005", kDeleteRecord},
   };
   std::vector<Entry> entries_list(entries, entries + 8);
 
@@ -578,10 +529,14 @@ TEST_F(WBWIKeepTest, TestValueAsSecondaryIndex) {
   batch_->Clear();
 
   Entry new_entries[] = {
-      {"aaa", "0005", kPutRecord},   {"e", "0002", kPutRecord},
-      {"add", "0002", kMergeRecord}, {"aab", "00001", kPutRecord},
-      {"zz", "00005", kPutRecord},   {"add", "0002", kPutRecord},
-      {"aab", "0003", kPutRecord},   {"zz", "00005", kDeleteRecord},
+      {"aaa", "0005", kPutRecord},
+      {"e", "0002", kPutRecord},
+      {"add", "0002", kMergeRecord},
+      {"aab", "00001", kPutRecord},
+      {"zz", "00005", kPutRecord},
+      {"add", "0002", kPutRecord},
+      {"aab", "0003", kPutRecord},
+      {"zz", "00005", kDeleteRecord},
   };
 
   entries_list = std::vector<Entry>(new_entries, new_entries + 8);
@@ -824,7 +779,7 @@ TEST_P(WriteBatchWithIndexTest, TestRandomIteraratorWithBase) {
 
     KVMap map;
     KVMap merged_map;
-    for (const auto& key : source_strings) {
+    for (auto key : source_strings) {
       std::string value = key + key;
       int type = rnd.Uniform(6);
       switch (type) {
@@ -1235,11 +1190,11 @@ TEST_P(WriteBatchWithIndexTest, TestGetFromBatchMerge) {
   std::string expected = "X";
 
   for (int i = 0; i < 5; i++) {
-    ASSERT_OK(batch_->Merge("x", std::to_string(i)));
-    expected = expected + "," + std::to_string(i);
+    ASSERT_OK(batch_->Merge("x", ToString(i)));
+    expected = expected + "," + ToString(i);
 
     if (i % 2 == 0) {
-      ASSERT_OK(batch_->Put("y", std::to_string(i / 2)));
+      ASSERT_OK(batch_->Put("y", ToString(i / 2)));
     }
 
     ASSERT_OK(batch_->Merge("z", "z"));
@@ -1250,7 +1205,7 @@ TEST_P(WriteBatchWithIndexTest, TestGetFromBatchMerge) {
 
     s = batch_->GetFromBatch(column_family, options_, "y", &value);
     ASSERT_OK(s);
-    ASSERT_EQ(std::to_string(i / 2), value);
+    ASSERT_EQ(ToString(i / 2), value);
 
     s = batch_->GetFromBatch(column_family, options_, "z", &value);
     ASSERT_TRUE(s.IsMergeInProgress());
@@ -1295,7 +1250,7 @@ TEST_F(WBWIOverwriteTest, TestGetFromBatchMerge2) {
   s = batch_->GetFromBatch(column_family, options_, "X", &value);
   ASSERT_TRUE(s.IsNotFound());
 
-  ASSERT_OK(batch_->Merge(column_family, "X", "ddd"));
+  batch_->Merge(column_family, "X", "ddd");
   ASSERT_OK(batch_->GetFromBatch(column_family, options_, "X", &value));
   ASSERT_EQ("ddd", value);
 }
@@ -1691,104 +1646,6 @@ TEST_P(WriteBatchWithIndexTest, TestNewIteratorWithBaseFromWbwi) {
   iter->SeekToFirst();
   ASSERT_TRUE(iter->Valid());
   ASSERT_OK(iter->status());
-}
-
-TEST_P(WriteBatchWithIndexTest, TestBoundsCheckingInDeltaIterator) {
-  Status s = OpenDB();
-  ASSERT_OK(s);
-
-  KVMap empty_map;
-
-  // writes that should be observed by BaseDeltaIterator::delta_iterator_
-  ASSERT_OK(batch_->Put("a", "aa"));
-  ASSERT_OK(batch_->Put("b", "bb"));
-  ASSERT_OK(batch_->Put("c", "cc"));
-
-  ReadOptions ro;
-
-  auto check_only_b_is_visible = [&]() {
-    std::unique_ptr<Iterator> iter(batch_->NewIteratorWithBase(
-        db_->DefaultColumnFamily(), new KVIter(&empty_map), &ro));
-
-    // move to the lower bound
-    iter->SeekToFirst();
-    ASSERT_EQ("b", iter->key());
-    iter->Prev();
-    ASSERT_FALSE(iter->Valid());
-
-    // move to the upper bound
-    iter->SeekToLast();
-    ASSERT_EQ("b", iter->key());
-    iter->Next();
-    ASSERT_FALSE(iter->Valid());
-
-    // test bounds checking in Seek and SeekForPrev
-    iter->Seek(Slice("a"));
-    ASSERT_EQ("b", iter->key());
-    iter->Seek(Slice("b"));
-    ASSERT_EQ("b", iter->key());
-    iter->Seek(Slice("c"));
-    ASSERT_FALSE(iter->Valid());
-
-    iter->SeekForPrev(Slice("c"));
-    ASSERT_EQ("b", iter->key());
-    iter->SeekForPrev(Slice("b"));
-    ASSERT_EQ("b", iter->key());
-    iter->SeekForPrev(Slice("a"));
-    ASSERT_FALSE(iter->Valid());
-
-    iter->SeekForPrev(
-        Slice("a.1"));  // a non-existent key that is smaller than "b"
-    ASSERT_FALSE(iter->Valid());
-
-    iter->Seek(Slice("b.1"));  // a non-existent key that is greater than "b"
-    ASSERT_FALSE(iter->Valid());
-
-    delete ro.iterate_lower_bound;
-    delete ro.iterate_upper_bound;
-  };
-
-  ro.iterate_lower_bound = new Slice("b");
-  ro.iterate_upper_bound = new Slice("c");
-  check_only_b_is_visible();
-
-  ro.iterate_lower_bound = new Slice("a.1");
-  ro.iterate_upper_bound = new Slice("c");
-  check_only_b_is_visible();
-
-  ro.iterate_lower_bound = new Slice("b");
-  ro.iterate_upper_bound = new Slice("b.2");
-  check_only_b_is_visible();
-}
-
-TEST_P(WriteBatchWithIndexTest,
-       TestBoundsCheckingInSeekToFirstAndLastOfDeltaIterator) {
-  Status s = OpenDB();
-  ASSERT_OK(s);
-  KVMap empty_map;
-  // writes that should be observed by BaseDeltaIterator::delta_iterator_
-  ASSERT_OK(batch_->Put("c", "cc"));
-
-  ReadOptions ro;
-  auto check_nothing_visible = [&]() {
-    std::unique_ptr<Iterator> iter(batch_->NewIteratorWithBase(
-        db_->DefaultColumnFamily(), new KVIter(&empty_map), &ro));
-    iter->SeekToFirst();
-    ASSERT_FALSE(iter->Valid());
-    iter->SeekToLast();
-    ASSERT_FALSE(iter->Valid());
-
-    delete ro.iterate_lower_bound;
-    delete ro.iterate_upper_bound;
-  };
-
-  ro.iterate_lower_bound = new Slice("b");
-  ro.iterate_upper_bound = new Slice("c");
-  check_nothing_visible();
-
-  ro.iterate_lower_bound = new Slice("d");
-  ro.iterate_upper_bound = new Slice("e");
-  check_nothing_visible();
 }
 
 TEST_P(WriteBatchWithIndexTest, SavePointTest) {
@@ -2250,8 +2107,8 @@ TEST_P(WriteBatchWithIndexTest, GetFromBatchAfterMerge) {
 
   ASSERT_OK(OpenDB());
   ASSERT_OK(db_->Put(write_opts_, "o", "aa"));
-  ASSERT_OK(batch_->Merge("o", "bb"));  // Merging bb under key "o"
-  ASSERT_OK(batch_->Merge("m", "cc"));  // Merging bc under key "m"
+  batch_->Merge("o", "bb");  // Merging bb under key "o"
+  batch_->Merge("m", "cc");  // Merging bc under key "m"
   s = batch_->GetFromBatch(options_, "m", &value);
   ASSERT_EQ(s.code(), Status::Code::kMergeInProgress);
   s = batch_->GetFromBatch(options_, "o", &value);
@@ -2372,7 +2229,7 @@ TEST_P(WriteBatchWithIndexTest, GetAfterMergeDelete) {
 TEST_F(WBWIOverwriteTest, TestBadMergeOperator) {
   class FailingMergeOperator : public MergeOperator {
    public:
-    FailingMergeOperator() = default;
+    FailingMergeOperator() {}
 
     bool FullMergeV2(const MergeOperationInput& /*merge_in*/,
                      MergeOperationOutput* /*merge_out*/) const override {
@@ -2397,582 +2254,6 @@ TEST_F(WBWIOverwriteTest, TestBadMergeOperator) {
   ASSERT_OK(batch_->GetFromBatch(column_family, options_, "b", &value));
 }
 
-TEST_P(WriteBatchWithIndexTest, ColumnFamilyWithTimestamp) {
-  ASSERT_OK(OpenDB());
-
-  ColumnFamilyHandleImplDummy cf2(2,
-                                  test::BytewiseComparatorWithU64TsWrapper());
-
-  // Sanity checks
-  ASSERT_TRUE(batch_->Put(&cf2, "key", "ts", "value").IsNotSupported());
-  ASSERT_TRUE(batch_->Put(/*column_family=*/nullptr, "key", "ts", "value")
-                  .IsInvalidArgument());
-  ASSERT_TRUE(batch_->Delete(&cf2, "key", "ts").IsNotSupported());
-  ASSERT_TRUE(batch_->Delete(/*column_family=*/nullptr, "key", "ts")
-                  .IsInvalidArgument());
-  ASSERT_TRUE(batch_->SingleDelete(&cf2, "key", "ts").IsNotSupported());
-  ASSERT_TRUE(batch_->SingleDelete(/*column_family=*/nullptr, "key", "ts")
-                  .IsInvalidArgument());
-  {
-    std::string value;
-    ASSERT_TRUE(
-        batch_->GetFromBatchAndDB(db_, ReadOptions(), &cf2, "key", &value)
-            .IsInvalidArgument());
-  }
-  {
-    constexpr size_t num_keys = 2;
-    std::array<Slice, num_keys> keys{{Slice(), Slice()}};
-    std::array<PinnableSlice, num_keys> pinnable_vals{
-        {PinnableSlice(), PinnableSlice()}};
-    std::array<Status, num_keys> statuses{{Status(), Status()}};
-    constexpr bool sorted_input = false;
-    batch_->MultiGetFromBatchAndDB(db_, ReadOptions(), &cf2, num_keys,
-                                   keys.data(), pinnable_vals.data(),
-                                   statuses.data(), sorted_input);
-    for (const auto& s : statuses) {
-      ASSERT_TRUE(s.IsInvalidArgument());
-    }
-  }
-
-  constexpr uint32_t kMaxKey = 10;
-
-  const auto ts_sz_lookup = [&cf2](uint32_t id) {
-    if (cf2.GetID() == id) {
-      return sizeof(uint64_t);
-    } else {
-      return std::numeric_limits<size_t>::max();
-    }
-  };
-
-  // Put keys
-  for (uint32_t i = 0; i < kMaxKey; ++i) {
-    std::string key;
-    PutFixed32(&key, i);
-    Status s = batch_->Put(&cf2, key, "value" + std::to_string(i));
-    ASSERT_OK(s);
-  }
-
-  WriteBatch* wb = batch_->GetWriteBatch();
-  assert(wb);
-  ASSERT_OK(
-      wb->UpdateTimestamps(std::string(sizeof(uint64_t), '\0'), ts_sz_lookup));
-
-  // Point lookup
-  for (uint32_t i = 0; i < kMaxKey; ++i) {
-    std::string value;
-    std::string key;
-    PutFixed32(&key, i);
-    Status s = batch_->GetFromBatch(&cf2, Options(), key, &value);
-    ASSERT_OK(s);
-    ASSERT_EQ("value" + std::to_string(i), value);
-  }
-
-  // Iterator
-  {
-    std::unique_ptr<WBWIIterator> it(batch_->NewIterator(&cf2));
-    uint32_t start = 0;
-    for (it->SeekToFirst(); it->Valid(); it->Next(), ++start) {
-      std::string key;
-      PutFixed32(&key, start);
-      ASSERT_OK(it->status());
-      ASSERT_EQ(key, it->Entry().key);
-      ASSERT_EQ("value" + std::to_string(start), it->Entry().value);
-      ASSERT_EQ(WriteType::kPutRecord, it->Entry().type);
-    }
-    ASSERT_EQ(kMaxKey, start);
-  }
-
-  // Delete the keys with Delete() or SingleDelete()
-  for (uint32_t i = 0; i < kMaxKey; ++i) {
-    std::string key;
-    PutFixed32(&key, i);
-    Status s;
-    if (0 == (i % 2)) {
-      s = batch_->Delete(&cf2, key);
-    } else {
-      s = batch_->SingleDelete(&cf2, key);
-    }
-    ASSERT_OK(s);
-  }
-
-  ASSERT_OK(wb->UpdateTimestamps(std::string(sizeof(uint64_t), '\xfe'),
-                                 ts_sz_lookup));
-
-  for (uint32_t i = 0; i < kMaxKey; ++i) {
-    std::string value;
-    std::string key;
-    PutFixed32(&key, i);
-    Status s = batch_->GetFromBatch(&cf2, Options(), key, &value);
-    ASSERT_TRUE(s.IsNotFound());
-  }
-
-  // Iterator
-  {
-    const bool overwrite = GetParam();
-    std::unique_ptr<WBWIIterator> it(batch_->NewIterator(&cf2));
-    uint32_t start = 0;
-    for (it->SeekToFirst(); it->Valid(); it->Next(), ++start) {
-      std::string key;
-      PutFixed32(&key, start);
-      ASSERT_EQ(key, it->Entry().key);
-      if (!overwrite) {
-        ASSERT_EQ(WriteType::kPutRecord, it->Entry().type);
-        it->Next();
-        ASSERT_TRUE(it->Valid());
-      }
-      if (0 == (start % 2)) {
-        ASSERT_EQ(WriteType::kDeleteRecord, it->Entry().type);
-      } else {
-        ASSERT_EQ(WriteType::kSingleDeleteRecord, it->Entry().type);
-      }
-    }
-  }
-}
-
-TEST_P(WriteBatchWithIndexTest, IndexNoTs) {
-  const Comparator* const ucmp = test::BytewiseComparatorWithU64TsWrapper();
-  ColumnFamilyHandleImplDummy cf(1, ucmp);
-  WriteBatchWithIndex wbwi;
-  ASSERT_OK(wbwi.Put(&cf, "a", "a0"));
-  ASSERT_OK(wbwi.Put(&cf, "a", "a1"));
-  {
-    std::string ts;
-    PutFixed64(&ts, 10000);
-    ASSERT_OK(wbwi.GetWriteBatch()->UpdateTimestamps(
-        ts, [](uint32_t cf_id) { return cf_id == 1 ? 8 : 0; }));
-  }
-  {
-    std::string value;
-    Status s = wbwi.GetFromBatch(&cf, options_, "a", &value);
-    ASSERT_OK(s);
-    ASSERT_EQ("a1", value);
-  }
-}
-
-TEST_P(WriteBatchWithIndexTest, WideColumnsBatchOnly) {
-  // Tests for the case when there's no need to consult the underlying DB during
-  // queries, i.e. when all queries can be answered using the write batch only.
-
-  ASSERT_OK(OpenDB());
-
-  constexpr size_t num_keys = 6;
-
-  constexpr char delete_key[] = "d";
-  constexpr char delete_merge_key[] = "dm";
-  constexpr char put_entity_key[] = "e";
-  constexpr char put_entity_merge_key[] = "em";
-  constexpr char put_key[] = "p";
-  constexpr char put_merge_key[] = "pm";
-
-  AddToBatch(db_->DefaultColumnFamily(), delete_key);
-  AddToBatch(db_->DefaultColumnFamily(), delete_merge_key);
-  AddToBatch(db_->DefaultColumnFamily(), put_entity_key);
-  AddToBatch(db_->DefaultColumnFamily(), put_entity_merge_key);
-  AddToBatch(db_->DefaultColumnFamily(), put_key);
-  AddToBatch(db_->DefaultColumnFamily(), put_merge_key);
-
-  std::array<Slice, num_keys> keys{{delete_key, delete_merge_key,
-                                    put_entity_key, put_entity_merge_key,
-                                    put_key, put_merge_key}};
-
-  std::array<WideColumns, num_keys> expected{
-      {{},
-       {{kDefaultWideColumnName, "dm1"}},
-       {{kDefaultWideColumnName, "e0"}, {"e", "0"}},
-       {{kDefaultWideColumnName, "em0,em1"}, {"em", "0"}},
-       {{kDefaultWideColumnName, "p0"}},
-       {{kDefaultWideColumnName, "pm0,pm1"}}}};
-
-  // GetFromBatchAndDB
-  {
-    PinnableSlice value;
-    ASSERT_TRUE(batch_->GetFromBatchAndDB(db_, read_opts_, delete_key, &value)
-                    .IsNotFound());
-  }
-
-  for (size_t i = 1; i < num_keys; ++i) {
-    PinnableSlice value;
-    ASSERT_OK(batch_->GetFromBatchAndDB(db_, read_opts_, keys[i], &value));
-    ASSERT_EQ(value, expected[i].front().value());
-  }
-
-  // MultiGetFromBatchAndDB
-  {
-    std::array<PinnableSlice, num_keys> values;
-    std::array<Status, num_keys> statuses;
-    constexpr bool sorted_input = false;
-
-    batch_->MultiGetFromBatchAndDB(db_, read_opts_, db_->DefaultColumnFamily(),
-                                   num_keys, keys.data(), values.data(),
-                                   statuses.data(), sorted_input);
-
-    ASSERT_TRUE(statuses[0].IsNotFound());
-
-    for (size_t i = 1; i < num_keys; ++i) {
-      ASSERT_OK(statuses[i]);
-      ASSERT_EQ(values[i], expected[i].front().value());
-    }
-  }
-
-  // GetEntityFromBatchAndDB
-  {
-    PinnableWideColumns columns;
-    ASSERT_TRUE(batch_
-                    ->GetEntityFromBatchAndDB(db_, read_opts_,
-                                              db_->DefaultColumnFamily(),
-                                              delete_key, &columns)
-                    .IsNotFound());
-  }
-
-  for (size_t i = 1; i < num_keys; ++i) {
-    PinnableWideColumns columns;
-    ASSERT_OK(batch_->GetEntityFromBatchAndDB(
-        db_, read_opts_, db_->DefaultColumnFamily(), keys[i], &columns));
-    ASSERT_EQ(columns.columns(), expected[i]);
-  }
-
-  // MultiGetEntityFromBatchAndDB
-  {
-    std::array<PinnableWideColumns, num_keys> results;
-    std::array<Status, num_keys> statuses;
-    constexpr bool sorted_input = false;
-
-    batch_->MultiGetEntityFromBatchAndDB(
-        db_, read_opts_, db_->DefaultColumnFamily(), num_keys, keys.data(),
-        results.data(), statuses.data(), sorted_input);
-
-    ASSERT_TRUE(statuses[0].IsNotFound());
-
-    for (size_t i = 1; i < num_keys; ++i) {
-      ASSERT_OK(statuses[i]);
-      ASSERT_EQ(results[i].columns(), expected[i]);
-    }
-  }
-
-  // Iterator
-  std::unique_ptr<Iterator> iter(batch_->NewIteratorWithBase(
-      db_->DefaultColumnFamily(), db_->NewIterator(read_opts_), &read_opts_));
-
-  iter->SeekToFirst();
-
-  for (size_t i = 1; i < num_keys; ++i) {
-    ASSERT_TRUE(iter->Valid());
-    ASSERT_EQ(iter->key(), keys[i]);
-    ASSERT_EQ(iter->value(), expected[i].front().value());
-    ASSERT_EQ(iter->columns(), expected[i]);
-    iter->Next();
-  }
-
-  ASSERT_FALSE(iter->Valid());
-
-  iter->SeekToLast();
-
-  for (size_t i = num_keys - 1; i > 0; --i) {
-    ASSERT_TRUE(iter->Valid());
-    ASSERT_EQ(iter->key(), keys[i]);
-    ASSERT_EQ(iter->value(), expected[i].front().value());
-    ASSERT_EQ(iter->columns(), expected[i]);
-    iter->Prev();
-  }
-
-  ASSERT_FALSE(iter->Valid());
-}
-
-TEST_P(WriteBatchWithIndexTest, WideColumnsBatchAndDB) {
-  // Tests for the case when queries require consulting both the write batch and
-  // the underlying DB, either because of merges or because the write batch
-  // doesn't contain the key.
-
-  ASSERT_OK(OpenDB());
-
-  constexpr size_t num_keys = 6;
-
-  // Note: for the "merge" keys, we'll have a merge operation in the write batch
-  // and the base value (Put/PutEntity/Delete) in the DB. For the "no-merge"
-  // keys, we'll have nothing in the write batch and a standalone
-  // Put/PutEntity/Delete in the DB.
-  constexpr char merge_a_key[] = "ma";
-  constexpr char merge_b_key[] = "mb";
-  constexpr char merge_c_key[] = "mc";
-  constexpr char no_merge_a_key[] = "na";
-  constexpr char no_merge_b_key[] = "nb";
-  constexpr char no_merge_c_key[] = "nc";
-
-  constexpr char merge_a_value[] = "mao";
-  const WideColumns merge_b_columns{{kDefaultWideColumnName, "mbo"},
-                                    {"mb", "o"}};
-  constexpr char no_merge_a_value[] = "nao";
-  const WideColumns no_merge_b_columns{{kDefaultWideColumnName, "nbo"},
-                                       {"nb", "o"}};
-
-  ASSERT_OK(db_->Put(write_opts_, db_->DefaultColumnFamily(), merge_a_key,
-                     merge_a_value));
-  ASSERT_OK(db_->PutEntity(write_opts_, db_->DefaultColumnFamily(), merge_b_key,
-                           merge_b_columns));
-  ASSERT_OK(db_->Delete(write_opts_, db_->DefaultColumnFamily(), merge_c_key));
-  ASSERT_OK(db_->Put(write_opts_, db_->DefaultColumnFamily(), no_merge_a_key,
-                     no_merge_a_value));
-  ASSERT_OK(db_->PutEntity(write_opts_, db_->DefaultColumnFamily(),
-                           no_merge_b_key, no_merge_b_columns));
-  ASSERT_OK(
-      db_->Delete(write_opts_, db_->DefaultColumnFamily(), no_merge_c_key));
-
-  AddToBatch(db_->DefaultColumnFamily(), merge_a_key);
-  AddToBatch(db_->DefaultColumnFamily(), merge_b_key);
-  AddToBatch(db_->DefaultColumnFamily(), merge_c_key);
-
-  std::array<Slice, num_keys> keys{{merge_a_key, merge_b_key, merge_c_key,
-                                    no_merge_a_key, no_merge_b_key,
-                                    no_merge_c_key}};
-
-  std::array<WideColumns, num_keys> expected{
-      {{{kDefaultWideColumnName, "mao,ma0"}},
-       {{kDefaultWideColumnName, "mbo,mb0"}, {"mb", "o"}},
-       {{kDefaultWideColumnName, "mc0"}},
-       {{kDefaultWideColumnName, "nao"}},
-       {{kDefaultWideColumnName, "nbo"}, {"nb", "o"}},
-       {}}};
-
-  // GetFromBatchAndDB
-  for (size_t i = 0; i < num_keys - 1; ++i) {
-    PinnableSlice value;
-    ASSERT_OK(batch_->GetFromBatchAndDB(db_, read_opts_, keys[i], &value));
-    ASSERT_EQ(value, expected[i].front().value());
-  }
-
-  {
-    PinnableSlice value;
-    ASSERT_TRUE(
-        batch_->GetFromBatchAndDB(db_, read_opts_, no_merge_c_key, &value)
-            .IsNotFound());
-  }
-
-  // MultiGetFromBatchAndDB
-  {
-    std::array<PinnableSlice, num_keys> values;
-    std::array<Status, num_keys> statuses;
-    constexpr bool sorted_input = false;
-
-    batch_->MultiGetFromBatchAndDB(db_, read_opts_, db_->DefaultColumnFamily(),
-                                   num_keys, keys.data(), values.data(),
-                                   statuses.data(), sorted_input);
-
-    for (size_t i = 0; i < num_keys - 1; ++i) {
-      ASSERT_OK(statuses[i]);
-      ASSERT_EQ(values[i], expected[i].front().value());
-    }
-
-    ASSERT_TRUE(statuses[num_keys - 1].IsNotFound());
-  }
-
-  // GetEntityFromBatchAndDB
-  for (size_t i = 0; i < num_keys - 1; ++i) {
-    PinnableWideColumns columns;
-    ASSERT_OK(batch_->GetEntityFromBatchAndDB(
-        db_, read_opts_, db_->DefaultColumnFamily(), keys[i], &columns));
-    ASSERT_EQ(columns.columns(), expected[i]);
-  }
-
-  {
-    PinnableWideColumns columns;
-    ASSERT_TRUE(batch_
-                    ->GetEntityFromBatchAndDB(db_, read_opts_,
-                                              db_->DefaultColumnFamily(),
-                                              no_merge_c_key, &columns)
-                    .IsNotFound());
-  }
-
-  // MultiGetEntityFromBatchAndDB
-  {
-    std::array<PinnableWideColumns, num_keys> results;
-    std::array<Status, num_keys> statuses;
-    constexpr bool sorted_input = false;
-
-    batch_->MultiGetEntityFromBatchAndDB(
-        db_, read_opts_, db_->DefaultColumnFamily(), num_keys, keys.data(),
-        results.data(), statuses.data(), sorted_input);
-
-    for (size_t i = 0; i < num_keys - 1; ++i) {
-      ASSERT_OK(statuses[i]);
-      ASSERT_EQ(results[i].columns(), expected[i]);
-    }
-
-    ASSERT_TRUE(statuses[num_keys - 1].IsNotFound());
-  }
-
-  // Iterator
-  std::unique_ptr<Iterator> iter(batch_->NewIteratorWithBase(
-      db_->DefaultColumnFamily(), db_->NewIterator(read_opts_), &read_opts_));
-
-  iter->SeekToFirst();
-
-  for (size_t i = 0; i < num_keys - 1; ++i) {
-    ASSERT_TRUE(iter->Valid());
-    ASSERT_EQ(iter->key(), keys[i]);
-    ASSERT_EQ(iter->value(), expected[i].front().value());
-    ASSERT_EQ(iter->columns(), expected[i]);
-    iter->Next();
-  }
-
-  ASSERT_FALSE(iter->Valid());
-
-  iter->SeekToLast();
-
-  for (size_t i = 0; i < num_keys - 1; ++i) {
-    const size_t idx = num_keys - 2 - i;
-
-    ASSERT_TRUE(iter->Valid());
-    ASSERT_EQ(iter->key(), keys[idx]);
-    ASSERT_EQ(iter->value(), expected[idx].front().value());
-    ASSERT_EQ(iter->columns(), expected[idx]);
-    iter->Prev();
-  }
-
-  ASSERT_FALSE(iter->Valid());
-}
-
-TEST_P(WriteBatchWithIndexTest, GetEntityFromBatch) {
-  ASSERT_OK(OpenDB());
-
-  // No base value, no merges => NotFound
-  {
-    constexpr char key[] = "a";
-
-    PinnableWideColumns result;
-    ASSERT_TRUE(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result)
-            .IsNotFound());
-  }
-
-  // No base value, with merges => MergeInProgress
-  {
-    constexpr char key[] = "b";
-    constexpr char merge_op1[] = "bv1";
-    constexpr char merge_op2[] = "bv2";
-
-    ASSERT_OK(batch_->Merge("b", merge_op1));
-    ASSERT_OK(batch_->Merge("b", merge_op2));
-
-    PinnableWideColumns result;
-    ASSERT_TRUE(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result)
-            .IsMergeInProgress());
-  }
-
-  // Plain value, no merges => Found
-  {
-    constexpr char key[] = "c";
-    constexpr char value[] = "cv";
-
-    ASSERT_OK(batch_->Put(key, value));
-
-    PinnableWideColumns result;
-    ASSERT_OK(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result));
-
-    const WideColumns expected{{kDefaultWideColumnName, value}};
-    ASSERT_EQ(result.columns(), expected);
-  }
-
-  // Wide-column value, no merges => Found
-  {
-    constexpr char key[] = "d";
-    const WideColumns columns{
-        {kDefaultWideColumnName, "d0v"}, {"1", "d1v"}, {"2", "d2v"}};
-
-    ASSERT_OK(batch_->PutEntity(db_->DefaultColumnFamily(), key, columns));
-
-    PinnableWideColumns result;
-    ASSERT_OK(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result));
-
-    ASSERT_EQ(result.columns(), columns);
-  }
-
-  // Plain value, with merges => Found
-  {
-    constexpr char key[] = "e";
-    constexpr char base_value[] = "ev0";
-    constexpr char merge_op1[] = "ev1";
-    constexpr char merge_op2[] = "ev2";
-
-    ASSERT_OK(batch_->Put(key, base_value));
-    ASSERT_OK(batch_->Merge(key, merge_op1));
-    ASSERT_OK(batch_->Merge(key, merge_op2));
-
-    PinnableWideColumns result;
-    ASSERT_OK(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result));
-
-    const WideColumns expected{{kDefaultWideColumnName, "ev0,ev1,ev2"}};
-    ASSERT_EQ(result.columns(), expected);
-  }
-
-  // Wide-column value, with merges => Found
-  {
-    constexpr char key[] = "f";
-    const WideColumns base_columns{
-        {kDefaultWideColumnName, "f0v0"}, {"1", "f1v"}, {"2", "f2v"}};
-    constexpr char merge_op1[] = "f0v1";
-    constexpr char merge_op2[] = "f0v2";
-
-    ASSERT_OK(batch_->PutEntity(db_->DefaultColumnFamily(), key, base_columns));
-    ASSERT_OK(batch_->Merge(key, merge_op1));
-    ASSERT_OK(batch_->Merge(key, merge_op2));
-
-    PinnableWideColumns result;
-    ASSERT_OK(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result));
-
-    const WideColumns expected{{kDefaultWideColumnName, "f0v0,f0v1,f0v2"},
-                               base_columns[1],
-                               base_columns[2]};
-    ASSERT_EQ(result.columns(), expected);
-  }
-
-  // Delete, no merges => NotFound
-  {
-    constexpr char key[] = "g";
-
-    ASSERT_OK(batch_->Delete(key));
-
-    PinnableWideColumns result;
-    ASSERT_TRUE(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result)
-            .IsNotFound());
-  }
-
-  // Delete, with merges => Found
-  {
-    constexpr char key[] = "h";
-    constexpr char merge_op1[] = "hv1";
-    constexpr char merge_op2[] = "hv2";
-
-    ASSERT_OK(batch_->Delete(key));
-    ASSERT_OK(batch_->Merge(key, merge_op1));
-    ASSERT_OK(batch_->Merge(key, merge_op2));
-
-    PinnableWideColumns result;
-    ASSERT_OK(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, &result));
-
-    const WideColumns expected{{kDefaultWideColumnName, "hv1,hv2"}};
-    ASSERT_EQ(result.columns(), expected);
-  }
-
-  // Validate parameters
-  {
-    constexpr char key[] = "foo";
-    PinnableWideColumns result;
-
-    ASSERT_TRUE(
-        batch_->GetEntityFromBatch(nullptr, key, &result).IsInvalidArgument());
-    ASSERT_TRUE(
-        batch_->GetEntityFromBatch(db_->DefaultColumnFamily(), key, nullptr)
-            .IsInvalidArgument());
-  }
-}
-
 INSTANTIATE_TEST_CASE_P(WBWI, WriteBatchWithIndexTest, testing::Bool());
 }  // namespace ROCKSDB_NAMESPACE
 
@@ -2981,3 +2262,13 @@ int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
+#else
+#include <stdio.h>
+
+int main() {
+  fprintf(stderr, "SKIPPED\n");
+  return 0;
+}
+
+#endif  // !ROCKSDB_LITE

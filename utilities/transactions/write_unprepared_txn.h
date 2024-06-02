@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <set>
 
@@ -74,7 +75,7 @@ class WriteUnpreparedTxnReadCallback : public ReadCallback {
     assert(valid_checked_ || backed_by_snapshot_ == kBackedByDBSnapshot);
   }
 
-  bool IsVisibleFullCheck(SequenceNumber seq) override;
+  virtual bool IsVisibleFullCheck(SequenceNumber seq) override;
 
   inline bool valid() {
     valid_checked_ = true;
@@ -117,27 +118,32 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
   virtual ~WriteUnpreparedTxn();
 
   using TransactionBaseImpl::Put;
-  Status Put(ColumnFamilyHandle* column_family, const Slice& key,
-             const Slice& value, const bool assume_tracked = false) override;
-  Status Put(ColumnFamilyHandle* column_family, const SliceParts& key,
-             const SliceParts& value,
-             const bool assume_tracked = false) override;
+  virtual Status Put(ColumnFamilyHandle* column_family, const Slice& key,
+                     const Slice& value,
+                     const bool assume_tracked = false) override;
+  virtual Status Put(ColumnFamilyHandle* column_family, const SliceParts& key,
+                     const SliceParts& value,
+                     const bool assume_tracked = false) override;
 
   using TransactionBaseImpl::Merge;
-  Status Merge(ColumnFamilyHandle* column_family, const Slice& key,
-               const Slice& value, const bool assume_tracked = false) override;
+  virtual Status Merge(ColumnFamilyHandle* column_family, const Slice& key,
+                       const Slice& value,
+                       const bool assume_tracked = false) override;
 
   using TransactionBaseImpl::Delete;
-  Status Delete(ColumnFamilyHandle* column_family, const Slice& key,
-                const bool assume_tracked = false) override;
-  Status Delete(ColumnFamilyHandle* column_family, const SliceParts& key,
-                const bool assume_tracked = false) override;
+  virtual Status Delete(ColumnFamilyHandle* column_family, const Slice& key,
+                        const bool assume_tracked = false) override;
+  virtual Status Delete(ColumnFamilyHandle* column_family,
+                        const SliceParts& key,
+                        const bool assume_tracked = false) override;
 
   using TransactionBaseImpl::SingleDelete;
-  Status SingleDelete(ColumnFamilyHandle* column_family, const Slice& key,
-                      const bool assume_tracked = false) override;
-  Status SingleDelete(ColumnFamilyHandle* column_family, const SliceParts& key,
-                      const bool assume_tracked = false) override;
+  virtual Status SingleDelete(ColumnFamilyHandle* column_family,
+                              const Slice& key,
+                              const bool assume_tracked = false) override;
+  virtual Status SingleDelete(ColumnFamilyHandle* column_family,
+                              const SliceParts& key,
+                              const bool assume_tracked = false) override;
 
   // In WriteUnprepared, untracked writes will break snapshot validation logic.
   // Snapshot validation will only check the largest sequence number of a key to
@@ -148,9 +154,11 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
   // validate all values larger than snap_seq. Otherwise, we should return
   // Status::NotSupported for untracked writes.
 
-  Status RebuildFromWriteBatch(WriteBatch*) override;
+  virtual Status RebuildFromWriteBatch(WriteBatch*) override;
 
-  uint64_t GetLastLogNumber() const override { return last_log_number_; }
+  virtual uint64_t GetLastLogNumber() const override {
+    return last_log_number_;
+  }
 
   void RemoveActiveIterator(Iterator* iter) {
     active_iterators_.erase(
@@ -177,23 +185,25 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
   // Get and GetIterator needs to be overridden so that a ReadCallback to
   // handle read-your-own-write is used.
   using Transaction::Get;
-  Status Get(const ReadOptions& _read_options,
-             ColumnFamilyHandle* column_family, const Slice& key,
-             PinnableSlice* value) override;
+  virtual Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     PinnableSlice* value) override;
 
   using Transaction::MultiGet;
-  void MultiGet(const ReadOptions& _read_options,
-                ColumnFamilyHandle* column_family, const size_t num_keys,
-                const Slice* keys, PinnableSlice* values, Status* statuses,
-                const bool sorted_input = false) override;
+  virtual void MultiGet(const ReadOptions& options,
+                        ColumnFamilyHandle* column_family,
+                        const size_t num_keys, const Slice* keys,
+                        PinnableSlice* values, Status* statuses,
+                        const bool sorted_input = false) override;
 
   using Transaction::GetIterator;
-  Iterator* GetIterator(const ReadOptions& options) override;
-  Iterator* GetIterator(const ReadOptions& options,
-                        ColumnFamilyHandle* column_family) override;
+  virtual Iterator* GetIterator(const ReadOptions& options) override;
+  virtual Iterator* GetIterator(const ReadOptions& options,
+                                ColumnFamilyHandle* column_family) override;
 
-  Status ValidateSnapshot(ColumnFamilyHandle* column_family, const Slice& key,
-                          SequenceNumber* tracked_at_seq) override;
+  virtual Status ValidateSnapshot(ColumnFamilyHandle* column_family,
+                                  const Slice& key,
+                                  SequenceNumber* tracked_at_seq) override;
 
  private:
   friend class WriteUnpreparedTransactionTest_ReadYourOwnWrite_Test;
@@ -202,10 +212,6 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
   friend class WriteUnpreparedTxnDB;
 
   const std::map<SequenceNumber, size_t>& GetUnpreparedSequenceNumbers();
-  using Transaction::GetImpl;
-  Status GetImpl(const ReadOptions& options, ColumnFamilyHandle* column_family,
-                 const Slice& key, PinnableSlice* value) override;
-
   Status WriteRollbackKeys(const LockTracker& tracked_keys,
                            WriteBatchWithIndex* rollback_batch,
                            ReadCallback* callback, const ReadOptions& roptions);
@@ -272,7 +278,7 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
 
     SavePoint(const std::map<SequenceNumber, size_t>& seqs,
               ManagedSnapshot* snapshot)
-        : unprep_seqs_(seqs), snapshot_(snapshot){}
+        : unprep_seqs_(seqs), snapshot_(snapshot){};
   };
 
   // We have 3 data structures holding savepoint information:
@@ -331,3 +337,5 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
 };
 
 }  // namespace ROCKSDB_NAMESPACE
+
+#endif  // ROCKSDB_LITE

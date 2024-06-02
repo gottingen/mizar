@@ -6,7 +6,7 @@ than release mode.
 
 RocksDB's library should be able to compile without any dependency installed,
 although we recommend installing some compression libraries (see below).
-We do depend on newer gcc/clang with C++17 support (GCC >= 7, Clang >= 5).
+We do depend on newer gcc/clang with C++11 support.
 
 There are few options when compiling RocksDB:
 
@@ -17,18 +17,15 @@ There are few options when compiling RocksDB:
 * `make check` will compile and run all the unit tests. `make check` will compile RocksDB in debug mode.
 
 * `make all` will compile our static library, and all our tools and unit tests. Our tools
-depend on gflags 2.2.0 or newer. You will need to have gflags installed to run `make all`. This will compile RocksDB in debug mode. Don't
+depend on gflags. You will need to have gflags installed to run `make all`. This will compile RocksDB in debug mode. Don't
 use binaries compiled by `make all` in production.
 
-* By default the binary we produce is optimized for the CPU you're compiling on
-(`-march=native` or the equivalent). To build a binary compatible with the most
-general architecture supported by your CPU and compiler, set `PORTABLE=1` for
-the build, but performance will suffer as many operations benefit from newer
-and wider instructions. In addition to `PORTABLE=0` (default) and `PORTABLE=1`,
-it can be set to an architecture name recognized by your compiler. For example,
-on 64-bit x86, a reasonable compromise is `PORTABLE=haswell` which supports
-many or most of the available optimizations while still being compatible with
-most processors made since roughly 2013.
+* By default the binary we produce is optimized for the platform you're compiling on
+(`-march=native` or the equivalent). SSE4.2 will thus be enabled automatically if your
+CPU supports it. To print a warning if your CPU does not support SSE4.2, build with
+`USE_SSE=1 make static_lib` or, if using CMake, `cmake -DFORCE_SSE42=ON`. If you want
+to build a portable binary, add `PORTABLE=1` before your make commands, like this:
+`PORTABLE=1 make static_lib`.
 
 ## Dependencies
 
@@ -50,17 +47,10 @@ most processors made since roughly 2013.
 
 * If you wish to build the RocksJava static target, then cmake is required for building Snappy.
 
-* If you wish to run microbench (e.g, `make microbench`, `make ribbon_bench` or `cmake -DWITH_BENCHMARK=1`), Google benchmark >= 1.6.0 is needed.
-* You can do the following to install Google benchmark. These commands are copied from `./build_tools/ubuntu20_image/Dockerfile`:
-
-`$ git clone --depth 1 --branch v1.7.0 https://github.com/google/benchmark.git ~/benchmark`
-
-`$ cd ~/benchmark && mkdir build && cd build && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_GTEST_TESTS=0 && ninja && ninja install`
-
 ## Supported platforms
 
 * **Linux - Ubuntu**
-    * Upgrade your gcc to version at least 7 to get C++17 support.
+    * Upgrade your gcc to version at least 4.8 to get C++11 support.
     * Install gflags. First, try: `sudo apt-get install libgflags-dev`
       If this doesn't work and you're using Ubuntu, here's a nice tutorial:
       (http://askubuntu.com/questions/312173/installing-gflags-12-04)
@@ -72,12 +62,13 @@ most processors made since roughly 2013.
     * Install zstandard: `sudo apt-get install libzstd-dev`.
 
 * **Linux - CentOS / RHEL**
-    * Upgrade your gcc to version at least 7 to get C++17 support
+    * Upgrade your gcc to version at least 4.8 to get C++11 support:
+      `yum install gcc48-c++`
     * Install gflags:
 
               git clone https://github.com/gflags/gflags.git
               cd gflags
-              git checkout v2.2.0
+              git checkout v2.0
               ./configure && make && sudo make install
 
       **Notice**: Once installed, please add the include path for gflags to your `CPATH` environment variable and the
@@ -122,10 +113,11 @@ most processors made since roughly 2013.
               make && sudo make install
 
 * **OS X**:
-    * Install latest C++ compiler that supports C++ 17:
+    * Install latest C++ compiler that supports C++ 11:
         * Update XCode:  run `xcode-select --install` (or install it from XCode App's settting).
         * Install via [homebrew](http://brew.sh/).
             * If you're first time developer in MacOS, you still need to run: `xcode-select --install` in your command line.
+            * run `brew tap homebrew/versions; brew install gcc48 --use-llvm` to install gcc 4.8 (or higher).
     * run `brew install rocksdb`
 
 * **FreeBSD** (11.01):
@@ -168,39 +160,35 @@ most processors made since roughly 2013.
 
     * Install the dependencies for RocksDB:
 
-      `pkg_add gmake gflags snappy bzip2 lz4 zstd git bash findutils gnuwatch`
+        pkg_add gmake gflags snappy bzip2 lz4 zstd git jdk bash findutils gnuwatch 
 
     * Build RocksDB from source:
 
-        ```bash
         cd ~
         git clone https://github.com/facebook/rocksdb.git
         cd rocksdb
         gmake static_lib
-        ```
 
     * Build RocksJava from source (optional):
-        * In OpenBSD, JDK depends on XWindows system, so please check that you installed OpenBSD with `xbase` package.
-        * Install dependencies : `pkg_add -v jdk%1.8`
-        ```bash
+
         cd rocksdb
         export JAVA_HOME=/usr/local/jdk-1.8.0
         export PATH=$PATH:/usr/local/jdk-1.8.0/bin
-        gmake rocksdbjava SHA256_CMD='sha256 -q'
-        ```
+        gmake rocksdbjava
 
 * **iOS**:
-  * Run: `TARGET_OS=IOS make static_lib`. When building the project which uses rocksdb iOS library, make sure to define an important pre-processing macros: `IOS_CROSS_COMPILE`.
+  * Run: `TARGET_OS=IOS make static_lib`. When building the project which uses rocksdb iOS library, make sure to define two important pre-processing macros: `ROCKSDB_LITE` and `IOS_CROSS_COMPILE`.
 
-* **Windows** (Visual Studio 2017 to up):
+* **Windows**:
+  * For building with MS Visual Studio 13 you will need Update 4 installed.
   * Read and follow the instructions at CMakeLists.txt
-  * Or install via [vcpkg](https://github.com/microsoft/vcpkg)
+  * Or install via [vcpkg](https://github.com/microsoft/vcpkg) 
        * run `vcpkg install rocksdb:x64-windows`
 
 * **AIX 6.1**
     * Install AIX Toolbox rpms with gcc
     * Use these environment variables:
-
+  
              export PORTABLE=1
              export CC=gcc
              export AR="ar -X64"
@@ -211,9 +199,9 @@ most processors made since roughly 2013.
              export LIBPATH=/opt/freeware/lib
              export JAVA_HOME=/usr/java8_64
              export PATH=/opt/freeware/bin:$PATH
-
+  
 * **Solaris Sparc**
-    * Install GCC 7 and higher.
+    * Install GCC 4.8.2 and higher.
     * Use these environment variables:
 
              export CC=gcc
@@ -222,3 +210,4 @@ most processors made since roughly 2013.
              export EXTRA_LDFLAGS=-m64
              export PORTABLE=1
              export PLATFORM_LDFLAGS="-static-libstdc++ -static-libgcc"
+

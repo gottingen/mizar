@@ -12,7 +12,6 @@
 #include <functional>
 #include <limits>
 #include <vector>
-
 #include "memory/arena.h"
 #include "port/port.h"
 #include "util/autovector.h"
@@ -59,7 +58,10 @@ class FileIndexer {
   void UpdateIndex(Arena* arena, const size_t num_levels,
                    std::vector<FileMetaData*>* const files);
 
-  enum { kLevelMaxIndex = std::numeric_limits<int32_t>::max() };
+  enum {
+    // MSVC version 1800 still does not have constexpr for ::max()
+    kLevelMaxIndex = ROCKSDB_NAMESPACE::port::kMaxInt32
+  };
 
  private:
   size_t num_levels_;
@@ -67,7 +69,7 @@ class FileIndexer {
 
   struct IndexUnit {
     IndexUnit()
-        : smallest_lb(0), largest_lb(0), smallest_rb(-1), largest_rb(-1) {}
+      : smallest_lb(0), largest_lb(0), smallest_rb(-1), largest_rb(-1) {}
     // During file search, a key is compared against smallest and largest
     // from a FileMetaData. It can have 3 possible outcomes:
     // (1) key is smaller than smallest, implying it is also smaller than

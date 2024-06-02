@@ -7,7 +7,7 @@ package org.rocksdb;
 
 /**
  * The class that controls the get behavior.
- * <p>
+ *
  * Note that dispose() must be called before an Options instance
  * become out-of-scope to release the allocated memory in c++.
  */
@@ -27,13 +27,13 @@ public class ReadOptions extends RocksObject {
 
   /**
    * Copy constructor.
-   * <p>
+   *
    * NOTE: This does a shallow copy, which means snapshot, iterate_upper_bound
    * and other pointers will be cloned!
    *
    * @param other The ReadOptions to copy.
    */
-  public ReadOptions(final ReadOptions other) {
+  public ReadOptions(ReadOptions other) {
     super(copyReadOptions(other.nativeHandle_));
     this.iterateLowerBoundSlice_ = other.iterateLowerBoundSlice_;
     this.iterateUpperBoundSlice_ = other.iterateUpperBoundSlice_;
@@ -106,7 +106,7 @@ public class ReadOptions extends RocksObject {
    */
   public Snapshot snapshot() {
     assert(isOwningHandle());
-    final long snapshotHandle = snapshot(nativeHandle_);
+    long snapshotHandle = snapshot(nativeHandle_);
     if (snapshotHandle != 0) {
       return new Snapshot(snapshotHandle);
     }
@@ -128,7 +128,7 @@ public class ReadOptions extends RocksObject {
     if (snapshot != null) {
       setSnapshot(nativeHandle_, snapshot.nativeHandle_);
     } else {
-      setSnapshot(nativeHandle_, 0L);
+      setSnapshot(nativeHandle_, 0l);
     }
     return this;
   }
@@ -163,6 +163,9 @@ public class ReadOptions extends RocksObject {
    * added data) and is optimized for sequential reads. It will return records
    * that were inserted into the database after the creation of the iterator.
    * Default: false
+   *
+   * Not supported in {@code ROCKSDB_LITE} mode!
+   *
    * @return true if tailing iterator is enabled.
    */
   public boolean tailing() {
@@ -176,6 +179,7 @@ public class ReadOptions extends RocksObject {
    * added data) and is optimized for sequential reads. It will return records
    * that were inserted into the database after the creation of the iterator.
    * Default: false
+   * Not supported in ROCKSDB_LITE mode!
    *
    * @param tailing if true, then tailing iterator will be enabled.
    * @return the reference to the current ReadOptions.
@@ -256,7 +260,7 @@ public class ReadOptions extends RocksObject {
    * Enforce that the iterator only iterates over the same prefix as the seek.
    * This option is effective only for prefix seeks, i.e. prefix_extractor is
    * non-null for the column family and {@link #totalOrderSeek()} is false.
-   * Unlike iterate_upper_bound, {@code #setPrefixSameAsStart(boolean)} only
+   * Unlike iterate_upper_bound, {@link #setPrefixSameAsStart(boolean)} only
    * works within a prefix but in both directions.
    *
    * @param prefixSameAsStart if true, then the iterator only iterates over the
@@ -300,7 +304,7 @@ public class ReadOptions extends RocksObject {
    * If true, when PurgeObsoleteFile is called in CleanupIteratorState, we
    * schedule a background job in the flush job queue and delete obsolete files
    * in background.
-   * <p>
+   *
    * Default: false
    *
    * @return true when PurgeObsoleteFile is called in CleanupIteratorState
@@ -314,7 +318,7 @@ public class ReadOptions extends RocksObject {
    * If true, when PurgeObsoleteFile is called in CleanupIteratorState, we
    * schedule a background job in the flush job queue and delete obsolete files
    * in background.
-   * <p>
+   *
    * Default: false
    *
    * @param backgroundPurgeOnIteratorCleanup true when PurgeObsoleteFile is
@@ -333,7 +337,7 @@ public class ReadOptions extends RocksObject {
    * If non-zero, NewIterator will create a new table reader which
    * performs reads of the given size. Using a large size (&gt; 2MB) can
    * improve the performance of forward iteration on spinning disks.
-   * <p>
+   *
    * Default: 0
    *
    * @return The readahead size is bytes
@@ -347,7 +351,7 @@ public class ReadOptions extends RocksObject {
    * If non-zero, NewIterator will create a new table reader which
    * performs reads of the given size. Using a large size (&gt; 2MB) can
    * improve the performance of forward iteration on spinning disks.
-   * <p>
+   *
    * Default: 0
    *
    * @param readaheadSize The readahead size is bytes
@@ -375,7 +379,7 @@ public class ReadOptions extends RocksObject {
    * A threshold for the number of keys that can be skipped before failing an
    * iterator seek as incomplete. The default value of 0 should be used to
    * never fail a request as incomplete, even on skipping too many keys.
-   * <p>
+   *
    * Default: 0
    *
    * @param maxSkippableInternalKeys the number of keys that can be skipped
@@ -394,7 +398,7 @@ public class ReadOptions extends RocksObject {
    * If true, keys deleted using the DeleteRange() API will be visible to
    * readers until they are naturally deleted during compaction. This improves
    * read performance in DBs with many range deletions.
-   * <p>
+   *
    * Default: false
    *
    * @return true if keys deleted using the DeleteRange() API will be visible
@@ -408,7 +412,7 @@ public class ReadOptions extends RocksObject {
    * If true, keys deleted using the DeleteRange() API will be visible to
    * readers until they are naturally deleted during compaction. This improves
    * read performance in DBs with many range deletions.
-   * <p>
+   *
    * Default: false
    *
    * @param ignoreRangeDeletions true if keys deleted using the DeleteRange()
@@ -425,14 +429,14 @@ public class ReadOptions extends RocksObject {
    * Defines the smallest key at which the backward
    * iterator can return an entry. Once the bound is passed,
    * {@link RocksIterator#isValid()} will be false.
-   * <p>
+   *
    * The lower bound is inclusive i.e. the bound value is a valid
    * entry.
-   * <p>
+   *
    * If prefix_extractor is not null, the Seek target and `iterate_lower_bound`
    * need to have the same prefix. This is because ordering is not guaranteed
    * outside of prefix domain.
-   * <p>
+   *
    * Default: null
    *
    * @param iterateLowerBound Slice representing the lower bound
@@ -450,7 +454,7 @@ public class ReadOptions extends RocksObject {
   /**
    * Returns the smallest key at which the backward
    * iterator can return an entry.
-   * <p>
+   *
    * The lower bound is inclusive i.e. the bound value is a valid entry.
    *
    * @return the smallest key, or null if there is no lower bound defined.
@@ -468,15 +472,15 @@ public class ReadOptions extends RocksObject {
 
   /**
    * Defines the extent up to which the forward iterator
-   * can return entries. Once the bound is reached,
+   * can returns entries. Once the bound is reached,
    * {@link RocksIterator#isValid()} will be false.
-   * <p>
+   *
    * The upper bound is exclusive i.e. the bound value is not a valid entry.
-   * <p>
+   *
    * If prefix_extractor is not null, the Seek target and iterate_upper_bound
    * need to have the same prefix. This is because ordering is not guaranteed
    * outside of prefix domain.
-   * <p>
+   *
    * Default: null
    *
    * @param iterateUpperBound Slice representing the upper bound
@@ -494,7 +498,7 @@ public class ReadOptions extends RocksObject {
   /**
    * Returns the largest key at which the forward
    * iterator can return an entry.
-   * <p>
+   *
    * The upper bound is exclusive i.e. the bound value is not a valid entry.
    *
    * @return the largest key, or null if there is no upper bound defined.
@@ -516,7 +520,7 @@ public class ReadOptions extends RocksObject {
    * properties of each table during iteration. If the callback returns false,
    * the table will not be scanned. This option only affects Iterators and has
    * no impact on point lookups.
-   * <p>
+   *
    * Default: null (every table will be scanned)
    *
    * @param tableFilter the table filter for the callback.
@@ -530,9 +534,40 @@ public class ReadOptions extends RocksObject {
   }
 
   /**
+   * Needed to support differential snapshots. Has 2 effects:
+   *     1) Iterator will skip all internal keys with seqnum &lt; iter_start_seqnum
+   *     2) if this param &gt; 0 iterator will return INTERNAL keys instead of user
+   *         keys; e.g. return tombstones as well.
+   *
+   * Default: 0 (don't filter by seqnum, return user keys)
+   *
+   * @param startSeqnum the starting sequence number.
+   *
+   * @return the reference to the current ReadOptions.
+   */
+  public ReadOptions setIterStartSeqnum(final long startSeqnum) {
+    assert(isOwningHandle());
+    setIterStartSeqnum(nativeHandle_, startSeqnum);
+    return this;
+  }
+
+  /**
+   * Returns the starting Sequence Number of any iterator.
+   * See {@link #setIterStartSeqnum(long)}.
+   *
+   * @return the starting sequence number of any iterator.
+   */
+  public long iterStartSeqnum() {
+    assert(isOwningHandle());
+    return iterStartSeqnum(nativeHandle_);
+  }
+
+  /**
    * When true, by default use total_order_seek = true, and RocksDB can
    * selectively enable prefix seek mode if won't generate a different result
    * from total_order_seek, based on seek key, and iterator upper bound.
+   * Not supported in ROCKSDB_LITE mode, in the way that even with value true
+   * prefix mode is not used.
    * Default: false
    *
    * @return true if auto prefix mode is set.
@@ -547,6 +582,8 @@ public class ReadOptions extends RocksObject {
    * When true, by default use total_order_seek = true, and RocksDB can
    * selectively enable prefix seek mode if won't generate a different result
    * from total_order_seek, based on seek key, and iterator upper bound.
+   * Not supported in ROCKSDB_LITE mode, in the way that even with value true
+   * prefix mode is not used.
    * Default: false
    * @param mode auto prefix mode
    * @return the reference to the current ReadOptions.
@@ -568,7 +605,7 @@ public class ReadOptions extends RocksObject {
    * only the most recent version visible to timestamp is returned.
    * The user-specified timestamp feature is still under active development,
    * and the API is subject to change.
-   * <p>
+   *
    * Default: null
    * @see #iterStartTs()
    * @return Reference to timestamp or null if there is no timestamp defined.
@@ -576,10 +613,11 @@ public class ReadOptions extends RocksObject {
   public Slice timestamp() {
     assert (isOwningHandle());
     final long timestampSliceHandle = timestamp(nativeHandle_);
-    if (timestampSliceHandle == 0) {
+    if (timestampSliceHandle != 0) {
+      return new Slice(timestampSliceHandle);
+    } else {
       return null;
     }
-    return new Slice(timestampSliceHandle);
   }
 
   /**
@@ -593,7 +631,7 @@ public class ReadOptions extends RocksObject {
    * only the most recent version visible to timestamp is returned.
    * The user-specified timestamp feature is still under active development,
    * and the API is subject to change.
-   * <p>
+   *
    * Default: null
    * @see #setIterStartTs(AbstractSlice)
    * @param timestamp Slice representing the timestamp
@@ -617,7 +655,7 @@ public class ReadOptions extends RocksObject {
    * only the most recent version visible to timestamp is returned.
    * The user-specified timestamp feature is still under active development,
    * and the API is subject to change.
-   * <p>
+   *
    * Default: null
    * @return Reference to lower bound timestamp or null if there is no lower bound timestamp
    *     defined.
@@ -625,10 +663,11 @@ public class ReadOptions extends RocksObject {
   public Slice iterStartTs() {
     assert (isOwningHandle());
     final long iterStartTsHandle = iterStartTs(nativeHandle_);
-    if (iterStartTsHandle == 0) {
+    if (iterStartTsHandle != 0) {
+      return new Slice(iterStartTsHandle);
+    } else {
       return null;
     }
-    return new Slice(iterStartTsHandle);
   }
 
   /**
@@ -642,7 +681,7 @@ public class ReadOptions extends RocksObject {
    * only the most recent version visible to timestamp is returned.
    * The user-specified timestamp feature is still under active development,
    * and the API is subject to change.
-   * <p>
+   *
    * Default: null
    *
    * @param iterStartTs Reference to lower bound timestamp or null if there is no lower bound
@@ -725,7 +764,7 @@ public class ReadOptions extends RocksObject {
    * It limits the maximum cumulative value size of the keys in batch while
    * reading through MultiGet. Once the cumulative value size exceeds this
    * soft limit then all the remaining keys are returned with status Aborted.
-   * <p>
+   *
    * Default: {@code std::numeric_limits<uint64_t>::max()}
    * @return actual valueSizeSofLimit
    */
@@ -738,44 +777,15 @@ public class ReadOptions extends RocksObject {
    * It limits the maximum cumulative value size of the keys in batch while
    * reading through MultiGet. Once the cumulative value size exceeds this
    * soft limit then all the remaining keys are returned with status Aborted.
-   * <p>
+   *
    * Default: {@code std::numeric_limits<uint64_t>::max()}
    *
-   * @param valueSizeSoftLimit the maximum cumulative value size of the keys
+   * @param valueSizeSofLimit
    * @return the reference to the current ReadOptions
    */
-  public ReadOptions setValueSizeSoftLimit(final long valueSizeSoftLimit) {
+  public ReadOptions setValueSizeSoftLimit(final long valueSizeSofLimit) {
     assert (isOwningHandle());
-    setValueSizeSoftLimit(nativeHandle_, valueSizeSoftLimit);
-    return this;
-  }
-
-  /**
-   * If async_io is enabled, RocksDB will prefetch some of data asynchronously.
-   * RocksDB apply it if reads are sequential and its internal automatic
-   * prefetching.
-   * <p>
-   * Default: false
-   * @return true if async_io is enabled.
-   */
-  @Experimental("Caution: this option is experimental")
-  public boolean asyncIo() {
-    assert (isOwningHandle());
-    return asyncIo(nativeHandle_);
-  }
-
-  /**
-   * If async_io is enabled, RocksDB will prefetch some of data asynchronously.
-   * RocksDB apply it if reads are sequential and its internal automatic
-   * prefetching.
-   * <p>
-   * @param asyncIo async_io enabled or not.
-   * @return the reference to the current ReadOptions.
-   */
-  @Experimental("Caution: this option is experimental")
-  public ReadOptions setAsyncIo(final boolean asyncIo) {
-    assert (isOwningHandle());
-    setAsyncIo(nativeHandle_, asyncIo);
+    setValueSizeSoftLimit(nativeHandle_, valueSizeSofLimit);
     return this;
   }
 
@@ -792,63 +802,62 @@ public class ReadOptions extends RocksObject {
   private AbstractSlice<?> timestampSlice_;
   private AbstractSlice<?> iterStartTs_;
 
-  private static native long newReadOptions();
-  private static native long newReadOptions(final boolean verifyChecksums, final boolean fillCache);
-  private static native long copyReadOptions(long handle);
-  @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  private native static long newReadOptions();
+  private native static long newReadOptions(final boolean verifyChecksums,
+    final boolean fillCache);
+  private native static long copyReadOptions(long handle);
+  @Override protected final native void disposeInternal(final long handle);
 
-  private native boolean asyncIo(final long handle);
-  private native void setAsyncIo(final long handle, final boolean asyncIO);
-  private static native boolean verifyChecksums(long handle);
-  private static native void setVerifyChecksums(long handle, boolean verifyChecksums);
-  private static native boolean fillCache(long handle);
-  private static native void setFillCache(long handle, boolean fillCache);
-  private static native long snapshot(long handle);
-  private static native void setSnapshot(long handle, long snapshotHandle);
-  private static native byte readTier(long handle);
-  private static native void setReadTier(long handle, byte readTierValue);
-  private static native boolean tailing(long handle);
-  private static native void setTailing(long handle, boolean tailing);
-  private static native boolean managed(long handle);
-  private static native void setManaged(long handle, boolean managed);
-  private static native boolean totalOrderSeek(long handle);
-  private static native void setTotalOrderSeek(long handle, boolean totalOrderSeek);
-  private static native boolean prefixSameAsStart(long handle);
-  private static native void setPrefixSameAsStart(long handle, boolean prefixSameAsStart);
-  private static native boolean pinData(long handle);
-  private static native void setPinData(long handle, boolean pinData);
-  private static native boolean backgroundPurgeOnIteratorCleanup(final long handle);
-  private static native void setBackgroundPurgeOnIteratorCleanup(
-      final long handle, final boolean backgroundPurgeOnIteratorCleanup);
-  private static native long readaheadSize(final long handle);
-  private static native void setReadaheadSize(final long handle, final long readaheadSize);
-  private static native long maxSkippableInternalKeys(final long handle);
-  private static native void setMaxSkippableInternalKeys(
-      final long handle, final long maxSkippableInternalKeys);
-  private static native boolean ignoreRangeDeletions(final long handle);
-  private static native void setIgnoreRangeDeletions(
-      final long handle, final boolean ignoreRangeDeletions);
-  private static native void setIterateUpperBound(
-      final long handle, final long upperBoundSliceHandle);
-  private static native long iterateUpperBound(final long handle);
-  private static native void setIterateLowerBound(
-      final long handle, final long lowerBoundSliceHandle);
-  private static native long iterateLowerBound(final long handle);
-  private static native void setTableFilter(final long handle, final long tableFilterHandle);
-  private static native boolean autoPrefixMode(final long handle);
-  private static native void setAutoPrefixMode(final long handle, final boolean autoPrefixMode);
-  private static native long timestamp(final long handle);
-  private static native void setTimestamp(final long handle, final long timestampSliceHandle);
-  private static native long iterStartTs(final long handle);
-  private static native void setIterStartTs(final long handle, final long iterStartTsHandle);
-  private static native long deadline(final long handle);
-  private static native void setDeadline(final long handle, final long deadlineTime);
-  private static native long ioTimeout(final long handle);
-  private static native void setIoTimeout(final long handle, final long ioTimeout);
-  private static native long valueSizeSoftLimit(final long handle);
-  private static native void setValueSizeSoftLimit(final long handle, final long softLimit);
+  private native boolean verifyChecksums(long handle);
+  private native void setVerifyChecksums(long handle, boolean verifyChecksums);
+  private native boolean fillCache(long handle);
+  private native void setFillCache(long handle, boolean fillCache);
+  private native long snapshot(long handle);
+  private native void setSnapshot(long handle, long snapshotHandle);
+  private native byte readTier(long handle);
+  private native void setReadTier(long handle, byte readTierValue);
+  private native boolean tailing(long handle);
+  private native void setTailing(long handle, boolean tailing);
+  private native boolean managed(long handle);
+  private native void setManaged(long handle, boolean managed);
+  private native boolean totalOrderSeek(long handle);
+  private native void setTotalOrderSeek(long handle, boolean totalOrderSeek);
+  private native boolean prefixSameAsStart(long handle);
+  private native void setPrefixSameAsStart(long handle, boolean prefixSameAsStart);
+  private native boolean pinData(long handle);
+  private native void setPinData(long handle, boolean pinData);
+  private native boolean backgroundPurgeOnIteratorCleanup(final long handle);
+  private native void setBackgroundPurgeOnIteratorCleanup(final long handle,
+      final boolean backgroundPurgeOnIteratorCleanup);
+  private native long readaheadSize(final long handle);
+  private native void setReadaheadSize(final long handle,
+      final long readaheadSize);
+  private native long maxSkippableInternalKeys(final long handle);
+  private native void setMaxSkippableInternalKeys(final long handle,
+      final long maxSkippableInternalKeys);
+  private native boolean ignoreRangeDeletions(final long handle);
+  private native void setIgnoreRangeDeletions(final long handle,
+      final boolean ignoreRangeDeletions);
+  private native void setIterateUpperBound(final long handle,
+      final long upperBoundSliceHandle);
+  private native long iterateUpperBound(final long handle);
+  private native void setIterateLowerBound(final long handle,
+      final long lowerBoundSliceHandle);
+  private native long iterateLowerBound(final long handle);
+  private native void setTableFilter(final long handle,
+      final long tableFilterHandle);
+  private native void setIterStartSeqnum(final long handle, final long seqNum);
+  private native long iterStartSeqnum(final long handle);
+  private native boolean autoPrefixMode(final long handle);
+  private native void setAutoPrefixMode(final long handle, final boolean autoPrefixMode);
+  private native long timestamp(final long handle);
+  private native void setTimestamp(final long handle, final long timestampSliceHandle);
+  private native long iterStartTs(final long handle);
+  private native void setIterStartTs(final long handle, final long iterStartTsHandle);
+  private native long deadline(final long handle);
+  private native void setDeadline(final long handle, final long deadlineTime);
+  private native long ioTimeout(final long handle);
+  private native void setIoTimeout(final long handle, final long ioTimeout);
+  private native long valueSizeSoftLimit(final long handle);
+  private native void setValueSizeSoftLimit(final long handle, final long softLimit);
 }

@@ -4,12 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
+#ifndef ROCKSDB_LITE
+
+#include "rocksdb/utilities/checkpoint.h"
 
 #include <string>
-
 #include "file/filename.h"
 #include "rocksdb/db.h"
-#include "rocksdb/utilities/checkpoint.h"
 
 namespace ROCKSDB_NAMESPACE {
 
@@ -34,8 +35,7 @@ class CheckpointImpl : public Checkpoint {
       std::function<Status(const std::string& src_dirname,
                            const std::string& fname, uint64_t size_limit_bytes,
                            FileType type, const std::string& checksum_func_name,
-                           const std::string& checksum_val,
-                           const Temperature src_temperature)>
+                           const std::string& checksum_val)>
           copy_file_cb,
       std::function<Status(const std::string& fname,
                            const std::string& contents, FileType type)>
@@ -62,3 +62,4 @@ class CheckpointImpl : public Checkpoint {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE

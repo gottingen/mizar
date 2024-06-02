@@ -20,6 +20,7 @@ namespace ROCKSDB_NAMESPACE {
 
 // TODO: the tests do not work in LITE mode due to relying on
 // `CreateFromString()` to create non-default memory allocators.
+#ifndef ROCKSDB_LITE
 
 class MemoryAllocatorTest
     : public testing::Test,
@@ -29,7 +30,11 @@ class MemoryAllocatorTest
     std::tie(id_, supported_) = GetParam();
     Status s =
         MemoryAllocator::CreateFromString(ConfigOptions(), id_, &allocator_);
-    EXPECT_EQ(supported_, s.ok());
+    if (supported_) {
+      EXPECT_OK(s);
+    } else if (!s.ok()) {
+      EXPECT_TRUE(s.IsNotSupported());
+    }
   }
   bool IsSupported() { return supported_; }
 
@@ -62,9 +67,11 @@ TEST_P(MemoryAllocatorTest, CreateAllocator) {
   } else {
     ASSERT_OK(s);
     ASSERT_NE(orig, nullptr);
+#ifndef ROCKSDB_LITE
     std::string str = orig->ToString(config_options);
     ASSERT_OK(MemoryAllocator::CreateFromString(config_options, str, &copy));
     ASSERT_EQ(orig, copy);
+#endif  // ROCKSDB_LITE
   }
 }
 
@@ -80,7 +87,7 @@ TEST_P(MemoryAllocatorTest, DatabaseBlockCache) {
 
   options.create_if_missing = true;
   BlockBasedTableOptions table_options;
-  auto cache = NewLRUCache(1024 * 1024, 6, false, 0.0, allocator_);
+  auto cache = NewLRUCache(1024 * 1024, 6, false, false, allocator_);
   table_options.block_cache = cache;
   options.table_factory.reset(NewBlockBasedTableFactory(table_options));
   DB* db = nullptr;
@@ -133,7 +140,7 @@ TEST_F(CreateMemoryAllocatorTest, JemallocOptionsTest) {
   std::string id = std::string("id=") + JemallocNodumpAllocator::kClassName();
   Status s = MemoryAllocator::CreateFromString(config_options_, id, &allocator);
   if (!JemallocNodumpAllocator::IsSupported()) {
-    ASSERT_NOK(s);
+    ASSERT_TRUE(s.IsNotSupported());
     ROCKSDB_GTEST_BYPASS("JEMALLOC not supported");
     return;
   }
@@ -185,7 +192,7 @@ TEST_F(CreateMemoryAllocatorTest, NewJemallocNodumpAllocator) {
   Status s = NewJemallocNodumpAllocator(jopts, &allocator);
   std::string msg;
   if (!JemallocNodumpAllocator::IsSupported(&msg)) {
-    ASSERT_NOK(s);
+    ASSERT_TRUE(s.IsNotSupported());
     ROCKSDB_GTEST_BYPASS("JEMALLOC not supported");
     return;
   }
@@ -226,11 +233,11 @@ INSTANTIATE_TEST_CASE_P(
                                       JemallocNodumpAllocator::IsSupported())));
 #endif  // ROCKSDB_JEMALLOC
 
+#endif  // ROCKSDB_LITE
 
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

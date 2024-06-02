@@ -13,10 +13,11 @@ public abstract class MutableOptionValue<T> {
   abstract String asString();
   abstract T asObject();
 
-  private abstract static class MutableOptionValueObject<T> extends MutableOptionValue<T> {
+  private static abstract class MutableOptionValueObject<T>
+      extends MutableOptionValue<T> {
     protected final T value;
 
-    protected MutableOptionValueObject(final T value) {
+    private MutableOptionValueObject(final T value) {
       this.value = value;
     }
 
@@ -152,6 +153,10 @@ public abstract class MutableOptionValue<T> {
 
     @Override
     double asDouble() {
+      if(value > Double.MAX_VALUE || value < Double.MIN_VALUE) {
+        throw new NumberFormatException(
+            "long value lies outside the bounds of int");
+      }
       return Long.valueOf(value).doubleValue();
     }
 
@@ -205,6 +210,9 @@ public abstract class MutableOptionValue<T> {
 
     @Override
     double asDouble() {
+      if(value > Double.MAX_VALUE || value < Double.MIN_VALUE) {
+        throw new NumberFormatException("int value lies outside the bounds of int");
+      }
       return Integer.valueOf(value).doubleValue();
     }
 

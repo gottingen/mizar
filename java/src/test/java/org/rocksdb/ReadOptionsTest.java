@@ -143,9 +143,9 @@ public class ReadOptionsTest {
   public void readaheadSize() {
     try (final ReadOptions opt = new ReadOptions()) {
       final Random rand = new Random();
-      final int intValue = rand.nextInt(2147483647);
-      opt.setReadaheadSize(intValue);
-      assertThat(opt.readaheadSize()).isEqualTo(intValue);
+      final long longValue = rand.nextLong();
+      opt.setReadaheadSize(longValue);
+      assertThat(opt.readaheadSize()).isEqualTo(longValue);
     }
   }
 
@@ -160,7 +160,7 @@ public class ReadOptionsTest {
   @Test
   public void iterateUpperBound() {
     try (final ReadOptions opt = new ReadOptions()) {
-      final Slice upperBound = buildRandomSlice();
+      Slice upperBound = buildRandomSlice();
       opt.setIterateUpperBound(upperBound);
       assertThat(Arrays.equals(upperBound.data(), opt.iterateUpperBound().data())).isTrue();
       opt.setIterateUpperBound(null);
@@ -178,7 +178,7 @@ public class ReadOptionsTest {
   @Test
   public void iterateLowerBound() {
     try (final ReadOptions opt = new ReadOptions()) {
-      final Slice lowerBound = buildRandomSlice();
+      Slice lowerBound = buildRandomSlice();
       opt.setIterateLowerBound(lowerBound);
       assertThat(Arrays.equals(lowerBound.data(), opt.iterateLowerBound().data())).isTrue();
       opt.setIterateLowerBound(null);
@@ -202,6 +202,16 @@ public class ReadOptionsTest {
   }
 
   @Test
+  public void iterStartSeqnum() {
+    try (final ReadOptions opt = new ReadOptions()) {
+      assertThat(opt.iterStartSeqnum()).isEqualTo(0);
+
+      opt.setIterStartSeqnum(10);
+      assertThat(opt.iterStartSeqnum()).isEqualTo(10);
+    }
+  }
+
+  @Test
   public void autoPrefixMode() {
     try (final ReadOptions opt = new ReadOptions()) {
       opt.setAutoPrefixMode(true);
@@ -212,7 +222,7 @@ public class ReadOptionsTest {
   @Test
   public void timestamp() {
     try (final ReadOptions opt = new ReadOptions()) {
-      final Slice timestamp = buildRandomSlice();
+      Slice timestamp = buildRandomSlice();
       opt.setTimestamp(timestamp);
       assertThat(Arrays.equals(timestamp.data(), opt.timestamp().data())).isTrue();
       opt.setTimestamp(null);
@@ -223,7 +233,7 @@ public class ReadOptionsTest {
   @Test
   public void iterStartTs() {
     try (final ReadOptions opt = new ReadOptions()) {
-      final Slice itertStartTsSlice = buildRandomSlice();
+      Slice itertStartTsSlice = buildRandomSlice();
       opt.setIterStartTs(itertStartTsSlice);
       assertThat(Arrays.equals(itertStartTsSlice.data(), opt.iterStartTs().data())).isTrue();
       opt.setIterStartTs(null);
@@ -234,32 +244,24 @@ public class ReadOptionsTest {
   @Test
   public void deadline() {
     try (final ReadOptions opt = new ReadOptions()) {
-      opt.setDeadline(1999L);
-      assertThat(opt.deadline()).isEqualTo(1999L);
+      opt.setDeadline(1999l);
+      assertThat(opt.deadline()).isEqualTo(1999l);
     }
   }
 
   @Test
   public void ioTimeout() {
     try (final ReadOptions opt = new ReadOptions()) {
-      opt.setIoTimeout(34555L);
-      assertThat(opt.ioTimeout()).isEqualTo(34555L);
+      opt.setIoTimeout(34555l);
+      assertThat(opt.ioTimeout()).isEqualTo(34555l);
     }
   }
 
   @Test
   public void valueSizeSoftLimit() {
     try (final ReadOptions opt = new ReadOptions()) {
-      opt.setValueSizeSoftLimit(12134324L);
-      assertThat(opt.valueSizeSoftLimit()).isEqualTo(12134324L);
-    }
-  }
-
-  @Test
-  public void asyncIo() {
-    try (final ReadOptions opt = new ReadOptions()) {
-      opt.setAsyncIo(true);
-      assertThat(opt.asyncIo()).isTrue();
+      opt.setValueSizeSoftLimit(12134324l);
+      assertThat(opt.valueSizeSoftLimit()).isEqualTo(12134324l);
     }
   }
 
@@ -359,7 +361,8 @@ public class ReadOptionsTest {
     }
   }
 
-  private ReadOptions setupUninitializedReadOptions(final ExpectedException exception) {
+  private ReadOptions setupUninitializedReadOptions(
+      ExpectedException exception) {
     final ReadOptions readOptions = new ReadOptions();
     readOptions.close();
     exception.expect(AssertionError.class);
@@ -368,7 +371,7 @@ public class ReadOptionsTest {
 
   private Slice buildRandomSlice() {
     final Random rand = new Random();
-    final byte[] sliceBytes = new byte[rand.nextInt(100) + 1];
+    byte[] sliceBytes = new byte[rand.nextInt(100) + 1];
     rand.nextBytes(sliceBytes);
     return new Slice(sliceBytes);
   }

@@ -23,6 +23,7 @@ namespace ROCKSDB_NAMESPACE {
 // cache disabled) reads appropriately, and also updates the IO stats.
 class SequentialFileReader {
  private:
+#ifndef ROCKSDB_LITE
   void NotifyOnFileReadFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
@@ -48,6 +49,7 @@ class SequentialFileReader {
                     }
                   });
   }
+#endif  // ROCKSDB_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
 
@@ -55,60 +57,46 @@ class SequentialFileReader {
   FSSequentialFilePtr file_;
   std::atomic<size_t> offset_{0};  // read offset
   std::vector<std::shared_ptr<EventListener>> listeners_{};
-  RateLimiter* rate_limiter_;
-  bool verify_and_reconstruct_read_;
 
  public:
   explicit SequentialFileReader(
       std::unique_ptr<FSSequentialFile>&& _file, const std::string& _file_name,
       const std::shared_ptr<IOTracer>& io_tracer = nullptr,
-      const std::vector<std::shared_ptr<EventListener>>& listeners = {},
-      RateLimiter* rate_limiter =
-          nullptr,  // TODO: migrate call sites to provide rate limiter
-      bool verify_and_reconstruct_read = false)
+      const std::vector<std::shared_ptr<EventListener>>& listeners = {})
       : file_name_(_file_name),
         file_(std::move(_file), io_tracer, _file_name),
-        listeners_(),
-        rate_limiter_(rate_limiter),
-        verify_and_reconstruct_read_(verify_and_reconstruct_read) {
+        listeners_() {
+#ifndef ROCKSDB_LITE
     AddFileIOListeners(listeners);
+#else
+    (void)listeners;
+#endif
   }
 
   explicit SequentialFileReader(
       std::unique_ptr<FSSequentialFile>&& _file, const std::string& _file_name,
       size_t _readahead_size,
       const std::shared_ptr<IOTracer>& io_tracer = nullptr,
-      const std::vector<std::shared_ptr<EventListener>>& listeners = {},
-      RateLimiter* rate_limiter =
-          nullptr,  // TODO: migrate call sites to provide rate limiter
-      bool verify_and_reconstruct_read = false)
+      const std::vector<std::shared_ptr<EventListener>>& listeners = {})
       : file_name_(_file_name),
         file_(NewReadaheadSequentialFile(std::move(_file), _readahead_size),
               io_tracer, _file_name),
-        listeners_(),
-        rate_limiter_(rate_limiter),
-        verify_and_reconstruct_read_(verify_and_reconstruct_read) {
+        listeners_() {
+#ifndef ROCKSDB_LITE
     AddFileIOListeners(listeners);
+#else
+    (void)listeners;
+#endif
   }
   static IOStatus Create(const std::shared_ptr<FileSystem>& fs,
                          const std::string& fname, const FileOptions& file_opts,
                          std::unique_ptr<SequentialFileReader>* reader,
-                         IODebugContext* dbg, RateLimiter* rate_limiter);
+                         IODebugContext* dbg);
 
   SequentialFileReader(const SequentialFileReader&) = delete;
   SequentialFileReader& operator=(const SequentialFileReader&) = delete;
 
-  // `rate_limiter_priority` is used to charge the internal rate limiter when
-  // enabled. The special value `Env::IO_TOTAL` makes this operation bypass the
-  // rate limiter. The amount charged to the internal rate limiter is n, even
-  // when less than n bytes are actually read (e.g. at end of file). To avoid
-  // overcharging the rate limiter, the caller can use file size to cap n to
-  // read until end of file.
-  //
-  // TODO(hx235): accept parameter `IOOptions` containing
-  // `rate_limiter_priority` like RandomAccessFileReader::Read()
-  IOStatus Read(size_t n, Slice* result, char* scratch,
-                Env::IOPriority rate_limiter_priority);
+  IOStatus Read(size_t n, Slice* result, char* scratch);
 
   IOStatus Skip(uint64_t n);
 

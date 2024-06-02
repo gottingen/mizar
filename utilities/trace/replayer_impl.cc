@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "utilities/trace/replayer_impl.h"
 
@@ -282,7 +283,8 @@ Status ReplayerImpl::ReadTrace(Trace* trace) {
 }
 
 void ReplayerImpl::BackgroundWork(void* arg) {
-  std::unique_ptr<ReplayerWorkerArg> ra(static_cast<ReplayerWorkerArg*>(arg));
+  std::unique_ptr<ReplayerWorkerArg> ra(
+      reinterpret_cast<ReplayerWorkerArg*>(arg));
   assert(ra != nullptr);
 
   std::unique_ptr<TraceRecord> record;
@@ -311,3 +313,4 @@ void ReplayerImpl::BackgroundWork(void* arg) {
 }
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

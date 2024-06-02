@@ -11,10 +11,8 @@ FilePrefetchBuffer* PrefetchBufferCollection::GetOrCreatePrefetchBuffer(
     uint64_t file_number) {
   auto& prefetch_buffer = prefetch_buffers_[file_number];
   if (!prefetch_buffer) {
-    ReadaheadParams readahead_params;
-    readahead_params.initial_readahead_size = readahead_size_;
-    readahead_params.max_readahead_size = readahead_size_;
-    prefetch_buffer.reset(new FilePrefetchBuffer(readahead_params));
+    prefetch_buffer.reset(
+        new FilePrefetchBuffer(readahead_size_, readahead_size_));
   }
 
   return prefetch_buffer.get();

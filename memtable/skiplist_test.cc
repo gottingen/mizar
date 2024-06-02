@@ -8,9 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "memtable/skiplist.h"
-
 #include <set>
-
 #include "memory/arena.h"
 #include "rocksdb/env.h"
 #include "test_util/testharness.h"
@@ -171,7 +169,7 @@ class ConcurrentTest {
   static uint64_t hash(Key key) { return key & 0xff; }
 
   static uint64_t HashNumbers(uint64_t k, uint64_t g) {
-    uint64_t data[2] = {k, g};
+    uint64_t data[2] = { k, g };
     return Hash(reinterpret_cast<char*>(data), sizeof(data), 0);
   }
 
@@ -313,7 +311,11 @@ class TestState {
   int seed_;
   std::atomic<bool> quit_flag_;
 
-  enum ReaderState { STARTING, RUNNING, DONE };
+  enum ReaderState {
+    STARTING,
+    RUNNING,
+    DONE
+  };
 
   explicit TestState(int s)
       : seed_(s), quit_flag_(false), state_(STARTING), state_cv_(&mu_) {}
@@ -340,7 +342,7 @@ class TestState {
 };
 
 static void ConcurrentReader(void* arg) {
-  TestState* state = static_cast<TestState*>(arg);
+  TestState* state = reinterpret_cast<TestState*>(arg);
   Random rnd(state->seed_);
   int64_t reads = 0;
   state->Change(TestState::RUNNING);
@@ -348,7 +350,6 @@ static void ConcurrentReader(void* arg) {
     state->t_.ReadStep(&rnd);
     ++reads;
   }
-  (void)reads;
   state->Change(TestState::DONE);
 }
 
@@ -382,7 +383,6 @@ TEST_F(SkipTest, Concurrent5) { RunConcurrent(5); }
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

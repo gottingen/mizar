@@ -6,11 +6,9 @@
 #pragma once
 
 #include <stdint.h>
-
 #include <memory>
 #include <string>
-
-#include "rocksdb/advanced_cache.h"
+#include "rocksdb/cache.h"
 #include "rocksdb/env.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/statistics.h"
@@ -34,17 +32,21 @@ class SimCache;
 // BlockBasedTableOptions.block_size = 4096 by default but is configurable,
 // Therefore, generally the actual memory overhead of SimCache is Less than
 // sim_capacity * 2%
-std::shared_ptr<SimCache> NewSimCache(std::shared_ptr<Cache> cache,
-                                      size_t sim_capacity, int num_shard_bits);
+extern std::shared_ptr<SimCache> NewSimCache(std::shared_ptr<Cache> cache,
+                                             size_t sim_capacity,
+                                             int num_shard_bits);
 
-std::shared_ptr<SimCache> NewSimCache(std::shared_ptr<Cache> sim_cache,
-                                      std::shared_ptr<Cache> cache,
-                                      int num_shard_bits);
+extern std::shared_ptr<SimCache> NewSimCache(std::shared_ptr<Cache> sim_cache,
+                                             std::shared_ptr<Cache> cache,
+                                             int num_shard_bits);
 
-// An abstract base class (public interface) to the SimCache implementation
-class SimCache : public CacheWrapper {
+class SimCache : public Cache {
  public:
-  using CacheWrapper::CacheWrapper;
+  SimCache() {}
+
+  ~SimCache() override {}
+
+  const char* Name() const override { return "SimCache"; }
 
   // returns the maximum configured capacity of the simcache for simulation
   virtual size_t GetSimCapacity() const = 0;

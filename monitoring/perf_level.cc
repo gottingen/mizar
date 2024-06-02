@@ -4,13 +4,16 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include <cassert>
-
+#include <assert.h>
 #include "monitoring/perf_level_imp.h"
 
 namespace ROCKSDB_NAMESPACE {
 
-thread_local PerfLevel perf_level = kEnableCount;
+#ifdef ROCKSDB_SUPPORT_THREAD_LOCAL
+__thread PerfLevel perf_level = kEnableCount;
+#else
+PerfLevel perf_level = kEnableCount;
+#endif
 
 void SetPerfLevel(PerfLevel level) {
   assert(level > kUninitialized);
@@ -18,6 +21,8 @@ void SetPerfLevel(PerfLevel level) {
   perf_level = level;
 }
 
-PerfLevel GetPerfLevel() { return perf_level; }
+PerfLevel GetPerfLevel() {
+  return perf_level;
+}
 
 }  // namespace ROCKSDB_NAMESPACE

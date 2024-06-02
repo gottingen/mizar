@@ -354,7 +354,7 @@ TEST_F(RangeTombstoneFragmenterTest,
 
   FragmentedRangeTombstoneList fragment_list(
       std::move(range_del_iter), bytewise_icmp, true /* for_compaction */,
-      {9, 20} /* snapshots */);
+      {20, 9} /* upper_bounds */);
   FragmentedRangeTombstoneIterator iter(&fragment_list, bytewise_icmp,
                                         kMaxSequenceNumber /* upper_bound */);
   VerifyFragmentedRangeDels(&iter, {{"a", "c", 10},
@@ -549,7 +549,6 @@ TEST_F(RangeTombstoneFragmenterTest, SeekOutOfBounds) {
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -10,10 +10,8 @@
 #pragma once
 
 #include <cassert>
-#include <type_traits>
-
 #include "port/likely.h"
-#include "rocksdb/advanced_cache.h"
+#include "rocksdb/cache.h"
 #include "rocksdb/cleanable.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -42,17 +40,18 @@ namespace ROCKSDB_NAMESPACE {
 
 template <class T>
 class CachableEntry {
- public:
+public:
   CachableEntry() = default;
 
   CachableEntry(T* value, Cache* cache, Cache::Handle* cache_handle,
-                bool own_value)
-      : value_(value),
-        cache_(cache),
-        cache_handle_(cache_handle),
-        own_value_(own_value) {
+    bool own_value)
+    : value_(value)
+    , cache_(cache)
+    , cache_handle_(cache_handle)
+    , own_value_(own_value)
+  {
     assert(value_ != nullptr ||
-           (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
+      (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
     assert(!!cache_ == !!cache_handle_);
     assert(!cache_handle_ || !own_value_);
   }
@@ -60,20 +59,21 @@ class CachableEntry {
   CachableEntry(const CachableEntry&) = delete;
   CachableEntry& operator=(const CachableEntry&) = delete;
 
-  CachableEntry(CachableEntry&& rhs) noexcept
-      : value_(rhs.value_),
-        cache_(rhs.cache_),
-        cache_handle_(rhs.cache_handle_),
-        own_value_(rhs.own_value_) {
+  CachableEntry(CachableEntry&& rhs)
+    : value_(rhs.value_)
+    , cache_(rhs.cache_)
+    , cache_handle_(rhs.cache_handle_)
+    , own_value_(rhs.own_value_)
+  {
     assert(value_ != nullptr ||
-           (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
+      (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
     assert(!!cache_ == !!cache_handle_);
     assert(!cache_handle_ || !own_value_);
 
     rhs.ResetFields();
   }
 
-  CachableEntry& operator=(CachableEntry&& rhs) noexcept {
+  CachableEntry& operator=(CachableEntry&& rhs) {
     if (UNLIKELY(this == &rhs)) {
       return *this;
     }
@@ -86,7 +86,7 @@ class CachableEntry {
     own_value_ = rhs.own_value_;
 
     assert(value_ != nullptr ||
-           (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
+      (cache_ == nullptr && cache_handle_ == nullptr && !own_value_));
     assert(!!cache_ == !!cache_handle_);
     assert(!cache_handle_ || !own_value_);
 
@@ -95,11 +95,13 @@ class CachableEntry {
     return *this;
   }
 
-  ~CachableEntry() { ReleaseResource(); }
+  ~CachableEntry() {
+    ReleaseResource();
+  }
 
   bool IsEmpty() const {
     return value_ == nullptr && cache_ == nullptr && cache_handle_ == nullptr &&
-           !own_value_;
+      !own_value_;
   }
 
   bool IsCached() const {
@@ -131,17 +133,17 @@ class CachableEntry {
     ResetFields();
   }
 
-  void SetOwnedValue(std::unique_ptr<T>&& value) {
-    assert(value.get() != nullptr);
+  void SetOwnedValue(T* value) {
+    assert(value != nullptr);
 
-    if (UNLIKELY(value_ == value.get() && own_value_)) {
+    if (UNLIKELY(value_ == value && own_value_)) {
       assert(cache_ == nullptr && cache_handle_ == nullptr);
       return;
     }
 
     Reset();
 
-    value_ = value.release();
+    value_ = value;
     own_value_ = true;
   }
 
@@ -176,31 +178,24 @@ class CachableEntry {
     assert(!own_value_);
   }
 
-  // Since this class is essentially an elaborate pointer, it's sometimes
-  // useful to be able to upcast or downcast the base type of the pointer,
-  // especially when interacting with typed_cache.h.
-  template <class TWrapper>
-  std::enable_if_t<sizeof(TWrapper) == sizeof(T) &&
-                       (std::is_base_of_v<TWrapper, T> ||
-                        std::is_base_of_v<T, TWrapper>),
-                   /* Actual return type */
-                   CachableEntry<TWrapper>&>
-  As() {
-    CachableEntry<TWrapper>* result_ptr =
-        reinterpret_cast<CachableEntry<TWrapper>*>(this);
-    // Ensure no weirdness in template instantiations
-    assert(static_cast<void*>(&this->value_) ==
-           static_cast<void*>(&result_ptr->value_));
-    assert(&this->cache_handle_ == &result_ptr->cache_handle_);
-    // This function depends on no arithmetic involved in the pointer
-    // conversion, which is not statically checkable.
-    assert(static_cast<void*>(this->value_) ==
-           static_cast<void*>(result_ptr->value_));
-    return *result_ptr;
+  void UpdateCachedValue() {
+    assert(cache_ != nullptr);
+    assert(cache_handle_ != nullptr);
+
+    value_ = static_cast<T*>(cache_->Value(cache_handle_));
   }
 
- private:
-  void ReleaseResource() noexcept {
+  bool IsReady() {
+    if (!own_value_) {
+      assert(cache_ != nullptr);
+      assert(cache_handle_ != nullptr);
+      return cache_->IsReady(cache_handle_);
+    }
+    return true;
+  }
+
+private:
+  void ReleaseResource() {
     if (LIKELY(cache_handle_ != nullptr)) {
       assert(cache_ != nullptr);
       cache_->Release(cache_handle_);
@@ -209,7 +204,7 @@ class CachableEntry {
     }
   }
 
-  void ResetFields() noexcept {
+  void ResetFields() {
     value_ = nullptr;
     cache_ = nullptr;
     cache_handle_ = nullptr;
@@ -230,11 +225,7 @@ class CachableEntry {
     delete static_cast<T*>(arg1);
   }
 
- private:
-  // Have to be your own best friend
-  template <class TT>
-  friend class CachableEntry;
-
+private:
   T* value_ = nullptr;
   Cache* cache_ = nullptr;
   Cache::Handle* cache_handle_ = nullptr;

@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "file/delete_scheduler.h"
 
@@ -60,10 +61,9 @@ DeleteScheduler::~DeleteScheduler() {
 Status DeleteScheduler::DeleteFile(const std::string& file_path,
                                    const std::string& dir_to_sync,
                                    const bool force_bg) {
-  uint64_t total_size = sst_file_manager_->GetTotalSize();
-  if (rate_bytes_per_sec_.load() <= 0 ||
-      (!force_bg &&
-       total_trash_size_.load() > total_size * max_trash_db_ratio_.load())) {
+  if (rate_bytes_per_sec_.load() <= 0 || (!force_bg &&
+      total_trash_size_.load() >
+          sst_file_manager_->GetTotalSize() * max_trash_db_ratio_.load())) {
     // Rate limiting is disabled or trash size makes up more than
     // max_trash_db_ratio_ (default 25%) of the total DB size
     TEST_SYNC_POINT("DeleteScheduler::DeleteFile");
@@ -72,11 +72,9 @@ Status DeleteScheduler::DeleteFile(const std::string& file_path,
       s = sst_file_manager_->OnDeleteFile(file_path);
       ROCKS_LOG_INFO(info_log_,
                      "Deleted file %s immediately, rate_bytes_per_sec %" PRIi64
-                     ", total_trash_size %" PRIu64 ", total_size %" PRIi64
-                     ", max_trash_db_ratio %lf",
+                     ", total_trash_size %" PRIu64 " max_trash_db_ratio %lf",
                      file_path.c_str(), rate_bytes_per_sec_.load(),
-                     total_trash_size_.load(), total_size,
-                     max_trash_db_ratio_.load());
+                     total_trash_size_.load(), max_trash_db_ratio_.load());
       InstrumentedMutexLock l(&mu_);
       RecordTick(stats_.get(), FILES_DELETED_IMMEDIATELY);
     }
@@ -143,11 +141,7 @@ Status DeleteScheduler::CleanupDirectory(Env* env, SstFileManagerImpl* sfm,
   Status s;
   // Check if there are any files marked as trash in this path
   std::vector<std::string> files_in_path;
-  const auto& fs = env->GetFileSystem();
-  IOOptions io_opts;
-  io_opts.do_not_recurse = true;
-  s = fs->GetChildren(path, io_opts, &files_in_path,
-                      /*IODebugContext*=*/nullptr);
+  s = env->GetChildren(path, &files_in_path);
   if (!s.ok()) {
     return s;
   }
@@ -179,7 +173,7 @@ Status DeleteScheduler::CleanupDirectory(Env* env, SstFileManagerImpl* sfm,
 Status DeleteScheduler::MarkAsTrash(const std::string& file_path,
                                     std::string* trash_file) {
   // Sanity check of the path
-  size_t idx = file_path.rfind('/');
+  size_t idx = file_path.rfind("/");
   if (idx == std::string::npos || idx == file_path.size() - 1) {
     return Status::InvalidArgument("file_path is corrupted");
   }
@@ -258,7 +252,6 @@ void DeleteScheduler::BackgroundEmptyTrash() {
       total_deleted_bytes += deleted_bytes;
       mu_.Lock();
       if (is_complete) {
-        RecordTick(stats_.get(), FILES_DELETED_FROM_TRASH_QUEUE);
         queue_.pop();
       }
 
@@ -321,8 +314,8 @@ Status DeleteScheduler::DeleteTrashFile(const std::string& path_in_trash,
       if (my_status.ok()) {
         if (num_hard_links == 1) {
           std::unique_ptr<FSWritableFile> wf;
-          my_status = fs_->ReopenWritableFile(path_in_trash, FileOptions(), &wf,
-                                              nullptr);
+          my_status = fs_->ReopenWritableFile(path_in_trash, FileOptions(),
+                                              &wf, nullptr);
           if (my_status.ok()) {
             my_status = wf->Truncate(file_size - bytes_max_delete_chunk_,
                                      IOOptions(), nullptr);
@@ -369,7 +362,7 @@ Status DeleteScheduler::DeleteTrashFile(const std::string& path_in_trash,
               DirFsyncOptions(DirFsyncOptions::FsyncReason::kFileDeleted));
           TEST_SYNC_POINT_CALLBACK(
               "DeleteScheduler::DeleteTrashFile::AfterSyncDir",
-              static_cast<void*>(const_cast<std::string*>(&dir_to_sync)));
+              reinterpret_cast<void*>(const_cast<std::string*>(&dir_to_sync)));
         }
       }
       if (s.ok()) {
@@ -410,3 +403,4 @@ void DeleteScheduler::MaybeCreateBackgroundThread() {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE

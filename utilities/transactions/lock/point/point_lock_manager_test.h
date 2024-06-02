@@ -1,8 +1,3 @@
-//  Copyright (c) Meta Platforms, Inc. and affiliates.
-//
-//  This source code is licensed under both the GPLv2 (found in the
-//  COPYING file in the root directory) and Apache 2.0 License
-//  (found in the LICENSE.Apache file in the root directory).
 
 #include "file/file_util.h"
 #include "port/port.h"
@@ -69,7 +64,7 @@ class PointLockManagerTest : public testing::Test {
   PessimisticTransaction* NewTxn(
       TransactionOptions txn_opt = TransactionOptions()) {
     Transaction* txn = db_->BeginTransaction(WriteOptions(), txn_opt);
-    return static_cast<PessimisticTransaction*>(txn);
+    return reinterpret_cast<PessimisticTransaction*>(txn);
   }
 
  protected:
@@ -244,7 +239,7 @@ TEST_P(AnyLockManagerTest, Deadlock) {
   // txn1 tries to lock k2, will block forever.
   port::Thread t = BlockUntilWaitingTxn(wait_sync_point_name_, [&]() {
     // block because txn2 is holding a lock on k2.
-    ASSERT_OK(locker_->TryLock(txn1, 1, "k2", env_, true));
+    locker_->TryLock(txn1, 1, "k2", env_, true);
   });
 
   auto s = locker_->TryLock(txn2, 1, "k1", env_, true);

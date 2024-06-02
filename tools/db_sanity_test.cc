@@ -5,19 +5,19 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <memory>
 #include <vector>
+#include <memory>
 
-#include "port/port.h"
-#include "rocksdb/comparator.h"
 #include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
 #include "rocksdb/options.h"
+#include "rocksdb/env.h"
 #include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
 #include "rocksdb/status.h"
+#include "rocksdb/comparator.h"
 #include "rocksdb/table.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/filter_policy.h"
+#include "port/port.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -37,19 +37,16 @@ class SanityTest {
     Options options = GetOptions();
     options.create_if_missing = true;
     std::string dbname = path_ + Name();
-    Status s = DestroyDB(dbname, options);
-    if (!s.ok()) {
-      return s;
-    }
+    DestroyDB(dbname, options);
     DB* db = nullptr;
-    s = DB::Open(options, dbname, &db);
+    Status s = DB::Open(options, dbname, &db);
     std::unique_ptr<DB> db_guard(db);
     if (!s.ok()) {
       return s;
     }
     for (int i = 0; i < 1000000; ++i) {
-      std::string k = "key" + std::to_string(i);
-      std::string v = "value" + std::to_string(i);
+      std::string k = "key" + ToString(i);
+      std::string v = "value" + ToString(i);
       s = db->Put(WriteOptions(), Slice(k), Slice(v));
       if (!s.ok()) {
         return s;
@@ -66,8 +63,8 @@ class SanityTest {
       return s;
     }
     for (int i = 0; i < 1000000; ++i) {
-      std::string k = "key" + std::to_string(i);
-      std::string v = "value" + std::to_string(i);
+      std::string k = "key" + ToString(i);
+      std::string v = "value" + ToString(i);
       std::string result;
       s = db->Get(ReadOptions(), Slice(k), &result);
       if (!s.ok()) {
@@ -88,12 +85,12 @@ class SanityTest {
 class SanityTestBasic : public SanityTest {
  public:
   explicit SanityTestBasic(const std::string& path) : SanityTest(path) {}
-  Options GetOptions() const override {
+  virtual Options GetOptions() const override {
     Options options;
     options.create_if_missing = true;
     return options;
   }
-  std::string Name() const override { return "Basic"; }
+  virtual std::string Name() const override { return "Basic"; }
 };
 
 class SanityTestSpecialComparator : public SanityTest {
@@ -103,20 +100,23 @@ class SanityTestSpecialComparator : public SanityTest {
     options_.comparator = new NewComparator();
   }
   ~SanityTestSpecialComparator() { delete options_.comparator; }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "SpecialComparator"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "SpecialComparator"; }
 
  private:
   class NewComparator : public Comparator {
    public:
-    const char* Name() const override { return "rocksdb.NewComparator"; }
-    int Compare(const Slice& a, const Slice& b) const override {
+    virtual const char* Name() const override {
+      return "rocksdb.NewComparator";
+    }
+    virtual int Compare(const Slice& a, const Slice& b) const override {
       return BytewiseComparator()->Compare(a, b);
     }
-    void FindShortestSeparator(std::string* s, const Slice& l) const override {
+    virtual void FindShortestSeparator(std::string* s,
+                                       const Slice& l) const override {
       BytewiseComparator()->FindShortestSeparator(s, l);
     }
-    void FindShortSuccessor(std::string* key) const override {
+    virtual void FindShortSuccessor(std::string* key) const override {
       BytewiseComparator()->FindShortSuccessor(key);
     }
   };
@@ -129,8 +129,8 @@ class SanityTestZlibCompression : public SanityTest {
       : SanityTest(path) {
     options_.compression = kZlibCompression;
   }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "ZlibCompression"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "ZlibCompression"; }
 
  private:
   Options options_;
@@ -147,8 +147,10 @@ class SanityTestZlibCompressionVersion2 : public SanityTest {
 #endif
     options_.table_factory.reset(NewBlockBasedTableFactory(table_options));
   }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "ZlibCompressionVersion2"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override {
+    return "ZlibCompressionVersion2";
+  }
 
  private:
   Options options_;
@@ -160,8 +162,8 @@ class SanityTestLZ4Compression : public SanityTest {
       : SanityTest(path) {
     options_.compression = kLZ4Compression;
   }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "LZ4Compression"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "LZ4Compression"; }
 
  private:
   Options options_;
@@ -173,8 +175,8 @@ class SanityTestLZ4HCCompression : public SanityTest {
       : SanityTest(path) {
     options_.compression = kLZ4HCCompression;
   }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "LZ4HCCompression"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "LZ4HCCompression"; }
 
  private:
   Options options_;
@@ -186,13 +188,14 @@ class SanityTestZSTDCompression : public SanityTest {
       : SanityTest(path) {
     options_.compression = kZSTD;
   }
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "ZSTDCompression"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "ZSTDCompression"; }
 
  private:
   Options options_;
 };
 
+#ifndef ROCKSDB_LITE
 class SanityTestPlainTableFactory : public SanityTest {
  public:
   explicit SanityTestPlainTableFactory(const std::string& path)
@@ -202,12 +205,13 @@ class SanityTestPlainTableFactory : public SanityTest {
     options_.allow_mmap_reads = true;
   }
   ~SanityTestPlainTableFactory() {}
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "PlainTable"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "PlainTable"; }
 
  private:
   Options options_;
 };
+#endif  // ROCKSDB_LITE
 
 class SanityTestBloomFilter : public SanityTest {
  public:
@@ -217,8 +221,8 @@ class SanityTestBloomFilter : public SanityTest {
     options_.table_factory.reset(NewBlockBasedTableFactory(table_options));
   }
   ~SanityTestBloomFilter() {}
-  Options GetOptions() const override { return options_; }
-  std::string Name() const override { return "BloomFilter"; }
+  virtual Options GetOptions() const override { return options_; }
+  virtual std::string Name() const override { return "BloomFilter"; }
 
  private:
   Options options_;
@@ -237,7 +241,9 @@ bool RunSanityTests(const std::string& command, const std::string& path) {
       new SanityTestLZ4Compression(path),
       new SanityTestLZ4HCCompression(path),
       new SanityTestZSTDCompression(path),
+#ifndef ROCKSDB_LITE
       new SanityTestPlainTableFactory(path),
+#endif  // ROCKSDB_LITE
       new SanityTestBloomFilter(path)};
 
   if (command == "create") {

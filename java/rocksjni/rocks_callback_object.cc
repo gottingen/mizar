@@ -17,7 +17,7 @@
  * Signature: (J)V
  */
 void Java_org_rocksdb_RocksCallbackObject_disposeInternal(JNIEnv* /*env*/,
-                                                          jclass /*jcls*/,
+                                                          jobject /*jobj*/,
                                                           jlong handle) {
   // TODO(AR) is deleting from the super class JniCallback OK, or must we delete
   // the subclass? Example hierarchies:

@@ -11,7 +11,6 @@
 #include <cstring>
 #include <string>
 #include <utility>
-
 #include "db/db_impl/db_impl.h"
 #include "util/string_util.h"
 
@@ -41,8 +40,6 @@ Status DecodePersistentStatsVersionNumber(DBImpl* db, StatsVersionKeyType type,
   } else if (type == StatsVersionKeyType::kCompatibleVersion) {
     key = kCompatibleVersionKeyString;
   }
-
-  // TODO: plumb Env::IOActivity, Env::IOPriority
   ReadOptions options;
   options.verify_checksums = true;
   std::string result;
@@ -76,7 +73,7 @@ void OptimizeForPersistentStats(ColumnFamilyOptions* cfo) {
   cfo->compression = kNoCompression;
 }
 
-PersistentStatsHistoryIterator::~PersistentStatsHistoryIterator() = default;
+PersistentStatsHistoryIterator::~PersistentStatsHistoryIterator() {}
 
 bool PersistentStatsHistoryIterator::Valid() const { return valid_; }
 
@@ -98,16 +95,16 @@ std::pair<uint64_t, std::string> parseKey(const Slice& key,
                                           uint64_t start_time) {
   std::pair<uint64_t, std::string> result;
   std::string key_str = key.ToString();
-  std::string::size_type pos = key_str.find('#');
+  std::string::size_type pos = key_str.find("#");
   // TODO(Zhongyi): add counters to track parse failures?
   if (pos == std::string::npos) {
-    result.first = std::numeric_limits<uint64_t>::max();
+    result.first = port::kMaxUint64;
     result.second.clear();
   } else {
     uint64_t parsed_time = ParseUint64(key_str.substr(0, pos));
     // skip entries with timestamp smaller than start_time
     if (parsed_time < start_time) {
-      result.first = std::numeric_limits<uint64_t>::max();
+      result.first = port::kMaxUint64;
       result.second = "";
     } else {
       result.first = parsed_time;
@@ -124,7 +121,6 @@ void PersistentStatsHistoryIterator::AdvanceIteratorByTime(uint64_t start_time,
                                                            uint64_t end_time) {
   // try to find next entry in stats_history_ map
   if (db_impl_ != nullptr) {
-    // TODO: plumb Env::IOActivity, Env::IOPriority
     ReadOptions ro;
     Iterator* iter =
         db_impl_->NewIterator(ro, db_impl_->PersistentStatsColumnFamily());

@@ -9,8 +9,9 @@
 
 #include "db/malloc_stats.h"
 
-#include <cstring>
+#ifndef ROCKSDB_LITE
 #include <memory>
+#include <string.h>
 
 #include "port/jemalloc_helper.h"
 
@@ -24,7 +25,7 @@ struct MallocStatus {
 };
 
 static void GetJemallocStatus(void* mstat_arg, const char* status) {
-  MallocStatus* mstat = static_cast<MallocStatus*>(mstat_arg);
+  MallocStatus* mstat = reinterpret_cast<MallocStatus*>(mstat_arg);
   size_t status_len = status ? strlen(status) : 0;
   size_t buf_size = (size_t)(mstat->end - mstat->cur);
   if (!status_len || status_len > buf_size) {
@@ -50,3 +51,4 @@ void DumpMallocStats(std::string* stats) {
 void DumpMallocStats(std::string*) {}
 #endif  // ROCKSDB_JEMALLOC
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

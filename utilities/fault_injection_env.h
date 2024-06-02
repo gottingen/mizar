@@ -72,26 +72,31 @@ class TestWritableFile : public WritableFile {
                             std::unique_ptr<WritableFile>&& f,
                             FaultInjectionTestEnv* env);
   virtual ~TestWritableFile();
-  Status Append(const Slice& data) override;
-  Status Append(const Slice& data,
-                const DataVerificationInfo& /*verification_info*/) override {
+  virtual Status Append(const Slice& data) override;
+  virtual Status Append(
+      const Slice& data,
+      const DataVerificationInfo& /*verification_info*/) override {
     return Append(data);
   }
-  Status Truncate(uint64_t size) override { return target_->Truncate(size); }
-  Status Close() override;
-  Status Flush() override;
-  Status Sync() override;
-  bool IsSyncThreadSafe() const override { return true; }
-  Status PositionedAppend(const Slice& data, uint64_t offset) override {
+  virtual Status Truncate(uint64_t size) override {
+    return target_->Truncate(size);
+  }
+  virtual Status Close() override;
+  virtual Status Flush() override;
+  virtual Status Sync() override;
+  virtual bool IsSyncThreadSafe() const override { return true; }
+  virtual Status PositionedAppend(const Slice& data,
+                                  uint64_t offset) override {
     return target_->PositionedAppend(data, offset);
   }
-  Status PositionedAppend(
+  virtual Status PositionedAppend(
       const Slice& data, uint64_t offset,
       const DataVerificationInfo& /*verification_info*/) override {
     return PositionedAppend(data, offset);
   }
-  bool use_direct_io() const override { return target_->use_direct_io(); }
-  uint64_t GetFileSize() final { return target_->GetFileSize(); }
+  virtual bool use_direct_io() const override {
+    return target_->use_direct_io();
+  };
 
  private:
   FileState state_;
@@ -117,7 +122,7 @@ class TestRandomRWFile : public RandomRWFile {
   size_t GetRequiredBufferAlignment() const override {
     return target_->GetRequiredBufferAlignment();
   }
-  bool use_direct_io() const override { return target_->use_direct_io(); }
+  bool use_direct_io() const override { return target_->use_direct_io(); };
 
  private:
   std::unique_ptr<RandomRWFile> target_;
@@ -132,8 +137,7 @@ class TestDirectory : public Directory {
       : env_(env), dirname_(dirname), dir_(dir) {}
   ~TestDirectory() {}
 
-  Status Fsync() override;
-  Status Close() override;
+  virtual Status Fsync() override;
 
  private:
   FaultInjectionTestEnv* env_;
@@ -169,15 +173,17 @@ class FaultInjectionTestEnv : public EnvWrapper {
                              std::unique_ptr<RandomAccessFile>* result,
                              const EnvOptions& soptions) override;
 
-  Status DeleteFile(const std::string& f) override;
+  virtual Status DeleteFile(const std::string& f) override;
 
-  Status RenameFile(const std::string& s, const std::string& t) override;
+  virtual Status RenameFile(const std::string& s,
+                            const std::string& t) override;
 
-  Status LinkFile(const std::string& s, const std::string& t) override;
+  virtual Status LinkFile(const std::string& s, const std::string& t) override;
 
 // Undef to eliminate clash on Windows
 #undef GetFreeSpace
-  Status GetFreeSpace(const std::string& path, uint64_t* disk_free) override {
+  virtual Status GetFreeSpace(const std::string& path,
+                              uint64_t* disk_free) override {
     if (!IsFilesystemActive() &&
         error_.subcode() == IOStatus::SubCode::kNoSpace) {
       *disk_free = 0;
@@ -220,8 +226,8 @@ class FaultInjectionTestEnv : public EnvWrapper {
     MutexLock l(&mutex_);
     return filesystem_active_;
   }
-  void SetFilesystemActiveNoLock(
-      bool active, Status error = Status::Corruption("Not active")) {
+  void SetFilesystemActiveNoLock(bool active,
+      Status error = Status::Corruption("Not active")) {
     error.PermitUncheckedError();
     filesystem_active_ = active;
     if (!active) {
@@ -230,7 +236,7 @@ class FaultInjectionTestEnv : public EnvWrapper {
     error.PermitUncheckedError();
   }
   void SetFilesystemActive(bool active,
-                           Status error = Status::Corruption("Not active")) {
+      Status error = Status::Corruption("Not active")) {
     error.PermitUncheckedError();
     MutexLock l(&mutex_);
     SetFilesystemActiveNoLock(active, error);

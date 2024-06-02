@@ -71,7 +71,7 @@ Status Truncate(Env* env, const std::string& filename, uint64_t length) {
 
 // Trim the tailing "/" in the end of `str`
 std::string TrimDirname(const std::string& str) {
-  size_t found = str.find_last_not_of('/');
+  size_t found = str.find_last_not_of("/");
   if (found == std::string::npos) {
     return str;
   }
@@ -105,13 +105,6 @@ Status TestDirectory::Fsync() {
   }
   env_->SyncDir(dirname_);
   return dir_->Fsync();
-}
-
-Status TestDirectory::Close() {
-  if (!env_->IsFilesystemActive()) {
-    return env_->GetError();
-  }
-  return dir_->Close();
 }
 
 TestRandomAccessFile::TestRandomAccessFile(
@@ -528,7 +521,7 @@ Status FaultInjectionTestEnv::DeleteFilesCreatedAfterLastDirSync() {
   }
 
   for (auto& pair : map_copy) {
-    for (const std::string& name : pair.second) {
+    for (std::string name : pair.second) {
       Status s = DeleteFile(pair.first + "/" + name);
       if (!s.ok()) {
         return s;

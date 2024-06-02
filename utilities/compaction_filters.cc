@@ -13,6 +13,7 @@
 #include "utilities/compaction_filters/remove_emptyvalue_compactionfilter.h"
 
 namespace ROCKSDB_NAMESPACE {
+#ifndef ROCKSDB_LITE
 static int RegisterBuiltinCompactionFilters(ObjectLibrary& library,
                                             const std::string& /*arg*/) {
   library.AddFactory<CompactionFilter>(
@@ -24,16 +25,19 @@ static int RegisterBuiltinCompactionFilters(ObjectLibrary& library,
       });
   return 1;
 }
+#endif  // ROCKSDB_LITE
 Status CompactionFilter::CreateFromString(const ConfigOptions& config_options,
                                           const std::string& value,
                                           const CompactionFilter** result) {
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinCompactionFilters(*(ObjectLibrary::Default().get()), "");
   });
+#endif  // ROCKSDB_LITE
   CompactionFilter* filter = const_cast<CompactionFilter*>(*result);
-  Status status =
-      LoadStaticObject<CompactionFilter>(config_options, value, &filter);
+  Status status = LoadStaticObject<CompactionFilter>(config_options, value,
+                                                     nullptr, &filter);
   if (status.ok()) {
     *result = const_cast<CompactionFilter*>(filter);
   }
@@ -45,8 +49,8 @@ Status CompactionFilterFactory::CreateFromString(
     std::shared_ptr<CompactionFilterFactory>* result) {
   // Currently there are no builtin CompactionFilterFactories.
   // If any are introduced, they need to be registered here.
-  Status status =
-      LoadSharedObject<CompactionFilterFactory>(config_options, value, result);
+  Status status = LoadSharedObject<CompactionFilterFactory>(
+      config_options, value, nullptr, result);
   return status;
 }
 }  // namespace ROCKSDB_NAMESPACE

@@ -26,12 +26,13 @@ class StringAppendTESTOperator : public MergeOperator {
   explicit StringAppendTESTOperator(char delim_char);
   explicit StringAppendTESTOperator(const std::string& delim);
 
-  bool FullMergeV2(const MergeOperationInput& merge_in,
-                   MergeOperationOutput* merge_out) const override;
+  virtual bool FullMergeV2(const MergeOperationInput& merge_in,
+                           MergeOperationOutput* merge_out) const override;
 
-  bool PartialMergeMulti(const Slice& key,
-                         const std::deque<Slice>& operand_list,
-                         std::string* new_value, Logger* logger) const override;
+  virtual bool PartialMergeMulti(const Slice& key,
+                                 const std::deque<Slice>& operand_list,
+                                 std::string* new_value, Logger* logger) const
+      override;
 
   static const char* kClassName() { return "StringAppendTESTOperator"; }
   static const char* kNickName() { return "stringappendtest"; }

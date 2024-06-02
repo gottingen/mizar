@@ -5,12 +5,13 @@
 
 #include "logging/log_buffer.h"
 
-#include "port/port.h"
 #include "port/sys_time.h"
+#include "port/port.h"
 
 namespace ROCKSDB_NAMESPACE {
 
-LogBuffer::LogBuffer(const InfoLogLevel log_level, Logger* info_log)
+LogBuffer::LogBuffer(const InfoLogLevel log_level,
+                     Logger*info_log)
     : log_level_(log_level), info_log_(info_log) {}
 
 void LogBuffer::AddLogToBuffer(size_t max_log_size, const char* format,
@@ -26,7 +27,7 @@ void LogBuffer::AddLogToBuffer(size_t max_log_size, const char* format,
   char* limit = alloc_mem + max_log_size - 1;
 
   // store the time
-  port::GetTimeOfDay(&(buffered_log->now_tv), nullptr);
+  gettimeofday(&(buffered_log->now_tv), nullptr);
 
   // Print the message
   if (p < limit) {
@@ -59,7 +60,7 @@ void LogBuffer::FlushBufferToLog() {
   for (BufferedLog* log : logs_) {
     const time_t seconds = log->now_tv.tv_sec;
     struct tm t;
-    if (port::LocalTimeR(&seconds, &t) != nullptr) {
+    if (localtime_r(&seconds, &t) != nullptr) {
       Log(log_level_, info_log_,
           "(Original Log Time %04d/%02d/%02d-%02d:%02d:%02d.%06d) %s",
           t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min,

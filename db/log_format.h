@@ -32,24 +32,17 @@ enum RecordType {
   kRecyclableFirstType = 6,
   kRecyclableMiddleType = 7,
   kRecyclableLastType = 8,
-
-  // Compression Type
-  kSetCompressionType = 9,
-
-  // User-defined timestamp sizes
-  kUserDefinedTimestampSizeType = 10,
-  kRecyclableUserDefinedTimestampSizeType = 11,
 };
-constexpr int kMaxRecordType = kRecyclableUserDefinedTimestampSizeType;
+static const int kMaxRecordType = kRecyclableLastType;
 
-constexpr unsigned int kBlockSize = 32768;
+static const unsigned int kBlockSize = 32768;
 
 // Header is checksum (4 bytes), length (2 bytes), type (1 byte)
-constexpr int kHeaderSize = 4 + 2 + 1;
+static const int kHeaderSize = 4 + 2 + 1;
 
 // Recyclable header is checksum (4 bytes), length (2 bytes), type (1 byte),
 // log number (4 bytes).
-constexpr int kRecyclableHeaderSize = 4 + 2 + 1 + 4;
+static const int kRecyclableHeaderSize = 4 + 2 + 1 + 4;
 
 }  // namespace log
 }  // namespace ROCKSDB_NAMESPACE

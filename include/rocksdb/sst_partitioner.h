@@ -104,7 +104,7 @@ class SstPartitionerFixedPrefix : public SstPartitioner {
  public:
   explicit SstPartitionerFixedPrefix(size_t len) : len_(len) {}
 
-  ~SstPartitionerFixedPrefix() override {}
+  virtual ~SstPartitionerFixedPrefix() override {}
 
   const char* Name() const override { return "SstPartitionerFixedPrefix"; }
 
@@ -136,7 +136,7 @@ class SstPartitionerFixedPrefixFactory : public SstPartitionerFactory {
   size_t len_;
 };
 
-std::shared_ptr<SstPartitionerFactory> NewSstPartitionerFixedPrefixFactory(
-    size_t prefix_len);
+extern std::shared_ptr<SstPartitionerFactory>
+NewSstPartitionerFixedPrefixFactory(size_t prefix_len);
 
 }  // namespace ROCKSDB_NAMESPACE

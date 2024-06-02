@@ -11,7 +11,6 @@
 #include "db/column_family.h"
 #include "db/internal_stats.h"
 #include "db/snapshot_impl.h"
-#include "db/version_edit.h"
 #include "env/file_system_tracer.h"
 #include "logging/event_logger.h"
 #include "options/db_options.h"
@@ -43,7 +42,7 @@ struct IngestedFileInfo {
   uint64_t num_entries;
   // total number of range deletions in external file
   uint64_t num_range_deletions;
-  // Id of column family this file should be ingested into
+  // Id of column family this file shoule be ingested into
   uint32_t cf_id;
   // TableProperties read from external file
   TableProperties table_properties;
@@ -71,24 +70,13 @@ struct IngestedFileInfo {
   std::string file_checksum_func_name;
   // The temperature of the file to be ingested
   Temperature file_temperature = Temperature::kUnknown;
-  // Unique id of the file to be ingested
-  UniqueId64x2 unique_id{};
-  // Whether the external file should be treated as if it has user-defined
-  // timestamps or not. If this flag is false, and the column family enables
-  // UDT feature, the file will have min-timestamp artificially padded to its
-  // user keys when it's read. Since it will affect how `TableReader` reads a
-  // table file, it's defaulted to optimize for the majority of the case where
-  // the user key's format in the external file matches the column family's
-  // setting.
-  bool user_defined_timestamps_persisted = true;
 };
 
 class ExternalSstFileIngestionJob {
  public:
   ExternalSstFileIngestionJob(
       VersionSet* versions, ColumnFamilyData* cfd,
-      const ImmutableDBOptions& db_options,
-      const MutableDBOptions& mutable_db_options, const EnvOptions& env_options,
+      const ImmutableDBOptions& db_options, const EnvOptions& env_options,
       SnapshotList* db_snapshots,
       const IngestExternalFileOptions& ingestion_options,
       Directories* directories, EventLogger* event_logger,
@@ -98,7 +86,6 @@ class ExternalSstFileIngestionJob {
         versions_(versions),
         cfd_(cfd),
         db_options_(db_options),
-        mutable_db_options_(mutable_db_options),
         env_options_(env_options),
         db_snapshots_(db_snapshots),
         ingestion_options_(ingestion_options),
@@ -109,8 +96,6 @@ class ExternalSstFileIngestionJob {
         io_tracer_(io_tracer) {
     assert(directories != nullptr);
   }
-
-  ~ExternalSstFileIngestionJob() { UnregisterRange(); }
 
   // Prepare the job by copying external files into the DB.
   Status Prepare(const std::vector<std::string>& external_files_paths,
@@ -133,15 +118,6 @@ class ExternalSstFileIngestionJob {
   // REQUIRES: Mutex held
   Status Run();
 
-  // Register key range involved in this ingestion job
-  // to prevent key range conflict with other ongoing compaction/file ingestion
-  // REQUIRES: Mutex held
-  void RegisterRange();
-
-  // Unregister key range registered for this ingestion job
-  // REQUIRES: Mutex held
-  void UnregisterRange();
-
   // Update column family stats.
   // REQUIRES: Mutex held
   void UpdateStats();
@@ -155,27 +131,10 @@ class ExternalSstFileIngestionJob {
     return files_to_ingest_;
   }
 
-  // How many sequence numbers did we consume as part of the ingestion job?
+  // How many sequence numbers did we consume as part of the ingest job?
   int ConsumedSequenceNumbersCount() const { return consumed_seqno_count_; }
 
  private:
-  Status ResetTableReader(const std::string& external_file,
-                          uint64_t new_file_number,
-                          bool user_defined_timestamps_persisted,
-                          SuperVersion* sv, IngestedFileInfo* file_to_ingest,
-                          std::unique_ptr<TableReader>* table_reader);
-
-  // Read the external file's table properties to do various sanity checks and
-  // populates certain fields in `IngestedFileInfo` according to some table
-  // properties.
-  // In some cases when sanity check passes, `table_reader` could be reset with
-  // different options. For example: when external file does not contain
-  // timestamps while column family enables UDT in Memtables only feature.
-  Status SanityCheckTableProperties(const std::string& external_file,
-                                    uint64_t new_file_number, SuperVersion* sv,
-                                    IngestedFileInfo* file_to_ingest,
-                                    std::unique_ptr<TableReader>* table_reader);
-
   // Open the external file and populate `file_to_ingest` with all the
   // external information we need to ingest this file.
   Status GetIngestedFileInfo(const std::string& external_file,
@@ -214,20 +173,11 @@ class ExternalSstFileIngestionJob {
   template <typename TWritableFile>
   Status SyncIngestedFile(TWritableFile* file);
 
-  // Create equivalent `Compaction` objects to this file ingestion job
-  // , which will be used to check range conflict with other ongoing
-  // compactions.
-  void CreateEquivalentFileIngestingCompactions();
-
-  // Remove all the internal files created, called when ingestion job fails.
-  void DeleteInternalFiles();
-
   SystemClock* clock_;
   FileSystemPtr fs_;
   VersionSet* versions_;
   ColumnFamilyData* cfd_;
   const ImmutableDBOptions& db_options_;
-  const MutableDBOptions& mutable_db_options_;
   const EnvOptions& env_options_;
   SnapshotList* db_snapshots_;
   autovector<IngestedFileInfo> files_to_ingest_;
@@ -244,14 +194,6 @@ class ExternalSstFileIngestionJob {
   // file_checksum_gen_factory is set, DB will generate checksum each file.
   bool need_generate_file_checksum_{true};
   std::shared_ptr<IOTracer> io_tracer_;
-
-  // Below are variables used in (un)registering range for this ingestion job
-  //
-  // FileMetaData used in inputs of compactions equivalent to this ingestion
-  // job
-  std::vector<FileMetaData*> compaction_input_metdatas_;
-  // Compactions equivalent to this ingestion job
-  std::vector<Compaction*> file_ingesting_compactions_;
 };
 
 }  // namespace ROCKSDB_NAMESPACE

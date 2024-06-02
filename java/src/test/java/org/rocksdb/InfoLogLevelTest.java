@@ -95,12 +95,12 @@ public class InfoLogLevelTest {
     int first_non_header = lines.length;
     // Identify the last line of the header
     for (int i = lines.length - 1; i >= 0; --i) {
-      if (lines[i].contains("DB pointer")) {
+      if (lines[i].indexOf("DB pointer") >= 0) {
         first_non_header = i + 1;
         break;
       }
     }
-    final StringBuilder builder = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
     for (int i = first_non_header; i < lines.length; ++i) {
       builder.append(lines[i]).append(separator);
     }

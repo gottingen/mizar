@@ -27,9 +27,9 @@ std::string GetWindowsErrSz(DWORD err);
 inline IOStatus IOErrorFromWindowsError(const std::string& context, DWORD err) {
   return ((err == ERROR_HANDLE_DISK_FULL) || (err == ERROR_DISK_FULL))
              ? IOStatus::NoSpace(context, GetWindowsErrSz(err))
-         : ((err == ERROR_FILE_NOT_FOUND) || (err == ERROR_PATH_NOT_FOUND))
-             ? IOStatus::PathNotFound(context, GetWindowsErrSz(err))
-             : IOStatus::IOError(context, GetWindowsErrSz(err));
+             : ((err == ERROR_FILE_NOT_FOUND) || (err == ERROR_PATH_NOT_FOUND))
+                   ? IOStatus::PathNotFound(context, GetWindowsErrSz(err))
+                   : IOStatus::IOError(context, GetWindowsErrSz(err));
 }
 
 inline IOStatus IOErrorFromLastWindowsError(const std::string& context) {
@@ -39,9 +39,10 @@ inline IOStatus IOErrorFromLastWindowsError(const std::string& context) {
 inline IOStatus IOError(const std::string& context, int err_number) {
   return (err_number == ENOSPC)
              ? IOStatus::NoSpace(context, errnoStr(err_number).c_str())
-         : (err_number == ENOENT)
-             ? IOStatus::PathNotFound(context, errnoStr(err_number).c_str())
-             : IOStatus::IOError(context, errnoStr(err_number).c_str());
+             : (err_number == ENOENT)
+                   ? IOStatus::PathNotFound(context,
+                                            errnoStr(err_number).c_str())
+                   : IOStatus::IOError(context, errnoStr(err_number).c_str());
 }
 
 class WinFileData;
@@ -125,7 +126,9 @@ class WinSequentialFile : protected WinFileData, public FSSequentialFile {
 
   IOStatus InvalidateCache(size_t offset, size_t length) override;
 
-  bool use_direct_io() const override { return WinFileData::use_direct_io(); }
+  virtual bool use_direct_io() const override {
+    return WinFileData::use_direct_io();
+  }
 };
 
 // mmap() based random-access
@@ -149,9 +152,9 @@ class WinMmapReadableFile : private WinFileData, public FSRandomAccessFile {
                 Slice* result, char* scratch,
                 IODebugContext* dbg) const override;
 
-  IOStatus InvalidateCache(size_t offset, size_t length) override;
+  virtual IOStatus InvalidateCache(size_t offset, size_t length) override;
 
-  size_t GetUniqueId(char* id, size_t max_size) const override;
+  virtual size_t GetUniqueId(char* id, size_t max_size) const override;
 };
 
 // We preallocate and use memcpy to append new
@@ -241,7 +244,7 @@ class WinMmapFile : private WinFileData, public FSWritableFile {
   IOStatus Allocate(uint64_t offset, uint64_t len, const IOOptions& options,
                     IODebugContext* dbg) override;
 
-  size_t GetUniqueId(char* id, size_t max_size) const override;
+  virtual size_t GetUniqueId(char* id, size_t max_size) const override;
 };
 
 class WinRandomAccessImpl {
@@ -285,13 +288,15 @@ class WinRandomAccessFile
                 Slice* result, char* scratch,
                 IODebugContext* dbg) const override;
 
-  size_t GetUniqueId(char* id, size_t max_size) const override;
+  virtual size_t GetUniqueId(char* id, size_t max_size) const override;
 
-  bool use_direct_io() const override { return WinFileData::use_direct_io(); }
+  virtual bool use_direct_io() const override {
+    return WinFileData::use_direct_io();
+  }
 
   IOStatus InvalidateCache(size_t offset, size_t length) override;
 
-  size_t GetRequiredBufferAlignment() const override;
+  virtual size_t GetRequiredBufferAlignment() const override;
 };
 
 // This is a sequential write class. It has been mimicked (as others) after
@@ -395,20 +400,20 @@ class WinWritableFile : private WinFileData,
 
   IOStatus Fsync(const IOOptions& options, IODebugContext* dbg) override;
 
-  bool IsSyncThreadSafe() const override;
+  virtual bool IsSyncThreadSafe() const override;
 
   // Indicates if the class makes use of direct I/O
   // Use PositionedAppend
-  bool use_direct_io() const override;
+  virtual bool use_direct_io() const override;
 
-  size_t GetRequiredBufferAlignment() const override;
+  virtual size_t GetRequiredBufferAlignment() const override;
 
   uint64_t GetFileSize(const IOOptions& options, IODebugContext* dbg) override;
 
   IOStatus Allocate(uint64_t offset, uint64_t len, const IOOptions& options,
                     IODebugContext* dbg) override;
 
-  size_t GetUniqueId(char* id, size_t max_size) const override;
+  virtual size_t GetUniqueId(char* id, size_t max_size) const override;
 };
 
 class WinRandomRWFile : private WinFileData,
@@ -423,11 +428,11 @@ class WinRandomRWFile : private WinFileData,
 
   // Indicates if the class makes use of direct I/O
   // If false you must pass aligned buffer to Write()
-  bool use_direct_io() const override;
+  virtual bool use_direct_io() const override;
 
   // Use the returned alignment value to allocate aligned
   // buffer for Write() when use_direct_io() returns true
-  size_t GetRequiredBufferAlignment() const override;
+  virtual size_t GetRequiredBufferAlignment() const override;
 
   // Write bytes in `data` at  offset `offset`, Returns Status::OK() on success.
   // Pass aligned buffer when use_direct_io() returns true.
@@ -467,23 +472,14 @@ class WinMemoryMappedBuffer : public MemoryMappedFileBuffer {
 };
 
 class WinDirectory : public FSDirectory {
-  const std::string filename_;
   HANDLE handle_;
 
  public:
-  explicit WinDirectory(const std::string& filename, HANDLE h) noexcept
-      : filename_(filename), handle_(h) {
+  explicit WinDirectory(HANDLE h) noexcept : handle_(h) {
     assert(handle_ != INVALID_HANDLE_VALUE);
   }
-  ~WinDirectory() {
-    if (handle_ != NULL) {
-      IOStatus s = WinDirectory::Close(IOOptions(), nullptr);
-      s.PermitUncheckedError();
-    }
-  }
-  const std::string& GetName() const { return filename_; }
+  ~WinDirectory() { ::CloseHandle(handle_); }
   IOStatus Fsync(const IOOptions& options, IODebugContext* dbg) override;
-  IOStatus Close(const IOOptions& options, IODebugContext* dbg) override;
 
   size_t GetUniqueId(char* id, size_t max_size) const override;
 };

@@ -6,16 +6,19 @@
 
 #include "util/random.h"
 
-#include <climits>
-#include <cstdint>
-#include <cstring>
+#include <stdint.h>
+#include <string.h>
 #include <thread>
 #include <utility>
 
 #include "port/likely.h"
 #include "util/thread_local.h"
 
-#define STORAGE_DECL static thread_local
+#ifdef ROCKSDB_SUPPORT_THREAD_LOCAL
+#define STORAGE_DECL static __thread
+#else
+#define STORAGE_DECL static
+#endif
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -47,15 +47,13 @@
 
 /* BEGIN RocksDB customizations */
 #ifndef XXPH_STATIC_LINKING_ONLY
-// Access experimental APIs
-#define XXPH_STATIC_LINKING_ONLY 1
+#define XXPH_STATIC_LINKING_ONLY 1 /* access experimental APIs like XXPH3 */
 #endif
 #define XXPH_NAMESPACE ROCKSDB_
 #define XXPH_INLINE_ALL
 #include <cstring>
 /* END RocksDB customizations */
 
-// clang-format off
 #if defined (__cplusplus)
 extern "C" {
 #endif
@@ -385,6 +383,10 @@ typedef struct {
 #ifndef XXPH_STATIC_LINKING_ONLY
 #define XXPH_STATIC_LINKING_ONLY
 #endif
+
+/* BEGIN RocksDB customizations */
+#include "port/lang.h" /* for FALLTHROUGH_INTENDED, inserted as appropriate */
+/* END RocksDB customizations */
 
 /* *************************************
 *  Compiler Specific Options

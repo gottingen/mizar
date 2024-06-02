@@ -4,6 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
+#ifndef ROCKSDB_LITE
 #ifndef OS_WIN
 
 // For DeadlockInfoBuffer:
@@ -133,3 +134,4 @@ void wait_callback_for_locktree(void* cdata, toku::lock_wait_infos* infos);
 
 }  // namespace ROCKSDB_NAMESPACE
 #endif  // OS_WIN
+#endif  // ROCKSDB_LITE

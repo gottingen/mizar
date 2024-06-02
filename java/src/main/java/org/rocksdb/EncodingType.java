@@ -47,7 +47,7 @@ public enum EncodingType {
     return value_;
   }
 
-  EncodingType(final byte value) {
+  private EncodingType(byte value) {
     value_ = value;
   }
 

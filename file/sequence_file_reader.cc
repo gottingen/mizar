@@ -16,40 +16,28 @@
 #include "monitoring/histogram.h"
 #include "monitoring/iostats_context_imp.h"
 #include "port/port.h"
-#include "rocksdb/file_system.h"
 #include "test_util/sync_point.h"
 #include "util/aligned_buffer.h"
 #include "util/random.h"
-#include "util/rate_limiter_impl.h"
+#include "util/rate_limiter.h"
 
 namespace ROCKSDB_NAMESPACE {
 IOStatus SequentialFileReader::Create(
     const std::shared_ptr<FileSystem>& fs, const std::string& fname,
     const FileOptions& file_opts, std::unique_ptr<SequentialFileReader>* reader,
-    IODebugContext* dbg, RateLimiter* rate_limiter) {
+    IODebugContext* dbg) {
   std::unique_ptr<FSSequentialFile> file;
   IOStatus io_s = fs->NewSequentialFile(fname, file_opts, &file, dbg);
   if (io_s.ok()) {
-    reader->reset(new SequentialFileReader(std::move(file), fname, nullptr, {},
-                                           rate_limiter));
+    reader->reset(new SequentialFileReader(std::move(file), fname));
   }
   return io_s;
 }
 
-IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch,
-                                    Env::IOPriority rate_limiter_priority) {
+IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch) {
   IOStatus io_s;
-  IOOptions io_opts;
-  io_opts.rate_limiter_priority = rate_limiter_priority;
-  io_opts.verify_and_reconstruct_read = verify_and_reconstruct_read_;
   if (use_direct_io()) {
-    //
-    //    |-offset_advance-|---bytes returned--|
-    //    |----------------------buf size-------------------------|
-    //    |                |                   |                  |
-    // aligned           offset          offset + n  Roundup(offset + n,
-    // offset                                             alignment)
-    //
+#ifndef ROCKSDB_LITE
     size_t offset = offset_.fetch_add(n);
     size_t alignment = file_->GetRequiredBufferAlignment();
     size_t aligned_offset = TruncateToPageBoundary(alignment, offset);
@@ -60,47 +48,30 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch,
     buf.Alignment(alignment);
     buf.AllocateNewBuffer(size);
 
-    while (buf.CurrentSize() < size) {
-      size_t allowed;
-      if (rate_limiter_priority != Env::IO_TOTAL && rate_limiter_ != nullptr) {
-        allowed = rate_limiter_->RequestToken(
-            buf.Capacity() - buf.CurrentSize(), buf.Alignment(),
-            rate_limiter_priority, nullptr /* stats */,
-            RateLimiter::OpType::kRead);
-      } else {
-        assert(buf.CurrentSize() == 0);
-        allowed = size;
-      }
-
-      Slice tmp;
-      uint64_t orig_offset = 0;
-      FileOperationInfo::StartTimePoint start_ts;
-      if (ShouldNotifyListeners()) {
-        orig_offset = aligned_offset + buf.CurrentSize();
-        start_ts = FileOperationInfo::StartNow();
-      }
-      io_s = file_->PositionedRead(aligned_offset + buf.CurrentSize(), allowed,
-                                   io_opts, &tmp, buf.Destination(),
-                                   nullptr /* dbg */);
-      if (ShouldNotifyListeners()) {
-        auto finish_ts = FileOperationInfo::FinishNow();
-        NotifyOnFileReadFinish(orig_offset, tmp.size(), start_ts, finish_ts,
-                               io_s);
-      }
-      buf.Size(buf.CurrentSize() + tmp.size());
-      if (!io_s.ok() || tmp.size() < allowed) {
-        break;
-      }
+    Slice tmp;
+    uint64_t orig_offset = 0;
+    FileOperationInfo::StartTimePoint start_ts;
+    if (ShouldNotifyListeners()) {
+      orig_offset = aligned_offset + buf.CurrentSize();
+      start_ts = FileOperationInfo::StartNow();
     }
-
-    if (io_s.ok() && offset_advance < buf.CurrentSize()) {
+    io_s = file_->PositionedRead(aligned_offset, size, IOOptions(), &tmp,
+                                 buf.BufferStart(), nullptr);
+    if (io_s.ok() && offset_advance < tmp.size()) {
+      buf.Size(tmp.size());
       r = buf.Read(scratch, offset_advance,
-                   std::min(buf.CurrentSize() - offset_advance, n));
+                   std::min(tmp.size() - offset_advance, n));
     }
     *result = Slice(scratch, r);
+    if (ShouldNotifyListeners()) {
+      auto finish_ts = FileOperationInfo::FinishNow();
+      NotifyOnFileReadFinish(orig_offset, tmp.size(), start_ts, finish_ts,
+                             io_s);
+    }
+#endif  // !ROCKSDB_LITE
   } else {
     // To be paranoid, modify scratch a little bit, so in case underlying
-    // FileSystem doesn't fill the buffer but return success and `scratch`
+    // FileSystem doesn't fill the buffer but return succee and `scratch`
     // returns contains a previous block, returned value will not pass
     // checksum.
     // It's hard to find useful byte for direct I/O case, so we skip it.
@@ -108,44 +79,34 @@ IOStatus SequentialFileReader::Read(size_t n, Slice* result, char* scratch,
       scratch[0]++;
     }
 
-    size_t read = 0;
-    while (read < n) {
-      size_t allowed;
-      if (rate_limiter_priority != Env::IO_TOTAL && rate_limiter_ != nullptr) {
-        allowed = rate_limiter_->RequestToken(
-            n - read, 0 /* alignment */, rate_limiter_priority,
-            nullptr /* stats */, RateLimiter::OpType::kRead);
-      } else {
-        allowed = n;
-      }
-      FileOperationInfo::StartTimePoint start_ts;
-      if (ShouldNotifyListeners()) {
-        start_ts = FileOperationInfo::StartNow();
-      }
-      Slice tmp;
-      io_s = file_->Read(allowed, io_opts, &tmp, scratch + read,
-                         nullptr /* dbg */);
-      if (ShouldNotifyListeners()) {
-        auto finish_ts = FileOperationInfo::FinishNow();
-        size_t offset = offset_.fetch_add(tmp.size());
-        NotifyOnFileReadFinish(offset, tmp.size(), start_ts, finish_ts, io_s);
-      }
-      read += tmp.size();
-      if (!io_s.ok() || tmp.size() < allowed) {
-        break;
-      }
+#ifndef ROCKSDB_LITE
+    FileOperationInfo::StartTimePoint start_ts;
+    if (ShouldNotifyListeners()) {
+      start_ts = FileOperationInfo::StartNow();
     }
-    *result = Slice(scratch, read);
+#endif
+
+    io_s = file_->Read(n, IOOptions(), result, scratch, nullptr);
+
+#ifndef ROCKSDB_LITE
+    if (ShouldNotifyListeners()) {
+      auto finish_ts = FileOperationInfo::FinishNow();
+      size_t offset = offset_.fetch_add(result->size());
+      NotifyOnFileReadFinish(offset, result->size(), start_ts, finish_ts, io_s);
+    }
+#endif
   }
   IOSTATS_ADD(bytes_read, result->size());
   return io_s;
 }
 
 IOStatus SequentialFileReader::Skip(uint64_t n) {
+#ifndef ROCKSDB_LITE
   if (use_direct_io()) {
     offset_ += static_cast<size_t>(n);
     return IOStatus::OK();
   }
+#endif  // !ROCKSDB_LITE
   return file_->Skip(n);
 }
 

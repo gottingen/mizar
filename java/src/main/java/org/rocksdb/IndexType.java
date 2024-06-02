@@ -47,7 +47,7 @@ public enum IndexType {
     return value_;
   }
 
-  IndexType(final byte value) {
+  IndexType(byte value) {
     value_ = value;
   }
 

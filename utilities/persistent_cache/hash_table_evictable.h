@@ -5,6 +5,7 @@
 //
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 
@@ -164,3 +165,4 @@ class EvictableHashTable : private HashTable<T*, Hash, Equal> {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif

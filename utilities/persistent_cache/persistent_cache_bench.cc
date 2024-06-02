@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
+#ifndef ROCKSDB_LITE
 
 #ifndef GFLAGS
 #include <cstdio>
@@ -233,7 +234,7 @@ class CacheTierBenchmark {
       fprintf(stderr, "%s\n", status.ToString().c_str());
     }
     assert(status.ok());
-    assert(size == (size_t)FLAGS_iosize);
+    assert(size == (size_t) FLAGS_iosize);
 
     // adjust stats
     const size_t elapsed_micro = timer.ElapsedNanos() / 1000;
@@ -353,3 +354,6 @@ int main(int argc, char** argv) {
   return 0;
 }
 #endif  // #ifndef GFLAGS
+#else
+int main(int, char**) { return 0; }
+#endif

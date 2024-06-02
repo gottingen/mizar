@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/transaction_test.h"
 #include "utilities/transactions/write_unprepared_txn.h"
@@ -27,7 +28,7 @@ class WriteUnpreparedTransactionTest
   WriteUnpreparedTransactionTest()
       : WriteUnpreparedTransactionTestBase(std::get<0>(GetParam()),
                                            std::get<1>(GetParam()),
-                                           std::get<2>(GetParam())) {}
+                                           std::get<2>(GetParam())){}
 };
 
 INSTANTIATE_TEST_CASE_P(
@@ -35,32 +36,26 @@ INSTANTIATE_TEST_CASE_P(
     ::testing::Values(std::make_tuple(false, false, WRITE_UNPREPARED),
                       std::make_tuple(false, true, WRITE_UNPREPARED)));
 
-enum SnapshotAction { NO_SNAPSHOT, RO_SNAPSHOT, REFRESH_SNAPSHOT };
-enum VerificationOperation { VERIFY_GET, VERIFY_NEXT, VERIFY_PREV };
-class WriteUnpreparedSnapshotTest
-    : public WriteUnpreparedTransactionTestBase,
-      virtual public ::testing::WithParamInterface<
-          std::tuple<bool, SnapshotAction, VerificationOperation>> {
+enum StressAction { NO_SNAPSHOT, RO_SNAPSHOT, REFRESH_SNAPSHOT };
+class WriteUnpreparedStressTest : public WriteUnpreparedTransactionTestBase,
+                                  virtual public ::testing::WithParamInterface<
+                                      std::tuple<bool, StressAction>> {
  public:
-  WriteUnpreparedSnapshotTest()
+  WriteUnpreparedStressTest()
       : WriteUnpreparedTransactionTestBase(false, std::get<0>(GetParam()),
                                            WRITE_UNPREPARED),
-        action_(std::get<1>(GetParam())),
-        verify_op_(std::get<2>(GetParam())) {}
-  SnapshotAction action_;
-  VerificationOperation verify_op_;
+        action_(std::get<1>(GetParam())) {}
+  StressAction action_;
 };
 
-// Test parameters:
-// Param 0): use stackable db, parameterization hard coded to be overwritten to
-// false. Param 1): test mode for snapshot action Param 2): test mode for
-// verification operation
 INSTANTIATE_TEST_CASE_P(
-    WriteUnpreparedSnapshotTest, WriteUnpreparedSnapshotTest,
-    ::testing::Combine(
-        ::testing::Bool(),
-        ::testing::Values(NO_SNAPSHOT, RO_SNAPSHOT, REFRESH_SNAPSHOT),
-        ::testing::Values(VERIFY_GET, VERIFY_NEXT, VERIFY_PREV)));
+    WriteUnpreparedStressTest, WriteUnpreparedStressTest,
+    ::testing::Values(std::make_tuple(false, NO_SNAPSHOT),
+                      std::make_tuple(false, RO_SNAPSHOT),
+                      std::make_tuple(false, REFRESH_SNAPSHOT),
+                      std::make_tuple(true, NO_SNAPSHOT),
+                      std::make_tuple(true, RO_SNAPSHOT),
+                      std::make_tuple(true, REFRESH_SNAPSHOT)));
 
 TEST_P(WriteUnpreparedTransactionTest, ReadYourOwnWrite) {
   // The following tests checks whether reading your own write for
@@ -92,7 +87,7 @@ TEST_P(WriteUnpreparedTransactionTest, ReadYourOwnWrite) {
     txn->SetSnapshot();
 
     for (int i = 0; i < 5; i++) {
-      std::string stored_value = "v" + std::to_string(i);
+      std::string stored_value = "v" + ToString(i);
       ASSERT_OK(txn->Put("a", stored_value));
       ASSERT_OK(txn->Put("b", stored_value));
       ASSERT_OK(wup_txn->FlushWriteBatchToDB(false));
@@ -141,33 +136,42 @@ TEST_P(WriteUnpreparedTransactionTest, ReadYourOwnWrite) {
   }
 }
 
-TEST_P(WriteUnpreparedSnapshotTest, ReadYourOwnWrite) {
-  // This test validates a transaction can read its writes and the correctness
-  // of its read with regard to a mocked snapshot functionality.
+#if !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
+TEST_P(WriteUnpreparedStressTest, ReadYourOwnWriteStress) {
+  // This is a stress test where different threads are writing random keys, and
+  // then before committing or aborting the transaction, it validates to see
+  // that it can read the keys it wrote, and the keys it did not write respect
+  // the snapshot. To avoid row lock contention (and simply stressing the
+  // locking system), each thread is mostly only writing to its own set of keys.
   const uint32_t kNumIter = 1000;
+  const uint32_t kNumThreads = 10;
   const uint32_t kNumKeys = 5;
 
   // Test with
   // 1. no snapshots set
   // 2. snapshot set on ReadOptions
   // 3. snapshot set, and refreshing after every write.
-  SnapshotAction snapshot_action = action_;
+  StressAction a = action_;
   WriteOptions write_options;
   txn_db_options.transaction_lock_timeout = -1;
   options.disable_auto_compactions = true;
   ASSERT_OK(ReOpen());
 
   std::vector<std::string> keys;
-  for (uint32_t k = 0; k < kNumKeys; k++) {
-    keys.push_back("k" + std::to_string(k));
+  for (uint32_t k = 0; k < kNumKeys * kNumThreads; k++) {
+    keys.push_back("k" + ToString(k));
   }
+  RandomShuffle(keys.begin(), keys.end());
 
   // This counter will act as a "sequence number" to help us validate
   // visibility logic with snapshots. If we had direct access to the seqno of
   // snapshots and key/values, then we should directly compare those instead.
   std::atomic<int64_t> counter(0);
 
-  std::function<void()> check_correctness_wrt_snapshot = [&]() {
+  std::function<void(uint32_t)> stress_thread = [&](int id) {
+    size_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
+    Random64 rnd(static_cast<uint32_t>(tid));
+
     Transaction* txn;
     TransactionOptions txn_options;
     // batch_size of 1 causes writes to DB for every marker.
@@ -175,82 +179,114 @@ TEST_P(WriteUnpreparedSnapshotTest, ReadYourOwnWrite) {
     ReadOptions read_options;
 
     for (uint32_t i = 0; i < kNumIter; i++) {
+      std::set<std::string> owned_keys(keys.begin() + id * kNumKeys,
+                                       keys.begin() + (id + 1) * kNumKeys);
+      // Add unowned keys to make the workload more interesting, but this
+      // increases row lock contention, so just do it sometimes.
+      if (rnd.OneIn(2)) {
+        owned_keys.insert(keys[rnd.Uniform(kNumKeys * kNumThreads)]);
+      }
+
       txn = db->BeginTransaction(write_options, txn_options);
+      ASSERT_OK(txn->SetName(ToString(id)));
       txn->SetSnapshot();
-      if (snapshot_action >= RO_SNAPSHOT) {
+      if (a >= RO_SNAPSHOT) {
         read_options.snapshot = txn->GetSnapshot();
         ASSERT_TRUE(read_options.snapshot != nullptr);
       }
 
-      uint64_t buf[1];
+      uint64_t buf[2];
+      buf[0] = id;
 
       // When scanning through the database, make sure that all unprepared
-      // keys have value >= snapshot.
+      // keys have value >= snapshot and all other keys have value < snapshot.
       int64_t snapshot_num = counter.fetch_add(1);
 
       Status s;
-      for (const auto& key : keys) {
-        buf[0] = counter.fetch_add(1);
+      for (const auto& key : owned_keys) {
+        buf[1] = counter.fetch_add(1);
         s = txn->Put(key, Slice((const char*)buf, sizeof(buf)));
         if (!s.ok()) {
           break;
         }
-        if (snapshot_action == REFRESH_SNAPSHOT) {
+        if (a == REFRESH_SNAPSHOT) {
           txn->SetSnapshot();
           read_options.snapshot = txn->GetSnapshot();
           snapshot_num = counter.fetch_add(1);
         }
       }
 
-      ASSERT_OK(s);
+      // Failure is possible due to snapshot validation. In this case,
+      // rollback and move onto next iteration.
+      if (!s.ok()) {
+        ASSERT_TRUE(s.IsBusy());
+        ASSERT_OK(txn->Rollback());
+        delete txn;
+        continue;
+      }
 
-      auto verify_key = [&snapshot_action,
-                         &snapshot_num](const std::string& value) {
-        ASSERT_EQ(value.size(), 8);
+      auto verify_key = [&owned_keys, &a, &id, &snapshot_num](
+                            const std::string& key, const std::string& value) {
+        if (owned_keys.count(key) > 0) {
+          ASSERT_EQ(value.size(), 16);
 
-        if (snapshot_action == REFRESH_SNAPSHOT) {
-          // If refresh snapshot is true, then the snapshot is refreshed
-          // after every Put(), meaning that the current snapshot in
-          // snapshot_num must be greater than the "seqno" of any keys
-          // written by the current transaction.
-          ASSERT_LT(((int64_t*)value.c_str())[0], snapshot_num);
-        } else {
-          // If refresh snapshot is not on, then the snapshot was taken at
-          // the beginning of the transaction, meaning all writes must come
-          // after snapshot_num
-          ASSERT_GT(((int64_t*)value.c_str())[0], snapshot_num);
+          // Since this key is part of owned_keys, then this key must be
+          // unprepared by this transaction identified by 'id'
+          ASSERT_EQ(((int64_t*)value.c_str())[0], id);
+          if (a == REFRESH_SNAPSHOT) {
+            // If refresh snapshot is true, then the snapshot is refreshed
+            // after every Put(), meaning that the current snapshot in
+            // snapshot_num must be greater than the "seqno" of any keys
+            // written by the current transaction.
+            ASSERT_LT(((int64_t*)value.c_str())[1], snapshot_num);
+          } else {
+            // If refresh snapshot is not on, then the snapshot was taken at
+            // the beginning of the transaction, meaning all writes must come
+            // after snapshot_num
+            ASSERT_GT(((int64_t*)value.c_str())[1], snapshot_num);
+          }
+        } else if (a >= RO_SNAPSHOT) {
+          // If this is not an unprepared key, just assert that the key
+          // "seqno" is smaller than the snapshot seqno.
+          ASSERT_EQ(value.size(), 16);
+          ASSERT_LT(((int64_t*)value.c_str())[1], snapshot_num);
         }
       };
 
-      // Validate one of Get()/Next()/Prev() depending on the verification
-      // operation to use.
-      switch (verify_op_) {
-        case VERIFY_GET:  // Validate Get()
+      // Validate Get()/Next()/Prev(). Do only one of them to save time, and
+      // reduce lock contention.
+      switch (rnd.Uniform(3)) {
+        case 0:  // Validate Get()
         {
           for (const auto& key : keys) {
             std::string value;
-            ASSERT_OK(txn->Get(read_options, Slice(key), &value));
-            verify_key(value);
+            s = txn->Get(read_options, Slice(key), &value);
+            if (!s.ok()) {
+              ASSERT_TRUE(s.IsNotFound());
+              ASSERT_EQ(owned_keys.count(key), 0);
+            } else {
+              verify_key(key, value);
+            }
           }
           break;
         }
-        case VERIFY_NEXT:  // Validate Next()
+        case 1:  // Validate Next()
         {
           Iterator* iter = txn->GetIterator(read_options);
           ASSERT_OK(iter->status());
           for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
-            verify_key(iter->value().ToString());
+            verify_key(iter->key().ToString(), iter->value().ToString());
           }
           ASSERT_OK(iter->status());
           delete iter;
           break;
         }
-        case VERIFY_PREV:  // Validate Prev()
+        case 2:  // Validate Prev()
         {
           Iterator* iter = txn->GetIterator(read_options);
           ASSERT_OK(iter->status());
           for (iter->SeekToLast(); iter->Valid(); iter->Prev()) {
-            verify_key(iter->value().ToString());
+            verify_key(iter->key().ToString(), iter->value().ToString());
           }
           ASSERT_OK(iter->status());
           delete iter;
@@ -260,13 +296,25 @@ TEST_P(WriteUnpreparedSnapshotTest, ReadYourOwnWrite) {
           FAIL();
       }
 
-      ASSERT_OK(txn->Commit());
+      if (rnd.OneIn(2)) {
+        ASSERT_OK(txn->Commit());
+      } else {
+        ASSERT_OK(txn->Rollback());
+      }
       delete txn;
     }
   };
 
-  check_correctness_wrt_snapshot();
+  std::vector<port::Thread> threads;
+  for (uint32_t i = 0; i < kNumThreads; i++) {
+    threads.emplace_back(stress_thread, i);
+  }
+
+  for (auto& t : threads) {
+    t.join();
+  }
 }
+#endif  // !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
 
 // This tests how write unprepared behaves during recovery when the DB crashes
 // after a transaction has either been unprepared or prepared, and tests if
@@ -294,8 +342,8 @@ TEST_P(WriteUnpreparedTransactionTest, RecoveryTest) {
           wup_db = dynamic_cast<WriteUnpreparedTxnDB*>(db);
           if (!empty) {
             for (int i = 0; i < num_batches; i++) {
-              ASSERT_OK(db->Put(WriteOptions(), "k" + std::to_string(i),
-                                "before value" + std::to_string(i)));
+              ASSERT_OK(db->Put(WriteOptions(), "k" + ToString(i),
+                                "before value" + ToString(i)));
             }
           }
 
@@ -304,8 +352,7 @@ TEST_P(WriteUnpreparedTransactionTest, RecoveryTest) {
           WriteUnpreparedTxn* wup_txn = dynamic_cast<WriteUnpreparedTxn*>(txn);
           ASSERT_OK(txn->SetName("xid"));
           for (int i = 0; i < num_batches; i++) {
-            ASSERT_OK(
-                txn->Put("k" + std::to_string(i), "value" + std::to_string(i)));
+            ASSERT_OK(txn->Put("k" + ToString(i), "value" + ToString(i)));
             if (txn_options.write_batch_flush_threshold == 1) {
               // WriteUnprepared will check write_batch_flush_threshold and
               // possibly flush before appending to the write batch. No flush
@@ -349,13 +396,12 @@ TEST_P(WriteUnpreparedTransactionTest, RecoveryTest) {
           if (!empty || a == COMMIT) {
             for (int i = 0; i < num_batches; i++) {
               ASSERT_TRUE(iter->Valid());
-              ASSERT_EQ(iter->key().ToString(), "k" + std::to_string(i));
+              ASSERT_EQ(iter->key().ToString(), "k" + ToString(i));
               if (a == COMMIT) {
-                ASSERT_EQ(iter->value().ToString(),
-                          "value" + std::to_string(i));
+                ASSERT_EQ(iter->value().ToString(), "value" + ToString(i));
               } else {
                 ASSERT_EQ(iter->value().ToString(),
-                          "before value" + std::to_string(i));
+                          "before value" + ToString(i));
               }
               iter->Next();
             }
@@ -388,7 +434,7 @@ TEST_P(WriteUnpreparedTransactionTest, UnpreparedBatch) {
         ASSERT_OK(txn->SetName("xid"));
 
         for (int i = 0; i < kNumKeys; i++) {
-          ASSERT_OK(txn->Put("k" + std::to_string(i), "v" + std::to_string(i)));
+          ASSERT_OK(txn->Put("k" + ToString(i), "v" + ToString(i)));
           if (txn_options.write_batch_flush_threshold == 1) {
             // WriteUnprepared will check write_batch_flush_threshold and
             // possibly flush before appending to the write batch. No flush will
@@ -425,8 +471,8 @@ TEST_P(WriteUnpreparedTransactionTest, UnpreparedBatch) {
 
         for (int i = 0; i < (commit ? kNumKeys : 0); i++) {
           ASSERT_TRUE(iter->Valid());
-          ASSERT_EQ(iter->key().ToString(), "k" + std::to_string(i));
-          ASSERT_EQ(iter->value().ToString(), "v" + std::to_string(i));
+          ASSERT_EQ(iter->key().ToString(), "k" + ToString(i));
+          ASSERT_EQ(iter->value().ToString(), "v" + ToString(i));
           iter->Next();
         }
         ASSERT_FALSE(iter->Valid());
@@ -466,10 +512,9 @@ TEST_P(WriteUnpreparedTransactionTest, MarkLogWithPrepSection) {
 
       // Spread this transaction across multiple log files.
       for (int i = 0; i < kNumKeys; i++) {
-        ASSERT_OK(txn1->Put("k1" + std::to_string(i), "v" + std::to_string(i)));
+        ASSERT_OK(txn1->Put("k1" + ToString(i), "v" + ToString(i)));
         if (i >= kNumKeys / 2) {
-          ASSERT_OK(
-              txn2->Put("k2" + std::to_string(i), "v" + std::to_string(i)));
+          ASSERT_OK(txn2->Put("k2" + ToString(i), "v" + ToString(i)));
         }
 
         if (i > 0) {
@@ -556,7 +601,7 @@ TEST_P(WriteUnpreparedTransactionTest, IterateAndWrite) {
 
   for (Action a : {DO_DELETE, DO_UPDATE}) {
     for (int i = 0; i < 100; i++) {
-      ASSERT_OK(db->Put(woptions, std::to_string(i), std::to_string(i)));
+      ASSERT_OK(db->Put(woptions, ToString(i), ToString(i)));
     }
 
     Transaction* txn = db->BeginTransaction(woptions, txn_options);
@@ -617,7 +662,7 @@ TEST_P(WriteUnpreparedTransactionTest, IterateAfterClear) {
 
   for (Action a : {kCommit, kRollback}) {
     for (int i = 0; i < 100; i++) {
-      ASSERT_OK(db->Put(woptions, std::to_string(i), std::to_string(i)));
+      ASSERT_OK(db->Put(woptions, ToString(i), ToString(i)));
     }
 
     Transaction* txn = db->BeginTransaction(woptions, txn_options);
@@ -725,8 +770,17 @@ TEST_P(WriteUnpreparedTransactionTest, UntrackedKeys) {
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
+#else
+#include <stdio.h>
+
+int main(int /*argc*/, char** /*argv*/) {
+  fprintf(stderr,
+          "SKIPPED as Transactions are not supported in ROCKSDB_LITE\n");
+  return 0;
+}
+
+#endif  // ROCKSDB_LITE

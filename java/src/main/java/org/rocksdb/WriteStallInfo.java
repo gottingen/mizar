@@ -51,12 +51,12 @@ public class WriteStallInfo {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    final WriteStallInfo that = (WriteStallInfo) o;
+    WriteStallInfo that = (WriteStallInfo) o;
     return Objects.equals(columnFamilyName, that.columnFamilyName)
         && currentCondition == that.currentCondition && previousCondition == that.previousCondition;
   }

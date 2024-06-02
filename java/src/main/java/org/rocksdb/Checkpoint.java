@@ -31,7 +31,8 @@ public class Checkpoint extends RocksObject {
       throw new IllegalStateException(
           "RocksDB instance must be initialized.");
     }
-    return new Checkpoint(db);
+    Checkpoint checkpoint = new Checkpoint(db);
+    return checkpoint;
   }
 
   /**
@@ -50,26 +51,16 @@ public class Checkpoint extends RocksObject {
     createCheckpoint(nativeHandle_, checkpointPath);
   }
 
-  public ExportImportFilesMetaData exportColumnFamily(final ColumnFamilyHandle columnFamilyHandle,
-      final String exportPath) throws RocksDBException {
-    return new ExportImportFilesMetaData(
-        exportColumnFamily(nativeHandle_, columnFamilyHandle.nativeHandle_, exportPath));
-  }
-
   private Checkpoint(final RocksDB db) {
     super(newCheckpoint(db.nativeHandle_));
+    this.db_ = db;
   }
+
+  private final RocksDB db_;
 
   private static native long newCheckpoint(long dbHandle);
-  @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  @Override protected final native void disposeInternal(final long handle);
 
-  private static native void createCheckpoint(long handle, String checkpointPath)
-      throws RocksDBException;
-
-  private native long exportColumnFamily(long handle, long columnFamilyHandle, String exportPath)
+  private native void createCheckpoint(long handle, String checkpointPath)
       throws RocksDBException;
 }

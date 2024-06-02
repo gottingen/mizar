@@ -23,7 +23,6 @@
 #pragma once
 
 #include <assert.h>
-
 #include <chrono>
 #include <condition_variable>
 #include <functional>

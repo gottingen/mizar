@@ -4,7 +4,6 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #include "options/options_helper.h"
 
-#include <atomic>
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
@@ -31,24 +30,30 @@
 
 namespace ROCKSDB_NAMESPACE {
 ConfigOptions::ConfigOptions()
+#ifndef ROCKSDB_LITE
     : registry(ObjectRegistry::NewInstance())
+#endif
 {
   env = Env::Default();
 }
 
 ConfigOptions::ConfigOptions(const DBOptions& db_opts) : env(db_opts.env) {
+#ifndef ROCKSDB_LITE
   registry = ObjectRegistry::NewInstance();
+#endif
 }
 
 Status ValidateOptions(const DBOptions& db_opts,
                        const ColumnFamilyOptions& cf_opts) {
   Status s;
+#ifndef ROCKSDB_LITE
   auto db_cfg = DBOptionsAsConfigurable(db_opts);
   auto cf_cfg = CFOptionsAsConfigurable(cf_opts);
   s = db_cfg->ValidateOptions(db_opts, cf_opts);
-  if (s.ok()) {
-    s = cf_cfg->ValidateOptions(db_opts, cf_opts);
-  }
+  if (s.ok()) s = cf_cfg->ValidateOptions(db_opts, cf_opts);
+#else
+  s = cf_opts.table_factory->ValidateOptions(db_opts, cf_opts);
+#endif
   return s;
 }
 
@@ -63,12 +68,8 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.paranoid_checks = immutable_db_options.paranoid_checks;
   options.flush_verify_memtable_count =
       immutable_db_options.flush_verify_memtable_count;
-  options.compaction_verify_record_count =
-      immutable_db_options.compaction_verify_record_count;
   options.track_and_verify_wals_in_manifest =
       immutable_db_options.track_and_verify_wals_in_manifest;
-  options.verify_sst_unique_id_in_manifest =
-      immutable_db_options.verify_sst_unique_id_in_manifest;
   options.env = immutable_db_options.env;
   options.rate_limiter = immutable_db_options.rate_limiter;
   options.sst_file_manager = immutable_db_options.sst_file_manager;
@@ -86,6 +87,8 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.delete_obsolete_files_period_micros =
       mutable_db_options.delete_obsolete_files_period_micros;
   options.max_background_jobs = mutable_db_options.max_background_jobs;
+  options.base_background_compactions =
+      mutable_db_options.base_background_compactions;
   options.max_background_compactions =
       mutable_db_options.max_background_compactions;
   options.bytes_per_sync = mutable_db_options.bytes_per_sync;
@@ -120,6 +123,10 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.advise_random_on_open = immutable_db_options.advise_random_on_open;
   options.db_write_buffer_size = immutable_db_options.db_write_buffer_size;
   options.write_buffer_manager = immutable_db_options.write_buffer_manager;
+  options.access_hint_on_compaction_start =
+      immutable_db_options.access_hint_on_compaction_start;
+  options.new_table_reader_for_compaction_inputs =
+      immutable_db_options.new_table_reader_for_compaction_inputs;
   options.compaction_readahead_size =
       mutable_db_options.compaction_readahead_size;
   options.random_access_max_buffer_size =
@@ -149,7 +156,9 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.wal_recovery_mode = immutable_db_options.wal_recovery_mode;
   options.allow_2pc = immutable_db_options.allow_2pc;
   options.row_cache = immutable_db_options.row_cache;
+#ifndef ROCKSDB_LITE
   options.wal_filter = immutable_db_options.wal_filter;
+#endif  // ROCKSDB_LITE
   options.fail_if_options_file_error =
       immutable_db_options.fail_if_options_file_error;
   options.dump_malloc_stats = immutable_db_options.dump_malloc_stats;
@@ -157,10 +166,12 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
       immutable_db_options.avoid_flush_during_recovery;
   options.avoid_flush_during_shutdown =
       mutable_db_options.avoid_flush_during_shutdown;
-  options.allow_ingest_behind = immutable_db_options.allow_ingest_behind;
+  options.allow_ingest_behind =
+      immutable_db_options.allow_ingest_behind;
+  options.preserve_deletes =
+      immutable_db_options.preserve_deletes;
   options.two_write_queues = immutable_db_options.two_write_queues;
   options.manual_wal_flush = immutable_db_options.manual_wal_flush;
-  options.wal_compression = immutable_db_options.wal_compression;
   options.atomic_flush = immutable_db_options.atomic_flush;
   options.avoid_unnecessary_blocking_io =
       immutable_db_options.avoid_unnecessary_blocking_io;
@@ -177,9 +188,6 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
   options.checksum_handoff_file_types =
       immutable_db_options.checksum_handoff_file_types;
   options.lowest_used_cache_tier = immutable_db_options.lowest_used_cache_tier;
-  options.enforce_single_del_contracts =
-      immutable_db_options.enforce_single_del_contracts;
-  options.daily_offpeak_time_utc = mutable_db_options.daily_offpeak_time_utc;
   return options;
 }
 
@@ -204,17 +212,8 @@ void UpdateColumnFamilyOptions(const MutableCFOptions& moptions,
   cf_opts->memtable_whole_key_filtering = moptions.memtable_whole_key_filtering;
   cf_opts->memtable_huge_page_size = moptions.memtable_huge_page_size;
   cf_opts->max_successive_merges = moptions.max_successive_merges;
-  cf_opts->strict_max_successive_merges = moptions.strict_max_successive_merges;
   cf_opts->inplace_update_num_locks = moptions.inplace_update_num_locks;
   cf_opts->prefix_extractor = moptions.prefix_extractor;
-  cf_opts->experimental_mempurge_threshold =
-      moptions.experimental_mempurge_threshold;
-  cf_opts->memtable_protection_bytes_per_key =
-      moptions.memtable_protection_bytes_per_key;
-  cf_opts->block_protection_bytes_per_key =
-      moptions.block_protection_bytes_per_key;
-  cf_opts->bottommost_file_compaction_delay =
-      moptions.bottommost_file_compaction_delay;
 
   // Compaction related options
   cf_opts->disable_auto_compactions = moptions.disable_auto_compactions;
@@ -257,12 +256,12 @@ void UpdateColumnFamilyOptions(const MutableCFOptions& moptions,
       moptions.blob_garbage_collection_force_threshold;
   cf_opts->blob_compaction_readahead_size =
       moptions.blob_compaction_readahead_size;
-  cf_opts->blob_file_starting_level = moptions.blob_file_starting_level;
-  cf_opts->prepopulate_blob_cache = moptions.prepopulate_blob_cache;
 
   // Misc options
   cf_opts->max_sequential_skip_in_iterations =
       moptions.max_sequential_skip_in_iterations;
+  cf_opts->check_flush_compaction_key_order =
+      moptions.check_flush_compaction_key_order;
   cf_opts->paranoid_file_checks = moptions.paranoid_file_checks;
   cf_opts->report_bg_io_stats = moptions.report_bg_io_stats;
   cf_opts->compression = moptions.compression;
@@ -270,10 +269,6 @@ void UpdateColumnFamilyOptions(const MutableCFOptions& moptions,
   cf_opts->bottommost_compression = moptions.bottommost_compression;
   cf_opts->bottommost_compression_opts = moptions.bottommost_compression_opts;
   cf_opts->sample_for_compression = moptions.sample_for_compression;
-  cf_opts->compression_per_level = moptions.compression_per_level;
-  cf_opts->last_level_temperature = moptions.last_level_temperature;
-  cf_opts->default_write_temperature = moptions.default_write_temperature;
-  cf_opts->memtable_max_range_deletions = moptions.memtable_max_range_deletions;
 }
 
 void UpdateColumnFamilyOptions(const ImmutableCFOptions& ioptions,
@@ -297,6 +292,9 @@ void UpdateColumnFamilyOptions(const ImmutableCFOptions& ioptions,
   cf_opts->table_properties_collector_factories =
       ioptions.table_properties_collector_factories;
   cf_opts->bloom_locality = ioptions.bloom_locality;
+  cf_opts->purge_redundant_kvs_while_flush =
+      ioptions.purge_redundant_kvs_while_flush;
+  cf_opts->compression_per_level = ioptions.compression_per_level;
   cf_opts->level_compaction_dynamic_level_bytes =
       ioptions.level_compaction_dynamic_level_bytes;
   cf_opts->num_levels = ioptions.num_levels;
@@ -307,14 +305,6 @@ void UpdateColumnFamilyOptions(const ImmutableCFOptions& ioptions,
   cf_opts->cf_paths = ioptions.cf_paths;
   cf_opts->compaction_thread_limiter = ioptions.compaction_thread_limiter;
   cf_opts->sst_partitioner_factory = ioptions.sst_partitioner_factory;
-  cf_opts->blob_cache = ioptions.blob_cache;
-  cf_opts->preclude_last_level_data_seconds =
-      ioptions.preclude_last_level_data_seconds;
-  cf_opts->preserve_internal_time_seconds =
-      ioptions.preserve_internal_time_seconds;
-  cf_opts->persist_user_defined_timestamps =
-      ioptions.persist_user_defined_timestamps;
-  cf_opts->default_temperature = ioptions.default_temperature;
 
   // TODO(yhchiang): find some way to handle the following derived options
   // * max_file_size
@@ -331,19 +321,12 @@ std::map<CompactionPri, std::string> OptionsHelper::compaction_pri_to_string = {
     {kByCompensatedSize, "kByCompensatedSize"},
     {kOldestLargestSeqFirst, "kOldestLargestSeqFirst"},
     {kOldestSmallestSeqFirst, "kOldestSmallestSeqFirst"},
-    {kMinOverlappingRatio, "kMinOverlappingRatio"},
-    {kRoundRobin, "kRoundRobin"}};
+    {kMinOverlappingRatio, "kMinOverlappingRatio"}};
 
 std::map<CompactionStopStyle, std::string>
     OptionsHelper::compaction_stop_style_to_string = {
         {kCompactionStopStyleSimilarSize, "kCompactionStopStyleSimilarSize"},
         {kCompactionStopStyleTotalSize, "kCompactionStopStyleTotalSize"}};
-
-std::map<Temperature, std::string> OptionsHelper::temperature_to_string = {
-    {Temperature::kUnknown, "kUnknown"},
-    {Temperature::kHot, "kHot"},
-    {Temperature::kWarm, "kWarm"},
-    {Temperature::kCold, "kCold"}};
 
 std::unordered_map<std::string, ChecksumType>
     OptionsHelper::checksum_type_string_map = {{"kNoChecksum", kNoChecksum},
@@ -399,6 +382,7 @@ std::vector<ChecksumType> GetSupportedChecksums() {
                                    checksum_types.end());
 }
 
+#ifndef ROCKSDB_LITE
 static bool ParseOptionHelper(void* opt_address, const OptionType& opt_type,
                               const std::string& value) {
   switch (opt_type) {
@@ -428,10 +412,6 @@ static bool ParseOptionHelper(void* opt_address, const OptionType& opt_type,
       break;
     case OptionType::kSizeT:
       PutUnaligned(static_cast<size_t*>(opt_address), ParseSizeT(value));
-      break;
-    case OptionType::kAtomicInt:
-      static_cast<std::atomic<int>*>(opt_address)
-          ->store(ParseInt(value), std::memory_order_release);
       break;
     case OptionType::kString:
       *static_cast<std::string*>(opt_address) = value;
@@ -465,10 +445,6 @@ static bool ParseOptionHelper(void* opt_address, const OptionType& opt_type,
       (Slice(value)).DecodeHex(output_addr);
       break;
     }
-    case OptionType::kTemperature: {
-      return ParseEnum<Temperature>(temperature_string_map, value,
-                                    static_cast<Temperature*>(opt_address));
-    }
     default:
       return false;
   }
@@ -484,47 +460,43 @@ bool SerializeSingleOptionHelper(const void* opt_address,
       *value = *(static_cast<const bool*>(opt_address)) ? "true" : "false";
       break;
     case OptionType::kInt:
-      *value = std::to_string(*(static_cast<const int*>(opt_address)));
+      *value = ToString(*(static_cast<const int*>(opt_address)));
       break;
     case OptionType::kInt32T:
-      *value = std::to_string(*(static_cast<const int32_t*>(opt_address)));
+      *value = ToString(*(static_cast<const int32_t*>(opt_address)));
       break;
     case OptionType::kInt64T:
       {
         int64_t v;
         GetUnaligned(static_cast<const int64_t*>(opt_address), &v);
-        *value = std::to_string(v);
+        *value = ToString(v);
       }
       break;
     case OptionType::kUInt:
-      *value = std::to_string(*(static_cast<const unsigned int*>(opt_address)));
+      *value = ToString(*(static_cast<const unsigned int*>(opt_address)));
       break;
     case OptionType::kUInt8T:
-      *value = std::to_string(*(static_cast<const uint8_t*>(opt_address)));
+      *value = ToString(*(static_cast<const uint8_t*>(opt_address)));
       break;
     case OptionType::kUInt32T:
-      *value = std::to_string(*(static_cast<const uint32_t*>(opt_address)));
+      *value = ToString(*(static_cast<const uint32_t*>(opt_address)));
       break;
     case OptionType::kUInt64T:
       {
         uint64_t v;
         GetUnaligned(static_cast<const uint64_t*>(opt_address), &v);
-        *value = std::to_string(v);
+        *value = ToString(v);
       }
       break;
     case OptionType::kSizeT:
       {
         size_t v;
         GetUnaligned(static_cast<const size_t*>(opt_address), &v);
-        *value = std::to_string(v);
+        *value = ToString(v);
       }
       break;
     case OptionType::kDouble:
-      *value = std::to_string(*(static_cast<const double*>(opt_address)));
-      break;
-    case OptionType::kAtomicInt:
-      *value = std::to_string(static_cast<const std::atomic<int>*>(opt_address)
-                                  ->load(std::memory_order_acquire));
+      *value = ToString(*(static_cast<const double*>(opt_address)));
       break;
     case OptionType::kString:
       *value =
@@ -543,6 +515,12 @@ bool SerializeSingleOptionHelper(const void* opt_address,
           compression_type_string_map,
           *(static_cast<const CompressionType*>(opt_address)), value);
       break;
+    case OptionType::kFilterPolicy: {
+      const auto* ptr =
+          static_cast<const std::shared_ptr<FilterPolicy>*>(opt_address);
+      *value = ptr->get() ? ptr->get()->Name() : kNullptrString;
+      break;
+    }
     case OptionType::kChecksumType:
       return SerializeEnum<ChecksumType>(
           checksum_type_string_map,
@@ -559,11 +537,6 @@ bool SerializeSingleOptionHelper(const void* opt_address,
       const auto* ptr = static_cast<const std::string*>(opt_address);
       *value = (Slice(*ptr)).ToString(true);
       break;
-    }
-    case OptionType::kTemperature: {
-      return SerializeEnum<Temperature>(
-          temperature_string_map, *static_cast<const Temperature*>(opt_address),
-          value);
     }
     default:
       return false;
@@ -674,6 +647,18 @@ Status GetStringFromCompressionType(std::string* compression_str,
 }
 
 Status GetColumnFamilyOptionsFromMap(
+    const ColumnFamilyOptions& base_options,
+    const std::unordered_map<std::string, std::string>& opts_map,
+    ColumnFamilyOptions* new_options, bool input_strings_escaped,
+    bool ignore_unknown_options) {
+  ConfigOptions config_options;
+  config_options.ignore_unknown_options = ignore_unknown_options;
+  config_options.input_strings_escaped = input_strings_escaped;
+  return GetColumnFamilyOptionsFromMap(config_options, base_options, opts_map,
+                                       new_options);
+}
+
+Status GetColumnFamilyOptionsFromMap(
     const ConfigOptions& config_options,
     const ColumnFamilyOptions& base_options,
     const std::unordered_map<std::string, std::string>& opts_map,
@@ -694,6 +679,17 @@ Status GetColumnFamilyOptionsFromMap(
   }
 }
 
+Status GetColumnFamilyOptionsFromString(
+    const ColumnFamilyOptions& base_options,
+    const std::string& opts_str,
+    ColumnFamilyOptions* new_options) {
+  ConfigOptions config_options;
+  config_options.input_strings_escaped = false;
+  config_options.ignore_unknown_options = false;
+  return GetColumnFamilyOptionsFromString(config_options, base_options,
+                                          opts_str, new_options);
+}
+
 Status GetColumnFamilyOptionsFromString(const ConfigOptions& config_options,
                                         const ColumnFamilyOptions& base_options,
                                         const std::string& opts_str,
@@ -706,6 +702,18 @@ Status GetColumnFamilyOptionsFromString(const ConfigOptions& config_options,
   }
   return GetColumnFamilyOptionsFromMap(config_options, base_options, opts_map,
                                        new_options);
+}
+
+Status GetDBOptionsFromMap(
+    const DBOptions& base_options,
+    const std::unordered_map<std::string, std::string>& opts_map,
+    DBOptions* new_options, bool input_strings_escaped,
+    bool ignore_unknown_options) {
+  ConfigOptions config_options(base_options);
+  config_options.input_strings_escaped = input_strings_escaped;
+  config_options.ignore_unknown_options = ignore_unknown_options;
+  return GetDBOptionsFromMap(config_options, base_options, opts_map,
+                             new_options);
 }
 
 Status GetDBOptionsFromMap(
@@ -724,6 +732,17 @@ Status GetDBOptionsFromMap(
   } else {
     return Status::InvalidArgument(s.getState());
   }
+}
+
+Status GetDBOptionsFromString(const DBOptions& base_options,
+                              const std::string& opts_str,
+                              DBOptions* new_options) {
+  ConfigOptions config_options(base_options);
+  config_options.input_strings_escaped = false;
+  config_options.ignore_unknown_options = false;
+
+  return GetDBOptionsFromString(config_options, base_options, opts_str,
+                                new_options);
 }
 
 Status GetDBOptionsFromString(const ConfigOptions& config_options,
@@ -803,25 +822,12 @@ std::unordered_map<std::string, CompactionPri>
         {"kByCompensatedSize", kByCompensatedSize},
         {"kOldestLargestSeqFirst", kOldestLargestSeqFirst},
         {"kOldestSmallestSeqFirst", kOldestSmallestSeqFirst},
-        {"kMinOverlappingRatio", kMinOverlappingRatio},
-        {"kRoundRobin", kRoundRobin}};
+        {"kMinOverlappingRatio", kMinOverlappingRatio}};
 
 std::unordered_map<std::string, CompactionStopStyle>
     OptionsHelper::compaction_stop_style_string_map = {
         {"kCompactionStopStyleSimilarSize", kCompactionStopStyleSimilarSize},
         {"kCompactionStopStyleTotalSize", kCompactionStopStyleTotalSize}};
-
-std::unordered_map<std::string, Temperature>
-    OptionsHelper::temperature_string_map = {
-        {"kUnknown", Temperature::kUnknown},
-        {"kHot", Temperature::kHot},
-        {"kWarm", Temperature::kWarm},
-        {"kCold", Temperature::kCold}};
-
-std::unordered_map<std::string, PrepopulateBlobCache>
-    OptionsHelper::prepopulate_blob_cache_string_map = {
-        {"kDisable", PrepopulateBlobCache::kDisable},
-        {"kFlushOnly", PrepopulateBlobCache::kFlushOnly}};
 
 Status OptionTypeInfo::NextToken(const std::string& opts, char delimiter,
                                  size_t pos, size_t* end, std::string* token) {
@@ -883,18 +889,18 @@ Status OptionTypeInfo::Parse(const ConfigOptions& config_options,
     return Status::OK();
   }
   try {
+    void* opt_addr = static_cast<char*>(opt_ptr) + offset_;
     const std::string& opt_value = config_options.input_strings_escaped
                                        ? UnescapeOptionString(value)
                                        : value;
 
-    if (opt_ptr == nullptr) {
+    if (opt_addr == nullptr) {
       return Status::NotFound("Could not find option", opt_name);
     } else if (parse_func_ != nullptr) {
       ConfigOptions copy = config_options;
       copy.invoke_prepare_options = false;
-      void* opt_addr = GetOffset(opt_ptr);
       return parse_func_(copy, opt_name, opt_value, opt_addr);
-    } else if (ParseOptionHelper(GetOffset(opt_ptr), type_, opt_value)) {
+    } else if (ParseOptionHelper(opt_addr, type_, opt_value)) {
       return Status::OK();
     } else if (IsConfigurable()) {
       // The option is <config>.<name>
@@ -907,7 +913,7 @@ Status OptionTypeInfo::Parse(const ConfigOptions& config_options,
         ConfigOptions copy = config_options;
         copy.ignore_unknown_options = false;
         copy.invoke_prepare_options = false;
-        if (opt_value.find('=') != std::string::npos) {
+        if (opt_value.find("=") != std::string::npos) {
           return config->ConfigureFromString(copy, opt_value);
         } else {
           return config->ConfigureOption(copy, opt_name, opt_value);
@@ -1006,12 +1012,12 @@ Status OptionTypeInfo::Serialize(const ConfigOptions& config_options,
                                  std::string* opt_value) const {
   // If the option is no longer used in rocksdb and marked as deprecated,
   // we skip it in the serialization.
-  if (opt_ptr == nullptr || IsDeprecated()) {
+  const void* opt_addr = static_cast<const char*>(opt_ptr) + offset_;
+  if (opt_addr == nullptr || IsDeprecated()) {
     return Status::OK();
   } else if (IsEnabled(OptionTypeFlags::kDontSerialize)) {
     return Status::NotSupported("Cannot serialize option: ", opt_name);
   } else if (serialize_func_ != nullptr) {
-    const void* opt_addr = GetOffset(opt_ptr);
     return serialize_func_(config_options, opt_name, opt_addr, opt_value);
   } else if (IsCustomizable()) {
     const Customizable* custom = AsRawPointer<Customizable>(opt_ptr);
@@ -1042,7 +1048,7 @@ Status OptionTypeInfo::Serialize(const ConfigOptions& config_options,
       }
       std::string value = custom->ToString(embedded);
       if (!embedded.mutable_options_only ||
-          value.find('=') != std::string::npos) {
+          value.find("=") != std::string::npos) {
         *opt_value = value;
       } else {
         *opt_value = "";
@@ -1059,8 +1065,7 @@ Status OptionTypeInfo::Serialize(const ConfigOptions& config_options,
     return Status::OK();
   } else if (config_options.mutable_options_only && !IsMutable()) {
     return Status::OK();
-  } else if (SerializeSingleOptionHelper(GetOffset(opt_ptr), type_,
-                                         opt_value)) {
+  } else if (SerializeSingleOptionHelper(opt_addr, type_, opt_value)) {
     return Status::OK();
   } else {
     return Status::InvalidArgument("Cannot serialize option: ", opt_name);
@@ -1174,8 +1179,6 @@ static bool AreOptionsEqual(OptionType type, const void* this_offset,
       GetUnaligned(static_cast<const size_t*>(that_offset), &v2);
       return (v1 == v2);
     }
-    case OptionType::kAtomicInt:
-      return IsOptionEqual<std::atomic<int>>(this_offset, that_offset);
     case OptionType::kString:
       return IsOptionEqual<std::string>(this_offset, that_offset);
     case OptionType::kDouble:
@@ -1195,8 +1198,6 @@ static bool AreOptionsEqual(OptionType type, const void* this_offset,
       return IsOptionEqual<EncodingType>(this_offset, that_offset);
     case OptionType::kEncodedString:
       return IsOptionEqual<std::string>(this_offset, that_offset);
-    case OptionType::kTemperature:
-      return IsOptionEqual<Temperature>(this_offset, that_offset);
     default:
       return false;
   }  // End switch
@@ -1211,43 +1212,39 @@ bool OptionTypeInfo::AreEqual(const ConfigOptions& config_options,
   if (!config_options.IsCheckEnabled(level)) {
     return true;  // If the sanity level is not being checked, skip it
   }
-  if (this_ptr == nullptr || that_ptr == nullptr) {
-    if (this_ptr == that_ptr) {
+  const void* this_addr = static_cast<const char*>(this_ptr) + offset_;
+  const void* that_addr = static_cast<const char*>(that_ptr) + offset_;
+  if (this_addr == nullptr || that_addr == nullptr) {
+    if (this_addr == that_addr) {
       return true;
     }
   } else if (equals_func_ != nullptr) {
-    const void* this_addr = GetOffset(this_ptr);
-    const void* that_addr = GetOffset(that_ptr);
     if (equals_func_(config_options, opt_name, this_addr, that_addr,
                      mismatch)) {
       return true;
     }
-  } else {
-    const void* this_addr = GetOffset(this_ptr);
-    const void* that_addr = GetOffset(that_ptr);
-    if (AreOptionsEqual(type_, this_addr, that_addr)) {
+  } else if (AreOptionsEqual(type_, this_addr, that_addr)) {
+    return true;
+  } else if (IsConfigurable()) {
+    const auto* this_config = AsRawPointer<Configurable>(this_ptr);
+    const auto* that_config = AsRawPointer<Configurable>(that_ptr);
+    if (this_config == that_config) {
       return true;
-    } else if (IsConfigurable()) {
-      const auto* this_config = AsRawPointer<Configurable>(this_ptr);
-      const auto* that_config = AsRawPointer<Configurable>(that_ptr);
-      if (this_config == that_config) {
-        return true;
-      } else if (this_config != nullptr && that_config != nullptr) {
-        std::string bad_name;
-        bool matches;
-        if (level < config_options.sanity_level) {
-          ConfigOptions copy = config_options;
-          copy.sanity_level = level;
-          matches = this_config->AreEquivalent(copy, that_config, &bad_name);
-        } else {
-          matches = this_config->AreEquivalent(config_options, that_config,
-                                               &bad_name);
-        }
-        if (!matches) {
-          *mismatch = opt_name + "." + bad_name;
-        }
-        return matches;
+    } else if (this_config != nullptr && that_config != nullptr) {
+      std::string bad_name;
+      bool matches;
+      if (level < config_options.sanity_level) {
+        ConfigOptions copy = config_options;
+        copy.sanity_level = level;
+        matches = this_config->AreEquivalent(copy, that_config, &bad_name);
+      } else {
+        matches =
+            this_config->AreEquivalent(config_options, that_config, &bad_name);
       }
+      if (!matches) {
+        *mismatch = opt_name + "." + bad_name;
+      }
+      return matches;
     }
   }
   if (mismatch->empty()) {
@@ -1371,44 +1368,6 @@ bool OptionTypeInfo::AreEqualByName(const ConfigOptions& config_options,
   return (this_value == that_value);
 }
 
-Status OptionTypeInfo::Prepare(const ConfigOptions& config_options,
-                               const std::string& name, void* opt_ptr) const {
-  if (ShouldPrepare()) {
-    if (prepare_func_ != nullptr) {
-      void* opt_addr = GetOffset(opt_ptr);
-      return prepare_func_(config_options, name, opt_addr);
-    } else if (IsConfigurable()) {
-      Configurable* config = AsRawPointer<Configurable>(opt_ptr);
-      if (config != nullptr) {
-        return config->PrepareOptions(config_options);
-      } else if (!CanBeNull()) {
-        return Status::NotFound("Missing configurable object", name);
-      }
-    }
-  }
-  return Status::OK();
-}
-
-Status OptionTypeInfo::Validate(const DBOptions& db_opts,
-                                const ColumnFamilyOptions& cf_opts,
-                                const std::string& name,
-                                const void* opt_ptr) const {
-  if (ShouldValidate()) {
-    if (validate_func_ != nullptr) {
-      const void* opt_addr = GetOffset(opt_ptr);
-      return validate_func_(db_opts, cf_opts, name, opt_addr);
-    } else if (IsConfigurable()) {
-      const Configurable* config = AsRawPointer<Configurable>(opt_ptr);
-      if (config != nullptr) {
-        return config->ValidateOptions(db_opts, cf_opts);
-      } else if (!CanBeNull()) {
-        return Status::NotFound("Missing configurable object", name);
-      }
-    }
-  }
-  return Status::OK();
-}
-
 const OptionTypeInfo* OptionTypeInfo::Find(
     const std::string& opt_name,
     const std::unordered_map<std::string, OptionTypeInfo>& opt_map,
@@ -1418,7 +1377,7 @@ const OptionTypeInfo* OptionTypeInfo::Find(
     *elem_name = opt_name;                   // Return the name
     return &(iter->second);  // Return the contents of the iterator
   } else {
-    auto idx = opt_name.find('.');              // Look for a separator
+    auto idx = opt_name.find(".");              // Look for a separator
     if (idx > 0 && idx != std::string::npos) {  // We found a separator
       auto siter =
           opt_map.find(opt_name.substr(0, idx));  // Look for the short name
@@ -1433,5 +1392,6 @@ const OptionTypeInfo* OptionTypeInfo::Find(
   }
   return nullptr;
 }
+#endif  // !ROCKSDB_LITE
 
 }  // namespace ROCKSDB_NAMESPACE

@@ -82,12 +82,12 @@ public class TableFileCreationBriefInfo {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    final TableFileCreationBriefInfo that = (TableFileCreationBriefInfo) o;
+    TableFileCreationBriefInfo that = (TableFileCreationBriefInfo) o;
     return jobId == that.jobId && Objects.equals(dbName, that.dbName)
         && Objects.equals(columnFamilyName, that.columnFamilyName)
         && Objects.equals(filePath, that.filePath) && reason == that.reason;

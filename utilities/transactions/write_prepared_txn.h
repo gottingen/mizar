@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <algorithm>
 #include <atomic>
@@ -51,15 +52,16 @@ class WritePreparedTxn : public PessimisticTransaction {
   // seq in the WAL that is also published, LastPublishedSequence, as opposed to
   // the last seq in the memtable.
   using Transaction::Get;
-  Status Get(const ReadOptions& _read_options,
-             ColumnFamilyHandle* column_family, const Slice& key,
-             PinnableSlice* value) override;
+  virtual Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     PinnableSlice* value) override;
 
   using Transaction::MultiGet;
-  void MultiGet(const ReadOptions& _read_options,
-                ColumnFamilyHandle* column_family, const size_t num_keys,
-                const Slice* keys, PinnableSlice* values, Status* statuses,
-                const bool sorted_input = false) override;
+  virtual void MultiGet(const ReadOptions& options,
+                        ColumnFamilyHandle* column_family,
+                        const size_t num_keys, const Slice* keys,
+                        PinnableSlice* values, Status* statuses,
+                        const bool sorted_input = false) override;
 
   // Note: The behavior is undefined in presence of interleaved writes to the
   // same transaction.
@@ -67,11 +69,11 @@ class WritePreparedTxn : public PessimisticTransaction {
   // based on the last seq in the WAL that is also published,
   // LastPublishedSequence, as opposed to the last seq in the memtable.
   using Transaction::GetIterator;
-  Iterator* GetIterator(const ReadOptions& options) override;
-  Iterator* GetIterator(const ReadOptions& options,
-                        ColumnFamilyHandle* column_family) override;
+  virtual Iterator* GetIterator(const ReadOptions& options) override;
+  virtual Iterator* GetIterator(const ReadOptions& options,
+                                ColumnFamilyHandle* column_family) override;
 
-  void SetSnapshot() override;
+  virtual void SetSnapshot() override;
 
  protected:
   void Initialize(const TransactionOptions& txn_options) override;
@@ -84,10 +86,6 @@ class WritePreparedTxn : public PessimisticTransaction {
   friend class WritePreparedTxnDB;
   friend class WriteUnpreparedTxnDB;
   friend class WriteUnpreparedTxn;
-
-  using Transaction::GetImpl;
-  Status GetImpl(const ReadOptions& options, ColumnFamilyHandle* column_family,
-                 const Slice& key, PinnableSlice* value) override;
 
   Status PrepareInternal() override;
 
@@ -105,10 +103,11 @@ class WritePreparedTxn : public PessimisticTransaction {
 
   Status RollbackInternal() override;
 
-  Status ValidateSnapshot(ColumnFamilyHandle* column_family, const Slice& key,
-                          SequenceNumber* tracked_at_seq) override;
+  virtual Status ValidateSnapshot(ColumnFamilyHandle* column_family,
+                                  const Slice& key,
+                                  SequenceNumber* tracked_at_seq) override;
 
-  Status RebuildFromWriteBatch(WriteBatch* src_batch) override;
+  virtual Status RebuildFromWriteBatch(WriteBatch* src_batch) override;
 
   WritePreparedTxnDB* wpt_db_;
   // Number of sub-batches in prepare
@@ -116,3 +115,5 @@ class WritePreparedTxn : public PessimisticTransaction {
 };
 
 }  // namespace ROCKSDB_NAMESPACE
+
+#endif  // ROCKSDB_LITE

@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #endif
 
-#include <memory>
 #include <string>
 
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
@@ -35,29 +34,31 @@ namespace ROCKSDB_NAMESPACE {
 class Status {
  public:
   // Create a success status.
-  Status()
-      : code_(kOk),
-        subcode_(kNone),
-        sev_(kNoError),
-        retryable_(false),
-        data_loss_(false),
-        scope_(0),
-        state_(nullptr) {}
+  Status() : code_(kOk), subcode_(kNone), sev_(kNoError), state_(nullptr) {}
   ~Status() {
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
     if (!checked_) {
       fprintf(stderr, "Failed to check Status %p\n", this);
       port::PrintStack();
-      std::abort();
+      abort();
     }
 #endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+    delete[] state_;
   }
 
   // Copy the specified status.
   Status(const Status& s);
   Status& operator=(const Status& s);
-  Status(Status&& s) noexcept;
-  Status& operator=(Status&& s) noexcept;
+  Status(Status&& s)
+#if !(defined _MSC_VER) || ((defined _MSC_VER) && (_MSC_VER >= 1900))
+      noexcept
+#endif
+      ;
+  Status& operator=(Status&& s)
+#if !(defined _MSC_VER) || ((defined _MSC_VER) && (_MSC_VER >= 1900))
+      noexcept
+#endif
+      ;
   bool operator==(const Status& rhs) const;
   bool operator!=(const Status& rhs) const;
 
@@ -113,8 +114,6 @@ class Status {
     kOverwritten = 12,
     kTxnNotPrepared = 13,
     kIOFenced = 14,
-    kMergeOperatorFailed = 15,
-    kMergeOperandThresholdExceeded = 16,
     kMaxSubCode
   };
 
@@ -137,9 +136,6 @@ class Status {
   Status(Code _code, SubCode _subcode, Severity _sev, const Slice& msg)
       : Status(_code, _subcode, msg, "", _sev) {}
 
-  static Status CopyAppendMessage(const Status& s, const Slice& delim,
-                                  const Slice& msg);
-
   Severity severity() const {
     MarkChecked();
     return sev_;
@@ -148,26 +144,7 @@ class Status {
   // Returns a C style string indicating the message of the Status
   const char* getState() const {
     MarkChecked();
-    return state_.get();
-  }
-
-  // Override this status with another, unless this status is already non-ok.
-  // Returns *this. Thus, the result of `a.UpdateIfOk(b).UpdateIfOk(c)` is
-  // non-ok (and `a` modified as such) iff any input was non-ok, with
-  // left-most taking precedence as far as the details.
-  Status& UpdateIfOk(Status&& s) {
-    if (code() == kOk) {
-      *this = std::move(s);
-    } else {
-      // Alright to ignore that status as long as this one is checked
-      s.PermitUncheckedError();
-    }
-    MustCheck();
-    return *this;
-  }
-
-  Status& UpdateIfOk(const Status& s) {
-    return UpdateIfOk(std::forward<Status>(Status(s)));
+    return state_;
   }
 
   // Return a success status.
@@ -178,14 +155,6 @@ class Status {
   // but it can be useful for communicating statistical information without
   // changing public APIs.
   static Status OkOverwritten() { return Status(kOk, kOverwritten); }
-
-  // Successful, though the number of operands merged during the query exceeded
-  // the threshold. Note: using variants of OK status for program logic is
-  // discouraged, but it can be useful for communicating statistical information
-  // without changing public APIs.
-  static Status OkMergeOperandThresholdExceeded() {
-    return Status(kOk, kMergeOperandThresholdExceeded);
-  }
 
   // Return error status of an appropriate type.
   static Status NotFound(const Slice& msg, const Slice& msg2 = Slice()) {
@@ -327,13 +296,6 @@ class Status {
   bool IsOkOverwritten() const {
     MarkChecked();
     return code() == kOk && subcode() == kOverwritten;
-  }
-
-  // Returns true iff the status indicates success *with* the number of operands
-  // merged exceeding the threshold
-  bool IsOkMergeOperandThresholdExceeded() const {
-    MarkChecked();
-    return code() == kOk && subcode() == kMergeOperandThresholdExceeded;
   }
 
   // Returns true iff the status indicates a NotFound error.
@@ -492,39 +454,22 @@ class Status {
   Code code_;
   SubCode subcode_;
   Severity sev_;
-  bool retryable_;
-  bool data_loss_;
-  unsigned char scope_;
   // A nullptr state_ (which is at least the case for OK) means the extra
   // message is empty.
-  std::unique_ptr<const char[]> state_;
+  const char* state_;
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
   mutable bool checked_ = false;
 #endif  // ROCKSDB_ASSERT_STATUS_CHECKED
 
   explicit Status(Code _code, SubCode _subcode = kNone)
-      : code_(_code),
-        subcode_(_subcode),
-        sev_(kNoError),
-        retryable_(false),
-        data_loss_(false),
-        scope_(0) {}
-
-  explicit Status(Code _code, SubCode _subcode, bool retryable, bool data_loss,
-                  unsigned char scope)
-      : code_(_code),
-        subcode_(_subcode),
-        sev_(kNoError),
-        retryable_(retryable),
-        data_loss_(data_loss),
-        scope_(scope) {}
+      : code_(_code), subcode_(_subcode), sev_(kNoError), state_(nullptr) {}
 
   Status(Code _code, SubCode _subcode, const Slice& msg, const Slice& msg2,
          Severity sev = kNoError);
   Status(Code _code, const Slice& msg, const Slice& msg2)
       : Status(_code, kNone, msg, msg2) {}
 
-  static std::unique_ptr<const char[]> CopyState(const char* s);
+  static const char* CopyState(const char* s);
 
   inline void MarkChecked() const {
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
@@ -534,24 +479,14 @@ class Status {
 };
 
 inline Status::Status(const Status& s)
-    : code_(s.code_),
-      subcode_(s.subcode_),
-      sev_(s.sev_),
-      retryable_(s.retryable_),
-      data_loss_(s.data_loss_),
-      scope_(s.scope_) {
+    : code_(s.code_), subcode_(s.subcode_), sev_(s.sev_) {
   s.MarkChecked();
-  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_);
 }
 inline Status::Status(const Status& s, Severity sev)
-    : code_(s.code_),
-      subcode_(s.subcode_),
-      sev_(sev),
-      retryable_(s.retryable_),
-      data_loss_(s.data_loss_),
-      scope_(s.scope_) {
+    : code_(s.code_), subcode_(s.subcode_), sev_(sev) {
   s.MarkChecked();
-  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_);
 }
 inline Status& Status::operator=(const Status& s) {
   if (this != &s) {
@@ -560,20 +495,26 @@ inline Status& Status::operator=(const Status& s) {
     code_ = s.code_;
     subcode_ = s.subcode_;
     sev_ = s.sev_;
-    retryable_ = s.retryable_;
-    data_loss_ = s.data_loss_;
-    scope_ = s.scope_;
-    state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+    delete[] state_;
+    state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_);
   }
   return *this;
 }
 
-inline Status::Status(Status&& s) noexcept : Status() {
+inline Status::Status(Status&& s)
+#if !(defined _MSC_VER) || ((defined _MSC_VER) && (_MSC_VER >= 1900))
+    noexcept
+#endif
+    : Status() {
   s.MarkChecked();
   *this = std::move(s);
 }
 
-inline Status& Status::operator=(Status&& s) noexcept {
+inline Status& Status::operator=(Status&& s)
+#if !(defined _MSC_VER) || ((defined _MSC_VER) && (_MSC_VER >= 1900))
+    noexcept
+#endif
+{
   if (this != &s) {
     s.MarkChecked();
     MustCheck();
@@ -583,13 +524,9 @@ inline Status& Status::operator=(Status&& s) noexcept {
     s.subcode_ = kNone;
     sev_ = std::move(s.sev_);
     s.sev_ = kNoError;
-    retryable_ = std::move(s.retryable_);
-    s.retryable_ = false;
-    data_loss_ = std::move(s.data_loss_);
-    s.data_loss_ = false;
-    scope_ = std::move(s.scope_);
-    s.scope_ = 0;
-    state_ = std::move(s.state_);
+    delete[] state_;
+    state_ = nullptr;
+    std::swap(state_, s.state_);
   }
   return *this;
 }

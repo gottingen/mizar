@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
 #include "rocksdb/iterator.h"
 #include "rocksdb/slice.h"
 #include "table/internal_iterator.h"
@@ -17,7 +16,7 @@ namespace ROCKSDB_NAMESPACE {
 class VectorIterator : public InternalIterator {
  public:
   VectorIterator(std::vector<std::string> keys, std::vector<std::string> values,
-                 const CompareInterface* icmp = nullptr)
+                 const Comparator* icmp = nullptr)
       : keys_(std::move(keys)),
         values_(std::move(values)),
         current_(keys_.size()),
@@ -33,14 +32,14 @@ class VectorIterator : public InternalIterator {
     }
   }
 
-  bool Valid() const override {
+  virtual bool Valid() const override {
     return !indices_.empty() && current_ < indices_.size();
   }
 
-  void SeekToFirst() override { current_ = 0; }
-  void SeekToLast() override { current_ = indices_.size() - 1; }
+  virtual void SeekToFirst() override { current_ = 0; }
+  virtual void SeekToLast() override { current_ = indices_.size() - 1; }
 
-  void Seek(const Slice& target) override {
+  virtual void Seek(const Slice& target) override {
     if (indexed_cmp_.cmp != nullptr) {
       current_ = std::lower_bound(indices_.begin(), indices_.end(), target,
                                   indexed_cmp_) -
@@ -52,7 +51,7 @@ class VectorIterator : public InternalIterator {
     }
   }
 
-  void SeekForPrev(const Slice& target) override {
+  virtual void SeekForPrev(const Slice& target) override {
     if (indexed_cmp_.cmp != nullptr) {
       current_ = std::upper_bound(indices_.begin(), indices_.end(), target,
                                   indexed_cmp_) -
@@ -69,16 +68,20 @@ class VectorIterator : public InternalIterator {
     }
   }
 
-  void Next() override { current_++; }
-  void Prev() override { current_--; }
+  virtual void Next() override { current_++; }
+  virtual void Prev() override { current_--; }
 
-  Slice key() const override { return Slice(keys_[indices_[current_]]); }
-  Slice value() const override { return Slice(values_[indices_[current_]]); }
+  virtual Slice key() const override {
+    return Slice(keys_[indices_[current_]]);
+  }
+  virtual Slice value() const override {
+    return Slice(values_[indices_[current_]]);
+  }
 
-  Status status() const override { return Status::OK(); }
+  virtual Status status() const override { return Status::OK(); }
 
-  bool IsKeyPinned() const override { return true; }
-  bool IsValuePinned() const override { return true; }
+  virtual bool IsKeyPinned() const override { return true; }
+  virtual bool IsValuePinned() const override { return true; }
 
  protected:
   std::vector<std::string> keys_;
@@ -87,7 +90,7 @@ class VectorIterator : public InternalIterator {
 
  private:
   struct IndexedKeyComparator {
-    IndexedKeyComparator(const CompareInterface* c,
+    IndexedKeyComparator(const Comparator* c,
                          const std::vector<std::string>* ks)
         : cmp(c), keys(ks) {}
 
@@ -103,7 +106,7 @@ class VectorIterator : public InternalIterator {
       return cmp->Compare(a, (*keys)[b]) < 0;
     }
 
-    const CompareInterface* cmp;
+    const Comparator* cmp;
     const std::vector<std::string>* keys;
   };
 

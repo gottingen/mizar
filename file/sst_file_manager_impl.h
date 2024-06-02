@@ -5,12 +5,14 @@
 
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <string>
 
+#include "port/port.h"
+
 #include "db/compaction/compaction.h"
 #include "file/delete_scheduler.h"
-#include "port/port.h"
 #include "rocksdb/sst_file_manager.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -29,10 +31,6 @@ class SstFileManagerImpl : public SstFileManager {
                               int64_t rate_bytes_per_sec,
                               double max_trash_db_ratio,
                               uint64_t bytes_max_delete_chunk);
-
-  // No copy
-  SstFileManagerImpl(const SstFileManagerImpl& sfm) = delete;
-  SstFileManagerImpl& operator=(const SstFileManagerImpl& sfm) = delete;
 
   ~SstFileManagerImpl();
 
@@ -92,16 +90,16 @@ class SstFileManagerImpl : public SstFileManager {
   std::unordered_map<std::string, uint64_t> GetTrackedFiles() override;
 
   // Return delete rate limit in bytes per second.
-  int64_t GetDeleteRateBytesPerSecond() override;
+  virtual int64_t GetDeleteRateBytesPerSecond() override;
 
   // Update the delete rate limit in bytes per second.
-  void SetDeleteRateBytesPerSecond(int64_t delete_rate) override;
+  virtual void SetDeleteRateBytesPerSecond(int64_t delete_rate) override;
 
   // Return trash/DB size ratio where new files will be deleted immediately
-  double GetMaxTrashDBRatio() override;
+  virtual double GetMaxTrashDBRatio() override;
 
   // Update trash/DB size ratio where new files will be deleted immediately
-  void SetMaxTrashDBRatio(double ratio) override;
+  virtual void SetMaxTrashDBRatio(double ratio) override;
 
   // Return the total size of trash files
   uint64_t GetTotalTrashSize() override;
@@ -168,7 +166,7 @@ class SstFileManagerImpl : public SstFileManager {
   std::unordered_map<std::string, uint64_t> tracked_files_;
   // The maximum allowed space (in bytes) for sst and blob files.
   uint64_t max_allowed_space_;
-  // DeleteScheduler used to throttle file deletion.
+  // DeleteScheduler used to throttle file deletition.
   DeleteScheduler delete_scheduler_;
   port::CondVar cv_;
   // Flag to force error recovery thread to exit
@@ -195,3 +193,4 @@ class SstFileManagerImpl : public SstFileManager {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE

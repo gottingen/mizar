@@ -1,9 +1,3 @@
-//  Copyright (c) Meta Platforms, Inc. and affiliates.
-//
-//  This source code is licensed under both the GPLv2 (found in the
-//  COPYING file in the root directory) and Apache 2.0 License
-//  (found in the LICENSE.Apache file in the root directory).
-
 #pragma once
 #include <string>
 #include <unordered_set>
@@ -25,22 +19,13 @@ class SystemClock;
 // Imports a set of sst files as is into a new column family. Logic is similar
 // to ExternalSstFileIngestionJob.
 class ImportColumnFamilyJob {
-  // All file information of an imported CF, mainly used to
-  // calculate whether there is overlap between CFs
-  struct ColumnFamilyIngestFileInfo {
-    // Smallest internal key in cf
-    InternalKey smallest_internal_key;
-    // Largest internal key in cf
-    InternalKey largest_internal_key;
-  };
-
  public:
-  ImportColumnFamilyJob(
-      VersionSet* versions, ColumnFamilyData* cfd,
-      const ImmutableDBOptions& db_options, const EnvOptions& env_options,
-      const ImportColumnFamilyOptions& import_options,
-      const std::vector<std::vector<LiveFileMetaData*>>& metadatas,
-      const std::shared_ptr<IOTracer>& io_tracer)
+  ImportColumnFamilyJob(VersionSet* versions, ColumnFamilyData* cfd,
+                        const ImmutableDBOptions& db_options,
+                        const EnvOptions& env_options,
+                        const ImportColumnFamilyOptions& import_options,
+                        const std::vector<LiveFileMetaData>& metadata,
+                        const std::shared_ptr<IOTracer>& io_tracer)
       : clock_(db_options.clock),
         versions_(versions),
         cfd_(cfd),
@@ -48,7 +33,7 @@ class ImportColumnFamilyJob {
         fs_(db_options_.fs, io_tracer),
         env_options_(env_options),
         import_options_(import_options),
-        metadatas_(metadatas),
+        metadata_(metadata),
         io_tracer_(io_tracer) {}
 
   // Prepare the job by copying external files into the DB.
@@ -63,7 +48,7 @@ class ImportColumnFamilyJob {
 
   VersionEdit* edit() { return &edit_; }
 
-  const std::vector<std::vector<IngestedFileInfo>>& files_to_import() const {
+  const autovector<IngestedFileInfo>& files_to_import() const {
     return files_to_import_;
   }
 
@@ -71,9 +56,9 @@ class ImportColumnFamilyJob {
   // Open the external file and populate `file_to_import` with all the
   // external information we need to import this file.
   Status GetIngestedFileInfo(const std::string& external_file,
-                             uint64_t new_file_number, SuperVersion* sv,
-                             const LiveFileMetaData& file_meta,
-                             IngestedFileInfo* file_to_import);
+                             uint64_t new_file_number,
+                             IngestedFileInfo* file_to_import,
+                             SuperVersion* sv);
 
   SystemClock* clock_;
   VersionSet* versions_;
@@ -81,10 +66,10 @@ class ImportColumnFamilyJob {
   const ImmutableDBOptions& db_options_;
   const FileSystemPtr fs_;
   const EnvOptions& env_options_;
-  std::vector<std::vector<IngestedFileInfo>> files_to_import_;
+  autovector<IngestedFileInfo> files_to_import_;
   VersionEdit edit_;
   const ImportColumnFamilyOptions& import_options_;
-  const std::vector<std::vector<LiveFileMetaData*>> metadatas_;
+  std::vector<LiveFileMetaData> metadata_;
   const std::shared_ptr<IOTracer> io_tracer_;
 };
 

@@ -15,6 +15,7 @@
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {
+#ifndef ROCKSDB_LITE
 
 CompactOnDeletionCollector::CompactOnDeletionCollector(
     size_t sliding_window_size, size_t deletion_trigger, double deletion_ratio)
@@ -99,6 +100,7 @@ Status CompactOnDeletionCollector::Finish(
 }
 static std::unordered_map<std::string, OptionTypeInfo>
     on_deletion_collector_type_info = {
+#ifndef ROCKSDB_LITE
         {"window_size",
          {0, OptionType::kUnknown, OptionVerificationType::kNormal,
           OptionTypeFlags::kCompareNever | OptionTypeFlags::kMutable,
@@ -113,7 +115,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
              std::string* value) {
             const auto* factory =
                 static_cast<const CompactOnDeletionCollectorFactory*>(addr);
-            *value = std::to_string(factory->GetWindowSize());
+            *value = ToString(factory->GetWindowSize());
             return Status::OK();
           },
           nullptr}},
@@ -131,7 +133,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
              std::string* value) {
             const auto* factory =
                 static_cast<const CompactOnDeletionCollectorFactory*>(addr);
-            *value = std::to_string(factory->GetDeletionTrigger());
+            *value = ToString(factory->GetDeletionTrigger());
             return Status::OK();
           },
           nullptr}},
@@ -149,11 +151,12 @@ static std::unordered_map<std::string, OptionTypeInfo>
              std::string* value) {
             const auto* factory =
                 static_cast<const CompactOnDeletionCollectorFactory*>(addr);
-            *value = std::to_string(factory->GetDeletionRatio());
+            *value = ToString(factory->GetDeletionRatio());
             return Status::OK();
           },
           nullptr}},
 
+#endif  // ROCKSDB_LITE
 };
 
 CompactOnDeletionCollectorFactory::CompactOnDeletionCollectorFactory(
@@ -205,17 +208,20 @@ static int RegisterTablePropertiesCollectorFactories(
   return 1;
 }
 }  // namespace
+#endif  // !ROCKSDB_LITE
 
 Status TablePropertiesCollectorFactory::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<TablePropertiesCollectorFactory>* result) {
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterTablePropertiesCollectorFactories(*(ObjectLibrary::Default().get()),
                                               "");
   });
+#endif  // ROCKSDB_LITE
   return LoadSharedObject<TablePropertiesCollectorFactory>(options, value,
-                                                           result);
+                                                           nullptr, result);
 }
 
 }  // namespace ROCKSDB_NAMESPACE

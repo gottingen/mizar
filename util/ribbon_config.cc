@@ -5,7 +5,11 @@
 
 #include "util/ribbon_config.h"
 
-namespace ROCKSDB_NAMESPACE::ribbon::detail {
+namespace ROCKSDB_NAMESPACE {
+
+namespace ribbon {
+
+namespace detail {
 
 // Each instantiation of this struct is sufficiently unique for configuration
 // purposes, and is only instantiated for settings where we support the
@@ -495,4 +499,8 @@ template struct BandingConfigHelper1MaybeSupported<
 template struct BandingConfigHelper1MaybeSupported<kOneIn1000, 64U, /*sm*/ true,
                                                    /*hm*/ true, /*sup*/ true>;
 
-}  // namespace ROCKSDB_NAMESPACE::ribbon::detail
+}  // namespace detail
+
+}  // namespace ribbon
+
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,95 +5,69 @@
 //
 #include "file/file_util.h"
 
-#include <algorithm>
 #include <string>
+#include <algorithm>
 
 #include "file/random_access_file_reader.h"
 #include "file/sequence_file_reader.h"
 #include "file/sst_file_manager_impl.h"
 #include "file/writable_file_writer.h"
 #include "rocksdb/env.h"
-#include "rocksdb/statistics.h"
 
 namespace ROCKSDB_NAMESPACE {
 
 // Utility function to copy a file up to a specified length
 IOStatus CopyFile(FileSystem* fs, const std::string& source,
-                  Temperature src_temp_hint,
-                  std::unique_ptr<WritableFileWriter>& dest_writer,
-                  uint64_t size, bool use_fsync,
+                  const std::string& destination, uint64_t size, bool use_fsync,
                   const std::shared_ptr<IOTracer>& io_tracer) {
-  FileOptions soptions;
+  const FileOptions soptions;
   IOStatus io_s;
   std::unique_ptr<SequentialFileReader> src_reader;
-  const IOOptions opts;
+  std::unique_ptr<WritableFileWriter> dest_writer;
 
   {
-    soptions.temperature = src_temp_hint;
     std::unique_ptr<FSSequentialFile> srcfile;
     io_s = fs->NewSequentialFile(source, soptions, &srcfile, nullptr);
+    if (!io_s.ok()) {
+      return io_s;
+    }
+    std::unique_ptr<FSWritableFile> destfile;
+    io_s = fs->NewWritableFile(destination, soptions, &destfile, nullptr);
     if (!io_s.ok()) {
       return io_s;
     }
 
     if (size == 0) {
       // default argument means copy everything
-      io_s = fs->GetFileSize(source, opts, &size, nullptr);
+      io_s = fs->GetFileSize(source, IOOptions(), &size, nullptr);
       if (!io_s.ok()) {
         return io_s;
       }
     }
     src_reader.reset(
         new SequentialFileReader(std::move(srcfile), source, io_tracer));
+    dest_writer.reset(
+        new WritableFileWriter(std::move(destfile), destination, soptions));
   }
 
   char buffer[4096];
   Slice slice;
   while (size > 0) {
     size_t bytes_to_read = std::min(sizeof(buffer), static_cast<size_t>(size));
-    // TODO: rate limit copy file
-    io_s = status_to_io_status(
-        src_reader->Read(bytes_to_read, &slice, buffer,
-                         Env::IO_TOTAL /* rate_limiter_priority */));
+    io_s = status_to_io_status(src_reader->Read(bytes_to_read, &slice, buffer));
     if (!io_s.ok()) {
       return io_s;
     }
     if (slice.size() == 0) {
       return IOStatus::Corruption("file too small");
     }
-
-    io_s = dest_writer->Append(opts, slice);
+    io_s = dest_writer->Append(slice);
     if (!io_s.ok()) {
       return io_s;
     }
     size -= slice.size();
   }
-  return dest_writer->Sync(opts, use_fsync);
-}
-
-IOStatus CopyFile(FileSystem* fs, const std::string& source,
-                  Temperature src_temp_hint, const std::string& destination,
-                  Temperature dst_temp, uint64_t size, bool use_fsync,
-                  const std::shared_ptr<IOTracer>& io_tracer) {
-  FileOptions options;
-  IOStatus io_s;
-  std::unique_ptr<WritableFileWriter> dest_writer;
-
-  {
-    options.temperature = dst_temp;
-    std::unique_ptr<FSWritableFile> destfile;
-    io_s = fs->NewWritableFile(destination, options, &destfile, nullptr);
-    if (!io_s.ok()) {
-      return io_s;
-    }
-
-    // TODO: pass in Histograms if the destination file is sst or blob
-    dest_writer.reset(
-        new WritableFileWriter(std::move(destfile), destination, options));
-  }
-
-  return CopyFile(fs, source, src_temp_hint, dest_writer, size, use_fsync,
-                  io_tracer);
+  return dest_writer->Sync(use_fsync);
 }
 
 // Utility function to create a file with the provided contents
@@ -102,26 +76,25 @@ IOStatus CreateFile(FileSystem* fs, const std::string& destination,
   const EnvOptions soptions;
   IOStatus io_s;
   std::unique_ptr<WritableFileWriter> dest_writer;
-  const IOOptions opts;
 
   std::unique_ptr<FSWritableFile> destfile;
   io_s = fs->NewWritableFile(destination, soptions, &destfile, nullptr);
   if (!io_s.ok()) {
     return io_s;
   }
-  // TODO: pass in Histograms if the destination file is sst or blob
   dest_writer.reset(
       new WritableFileWriter(std::move(destfile), destination, soptions));
-  io_s = dest_writer->Append(opts, Slice(contents));
+  io_s = dest_writer->Append(Slice(contents));
   if (!io_s.ok()) {
     return io_s;
   }
-  return dest_writer->Sync(opts, use_fsync);
+  return dest_writer->Sync(use_fsync);
 }
 
 Status DeleteDBFile(const ImmutableDBOptions* db_options,
                     const std::string& fname, const std::string& dir_to_sync,
                     const bool force_bg, const bool force_fg) {
+#ifndef ROCKSDB_LITE
   SstFileManagerImpl* sfm =
       static_cast<SstFileManagerImpl*>(db_options->sst_file_manager.get());
   if (sfm && !force_fg) {
@@ -129,6 +102,14 @@ Status DeleteDBFile(const ImmutableDBOptions* db_options,
   } else {
     return db_options->env->DeleteFile(fname);
   }
+#else
+  (void)dir_to_sync;
+  (void)force_bg;
+  (void)force_fg;
+  // SstFileManager is not supported in ROCKSDB_LITE
+  // Delete file immediately
+  return db_options->env->DeleteFile(fname);
+#endif
 }
 
 // requested_checksum_func_name brings the function name of the checksum
@@ -141,9 +122,8 @@ IOStatus GenerateOneFileChecksum(
     FileChecksumGenFactory* checksum_factory,
     const std::string& requested_checksum_func_name, std::string* file_checksum,
     std::string* file_checksum_func_name,
-    size_t verify_checksums_readahead_size, bool /*allow_mmap_reads*/,
-    std::shared_ptr<IOTracer>& io_tracer, RateLimiter* rate_limiter,
-    const ReadOptions& read_options, Statistics* stats, SystemClock* clock) {
+    size_t verify_checksums_readahead_size, bool allow_mmap_reads,
+    std::shared_ptr<IOTracer>& io_tracer, RateLimiter* rate_limiter) {
   if (checksum_factory == nullptr) {
     return IOStatus::InvalidArgument("Checksum factory is invalid");
   }
@@ -191,9 +171,9 @@ IOStatus GenerateOneFileChecksum(
     if (!io_s.ok()) {
       return io_s;
     }
-    reader.reset(new RandomAccessFileReader(
-        std::move(r_file), file_path, clock, io_tracer, stats,
-        Histograms::SST_READ_MICROS, nullptr, rate_limiter));
+    reader.reset(new RandomAccessFileReader(std::move(r_file), file_path,
+                                            nullptr /*Env*/, io_tracer, nullptr,
+                                            0, nullptr, rate_limiter));
   }
 
   // Found that 256 KB readahead size provides the best performance, based on
@@ -202,28 +182,21 @@ IOStatus GenerateOneFileChecksum(
   size_t readahead_size = (verify_checksums_readahead_size != 0)
                               ? verify_checksums_readahead_size
                               : default_max_read_ahead_size;
-  std::unique_ptr<char[]> buf;
-  if (reader->use_direct_io()) {
-    size_t alignment = reader->file()->GetRequiredBufferAlignment();
-    readahead_size = (readahead_size + alignment - 1) & ~(alignment - 1);
-  }
-  buf.reset(new char[readahead_size]);
+
+  FilePrefetchBuffer prefetch_buffer(readahead_size /* readahead_size */,
+                                     readahead_size /* max_readahead_size */,
+                                     !allow_mmap_reads /* enable */);
 
   Slice slice;
   uint64_t offset = 0;
   IOOptions opts;
-  io_s = reader->PrepareIOOptions(read_options, opts);
-  if (!io_s.ok()) {
-    return io_s;
-  }
   while (size > 0) {
     size_t bytes_to_read =
         static_cast<size_t>(std::min(uint64_t{readahead_size}, size));
-    io_s =
-        reader->Read(opts, offset, bytes_to_read, &slice, buf.get(), nullptr);
-    if (!io_s.ok()) {
-      return IOStatus::Corruption("file read failed with error: " +
-                                  io_s.ToString());
+    if (!prefetch_buffer.TryReadFromCache(
+            opts, reader.get(), offset, bytes_to_read, &slice,
+            nullptr /* status */, false /* for_compaction */)) {
+      return IOStatus::Corruption("file read failed");
     }
     if (slice.size() == 0) {
       return IOStatus::Corruption("file too small");
@@ -231,8 +204,6 @@ IOStatus GenerateOneFileChecksum(
     checksum_generator->Update(slice.data(), slice.size());
     size -= slice.size();
     offset += slice.size();
-
-    TEST_SYNC_POINT("GenerateOneFileChecksum::Chunk:0");
   }
   checksum_generator->Finalize();
   *file_checksum = checksum_generator->GetChecksum();

@@ -15,7 +15,7 @@
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
-#include "db/periodic_task_scheduler.h"
+#include "db/periodic_work_scheduler.h"
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
 #include "port/stack_trace.h"
@@ -29,6 +29,7 @@
 
 namespace ROCKSDB_NAMESPACE {
 
+#ifndef ROCKSDB_LITE
 class StatsHistoryTest : public DBTestBase {
  public:
   StatsHistoryTest() : DBTestBase("stats_history_test", /*env_do_fsync=*/true) {
@@ -43,10 +44,11 @@ class StatsHistoryTest : public DBTestBase {
   void SetUp() override {
     mock_clock_->InstallTimedWaitFixCallback();
     SyncPoint::GetInstance()->SetCallBack(
-        "DBImpl::StartPeriodicTaskScheduler:Init", [&](void* arg) {
-          auto periodic_task_scheduler_ptr =
-              static_cast<PeriodicTaskScheduler*>(arg);
-          periodic_task_scheduler_ptr->TEST_OverrideTimer(mock_clock_.get());
+        "DBImpl::StartPeriodicWorkScheduler:Init", [&](void* arg) {
+          auto* periodic_work_scheduler_ptr =
+              reinterpret_cast<PeriodicWorkScheduler**>(arg);
+          *periodic_work_scheduler_ptr =
+              PeriodicWorkTestScheduler::Default(mock_clock_);
         });
   }
 };
@@ -65,10 +67,10 @@ TEST_F(StatsHistoryTest, RunStatsDumpPeriodSec) {
 
   // Wait for the first stats persist to finish, as the initial delay could be
   // different.
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   ASSERT_GE(counter, 1);
 
@@ -97,17 +99,17 @@ TEST_F(StatsHistoryTest, StatsPersistScheduling) {
 
   // Wait for the first stats persist to finish, as the initial delay could be
   // different.
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   ASSERT_GE(counter, 1);
 
   // Test cancel job through SetOptions
   ASSERT_OK(dbfull()->SetDBOptions({{"stats_persist_period_sec", "0"}}));
   int old_val = counter;
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec * 2); });
   ASSERT_EQ(counter, old_val);
 
@@ -129,7 +131,7 @@ TEST_F(StatsHistoryTest, PersistentStatsFreshInstall) {
       {{"stats_persist_period_sec", std::to_string(kPeriodSec)}}));
   ASSERT_EQ(kPeriodSec, dbfull()->GetDBOptions().stats_persist_period_sec);
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   ASSERT_GE(counter, 1);
   Close();
@@ -148,11 +150,11 @@ TEST_F(StatsHistoryTest, GetStatsHistoryInMemory) {
   ReopenWithColumnFamilies({"default", "pikachu"}, options);
 
   // make sure the first stats persist to finish
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
   // Wait for stats persist to finish
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
 
   std::unique_ptr<StatsHistoryIterator> stats_iter;
@@ -170,7 +172,7 @@ TEST_F(StatsHistoryTest, GetStatsHistoryInMemory) {
   ASSERT_GT(stats_count, 0);
   // Wait a bit and verify no more stats are found
   for (int i = 0; i < 10; ++i) {
-    dbfull()->TEST_WaitForPeriodicTaskRun(
+    dbfull()->TEST_WaitForStatsDumpRun(
         [&] { mock_clock_->MockSleepForSeconds(1); });
   }
   ASSERT_OK(db_->GetStatsHistory(0, mock_clock_->NowSeconds(), &stats_iter));
@@ -185,8 +187,6 @@ TEST_F(StatsHistoryTest, GetStatsHistoryInMemory) {
 
 TEST_F(StatsHistoryTest, InMemoryStatsHistoryPurging) {
   constexpr int kPeriodSec = 1;
-  constexpr int kEstimatedOneSliceSize = 16000;
-
   Options options;
   options.create_if_missing = true;
   options.statistics = CreateDBStatistics();
@@ -208,7 +208,6 @@ TEST_F(StatsHistoryTest, InMemoryStatsHistoryPurging) {
   for (iterator->SeekToFirst(); iterator->Valid(); iterator->Next()) {
     ASSERT_TRUE(iterator->key() == iterator->value());
   }
-  ASSERT_OK(iterator->status());
   delete iterator;
   ASSERT_OK(Flush());
   ASSERT_OK(Delete("sol"));
@@ -222,14 +221,13 @@ TEST_F(StatsHistoryTest, InMemoryStatsHistoryPurging) {
   for (iterator->SeekToFirst(); iterator->Valid(); iterator->Next()) {
     ASSERT_TRUE(iterator->key() == iterator->value());
   }
-  ASSERT_OK(iterator->status());
   delete iterator;
   ASSERT_OK(Flush());
   ASSERT_OK(db_->CompactRange(CompactRangeOptions(), nullptr, nullptr));
 
   const int kIterations = 10;
   for (int i = 0; i < kIterations; ++i) {
-    dbfull()->TEST_WaitForPeriodicTaskRun(
+    dbfull()->TEST_WaitForStatsDumpRun(
         [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   }
 
@@ -246,16 +244,14 @@ TEST_F(StatsHistoryTest, InMemoryStatsHistoryPurging) {
   }
   size_t stats_history_size = dbfull()->TEST_EstimateInMemoryStatsHistorySize();
   ASSERT_GE(slice_count, kIterations - 1);
-  ASSERT_GE(stats_history_size, kEstimatedOneSliceSize);
-  // capping memory cost to roughly one slice's size
-  ASSERT_OK(dbfull()->SetDBOptions(
-      {{"stats_history_buffer_size", std::to_string(kEstimatedOneSliceSize)}}));
-  ASSERT_EQ(kEstimatedOneSliceSize,
-            dbfull()->GetDBOptions().stats_history_buffer_size);
+  ASSERT_GE(stats_history_size, 15000);
+  // capping memory cost at 15000 bytes since one slice is around 10000~15000
+  ASSERT_OK(dbfull()->SetDBOptions({{"stats_history_buffer_size", "15000"}}));
+  ASSERT_EQ(15000, dbfull()->GetDBOptions().stats_history_buffer_size);
 
   // Wait for stats persist to finish
   for (int i = 0; i < kIterations; ++i) {
-    dbfull()->TEST_WaitForPeriodicTaskRun(
+    dbfull()->TEST_WaitForStatsDumpRun(
         [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   }
 
@@ -271,13 +267,9 @@ TEST_F(StatsHistoryTest, InMemoryStatsHistoryPurging) {
   }
   size_t stats_history_size_reopen =
       dbfull()->TEST_EstimateInMemoryStatsHistorySize();
-
-  // Only one slice can fit under the new stats_history_buffer_size
-  //
-  // If `slice_count == 0` when new statistics are added, consider increasing
-  // `kEstimatedOneSliceSize`
-  ASSERT_EQ(slice_count, 1);
-  ASSERT_TRUE(stats_history_size_reopen < 16000 &&
+  // only one slice can fit under the new stats_history_buffer_size
+  ASSERT_LT(slice_count, 2);
+  ASSERT_TRUE(stats_history_size_reopen < 15000 &&
               stats_history_size_reopen > 0);
   ASSERT_TRUE(stats_count_reopen < stats_count && stats_count_reopen > 0);
   Close();
@@ -290,7 +282,6 @@ int countkeys(Iterator* iter) {
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     count++;
   }
-  EXPECT_OK(iter->status());
   return count;
 }
 
@@ -309,11 +300,11 @@ TEST_F(StatsHistoryTest, GetStatsHistoryFromDisk) {
 
   // Wait for the first stats persist to finish, as the initial delay could be
   // different.
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
   // Wait for stats persist to finish
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
 
   auto iter =
@@ -321,14 +312,14 @@ TEST_F(StatsHistoryTest, GetStatsHistoryFromDisk) {
   int key_count1 = countkeys(iter);
   delete iter;
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
   int key_count2 = countkeys(iter);
   delete iter;
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
@@ -402,32 +393,32 @@ TEST_F(StatsHistoryTest, PersitentStatsVerifyValue) {
 
   // Wait for the first stats persist to finish, as the initial delay could be
   // different.
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
   // Wait for stats persist to finish
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   auto iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
   countkeys(iter);
   delete iter;
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
   countkeys(iter);
   delete iter;
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
   countkeys(iter);
   delete iter;
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
 
   std::map<std::string, uint64_t> stats_map_after;
@@ -491,10 +482,10 @@ TEST_F(StatsHistoryTest, PersistentStatsCreateColumnFamilies) {
   ASSERT_EQ(Get(2, "foo"), "bar");
 
   // make sure the first stats persist to finish
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   auto iter =
       db_->NewIterator(ReadOptions(), dbfull()->PersistentStatsColumnFamily());
@@ -591,7 +582,7 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
 
   // Wait for the first stats persist to finish, as the initial delay could be
   // different.
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec - 1); });
 
   ColumnFamilyData* cfd_default =
@@ -610,17 +601,13 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
   ASSERT_OK(Put(1, "Eevee", "v0"));
   ASSERT_EQ("v0", Get(1, "Eevee"));
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   // writing to all three cf, flush default cf
-  // LogNumbers: default: 16, stats: 10, pikachu: 5
-  // Since in recovery process, cfd_stats column is created after WAL is
-  // created, synced and MANIFEST is persisted, its log number which depends on
-  // logfile_number_ will be different. Since "pikachu" is never flushed, thus
-  // its log_number should be the smallest of the three.
+  // LogNumbers: default: 14, stats: 4, pikachu: 4
   ASSERT_OK(Flush());
-  ASSERT_LT(cfd_test->GetLogNumber(), cfd_stats->GetLogNumber());
-  ASSERT_LT(cfd_test->GetLogNumber(), cfd_default->GetLogNumber());
+  ASSERT_EQ(cfd_stats->GetLogNumber(), cfd_test->GetLogNumber());
+  ASSERT_LT(cfd_stats->GetLogNumber(), cfd_default->GetLogNumber());
 
   ASSERT_OK(Put("foo1", "v1"));
   ASSERT_OK(Put("bar1", "v1"));
@@ -639,7 +626,7 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
   ASSERT_EQ("v2", Get("bar2"));
   ASSERT_EQ("v2", Get("foo2"));
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   // writing to default and stats cf, flushing default cf
   // LogNumbers: default: 19, stats: 19, pikachu: 19
@@ -654,7 +641,7 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
   ASSERT_OK(Put(1, "Jolteon", "v3"));
   ASSERT_EQ("v3", Get(1, "Jolteon"));
 
-  dbfull()->TEST_WaitForPeriodicTaskRun(
+  dbfull()->TEST_WaitForStatsDumpRun(
       [&] { mock_clock_->MockSleepForSeconds(kPeriodSec); });
   // writing to all three cf, flushing test cf
   // LogNumbers: default: 19, stats: 19, pikachu: 22
@@ -664,6 +651,7 @@ TEST_F(StatsHistoryTest, ForceManualFlushStatsCF) {
   Close();
 }
 
+#endif  // !ROCKSDB_LITE
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {

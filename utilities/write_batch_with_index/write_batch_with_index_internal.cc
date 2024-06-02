@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
+
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
+#include "db/merge_context.h"
 #include "db/merge_helper.h"
-#include "db/wide/wide_column_serialization.h"
-#include "db/wide/wide_columns_helper.h"
-#include "options/cf_options.h"
 #include "rocksdb/comparator.h"
 #include "rocksdb/db.h"
 #include "rocksdb/utilities/write_batch_with_index.h"
@@ -22,18 +22,18 @@ namespace ROCKSDB_NAMESPACE {
 BaseDeltaIterator::BaseDeltaIterator(ColumnFamilyHandle* column_family,
                                      Iterator* base_iterator,
                                      WBWIIteratorImpl* delta_iterator,
-                                     const Comparator* comparator)
+                                     const Comparator* comparator,
+                                     const ReadOptions* read_options)
     : forward_(true),
       current_at_base_(true),
       equal_keys_(false),
       status_(Status::OK()),
-      column_family_(column_family),
       base_iterator_(base_iterator),
       delta_iterator_(delta_iterator),
-      comparator_(comparator) {
-  assert(base_iterator_);
-  assert(delta_iterator_);
-  assert(comparator_);
+      comparator_(comparator),
+      iterate_upper_bound_(read_options ? read_options->iterate_upper_bound
+                                        : nullptr) {
+  wbwii_.reset(new WriteBatchWithIndexInternal(column_family));
 }
 
 bool BaseDeltaIterator::Valid() const {
@@ -95,9 +95,8 @@ void BaseDeltaIterator::Next() {
       AdvanceBase();
     }
     if (DeltaValid() && BaseValid()) {
-      if (0 == comparator_->CompareWithoutTimestamp(
-                   delta_iterator_->Entry().key, /*a_has_ts=*/false,
-                   base_iterator_->key(), /*b_has_ts=*/false)) {
+      if (comparator_->Equal(delta_iterator_->Entry().key,
+                             base_iterator_->key())) {
         equal_keys_ = true;
       }
     }
@@ -132,9 +131,8 @@ void BaseDeltaIterator::Prev() {
       AdvanceBase();
     }
     if (DeltaValid() && BaseValid()) {
-      if (0 == comparator_->CompareWithoutTimestamp(
-                   delta_iterator_->Entry().key, /*a_has_ts=*/false,
-                   base_iterator_->key(), /*b_has_ts=*/false)) {
+      if (comparator_->Equal(delta_iterator_->Entry().key,
+                             base_iterator_->key())) {
         equal_keys_ = true;
       }
     }
@@ -148,8 +146,33 @@ Slice BaseDeltaIterator::key() const {
                           : delta_iterator_->Entry().key;
 }
 
-Slice BaseDeltaIterator::timestamp() const {
-  return current_at_base_ ? base_iterator_->timestamp() : Slice();
+Slice BaseDeltaIterator::value() const {
+  if (current_at_base_) {
+    return base_iterator_->value();
+  } else {
+    WriteEntry delta_entry = delta_iterator_->Entry();
+    if (wbwii_->GetNumOperands() == 0) {
+      return delta_entry.value;
+    } else if (delta_entry.type == kDeleteRecord ||
+               delta_entry.type == kSingleDeleteRecord) {
+      status_ =
+          wbwii_->MergeKey(delta_entry.key, nullptr, merge_result_.GetSelf());
+    } else if (delta_entry.type == kPutRecord) {
+      status_ = wbwii_->MergeKey(delta_entry.key, &delta_entry.value,
+                                 merge_result_.GetSelf());
+    } else if (delta_entry.type == kMergeRecord) {
+      if (equal_keys_) {
+        Slice base_value = base_iterator_->value();
+        status_ = wbwii_->MergeKey(delta_entry.key, &base_value,
+                                   merge_result_.GetSelf());
+      } else {
+        status_ =
+            wbwii_->MergeKey(delta_entry.key, nullptr, merge_result_.GetSelf());
+      }
+    }
+    merge_result_.PinSelf();
+    return merge_result_;
+  }
 }
 
 Status BaseDeltaIterator::status() const {
@@ -195,9 +218,8 @@ void BaseDeltaIterator::AssertInvariants() {
   // we don't support those yet
   assert(delta_iterator_->Entry().type != kMergeRecord &&
          delta_iterator_->Entry().type != kLogDataRecord);
-  int compare = comparator_->CompareWithoutTimestamp(
-      delta_iterator_->Entry().key, /*a_has_ts=*/false, base_iterator_->key(),
-      /*b_has_ts=*/false);
+  int compare =
+      comparator_->Compare(delta_iterator_->Entry().key, base_iterator_->key());
   if (forward_) {
     // current_at_base -> compare < 0
     assert(!current_at_base_ || compare < 0);
@@ -248,128 +270,17 @@ void BaseDeltaIterator::AdvanceBase() {
 
 bool BaseDeltaIterator::BaseValid() const { return base_iterator_->Valid(); }
 bool BaseDeltaIterator::DeltaValid() const { return delta_iterator_->Valid(); }
-
-void BaseDeltaIterator::ResetValueAndColumns() {
-  value_.clear();
-  columns_.clear();
-}
-
-void BaseDeltaIterator::SetValueAndColumnsFromBase() {
-  assert(current_at_base_);
-  assert(BaseValid());
-  assert(value_.empty());
-  assert(columns_.empty());
-
-  value_ = base_iterator_->value();
-  columns_ = base_iterator_->columns();
-}
-
-void BaseDeltaIterator::SetValueAndColumnsFromDelta() {
-  assert(!current_at_base_);
-  assert(DeltaValid());
-  assert(value_.empty());
-  assert(columns_.empty());
-
-  WriteEntry delta_entry = delta_iterator_->Entry();
-
-  if (merge_context_.GetNumOperands() == 0) {
-    if (delta_entry.type == kPutRecord) {
-      value_ = delta_entry.value;
-      columns_.emplace_back(kDefaultWideColumnName, value_);
-    } else if (delta_entry.type == kPutEntityRecord) {
-      Slice value_copy(delta_entry.value);
-
-      status_ = WideColumnSerialization::Deserialize(value_copy, columns_);
-      if (!status_.ok()) {
-        columns_.clear();
-        return;
-      }
-
-      if (WideColumnsHelper::HasDefaultColumn(columns_)) {
-        value_ = WideColumnsHelper::GetDefaultColumn(columns_);
-      }
-    }
-
-    return;
-  }
-
-  ValueType result_type = kTypeValue;
-
-  if (delta_entry.type == kDeleteRecord ||
-      delta_entry.type == kSingleDeleteRecord) {
-    status_ = WriteBatchWithIndexInternal::MergeKeyWithNoBaseValue(
-        column_family_, delta_entry.key, merge_context_, &merge_result_,
-        /* result_operand */ nullptr, &result_type);
-  } else if (delta_entry.type == kPutRecord) {
-    status_ = WriteBatchWithIndexInternal::MergeKeyWithBaseValue(
-        column_family_, delta_entry.key, MergeHelper::kPlainBaseValue,
-        delta_entry.value, merge_context_, &merge_result_,
-        /* result_operand */ nullptr, &result_type);
-  } else if (delta_entry.type == kPutEntityRecord) {
-    status_ = WriteBatchWithIndexInternal::MergeKeyWithBaseValue(
-        column_family_, delta_entry.key, MergeHelper::kWideBaseValue,
-        delta_entry.value, merge_context_, &merge_result_,
-        /* result_operand */ nullptr, &result_type);
-  } else if (delta_entry.type == kMergeRecord) {
-    if (equal_keys_) {
-      if (WideColumnsHelper::HasDefaultColumnOnly(base_iterator_->columns())) {
-        status_ = WriteBatchWithIndexInternal::MergeKeyWithBaseValue(
-            column_family_, delta_entry.key, MergeHelper::kPlainBaseValue,
-            base_iterator_->value(), merge_context_, &merge_result_,
-            /* result_operand */ nullptr, &result_type);
-      } else {
-        status_ = WriteBatchWithIndexInternal::MergeKeyWithBaseValue(
-            column_family_, delta_entry.key, MergeHelper::kWideBaseValue,
-            base_iterator_->columns(), merge_context_, &merge_result_,
-            /* result_operand */ nullptr, &result_type);
-      }
-    } else {
-      status_ = WriteBatchWithIndexInternal::MergeKeyWithNoBaseValue(
-          column_family_, delta_entry.key, merge_context_, &merge_result_,
-          /* result_operand */ nullptr, &result_type);
-    }
-  } else {
-    status_ = Status::NotSupported("Unsupported entry type for merge");
-  }
-
-  if (!status_.ok()) {
-    return;
-  }
-
-  if (result_type == kTypeWideColumnEntity) {
-    Slice entity(merge_result_);
-
-    status_ = WideColumnSerialization::Deserialize(entity, columns_);
-    if (!status_.ok()) {
-      columns_.clear();
-      return;
-    }
-
-    if (WideColumnsHelper::HasDefaultColumn(columns_)) {
-      value_ = WideColumnsHelper::GetDefaultColumn(columns_);
-    }
-
-    return;
-  }
-
-  assert(result_type == kTypeValue);
-
-  value_ = merge_result_;
-  columns_.emplace_back(kDefaultWideColumnName, value_);
-}
-
 void BaseDeltaIterator::UpdateCurrent() {
 // Suppress false positive clang analyzer warnings.
 #ifndef __clang_analyzer__
   status_ = Status::OK();
-  ResetValueAndColumns();
-
   while (true) {
     auto delta_result = WBWIIteratorImpl::kNotFound;
     WriteEntry delta_entry;
     if (DeltaValid()) {
       assert(delta_iterator_->status().ok());
-      delta_result = delta_iterator_->FindLatestUpdate(&merge_context_);
+      delta_result =
+          delta_iterator_->FindLatestUpdate(wbwii_->GetMergeContext());
       delta_entry = delta_iterator_->Entry();
     } else if (!delta_iterator_->status().ok()) {
       // Expose the error status and stop.
@@ -389,32 +300,34 @@ void BaseDeltaIterator::UpdateCurrent() {
         // Finished
         return;
       }
+      if (iterate_upper_bound_) {
+        if (comparator_->Compare(delta_entry.key, *iterate_upper_bound_) >= 0) {
+          // out of upper bound -> finished.
+          return;
+        }
+      }
       if (delta_result == WBWIIteratorImpl::kDeleted &&
-          merge_context_.GetNumOperands() == 0) {
+          wbwii_->GetNumOperands() == 0) {
         AdvanceDelta();
       } else {
         current_at_base_ = false;
-        SetValueAndColumnsFromDelta();
         return;
       }
     } else if (!DeltaValid()) {
       // Delta has finished.
       current_at_base_ = true;
-      SetValueAndColumnsFromBase();
       return;
     } else {
       int compare =
-          (forward_ ? 1 : -1) * comparator_->CompareWithoutTimestamp(
-                                    delta_entry.key, /*a_has_ts=*/false,
-                                    base_iterator_->key(), /*b_has_ts=*/false);
+          (forward_ ? 1 : -1) *
+          comparator_->Compare(delta_entry.key, base_iterator_->key());
       if (compare <= 0) {  // delta bigger or equal
         if (compare == 0) {
           equal_keys_ = true;
         }
         if (delta_result != WBWIIteratorImpl::kDeleted ||
-            merge_context_.GetNumOperands() > 0) {
+            wbwii_->GetNumOperands() > 0) {
           current_at_base_ = false;
-          SetValueAndColumnsFromDelta();
           return;
         }
         // Delta is less advanced and is delete.
@@ -424,7 +337,6 @@ void BaseDeltaIterator::UpdateCurrent() {
         }
       } else {
         current_at_base_ = true;
-        SetValueAndColumnsFromBase();
         return;
       }
     }
@@ -517,8 +429,6 @@ WBWIIteratorImpl::Result WBWIIteratorImpl::FindLatestUpdate(
           break;  // ignore
         case kXIDRecord:
           break;  // ignore
-        case kPutEntityRecord:
-          return WBWIIteratorImpl::kFound;
         default:
           return WBWIIteratorImpl::kError;
       }  // end switch statement
@@ -537,10 +447,10 @@ WBWIIteratorImpl::Result WBWIIteratorImpl::FindLatestUpdate(
 }
 
 Status ReadableWriteBatch::GetEntryFromDataOffset(size_t data_offset,
-                                                  WriteType* type, Slice* key,
+                                                  WriteType* type, Slice* Key,
                                                   Slice* value, Slice* blob,
                                                   Slice* xid) const {
-  if (type == nullptr || key == nullptr || value == nullptr ||
+  if (type == nullptr || Key == nullptr || value == nullptr ||
       blob == nullptr || xid == nullptr) {
     return Status::InvalidArgument("Output parameters cannot be null");
   }
@@ -555,10 +465,9 @@ Status ReadableWriteBatch::GetEntryFromDataOffset(size_t data_offset,
   }
   Slice input = Slice(rep_.data() + data_offset, rep_.size() - data_offset);
   char tag;
-  uint32_t column_family = 0;  // default
-  uint64_t unix_write_time = 0;
-  Status s = ReadRecordFromWriteBatch(&input, &tag, &column_family, key, value,
-                                      blob, xid, &unix_write_time);
+  uint32_t column_family;
+  Status s = ReadRecordFromWriteBatch(&input, &tag, &column_family, Key, value,
+                                      blob, xid);
   if (!s.ok()) {
     return s;
   }
@@ -596,19 +505,9 @@ Status ReadableWriteBatch::GetEntryFromDataOffset(size_t data_offset,
     case kTypeRollbackXID:
       *type = kXIDRecord;
       break;
-    case kTypeColumnFamilyWideColumnEntity:
-    case kTypeWideColumnEntity: {
-      *type = kPutEntityRecord;
-      break;
-    }
-    case kTypeColumnFamilyValuePreferredSeqno:
-    case kTypeValuePreferredSeqno:
-      // TimedPut is not supported in Transaction APIs.
-      return Status::Corruption("unexpected WriteBatch tag ",
-                                std::to_string(static_cast<unsigned int>(tag)));
     default:
       return Status::Corruption("unknown WriteBatch tag ",
-                                std::to_string(static_cast<unsigned int>(tag)));
+                                ToString(static_cast<unsigned int>(tag)));
   }
   return Status::OK();
 }
@@ -673,26 +572,10 @@ int WriteBatchEntryComparator::CompareKey(uint32_t column_family,
                                           const Slice& key2) const {
   if (column_family < cf_comparators_.size() &&
       cf_comparators_[column_family] != nullptr) {
-    return cf_comparators_[column_family]->CompareWithoutTimestamp(
-        key1, /*a_has_ts=*/false, key2, /*b_has_ts=*/false);
+    return cf_comparators_[column_family]->Compare(key1, key2);
   } else {
-    return default_comparator_->CompareWithoutTimestamp(
-        key1, /*a_has_ts=*/false, key2, /*b_has_ts=*/false);
+    return default_comparator_->Compare(key1, key2);
   }
-}
-
-const Comparator* WriteBatchEntryComparator::GetComparator(
-    const ColumnFamilyHandle* column_family) const {
-  return column_family ? column_family->GetComparator() : default_comparator_;
-}
-
-const Comparator* WriteBatchEntryComparator::GetComparator(
-    uint32_t column_family) const {
-  if (column_family < cf_comparators_.size() &&
-      cf_comparators_[column_family]) {
-    return cf_comparators_[column_family];
-  }
-  return default_comparator_;
 }
 
 WriteEntry WBWIIteratorImpl::Entry() const {
@@ -705,15 +588,9 @@ WriteEntry WBWIIteratorImpl::Entry() const {
   auto s = write_batch_->GetEntryFromDataOffset(
       iter_entry->offset, &ret.type, &ret.key, &ret.value, &blob, &xid);
   assert(s.ok());
-  assert(ret.type == kPutRecord || ret.type == kPutEntityRecord ||
-         ret.type == kDeleteRecord || ret.type == kSingleDeleteRecord ||
-         ret.type == kDeleteRangeRecord || ret.type == kMergeRecord);
-  // Make sure entry.key does not include user-defined timestamp.
-  const Comparator* const ucmp = comparator_->GetComparator(column_family_id_);
-  size_t ts_sz = ucmp->timestamp_size();
-  if (ts_sz > 0) {
-    ret.key = StripTimestampFromUserKey(ret.key, ts_sz);
-  }
+  assert(ret.type == kPutRecord || ret.type == kDeleteRecord ||
+         ret.type == kSingleDeleteRecord || ret.type == kDeleteRangeRecord ||
+         ret.type == kMergeRecord);
   return ret;
 }
 
@@ -725,208 +602,102 @@ bool WBWIIteratorImpl::MatchesKey(uint32_t cf_id, const Slice& key) {
   }
 }
 
-Status WriteBatchWithIndexInternal::CheckAndGetImmutableOptions(
-    ColumnFamilyHandle* column_family, const ImmutableOptions** ioptions) {
-  assert(ioptions);
-  assert(!*ioptions);
+WriteBatchWithIndexInternal::WriteBatchWithIndexInternal(
+    ColumnFamilyHandle* column_family)
+    : db_(nullptr), db_options_(nullptr), column_family_(column_family) {}
 
-  if (!column_family) {
-    return Status::InvalidArgument("Must provide a column family");
+WriteBatchWithIndexInternal::WriteBatchWithIndexInternal(
+    DB* db, ColumnFamilyHandle* column_family)
+    : db_(db), db_options_(nullptr), column_family_(column_family) {
+  if (db_ != nullptr && column_family_ == nullptr) {
+    column_family_ = db_->DefaultColumnFamily();
   }
-
-  const auto& iopts = GetImmutableOptions(column_family);
-
-  const auto* merge_operator = iopts.merge_operator.get();
-  if (!merge_operator) {
-    return Status::InvalidArgument(
-        "Merge operator must be set for column family");
-  }
-
-  *ioptions = &iopts;
-
-  return Status::OK();
 }
 
-template <typename Traits>
-WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetFromBatchImpl(
-    WriteBatchWithIndex* batch, ColumnFamilyHandle* column_family,
-    const Slice& key, MergeContext* context,
-    typename Traits::OutputType* output, Status* s) {
-  assert(batch);
-  assert(context);
-  assert(output);
-  assert(s);
+WriteBatchWithIndexInternal::WriteBatchWithIndexInternal(
+    const DBOptions* db_options, ColumnFamilyHandle* column_family)
+    : db_(nullptr), db_options_(db_options), column_family_(column_family) {}
 
-  std::unique_ptr<WBWIIteratorImpl> iter(
-      static_cast_with_check<WBWIIteratorImpl>(
-          batch->NewIterator(column_family)));
-
-  iter->Seek(key);
-  auto result = iter->FindLatestUpdate(key, context);
-
-  if (result == WBWIIteratorImpl::kError) {
-    Traits::ClearOutput(output);
-    *s = Status::Corruption("Unexpected entry in WriteBatchWithIndex:",
-                            std::to_string(iter->Entry().type));
-    return result;
-  }
-
-  if (result == WBWIIteratorImpl::kNotFound) {
-    Traits::ClearOutput(output);
-    *s = Status::OK();
-    return result;
-  }
-
-  auto resolve_merge_outputs = [](auto out) {
-    std::string* output_value = nullptr;
-    PinnableWideColumns* output_entity = nullptr;
-
-    if constexpr (std::is_same_v<typename Traits::OutputType, std::string>) {
-      output_value = out;
+Status WriteBatchWithIndexInternal::MergeKey(const Slice& key,
+                                             const Slice* value,
+                                             const MergeContext& context,
+                                             std::string* result) const {
+  if (column_family_ != nullptr) {
+    auto cfh = static_cast_with_check<ColumnFamilyHandleImpl>(column_family_);
+    const auto merge_operator = cfh->cfd()->ioptions()->merge_operator.get();
+    if (merge_operator == nullptr) {
+      return Status::InvalidArgument(
+          "Merge_operator must be set for column_family");
+    } else if (db_ != nullptr) {
+      const ImmutableDBOptions& immutable_db_options =
+          static_cast_with_check<DBImpl>(db_->GetRootDB())
+              ->immutable_db_options();
+      Statistics* statistics = immutable_db_options.statistics.get();
+      Logger* logger = immutable_db_options.info_log.get();
+      SystemClock* clock = immutable_db_options.clock;
+      return MergeHelper::TimedFullMerge(merge_operator, key, value,
+                                         context.GetOperands(), result, logger,
+                                         statistics, clock);
+    } else if (db_options_ != nullptr) {
+      Statistics* statistics = db_options_->statistics.get();
+      Env* env = db_options_->env;
+      Logger* logger = db_options_->info_log.get();
+      SystemClock* clock = env->GetSystemClock().get();
+      return MergeHelper::TimedFullMerge(merge_operator, key, value,
+                                         context.GetOperands(), result, logger,
+                                         statistics, clock);
     } else {
-      static_assert(
-          std::is_same_v<typename Traits::OutputType, PinnableWideColumns>,
-          "unexpected type");
-      output_entity = out;
+      const auto cf_opts = cfh->cfd()->ioptions();
+      return MergeHelper::TimedFullMerge(
+          merge_operator, key, value, context.GetOperands(), result,
+          cf_opts->logger, cf_opts->stats, cf_opts->clock);
     }
-
-    return std::pair<std::string*, PinnableWideColumns*>(output_value,
-                                                         output_entity);
-  };
-
-  if (result == WBWIIteratorImpl::Result::kFound) {  // Put/PutEntity
-    WriteEntry entry = iter->Entry();
-
-    if (context->GetNumOperands() > 0) {
-      auto [output_value, output_entity] = resolve_merge_outputs(output);
-
-      if (entry.type == kPutRecord) {
-        *s = MergeKeyWithBaseValue(column_family, key,
-                                   MergeHelper::kPlainBaseValue, entry.value,
-                                   *context, output_value, output_entity);
-      } else {
-        assert(entry.type == kPutEntityRecord);
-
-        *s = MergeKeyWithBaseValue(column_family, key,
-                                   MergeHelper::kWideBaseValue, entry.value,
-                                   *context, output_value, output_entity);
-      }
-    } else {
-      if (entry.type == kPutRecord) {
-        *s = Traits::SetPlainValue(entry.value, output);
-      } else {
-        assert(entry.type == kPutEntityRecord);
-        *s = Traits::SetWideColumnValue(entry.value, output);
-      }
-    }
-
-    if (!s->ok()) {
-      Traits::ClearOutput(output);
-      result = WBWIIteratorImpl::Result::kError;
-    }
-
-    return result;
+  } else {
+    return Status::InvalidArgument("Must provide a column_family");
   }
-
-  if (result == WBWIIteratorImpl::kDeleted) {
-    if (context->GetNumOperands() > 0) {
-      auto [output_value, output_entity] = resolve_merge_outputs(output);
-
-      *s = MergeKeyWithNoBaseValue(column_family, key, *context, output_value,
-                                   output_entity);
-      if (s->ok()) {
-        result = WBWIIteratorImpl::Result::kFound;
-      } else {
-        Traits::ClearOutput(output);
-        result = WBWIIteratorImpl::Result::kError;
-      }
-    } else {
-      Traits::ClearOutput(output);
-      *s = Status::OK();
-    }
-
-    return result;
-  }
-
-  assert(result == WBWIIteratorImpl::Result::kMergeInProgress);
-
-  Traits::ClearOutput(output);
-  *s = Status::OK();
-  return result;
 }
 
 WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetFromBatch(
-    WriteBatchWithIndex* batch, ColumnFamilyHandle* column_family,
-    const Slice& key, MergeContext* context, std::string* value, Status* s) {
-  struct Traits {
-    using OutputType = std::string;
+    WriteBatchWithIndex* batch, const Slice& key, MergeContext* context,
+    std::string* value, Status* s) {
+  *s = Status::OK();
 
-    static void ClearOutput(OutputType* output) {
-      assert(output);
-      output->clear();
-    }
+  std::unique_ptr<WBWIIteratorImpl> iter(
+      static_cast_with_check<WBWIIteratorImpl>(
+          batch->NewIterator(column_family_)));
 
-    static Status SetPlainValue(const Slice& value, OutputType* output) {
-      assert(output);
-      output->assign(value.data(), value.size());
-
-      return Status::OK();
-    }
-
-    static Status SetWideColumnValue(const Slice& entity, OutputType* output) {
-      assert(output);
-
-      Slice entity_copy = entity;
-      Slice value_of_default;
-      const Status s = WideColumnSerialization::GetValueOfDefaultColumn(
-          entity_copy, value_of_default);
-      if (!s.ok()) {
-        ClearOutput(output);
-        return s;
+  // Search the iterator for this key, and updates/merges to it.
+  iter->Seek(key);
+  auto result = iter->FindLatestUpdate(key, context);
+  if (result == WBWIIteratorImpl::kError) {
+    (*s) = Status::Corruption("Unexpected entry in WriteBatchWithIndex:",
+                              ToString(iter->Entry().type));
+    return result;
+  } else if (result == WBWIIteratorImpl::kNotFound) {
+    return result;
+  } else if (result == WBWIIteratorImpl::Result::kFound) {  // PUT
+    Slice entry_value = iter->Entry().value;
+    if (context->GetNumOperands() > 0) {
+      *s = MergeKey(key, &entry_value, *context, value);
+      if (!s->ok()) {
+        result = WBWIIteratorImpl::Result::kError;
       }
-
-      output->assign(value_of_default.data(), value_of_default.size());
-      return Status::OK();
+    } else {
+      value->assign(entry_value.data(), entry_value.size());
     }
-  };
-
-  return GetFromBatchImpl<Traits>(batch, column_family, key, context, value, s);
-}
-
-WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetEntityFromBatch(
-    WriteBatchWithIndex* batch, ColumnFamilyHandle* column_family,
-    const Slice& key, MergeContext* context, PinnableWideColumns* columns,
-    Status* s) {
-  struct Traits {
-    using OutputType = PinnableWideColumns;
-
-    static void ClearOutput(OutputType* output) {
-      assert(output);
-      output->Reset();
-    }
-
-    static Status SetPlainValue(const Slice& value, OutputType* output) {
-      assert(output);
-      output->SetPlainValue(value);
-
-      return Status::OK();
-    }
-
-    static Status SetWideColumnValue(const Slice& entity, OutputType* output) {
-      assert(output);
-
-      const Status s = output->SetWideColumnValue(entity);
-      if (!s.ok()) {
-        ClearOutput(output);
-        return s;
+  } else if (result == WBWIIteratorImpl::kDeleted) {
+    if (context->GetNumOperands() > 0) {
+      *s = MergeKey(key, nullptr, *context, value);
+      if (s->ok()) {
+        result = WBWIIteratorImpl::Result::kFound;
+      } else {
+        result = WBWIIteratorImpl::Result::kError;
       }
-
-      return Status::OK();
     }
-  };
-
-  return GetFromBatchImpl<Traits>(batch, column_family, key, context, columns,
-                                  s);
+  }
+  return result;
 }
 
 }  // namespace ROCKSDB_NAMESPACE
+
+#endif  // !ROCKSDB_LITE

@@ -9,9 +9,13 @@ package org.rocksdb;
  * Java wrapper over native write_buffer_manager class
  */
 public class WriteBufferManager extends RocksObject {
+  static {
+    RocksDB.loadLibrary();
+  }
+
   /**
    * Construct a new instance of WriteBufferManager.
-   * <p>
+   *
    * Check <a href="https://github.com/facebook/rocksdb/wiki/Write-Buffer-Manager">
    *     https://github.com/facebook/rocksdb/wiki/Write-Buffer-Manager</a>
    * for more details on when to use it
@@ -24,7 +28,7 @@ public class WriteBufferManager extends RocksObject {
    */
   public WriteBufferManager(
       final long bufferSizeBytes, final Cache cache, final boolean allowStall) {
-    super(newWriteBufferManagerInstance(bufferSizeBytes, cache.nativeHandle_, allowStall));
+    super(newWriteBufferManager(bufferSizeBytes, cache.nativeHandle_, allowStall));
     this.allowStall_ = allowStall;
   }
 
@@ -36,20 +40,11 @@ public class WriteBufferManager extends RocksObject {
     return allowStall_;
   }
 
-  private static long newWriteBufferManagerInstance(
-      final long bufferSizeBytes, final long cacheHandle, final boolean allowStall) {
-    RocksDB.loadLibrary();
-    return newWriteBufferManager(bufferSizeBytes, cacheHandle, allowStall);
-  }
-  private static native long newWriteBufferManager(
+  private native static long newWriteBufferManager(
       final long bufferSizeBytes, final long cacheHandle, final boolean allowStall);
 
   @Override
-  protected void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
+  protected native void disposeInternal(final long handle);
 
-  private static native void disposeInternalJni(final long handle);
-
-  private final boolean allowStall_;
+  private boolean allowStall_;
 }

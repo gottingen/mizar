@@ -15,8 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "port/port.h"
 #include "util/autovector.h"
+#include "port/port.h"
 
 namespace ROCKSDB_NAMESPACE {
 
@@ -91,7 +91,8 @@ class ThreadLocalPtr {
 
   class StaticMeta;
 
- private:
+private:
+
   static StaticMeta* Instance();
 
   const uint32_t id_;

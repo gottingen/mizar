@@ -5,7 +5,6 @@
 
 package org.rocksdb;
 
-@SuppressWarnings("PMD.MissingStaticMethodInNonInstantiatableClass")
 public class LogFile {
   private final String pathName;
   private final long logNumber;

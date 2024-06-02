@@ -23,25 +23,25 @@ class DbStressTablePropertiesCollector : public TablePropertiesCollector {
       : need_compact_(Random::GetTLSInstance()->OneInOpt(
             FLAGS_mark_for_compaction_one_file_in)) {}
 
-  Status AddUserKey(const Slice& /* key */, const Slice& /* value */,
-                    EntryType /*type*/, SequenceNumber /*seq*/,
-                    uint64_t /*file_size*/) override {
+  virtual Status AddUserKey(const Slice& /* key */, const Slice& /* value */,
+                            EntryType /*type*/, SequenceNumber /*seq*/,
+                            uint64_t /*file_size*/) override {
     return Status::OK();
   }
 
-  Status Finish(UserCollectedProperties* /* properties */) override {
+  virtual Status Finish(UserCollectedProperties* /* properties */) override {
     return Status::OK();
   }
 
-  UserCollectedProperties GetReadableProperties() const override {
+  virtual UserCollectedProperties GetReadableProperties() const override {
     return UserCollectedProperties{};
   }
 
-  const char* Name() const override {
+  virtual const char* Name() const override {
     return "DbStressTablePropertiesCollector";
   }
 
-  bool NeedCompact() const override { return need_compact_; }
+  virtual bool NeedCompact() const override { return need_compact_; }
 
  private:
   const bool need_compact_;
@@ -52,12 +52,12 @@ class DbStressTablePropertiesCollector : public TablePropertiesCollector {
 class DbStressTablePropertiesCollectorFactory
     : public TablePropertiesCollectorFactory {
  public:
-  TablePropertiesCollector* CreateTablePropertiesCollector(
+  virtual TablePropertiesCollector* CreateTablePropertiesCollector(
       TablePropertiesCollectorFactory::Context /* context */) override {
     return new DbStressTablePropertiesCollector();
   }
 
-  const char* Name() const override {
+  virtual const char* Name() const override {
     return "DbStressTablePropertiesCollectorFactory";
   }
 };

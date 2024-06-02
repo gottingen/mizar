@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
+#ifndef ROCKSDB_LITE
 
 #include <atomic>
 #include <limits>
@@ -180,7 +181,7 @@ class BlobFile {
     return obsolete_sequence_;
   }
 
-  Status Fsync(const WriteOptions& write_options);
+  Status Fsync();
 
   uint64_t GetFileSize() const {
     return file_size_.load(std::memory_order_acquire);
@@ -218,8 +219,7 @@ class BlobFile {
  private:
   Status ReadFooter(BlobLogFooter* footer);
 
-  Status WriteFooterAndCloseLocked(const WriteOptions& write_options,
-                                   SequenceNumber sequence);
+  Status WriteFooterAndCloseLocked(SequenceNumber sequence);
 
   void CloseRandomAccessLocked();
 
@@ -243,3 +243,4 @@ class BlobFile {
 };
 }  // namespace blob_db
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

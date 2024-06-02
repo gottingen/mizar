@@ -77,12 +77,12 @@ public class MemTableInfo {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    final MemTableInfo that = (MemTableInfo) o;
+    MemTableInfo that = (MemTableInfo) o;
     return firstSeqno == that.firstSeqno && earliestSeqno == that.earliestSeqno
         && numEntries == that.numEntries && numDeletes == that.numDeletes
         && Objects.equals(columnFamilyName, that.columnFamilyName);

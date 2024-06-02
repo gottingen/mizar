@@ -64,7 +64,7 @@ public enum MemoryUsageType {
         "Illegal value provided for MemoryUsageType.");
   }
 
-  MemoryUsageType(final byte value) {
+  MemoryUsageType(byte value) {
     value_ = value;
   }
 

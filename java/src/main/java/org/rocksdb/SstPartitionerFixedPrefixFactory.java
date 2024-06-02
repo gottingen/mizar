@@ -9,15 +9,11 @@ package org.rocksdb;
  * Fixed prefix factory. It partitions SST files using fixed prefix of the key.
  */
 public class SstPartitionerFixedPrefixFactory extends SstPartitionerFactory {
-  public SstPartitionerFixedPrefixFactory(final long prefixLength) {
+  public SstPartitionerFixedPrefixFactory(long prefixLength) {
     super(newSstPartitionerFixedPrefixFactory0(prefixLength));
   }
 
-  private static native long newSstPartitionerFixedPrefixFactory0(long prefixLength);
+  private native static long newSstPartitionerFixedPrefixFactory0(long prefixLength);
 
-  @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  @Override protected final native void disposeInternal(final long handle);
 }

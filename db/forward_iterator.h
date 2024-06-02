@@ -4,11 +4,11 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#include "rocksdb/comparator.h"
+#ifndef ROCKSDB_LITE
 
-#include <queue>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include "memory/arena.h"
 #include "rocksdb/db.h"
@@ -28,15 +28,14 @@ struct FileMetaData;
 
 class MinIterComparator {
  public:
-  explicit MinIterComparator(const CompareInterface* comparator)
-      : comparator_(comparator) {}
+  explicit MinIterComparator(const Comparator* comparator) :
+    comparator_(comparator) {}
 
   bool operator()(InternalIterator* a, InternalIterator* b) {
     return comparator_->Compare(a->key(), b->key()) > 0;
   }
-
  private:
-  const CompareInterface* comparator_;
+  const Comparator* comparator_;
 };
 
 using MinIterHeap =
@@ -70,19 +69,19 @@ class ForwardIterator : public InternalIterator {
     valid_ = false;
   }
 
-  bool Valid() const override;
+  virtual bool Valid() const override;
   void SeekToFirst() override;
-  void Seek(const Slice& target) override;
-  void Next() override;
-  Slice key() const override;
-  Slice value() const override;
-  uint64_t write_unix_time() const override;
-  Status status() const override;
-  bool PrepareValue() override;
-  Status GetProperty(std::string prop_name, std::string* prop) override;
-  void SetPinnedItersMgr(PinnedIteratorsManager* pinned_iters_mgr) override;
-  bool IsKeyPinned() const override;
-  bool IsValuePinned() const override;
+  virtual void Seek(const Slice& target) override;
+  virtual void Next() override;
+  virtual Slice key() const override;
+  virtual Slice value() const override;
+  virtual Status status() const override;
+  virtual bool PrepareValue() override;
+  virtual Status GetProperty(std::string prop_name, std::string* prop) override;
+  virtual void SetPinnedItersMgr(
+      PinnedIteratorsManager* pinned_iters_mgr) override;
+  virtual bool IsKeyPinned() const override;
+  virtual bool IsValuePinned() const override;
 
   bool TEST_CheckDeletedIters(int* deleted_iters, int* num_iters);
 
@@ -92,8 +91,8 @@ class ForwardIterator : public InternalIterator {
   // either done immediately or deferred until this iterator is unpinned by
   // PinnedIteratorsManager.
   void SVCleanup();
-  static void SVCleanup(DBImpl* db, SuperVersion* sv,
-                        bool background_purge_on_iterator_cleanup);
+  static void SVCleanup(
+    DBImpl* db, SuperVersion* sv, bool background_purge_on_iterator_cleanup);
   static void DeferredSVCleanup(void* arg);
 
   void RebuildIterators(bool refresh_sv);
@@ -101,15 +100,13 @@ class ForwardIterator : public InternalIterator {
   void BuildLevelIterators(const VersionStorageInfo* vstorage,
                            SuperVersion* sv);
   void ResetIncompleteIterators();
-  void SeekInternal(const Slice& internal_key, bool seek_to_first,
-                    bool seek_after_async_io);
-
+  void SeekInternal(const Slice& internal_key, bool seek_to_first);
   void UpdateCurrent();
   bool NeedToSeekImmutable(const Slice& internal_key);
   void DeleteCurrentIter();
-  uint32_t FindFileInRange(const std::vector<FileMetaData*>& files,
-                           const Slice& internal_key, uint32_t left,
-                           uint32_t right);
+  uint32_t FindFileInRange(
+    const std::vector<FileMetaData*>& files, const Slice& internal_key,
+    uint32_t left, uint32_t right);
 
   bool IsOverUpperBound(const Slice& internal_key) const;
 
@@ -122,7 +119,7 @@ class ForwardIterator : public InternalIterator {
   void DeleteIterator(InternalIterator* iter, bool is_arena = false);
 
   DBImpl* const db_;
-  ReadOptions read_options_;
+  const ReadOptions read_options_;
   ColumnFamilyData* const cfd_;
   const SliceTransform* const prefix_extractor_;
   const Comparator* user_comparator_;
@@ -164,3 +161,4 @@ class ForwardIterator : public InternalIterator {
 };
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

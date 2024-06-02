@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "monitoring/statistics_impl.h"
+#include "monitoring/statistics.h"
 #include "port/port.h"
 #include "rocksdb/statistics.h"
 #include "rocksdb/system_clock.h"
@@ -32,21 +32,15 @@ class InstrumentedMutex {
         clock_(clock),
         stats_code_(stats_code) {}
 
-#ifdef COERCE_CONTEXT_SWITCH
-  InstrumentedMutex(Statistics* stats, SystemClock* clock, int stats_code,
-                    InstrumentedCondVar* bg_cv, bool adaptive = false)
-      : mutex_(adaptive),
-        stats_(stats),
-        clock_(clock),
-        stats_code_(stats_code),
-        bg_cv_(bg_cv) {}
-#endif
-
   void Lock();
 
-  void Unlock() { mutex_.Unlock(); }
+  void Unlock() {
+    mutex_.Unlock();
+  }
 
-  void AssertHeld() const { mutex_.AssertHeld(); }
+  void AssertHeld() {
+    mutex_.AssertHeld();
+  }
 
  private:
   void LockInternal();
@@ -55,17 +49,7 @@ class InstrumentedMutex {
   Statistics* stats_;
   SystemClock* clock_;
   int stats_code_;
-#ifdef COERCE_CONTEXT_SWITCH
-  InstrumentedCondVar* bg_cv_ = nullptr;
-#endif
 };
-
-class ALIGN_AS(CACHE_LINE_SIZE) CacheAlignedInstrumentedMutex
-    : public InstrumentedMutex {
-  using InstrumentedMutex::InstrumentedMutex;
-};
-static_assert(alignof(CacheAlignedInstrumentedMutex) != CACHE_LINE_SIZE ||
-              sizeof(CacheAlignedInstrumentedMutex) % CACHE_LINE_SIZE == 0);
 
 // RAII wrapper for InstrumentedMutex
 class InstrumentedMutexLock {
@@ -74,7 +58,9 @@ class InstrumentedMutexLock {
     mutex_->Lock();
   }
 
-  ~InstrumentedMutexLock() { mutex_->Unlock(); }
+  ~InstrumentedMutexLock() {
+    mutex_->Unlock();
+  }
 
  private:
   InstrumentedMutex* const mutex_;
@@ -110,9 +96,13 @@ class InstrumentedCondVar {
 
   bool TimedWait(uint64_t abs_time_us);
 
-  void Signal() { cond_.Signal(); }
+  void Signal() {
+    cond_.Signal();
+  }
 
-  void SignalAll() { cond_.SignalAll(); }
+  void SignalAll() {
+    cond_.SignalAll();
+  }
 
  private:
   void WaitInternal();

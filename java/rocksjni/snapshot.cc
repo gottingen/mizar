@@ -19,7 +19,7 @@
  * Signature: (J)J
  */
 jlong Java_org_rocksdb_Snapshot_getSequenceNumber(JNIEnv* /*env*/,
-                                                  jclass /*jcls*/,
+                                                  jobject /*jobj*/,
                                                   jlong jsnapshot_handle) {
   auto* snapshot =
       reinterpret_cast<ROCKSDB_NAMESPACE::Snapshot*>(jsnapshot_handle);

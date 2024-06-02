@@ -8,10 +8,8 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "db/file_indexer.h"
-
 #include <algorithm>
 #include <functional>
-
 #include "db/version_edit.h"
 #include "rocksdb/comparator.h"
 
@@ -56,15 +54,17 @@ void FileIndexer::GetNextLevelIndex(const size_t level, const size_t file_index,
   } else if (cmp_smallest == 0) {
     *left_bound = index.smallest_lb;
     *right_bound = index.smallest_rb;
-  } else if (cmp_largest < 0) {
+  } else if (cmp_smallest > 0 && cmp_largest < 0) {
     *left_bound = index.smallest_lb;
     *right_bound = index.largest_rb;
   } else if (cmp_largest == 0) {
     *left_bound = index.largest_lb;
     *right_bound = index.largest_rb;
-  } else {
+  } else if (cmp_largest > 0) {
     *left_bound = index.largest_lb;
     *right_bound = level_rb_[level + 1];
+  } else {
+    assert(false);
   }
 
   assert(*left_bound >= 0);

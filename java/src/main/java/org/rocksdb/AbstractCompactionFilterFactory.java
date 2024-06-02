@@ -15,7 +15,7 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
     extends RocksCallbackObject {
 
   public AbstractCompactionFilterFactory() {
-    super(0L);
+    super(null);
   }
 
   @Override
@@ -31,9 +31,8 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
    *
    * @return native handle of the CompactionFilter
    */
-  @SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.CloseResource"})
-  private long createCompactionFilter(
-      final boolean fullCompaction, final boolean manualCompaction) {
+  private long createCompactionFilter(final boolean fullCompaction,
+      final boolean manualCompaction) {
     final T filter = createCompactionFilter(
         new AbstractCompactionFilter.Context(fullCompaction, manualCompaction));
 
@@ -56,7 +55,7 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
 
   /**
    * A name which identifies this compaction filter
-   * <p>
+   *
    * The name will be printed to the LOG file on start up for diagnosis
    *
    * @return name which identifies this compaction filter.
@@ -74,5 +73,5 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
   }
 
   private native long createNewCompactionFilterFactory0();
-  private static native void disposeInternal(final long handle);
+  private native void disposeInternal(final long handle);
 }

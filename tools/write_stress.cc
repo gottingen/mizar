@@ -208,16 +208,13 @@ class WriteStress {
       SystemClock::Default()->SleepForMicroseconds(
           static_cast<int>(FLAGS_prefix_mutate_period_sec * 1000 * 1000LL));
       if (dist(rng) < FLAGS_first_char_mutate_probability) {
-        key_prefix_[0].store(static_cast<char>(char_dist(rng)),
-                             std::memory_order_relaxed);
+        key_prefix_[0].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
       }
       if (dist(rng) < FLAGS_second_char_mutate_probability) {
-        key_prefix_[1].store(static_cast<char>(char_dist(rng)),
-                             std::memory_order_relaxed);
+        key_prefix_[1].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
       }
       if (dist(rng) < FLAGS_third_char_mutate_probability) {
-        key_prefix_[2].store(static_cast<char>(char_dist(rng)),
-                             std::memory_order_relaxed);
+        key_prefix_[2].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
       }
     }
   }
@@ -243,6 +240,9 @@ class WriteStress {
     }
     threads_.clear();
 
+// Skip checking for leaked files in ROCKSDB_LITE since we don't have access to
+// function GetLiveFilesMetaData
+#ifndef ROCKSDB_LITE
     // let's see if we leaked some files
     db_->PauseBackgroundWork();
     std::vector<LiveFileMetaData> metadata;
@@ -278,6 +278,7 @@ class WriteStress {
       }
     }
     db_->ContinueBackgroundWork();
+#endif  // !ROCKSDB_LITE
 
     return 0;
   }

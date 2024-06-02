@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "utilities/blob_db/blob_compaction_filter.h"
 
@@ -13,7 +14,8 @@
 #include "rocksdb/system_clock.h"
 #include "test_util/sync_point.h"
 
-namespace ROCKSDB_NAMESPACE::blob_db {
+namespace ROCKSDB_NAMESPACE {
+namespace blob_db {
 
 BlobIndexCompactionFilterBase::~BlobIndexCompactionFilterBase() {
   if (blob_file_) {
@@ -180,9 +182,7 @@ bool BlobIndexCompactionFilterBase::OpenNewBlobFileIfNeeded() const {
   BlobDBImpl* const blob_db_impl = context_.blob_db_impl;
   assert(blob_db_impl);
 
-  // TODO: plumb Env::IOActivity, Env::IOPriority
   const Status s = blob_db_impl->CreateBlobFileAndWriter(
-      WriteOptions(),
       /* has_ttl */ false, ExpirationRange(), "compaction/GC", &blob_file_,
       &writer_);
   if (!s.ok()) {
@@ -252,9 +252,8 @@ bool BlobIndexCompactionFilterBase::WriteBlobToNewFile(
 
   assert(writer_);
   uint64_t new_key_offset = 0;
-  // TODO: plumb Env::IOActivity, Env::IOPriority
-  const Status s = writer_->AddRecord(WriteOptions(), key, blob, kNoExpiration,
-                                      &new_key_offset, new_blob_offset);
+  const Status s = writer_->AddRecord(key, blob, kNoExpiration, &new_key_offset,
+                                      new_blob_offset);
 
   if (!s.ok()) {
     const BlobDBImpl* const blob_db_impl = context_.blob_db_impl;
@@ -304,8 +303,7 @@ bool BlobIndexCompactionFilterBase::CloseAndRegisterNewBlobFile() const {
   {
     WriteLock wl(&blob_db_impl->mutex_);
 
-    // TODO: plumb Env::IOActivity, Env::IOPriority
-    s = blob_db_impl->CloseBlobFile(WriteOptions(), blob_file_);
+    s = blob_db_impl->CloseBlobFile(blob_file_);
 
     // Note: we delay registering the new blob file until it's closed to
     // prevent FIFO eviction from processing it during compaction/GC.
@@ -487,4 +485,6 @@ BlobIndexCompactionFilterFactoryGC::CreateCompactionFilter(
       std::move(user_comp_filter_from_factory), current_time, statistics()));
 }
 
-}  // namespace ROCKSDB_NAMESPACE::blob_db
+}  // namespace blob_db
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

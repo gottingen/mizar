@@ -8,6 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 #include <limits>
@@ -282,3 +283,4 @@ class PersistentCacheDBTest : public DBTestBase {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif

@@ -7,12 +7,10 @@
 // calling C++ ROCKSDB_NAMESPACE::BackupEngine methods from the Java side.
 
 #include <jni.h>
-
 #include <vector>
 
 #include "include/org_rocksdb_BackupEngine.h"
-#include "rocksdb/utilities/backup_engine.h"
-#include "rocksjni/cplusplus_to_java_convert.h"
+#include "rocksdb/utilities/backupable_db.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -22,17 +20,17 @@
  */
 jlong Java_org_rocksdb_BackupEngine_open(JNIEnv* env, jclass /*jcls*/,
                                          jlong env_handle,
-                                         jlong backup_engine_options_handle) {
+                                         jlong backupable_db_options_handle) {
   auto* rocks_env = reinterpret_cast<ROCKSDB_NAMESPACE::Env*>(env_handle);
-  auto* backup_engine_options =
-      reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngineOptions*>(
-          backup_engine_options_handle);
+  auto* backupable_db_options =
+      reinterpret_cast<ROCKSDB_NAMESPACE::BackupableDBOptions*>(
+          backupable_db_options_handle);
   ROCKSDB_NAMESPACE::BackupEngine* backup_engine;
   auto status = ROCKSDB_NAMESPACE::BackupEngine::Open(
-      rocks_env, *backup_engine_options, &backup_engine);
+      rocks_env, *backupable_db_options, &backup_engine);
 
   if (status.ok()) {
-    return GET_CPLUSPLUS_POINTER(backup_engine);
+    return reinterpret_cast<jlong>(backup_engine);
   } else {
     ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, status);
     return 0;
@@ -45,7 +43,7 @@ jlong Java_org_rocksdb_BackupEngine_open(JNIEnv* env, jclass /*jcls*/,
  * Signature: (JJZ)V
  */
 void Java_org_rocksdb_BackupEngine_createNewBackup(
-    JNIEnv* env, jclass /*jbe*/, jlong jbe_handle, jlong db_handle,
+    JNIEnv* env, jobject /*jbe*/, jlong jbe_handle, jlong db_handle,
     jboolean jflush_before_backup) {
   auto* db = reinterpret_cast<ROCKSDB_NAMESPACE::DB*>(db_handle);
   auto* backup_engine =
@@ -66,7 +64,7 @@ void Java_org_rocksdb_BackupEngine_createNewBackup(
  * Signature: (JJLjava/lang/String;Z)V
  */
 void Java_org_rocksdb_BackupEngine_createNewBackupWithMetadata(
-    JNIEnv* env, jclass /*jbe*/, jlong jbe_handle, jlong db_handle,
+    JNIEnv* env, jobject /*jbe*/, jlong jbe_handle, jlong db_handle,
     jstring japp_metadata, jboolean jflush_before_backup) {
   auto* db = reinterpret_cast<ROCKSDB_NAMESPACE::DB*>(db_handle);
   auto* backup_engine =
@@ -97,7 +95,7 @@ void Java_org_rocksdb_BackupEngine_createNewBackupWithMetadata(
  * Signature: (J)Ljava/util/List;
  */
 jobject Java_org_rocksdb_BackupEngine_getBackupInfo(JNIEnv* env,
-                                                    jclass /*jcls*/,
+                                                    jobject /*jbe*/,
                                                     jlong jbe_handle) {
   auto* backup_engine =
       reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
@@ -112,7 +110,7 @@ jobject Java_org_rocksdb_BackupEngine_getBackupInfo(JNIEnv* env,
  * Signature: (J)[I
  */
 jintArray Java_org_rocksdb_BackupEngine_getCorruptedBackups(JNIEnv* env,
-                                                            jclass /*jcls*/,
+                                                            jobject /*jbe*/,
                                                             jlong jbe_handle) {
   auto* backup_engine =
       reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
@@ -139,7 +137,7 @@ jintArray Java_org_rocksdb_BackupEngine_getCorruptedBackups(JNIEnv* env,
  * Method:    garbageCollect
  * Signature: (J)V
  */
-void Java_org_rocksdb_BackupEngine_garbageCollect(JNIEnv* env, jclass /*jbe*/,
+void Java_org_rocksdb_BackupEngine_garbageCollect(JNIEnv* env, jobject /*jbe*/,
                                                   jlong jbe_handle) {
   auto* backup_engine =
       reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
@@ -157,7 +155,7 @@ void Java_org_rocksdb_BackupEngine_garbageCollect(JNIEnv* env, jclass /*jbe*/,
  * Method:    purgeOldBackups
  * Signature: (JI)V
  */
-void Java_org_rocksdb_BackupEngine_purgeOldBackups(JNIEnv* env, jclass /*jbe*/,
+void Java_org_rocksdb_BackupEngine_purgeOldBackups(JNIEnv* env, jobject /*jbe*/,
                                                    jlong jbe_handle,
                                                    jint jnum_backups_to_keep) {
   auto* backup_engine =
@@ -177,7 +175,7 @@ void Java_org_rocksdb_BackupEngine_purgeOldBackups(JNIEnv* env, jclass /*jbe*/,
  * Method:    deleteBackup
  * Signature: (JI)V
  */
-void Java_org_rocksdb_BackupEngine_deleteBackup(JNIEnv* env, jclass /*jbe*/,
+void Java_org_rocksdb_BackupEngine_deleteBackup(JNIEnv* env, jobject /*jbe*/,
                                                 jlong jbe_handle,
                                                 jint jbackup_id) {
   auto* backup_engine =
@@ -198,7 +196,7 @@ void Java_org_rocksdb_BackupEngine_deleteBackup(JNIEnv* env, jclass /*jbe*/,
  * Signature: (JILjava/lang/String;Ljava/lang/String;J)V
  */
 void Java_org_rocksdb_BackupEngine_restoreDbFromBackup(
-    JNIEnv* env, jclass /*jbe*/, jlong jbe_handle, jint jbackup_id,
+    JNIEnv* env, jobject /*jbe*/, jlong jbe_handle, jint jbackup_id,
     jstring jdb_dir, jstring jwal_dir, jlong jrestore_options_handle) {
   auto* backup_engine =
       reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
@@ -235,7 +233,7 @@ void Java_org_rocksdb_BackupEngine_restoreDbFromBackup(
  * Signature: (JLjava/lang/String;Ljava/lang/String;J)V
  */
 void Java_org_rocksdb_BackupEngine_restoreDbFromLatestBackup(
-    JNIEnv* env, jclass /*jbe*/, jlong jbe_handle, jstring jdb_dir,
+    JNIEnv* env, jobject /*jbe*/, jlong jbe_handle, jstring jdb_dir,
     jstring jwal_dir, jlong jrestore_options_handle) {
   auto* backup_engine =
       reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
@@ -270,9 +268,9 @@ void Java_org_rocksdb_BackupEngine_restoreDbFromLatestBackup(
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_org_rocksdb_BackupEngine_disposeInternalJni(JNIEnv* /*env*/,
-                                                      jclass /*jcls*/,
-                                                      jlong jbe_handle) {
+void Java_org_rocksdb_BackupEngine_disposeInternal(JNIEnv* /*env*/,
+                                                   jobject /*jbe*/,
+                                                   jlong jbe_handle) {
   auto* be = reinterpret_cast<ROCKSDB_NAMESPACE::BackupEngine*>(jbe_handle);
   assert(be != nullptr);
   delete be;

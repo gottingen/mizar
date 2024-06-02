@@ -10,7 +10,6 @@
 #include "include/org_rocksdb_SkipListMemTableConfig.h"
 #include "include/org_rocksdb_VectorMemTableConfig.h"
 #include "rocksdb/memtablerep.h"
-#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -19,12 +18,12 @@
  * Signature: (JII)J
  */
 jlong Java_org_rocksdb_HashSkipListMemTableConfig_newMemTableFactoryHandle(
-    JNIEnv* env, jclass /*jcls*/, jlong jbucket_count, jint jheight,
+    JNIEnv* env, jobject /*jobj*/, jlong jbucket_count, jint jheight,
     jint jbranching_factor) {
   ROCKSDB_NAMESPACE::Status s =
       ROCKSDB_NAMESPACE::JniUtil::check_if_jlong_fits_size_t(jbucket_count);
   if (s.ok()) {
-    return GET_CPLUSPLUS_POINTER(ROCKSDB_NAMESPACE::NewHashSkipListRepFactory(
+    return reinterpret_cast<jlong>(ROCKSDB_NAMESPACE::NewHashSkipListRepFactory(
         static_cast<size_t>(jbucket_count), static_cast<int32_t>(jheight),
         static_cast<int32_t>(jbranching_factor)));
   }
@@ -38,7 +37,7 @@ jlong Java_org_rocksdb_HashSkipListMemTableConfig_newMemTableFactoryHandle(
  * Signature: (JJIZI)J
  */
 jlong Java_org_rocksdb_HashLinkedListMemTableConfig_newMemTableFactoryHandle(
-    JNIEnv* env, jclass /*jcls*/, jlong jbucket_count,
+    JNIEnv* env, jobject /*jobj*/, jlong jbucket_count,
     jlong jhuge_page_tlb_size, jint jbucket_entries_logging_threshold,
     jboolean jif_log_bucket_dist_when_flash, jint jthreshold_use_skiplist) {
   ROCKSDB_NAMESPACE::Status statusBucketCount =
@@ -47,7 +46,7 @@ jlong Java_org_rocksdb_HashLinkedListMemTableConfig_newMemTableFactoryHandle(
       ROCKSDB_NAMESPACE::JniUtil::check_if_jlong_fits_size_t(
           jhuge_page_tlb_size);
   if (statusBucketCount.ok() && statusHugePageTlb.ok()) {
-    return GET_CPLUSPLUS_POINTER(ROCKSDB_NAMESPACE::NewHashLinkListRepFactory(
+    return reinterpret_cast<jlong>(ROCKSDB_NAMESPACE::NewHashLinkListRepFactory(
         static_cast<size_t>(jbucket_count),
         static_cast<size_t>(jhuge_page_tlb_size),
         static_cast<int32_t>(jbucket_entries_logging_threshold),
@@ -65,11 +64,11 @@ jlong Java_org_rocksdb_HashLinkedListMemTableConfig_newMemTableFactoryHandle(
  * Signature: (J)J
  */
 jlong Java_org_rocksdb_VectorMemTableConfig_newMemTableFactoryHandle(
-    JNIEnv* env, jclass /*jcls*/, jlong jreserved_size) {
+    JNIEnv* env, jobject /*jobj*/, jlong jreserved_size) {
   ROCKSDB_NAMESPACE::Status s =
       ROCKSDB_NAMESPACE::JniUtil::check_if_jlong_fits_size_t(jreserved_size);
   if (s.ok()) {
-    return GET_CPLUSPLUS_POINTER(new ROCKSDB_NAMESPACE::VectorRepFactory(
+    return reinterpret_cast<jlong>(new ROCKSDB_NAMESPACE::VectorRepFactory(
         static_cast<size_t>(jreserved_size)));
   }
   ROCKSDB_NAMESPACE::IllegalArgumentExceptionJni::ThrowNew(env, s);
@@ -82,11 +81,11 @@ jlong Java_org_rocksdb_VectorMemTableConfig_newMemTableFactoryHandle(
  * Signature: (J)J
  */
 jlong Java_org_rocksdb_SkipListMemTableConfig_newMemTableFactoryHandle0(
-    JNIEnv* env, jclass /*jcls*/, jlong jlookahead) {
+    JNIEnv* env, jobject /*jobj*/, jlong jlookahead) {
   ROCKSDB_NAMESPACE::Status s =
       ROCKSDB_NAMESPACE::JniUtil::check_if_jlong_fits_size_t(jlookahead);
   if (s.ok()) {
-    return GET_CPLUSPLUS_POINTER(new ROCKSDB_NAMESPACE::SkipListFactory(
+    return reinterpret_cast<jlong>(new ROCKSDB_NAMESPACE::SkipListFactory(
         static_cast<size_t>(jlookahead)));
   }
   ROCKSDB_NAMESPACE::IllegalArgumentExceptionJni::ThrowNew(env, s);

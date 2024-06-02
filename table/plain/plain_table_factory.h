@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include <stdint.h>
-
+#ifndef ROCKSDB_LITE
 #include <memory>
 #include <string>
+#include <stdint.h>
 
 #include "rocksdb/table.h"
 
@@ -177,4 +177,6 @@ class PlainTableFactory : public TableFactory {
   PlainTableOptions table_options_;
 };
 
+
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

@@ -24,6 +24,7 @@ public class KeyMayExist {
   }
 
   public enum KeyMayExistEnum { kNotExist, kExistsWithoutValue, kExistsWithValue }
+  ;
 
   public KeyMayExist(final KeyMayExistEnum exists, final int valueLength) {
     this.exists = exists;

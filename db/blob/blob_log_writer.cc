@@ -10,7 +10,7 @@
 
 #include "db/blob/blob_log_format.h"
 #include "file/writable_file_writer.h"
-#include "monitoring/statistics_impl.h"
+#include "monitoring/statistics.h"
 #include "rocksdb/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
@@ -33,49 +33,35 @@ BlobLogWriter::BlobLogWriter(std::unique_ptr<WritableFileWriter>&& dest,
 
 BlobLogWriter::~BlobLogWriter() = default;
 
-Status BlobLogWriter::Sync(const WriteOptions& write_options) {
+Status BlobLogWriter::Sync() {
   TEST_SYNC_POINT("BlobLogWriter::Sync");
 
   StopWatch sync_sw(clock_, statistics_, BLOB_DB_BLOB_FILE_SYNC_MICROS);
-  IOOptions opts;
-  Status s = WritableFileWriter::PrepareIOOptions(write_options, opts);
-  if (s.ok()) {
-    s = dest_->Sync(opts, use_fsync_);
-  }
-  if (s.ok()) {
-    RecordTick(statistics_, BLOB_DB_BLOB_FILE_SYNCED);
-  }
+  Status s = dest_->Sync(use_fsync_);
+  RecordTick(statistics_, BLOB_DB_BLOB_FILE_SYNCED);
   return s;
 }
 
-Status BlobLogWriter::WriteHeader(const WriteOptions& write_options,
-                                  BlobLogHeader& header) {
+Status BlobLogWriter::WriteHeader(BlobLogHeader& header) {
   assert(block_offset_ == 0);
   assert(last_elem_type_ == kEtNone);
   std::string str;
   header.EncodeTo(&str);
 
-  IOOptions opts;
-  Status s = WritableFileWriter::PrepareIOOptions(write_options, opts);
-  if (s.ok()) {
-    s = dest_->Append(opts, Slice(str));
-  }
+  Status s = dest_->Append(Slice(str));
   if (s.ok()) {
     block_offset_ += str.size();
     if (do_flush_) {
-      s = dest_->Flush(opts);
+      s = dest_->Flush();
     }
   }
   last_elem_type_ = kEtFileHdr;
-  if (s.ok()) {
-    RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
-               BlobLogHeader::kSize);
-  }
+  RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
+             BlobLogHeader::kSize);
   return s;
 }
 
-Status BlobLogWriter::AppendFooter(const WriteOptions& write_options,
-                                   BlobLogFooter& footer,
+Status BlobLogWriter::AppendFooter(BlobLogFooter& footer,
                                    std::string* checksum_method,
                                    std::string* checksum_value) {
   assert(block_offset_ != 0);
@@ -84,41 +70,32 @@ Status BlobLogWriter::AppendFooter(const WriteOptions& write_options,
   std::string str;
   footer.EncodeTo(&str);
 
-  Status s;
-  if (dest_->seen_error()) {
-    s.PermitUncheckedError();
-    return Status::IOError("Seen Error. Skip closing.");
-  } else {
-    IOOptions opts;
-    s = WritableFileWriter::PrepareIOOptions(write_options, opts);
+  Status s = dest_->Append(Slice(str));
+  if (s.ok()) {
+    block_offset_ += str.size();
+
+    s = Sync();
+
     if (s.ok()) {
-      s = dest_->Append(opts, Slice(str));
-    }
-    if (s.ok()) {
-      block_offset_ += str.size();
-      s = Sync(write_options);
+      s = dest_->Close();
 
       if (s.ok()) {
-        s = dest_->Close(opts);
+        assert(!!checksum_method == !!checksum_value);
 
-        if (s.ok()) {
-          assert(!!checksum_method == !!checksum_value);
+        if (checksum_method) {
+          assert(checksum_method->empty());
 
-          if (checksum_method) {
-            assert(checksum_method->empty());
-
-            std::string method = dest_->GetFileChecksumFuncName();
-            if (method != kUnknownFileChecksumFuncName) {
-              *checksum_method = std::move(method);
-            }
+          std::string method = dest_->GetFileChecksumFuncName();
+          if (method != kUnknownFileChecksumFuncName) {
+            *checksum_method = std::move(method);
           }
-          if (checksum_value) {
-            assert(checksum_value->empty());
+        }
+        if (checksum_value) {
+          assert(checksum_value->empty());
 
-            std::string value = dest_->GetFileChecksum();
-            if (value != kUnknownFileChecksum) {
-              *checksum_value = std::move(value);
-            }
+          std::string value = dest_->GetFileChecksum();
+          if (value != kUnknownFileChecksum) {
+            *checksum_value = std::move(value);
           }
         }
       }
@@ -128,15 +105,12 @@ Status BlobLogWriter::AppendFooter(const WriteOptions& write_options,
   }
 
   last_elem_type_ = kEtFileFooter;
-  if (s.ok()) {
-    RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
-               BlobLogFooter::kSize);
-  }
+  RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
+             BlobLogFooter::kSize);
   return s;
 }
 
-Status BlobLogWriter::AddRecord(const WriteOptions& write_options,
-                                const Slice& key, const Slice& val,
+Status BlobLogWriter::AddRecord(const Slice& key, const Slice& val,
                                 uint64_t expiration, uint64_t* key_offset,
                                 uint64_t* blob_offset) {
   assert(block_offset_ != 0);
@@ -145,13 +119,11 @@ Status BlobLogWriter::AddRecord(const WriteOptions& write_options,
   std::string buf;
   ConstructBlobHeader(&buf, key, val, expiration);
 
-  Status s =
-      EmitPhysicalRecord(write_options, buf, key, val, key_offset, blob_offset);
+  Status s = EmitPhysicalRecord(buf, key, val, key_offset, blob_offset);
   return s;
 }
 
-Status BlobLogWriter::AddRecord(const WriteOptions& write_options,
-                                const Slice& key, const Slice& val,
+Status BlobLogWriter::AddRecord(const Slice& key, const Slice& val,
                                 uint64_t* key_offset, uint64_t* blob_offset) {
   assert(block_offset_ != 0);
   assert(last_elem_type_ == kEtFileHdr || last_elem_type_ == kEtRecord);
@@ -159,8 +131,7 @@ Status BlobLogWriter::AddRecord(const WriteOptions& write_options,
   std::string buf;
   ConstructBlobHeader(&buf, key, val, 0);
 
-  Status s =
-      EmitPhysicalRecord(write_options, buf, key, val, key_offset, blob_offset);
+  Status s = EmitPhysicalRecord(buf, key, val, key_offset, blob_offset);
   return s;
 }
 
@@ -173,34 +144,28 @@ void BlobLogWriter::ConstructBlobHeader(std::string* buf, const Slice& key,
   record.EncodeHeaderTo(buf);
 }
 
-Status BlobLogWriter::EmitPhysicalRecord(const WriteOptions& write_options,
-                                         const std::string& headerbuf,
+Status BlobLogWriter::EmitPhysicalRecord(const std::string& headerbuf,
                                          const Slice& key, const Slice& val,
                                          uint64_t* key_offset,
                                          uint64_t* blob_offset) {
-  IOOptions opts;
-  Status s = WritableFileWriter::PrepareIOOptions(write_options, opts);
+  StopWatch write_sw(clock_, statistics_, BLOB_DB_BLOB_FILE_WRITE_MICROS);
+  Status s = dest_->Append(Slice(headerbuf));
   if (s.ok()) {
-    s = dest_->Append(opts, Slice(headerbuf));
+    s = dest_->Append(key);
   }
   if (s.ok()) {
-    s = dest_->Append(opts, key);
-  }
-  if (s.ok()) {
-    s = dest_->Append(opts, val);
+    s = dest_->Append(val);
   }
   if (do_flush_ && s.ok()) {
-    s = dest_->Flush(opts);
+    s = dest_->Flush();
   }
 
   *key_offset = block_offset_ + BlobLogRecord::kHeaderSize;
   *blob_offset = *key_offset + key.size();
   block_offset_ = *blob_offset + val.size();
   last_elem_type_ = kEtRecord;
-  if (s.ok()) {
-    RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
-               BlobLogRecord::kHeaderSize + key.size() + val.size());
-  }
+  RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_WRITTEN,
+             BlobLogRecord::kHeaderSize + key.size() + val.size());
   return s;
 }
 

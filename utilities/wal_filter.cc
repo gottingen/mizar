@@ -15,7 +15,8 @@ namespace ROCKSDB_NAMESPACE {
 Status WalFilter::CreateFromString(const ConfigOptions& config_options,
                                    const std::string& value,
                                    WalFilter** filter) {
-  Status s = LoadStaticObject<WalFilter>(config_options, value, filter);
+  Status s =
+      LoadStaticObject<WalFilter>(config_options, value, nullptr, filter);
   return s;
 }
 

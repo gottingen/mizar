@@ -62,12 +62,12 @@ public class TableFileCreationInfo extends TableFileCreationBriefInfo {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    final TableFileCreationInfo that = (TableFileCreationInfo) o;
+    TableFileCreationInfo that = (TableFileCreationInfo) o;
     return fileSize == that.fileSize && Objects.equals(tableProperties, that.tableProperties)
         && Objects.equals(status, that.status);
   }

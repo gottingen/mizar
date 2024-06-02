@@ -18,5 +18,5 @@ public abstract class TableFormatConfig {
    *
    * @return native handle address to native table instance.
    */
-  protected abstract long newTableFactoryHandle();
+  abstract protected long newTableFactoryHandle();
 }

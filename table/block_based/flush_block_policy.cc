@@ -13,8 +13,9 @@
 #include "rocksdb/utilities/customizable_util.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
-#include "table/block_based/flush_block_policy_impl.h"
+#include "table/block_based/flush_block_policy.h"
 #include "table/format.h"
+
 
 namespace ROCKSDB_NAMESPACE {
 
@@ -26,7 +27,8 @@ class FlushBlockBySizePolicy : public FlushBlockPolicy {
   // @params block_size_deviation: This is used to close a block before it
   //                               reaches the configured
   FlushBlockBySizePolicy(const uint64_t block_size,
-                         const uint64_t block_size_deviation, const bool align,
+                         const uint64_t block_size_deviation,
+                         const bool align,
                          const BlockBuilder& data_block_builder)
       : block_size_(block_size),
         block_size_deviation_limit_(
@@ -89,6 +91,7 @@ FlushBlockPolicy* FlushBlockBySizePolicyFactory::NewFlushBlockPolicy(
   return new FlushBlockBySizePolicy(size, deviation, false, data_block_builder);
 }
 
+#ifndef ROCKSDB_LITE
 static int RegisterFlushBlockPolicyFactories(ObjectLibrary& library,
                                              const std::string& /*arg*/) {
   library.AddFactory<FlushBlockPolicyFactory>(
@@ -109,6 +112,23 @@ static int RegisterFlushBlockPolicyFactories(ObjectLibrary& library,
       });
   return 2;
 }
+#endif  // ROCKSDB_LITE
+
+static bool LoadFlushPolicyFactory(
+    const std::string& id, std::shared_ptr<FlushBlockPolicyFactory>* result) {
+  if (id.empty()) {
+    result->reset(new FlushBlockBySizePolicyFactory());
+#ifdef ROCKSDB_LITE
+  } else if (id == FlushBlockBySizePolicyFactory::kClassName()) {
+    result->reset(new FlushBlockBySizePolicyFactory());
+  } else if (id == FlushBlockEveryKeyPolicyFactory::kClassName()) {
+    result->reset(new FlushBlockEveryKeyPolicyFactory());
+#endif  // ROCKSDB_LITE
+  } else {
+    return false;
+  }
+  return true;
+}
 
 FlushBlockBySizePolicyFactory::FlushBlockBySizePolicyFactory()
     : FlushBlockPolicyFactory() {}
@@ -116,17 +136,13 @@ FlushBlockBySizePolicyFactory::FlushBlockBySizePolicyFactory()
 Status FlushBlockPolicyFactory::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::shared_ptr<FlushBlockPolicyFactory>* factory) {
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterFlushBlockPolicyFactories(*(ObjectLibrary::Default().get()), "");
   });
-
-  if (value.empty()) {
-    factory->reset(new FlushBlockBySizePolicyFactory());
-    return Status::OK();
-  } else {
-    return LoadSharedObject<FlushBlockPolicyFactory>(config_options, value,
-                                                     factory);
-  }
+#endif  // ROCKSDB_LITE
+  return LoadSharedObject<FlushBlockPolicyFactory>(
+      config_options, value, LoadFlushPolicyFactory, factory);
 }
 }  // namespace ROCKSDB_NAMESPACE

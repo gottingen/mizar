@@ -27,13 +27,15 @@ public class DBOptionsTest {
 
   @Test
   public void copyConstructor() {
-    final DBOptions origOpts = new DBOptions();
+    DBOptions origOpts = new DBOptions();
     origOpts.setCreateIfMissing(rand.nextBoolean());
     origOpts.setAllow2pc(rand.nextBoolean());
     origOpts.setMaxBackgroundJobs(rand.nextInt(10));
-    final DBOptions copyOpts = new DBOptions(origOpts);
+    DBOptions copyOpts = new DBOptions(origOpts);
     assertThat(origOpts.createIfMissing()).isEqualTo(copyOpts.createIfMissing());
     assertThat(origOpts.allow2pc()).isEqualTo(copyOpts.allow2pc());
+    assertThat(origOpts.baseBackgroundCompactions()).isEqualTo(
+            copyOpts.baseBackgroundCompactions());
   }
 
   @Test
@@ -213,6 +215,17 @@ public class DBOptionsTest {
       final long longValue = rand.nextLong();
       opt.setDeleteObsoleteFilesPeriodMicros(longValue);
       assertThat(opt.deleteObsoleteFilesPeriodMicros()).isEqualTo(longValue);
+    }
+  }
+
+  @SuppressWarnings("deprecated")
+  @Test
+  public void baseBackgroundCompactions() {
+    try (final DBOptions opt = new DBOptions()) {
+      final int intValue = rand.nextInt();
+      opt.setBaseBackgroundCompactions(intValue);
+      assertThat(opt.baseBackgroundCompactions()).
+          isEqualTo(intValue);
     }
   }
 
@@ -437,8 +450,9 @@ public class DBOptionsTest {
 
   @Test
   public void setWriteBufferManager() throws RocksDBException {
-    try (final DBOptions opt = new DBOptions(); final Cache cache = new LRUCache(1024 * 1024);
-         final WriteBufferManager writeBufferManager = new WriteBufferManager(2000L, cache)) {
+    try (final DBOptions opt = new DBOptions();
+         final Cache cache = new LRUCache(1 * 1024 * 1024);
+         final WriteBufferManager writeBufferManager = new WriteBufferManager(2000l, cache)) {
       opt.setWriteBufferManager(writeBufferManager);
       assertThat(opt.writeBufferManager()).isEqualTo(writeBufferManager);
     }
@@ -446,10 +460,29 @@ public class DBOptionsTest {
 
   @Test
   public void setWriteBufferManagerWithZeroBufferSize() throws RocksDBException {
-    try (final DBOptions opt = new DBOptions(); final Cache cache = new LRUCache(1024 * 1024);
-         final WriteBufferManager writeBufferManager = new WriteBufferManager(0L, cache)) {
+    try (final DBOptions opt = new DBOptions();
+         final Cache cache = new LRUCache(1 * 1024 * 1024);
+         final WriteBufferManager writeBufferManager = new WriteBufferManager(0l, cache)) {
       opt.setWriteBufferManager(writeBufferManager);
       assertThat(opt.writeBufferManager()).isEqualTo(writeBufferManager);
+    }
+  }
+
+  @Test
+  public void accessHintOnCompactionStart() {
+    try(final DBOptions opt = new DBOptions()) {
+      final AccessHint accessHint = AccessHint.SEQUENTIAL;
+      opt.setAccessHintOnCompactionStart(accessHint);
+      assertThat(opt.accessHintOnCompactionStart()).isEqualTo(accessHint);
+    }
+  }
+
+  @Test
+  public void newTableReaderForCompactionInputs() {
+    try(final DBOptions opt = new DBOptions()) {
+      final boolean boolValue = rand.nextBoolean();
+      opt.setNewTableReaderForCompactionInputs(boolValue);
+      assertThat(opt.newTableReaderForCompactionInputs()).isEqualTo(boolValue);
     }
   }
 
@@ -711,6 +744,15 @@ public class DBOptionsTest {
   }
 
   @Test
+  public void preserveDeletes() {
+    try (final DBOptions opt = new DBOptions()) {
+      assertThat(opt.preserveDeletes()).isFalse();
+      opt.setPreserveDeletes(true);
+      assertThat(opt.preserveDeletes()).isTrue();
+    }
+  }
+
+  @Test
   public void twoWriteQueues() {
     try (final DBOptions opt = new DBOptions()) {
       assertThat(opt.twoWriteQueues()).isFalse();
@@ -876,18 +918,16 @@ public class DBOptionsTest {
                  wasCalled2.set(true);
                }
              }) {
-      assertThat(options.setListeners(null)).isEqualTo(options);
-      assertThat(options.listeners().size()).isEqualTo(0);
       assertThat(options.setListeners(Arrays.asList(el1, el2))).isEqualTo(options);
-      final List<AbstractEventListener> listeners = options.listeners();
+      List<AbstractEventListener> listeners = options.listeners();
       assertEquals(el1, listeners.get(0));
       assertEquals(el2, listeners.get(1));
-      options.setListeners(Collections.emptyList());
+      options.setListeners(Collections.<AbstractEventListener>emptyList());
       listeners.get(0).onTableFileDeleted(null);
       assertTrue(wasCalled1.get());
       listeners.get(1).onMemTableSealed(null);
       assertTrue(wasCalled2.get());
-      final List<AbstractEventListener> listeners2 = options.listeners();
+      List<AbstractEventListener> listeners2 = options.listeners();
       assertNotNull(listeners2);
       assertEquals(0, listeners2.size());
     }

@@ -36,7 +36,7 @@
 
 namespace ROCKSDB_NAMESPACE {
 
-const bool kDefaultToAdaptiveMutex = false;
+extern const bool kDefaultToAdaptiveMutex = false;
 
 namespace port {
 
@@ -52,7 +52,7 @@ std::wstring utf8_to_utf16(const std::string& utf8) {
 }
 #endif
 
-void GetTimeOfDay(TimeVal* tv, struct timezone* /* tz */) {
+void gettimeofday(struct timeval* tv, struct timezone* /* tz */) {
   std::chrono::microseconds usNow(
       std::chrono::duration_cast<std::chrono::microseconds>(
           std::chrono::system_clock::now().time_since_epoch()));
@@ -288,8 +288,7 @@ bool GenerateRfcUuid(std::string* output) {
     return false;
   }
 
-  // rpc_str is nul-terminated.
-  // reinterpret_cast for possible change between signed/unsigned char.
+  // rpc_str is nul-terminated
   *output = reinterpret_cast<char*>(rpc_str);
 
   status = RpcStringFreeA(&rpc_str);

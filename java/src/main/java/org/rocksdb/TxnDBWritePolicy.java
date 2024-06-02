@@ -23,7 +23,7 @@ public enum TxnDBWritePolicy {
    */
   WRITE_UNPREPARED((byte)0x2);
 
-  private final byte value;
+  private byte value;
 
   TxnDBWritePolicy(final byte value) {
     this.value = value;

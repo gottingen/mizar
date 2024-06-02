@@ -4,6 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
+#ifndef ROCKSDB_LITE
 
 #include <list>
 #include <map>
@@ -34,8 +35,7 @@ enum TraceOperationType : int {
   kIteratorSeek = 6,
   kIteratorSeekForPrev = 7,
   kMultiGet = 8,
-  kPutEntity = 9,
-  kTaTypeNum = 10
+  kTaTypeNum = 9
 };
 
 struct TraceUnit {
@@ -201,10 +201,6 @@ class TraceAnalyzer : private TraceRecord::Handler,
   Status PutCF(uint32_t column_family_id, const Slice& key,
                const Slice& value) override;
 
-  using WriteBatch::Handler::PutEntityCF;
-  Status PutEntityCF(uint32_t column_family_id, const Slice& key,
-                     const Slice& value) override;
-
   using WriteBatch::Handler::DeleteCF;
   Status DeleteCF(uint32_t column_family_id, const Slice& key) override;
 
@@ -327,3 +323,4 @@ int trace_analyzer_tool(int argc, char** argv);
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE

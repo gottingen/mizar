@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef ROCKSDB_LITE
 
 #include <utility>
 
@@ -135,3 +136,4 @@ class RemapFileSystem : public FileSystemWrapper {
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE

@@ -258,6 +258,7 @@ common_in_mem_args="--db=/dev/shm/rocksdb \
     --value_size=100 \
     --compression_type=none \
     --compression_ratio=1 \
+    --hard_rate_limit=2 \
     --write_buffer_size=134217728 \
     --max_write_buffer_number=4 \
     --level0_file_num_compaction_trigger=8 \
@@ -360,7 +361,7 @@ function send_to_ods {
     echo >&2 "ERROR: Key $key doesn't have a value."
     return
   fi
-  curl --silent "https://www.facebook.com/intern/agent/ods_set.php?entity=rocksdb_build&key=$key&value=$value" \
+  curl --silent "https://www.intern.facebook.com/intern/agent/ods_set.php?entity=rocksdb_build&key=$key&value=$value" \
     --connect-timeout 60
 }
 

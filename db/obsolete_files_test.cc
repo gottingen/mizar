@@ -7,12 +7,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
+#ifndef ROCKSDB_LITE
+
+#include <stdlib.h>
 #include <algorithm>
-#include <cstdlib>
 #include <map>
 #include <string>
 #include <vector>
-
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "db/version_set.h"
@@ -27,6 +28,7 @@
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
+
 namespace ROCKSDB_NAMESPACE {
 
 class ObsoleteFilesTest : public DBTestBase {
@@ -38,8 +40,8 @@ class ObsoleteFilesTest : public DBTestBase {
   void AddKeys(int numkeys, int startkey) {
     WriteOptions options;
     options.sync = false;
-    for (int i = startkey; i < (numkeys + startkey); i++) {
-      std::string temp = std::to_string(i);
+    for (int i = startkey; i < (numkeys + startkey) ; i++) {
+      std::string temp = ToString(i);
       Slice key(temp);
       Slice value(temp);
       ASSERT_OK(db_->Put(options, key, value));
@@ -66,7 +68,7 @@ class ObsoleteFilesTest : public DBTestBase {
     int log_cnt = 0;
     int sst_cnt = 0;
     int manifest_cnt = 0;
-    for (const auto& file : filenames) {
+    for (auto file : filenames) {
       uint64_t number;
       FileType type;
       if (ParseFileName(file, &number, &type)) {
@@ -115,10 +117,10 @@ TEST_F(ObsoleteFilesTest, RaceForObsoleteFileDeletion) {
        "ObsoleteFilesTest::RaceForObsoleteFileDeletion:1"},
       {"DBImpl::BackgroundCallCompaction:PurgedObsoleteFiles",
        "ObsoleteFilesTest::RaceForObsoleteFileDeletion:2"},
-  });
+      });
   SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::DeleteObsoleteFileImpl:AfterDeletion", [&](void* arg) {
-        Status* p_status = static_cast<Status*>(arg);
+        Status* p_status = reinterpret_cast<Status*>(arg);
         ASSERT_OK(*p_status);
       });
   SyncPoint::GetInstance()->SetCallBack(
@@ -163,7 +165,7 @@ TEST_F(ObsoleteFilesTest, DeleteObsoleteOptionsFile) {
                                      {{"paranoid_file_checks", "true"}}));
     }
   }
-  ASSERT_OK(dbfull()->EnableFileDeletions());
+  ASSERT_OK(dbfull()->EnableFileDeletions(true /* force */));
 
   Close();
 
@@ -313,3 +315,13 @@ int main(int argc, char** argv) {
   return RUN_ALL_TESTS();
 }
 
+#else
+#include <stdio.h>
+
+int main(int /*argc*/, char** /*argv*/) {
+  fprintf(stderr,
+          "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
+  return 0;
+}
+
+#endif  // !ROCKSDB_LITE

@@ -11,7 +11,6 @@ import java.util.List;
 /**
  * The metadata that describes a column family.
  */
-@SuppressWarnings("PMD.MissingStaticMethodInNonInstantiatableClass")
 public class ColumnFamilyMetaData {
   private final long size;
   private final long fileCount;
@@ -56,7 +55,6 @@ public class ColumnFamilyMetaData {
    *
    * @return the name
    */
-  @SuppressWarnings("PMD.MethodReturnsInternalArray")
   public byte[] name() {
     return name;
   }

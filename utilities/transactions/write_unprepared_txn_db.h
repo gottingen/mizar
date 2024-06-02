@@ -4,6 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/write_prepared_txn_db.h"
 #include "utilities/transactions/write_unprepared_txn.h"
@@ -27,7 +28,7 @@ class WriteUnpreparedTxnDB : public WritePreparedTxnDB {
   struct IteratorState;
 
   using WritePreparedTxnDB::NewIterator;
-  Iterator* NewIterator(const ReadOptions& _read_options,
+  Iterator* NewIterator(const ReadOptions& options,
                         ColumnFamilyHandle* column_family,
                         WriteUnpreparedTxn* txn);
 
@@ -54,9 +55,10 @@ class WriteUnpreparedCommitEntryPreReleaseCallback : public PreReleaseCallback {
     assert(unprep_seqs.size() > 0);
   }
 
-  Status Callback(SequenceNumber commit_seq,
-                  bool is_mem_disabled __attribute__((__unused__)), uint64_t,
-                  size_t /*index*/, size_t /*total*/) override {
+  virtual Status Callback(SequenceNumber commit_seq,
+                          bool is_mem_disabled __attribute__((__unused__)),
+                          uint64_t, size_t /*index*/,
+                          size_t /*total*/) override {
     const uint64_t last_commit_seq = LIKELY(data_batch_cnt_ <= 1)
                                          ? commit_seq
                                          : commit_seq + data_batch_cnt_ - 1;
@@ -103,3 +105,4 @@ class WriteUnpreparedCommitEntryPreReleaseCallback : public PreReleaseCallback {
 };
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

@@ -9,7 +9,6 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_AbstractTraceWriter.h"
-#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/trace_writer_jnicallback.h"
 
 /*
@@ -17,8 +16,8 @@
  * Method:    createNewTraceWriter
  * Signature: ()J
  */
-jlong Java_org_rocksdb_AbstractTraceWriter_createNewTraceWriter(JNIEnv* env,
-                                                                jobject jobj) {
+jlong Java_org_rocksdb_AbstractTraceWriter_createNewTraceWriter(
+    JNIEnv* env, jobject jobj) {
   auto* trace_writer = new ROCKSDB_NAMESPACE::TraceWriterJniCallback(env, jobj);
-  return GET_CPLUSPLUS_POINTER(trace_writer);
+  return reinterpret_cast<jlong>(trace_writer);
 }

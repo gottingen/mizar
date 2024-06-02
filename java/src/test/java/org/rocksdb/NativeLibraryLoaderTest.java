@@ -32,7 +32,7 @@ public class NativeLibraryLoaderTest {
 
   @Test
   public void overridesExistingLibrary() throws IOException {
-    final File first = NativeLibraryLoader.getInstance().loadLibraryFromJarToTemp(
+    File first = NativeLibraryLoader.getInstance().loadLibraryFromJarToTemp(
         temporaryFolder.getRoot().getAbsolutePath());
     NativeLibraryLoader.getInstance().loadLibraryFromJarToTemp(
         temporaryFolder.getRoot().getAbsolutePath());

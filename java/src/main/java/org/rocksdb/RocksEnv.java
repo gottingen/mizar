@@ -28,8 +28,5 @@ public class RocksEnv extends Env {
   }
 
   @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  protected native final void disposeInternal(final long handle);
 }

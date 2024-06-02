@@ -5,6 +5,7 @@
 
 #pragma once
 
+#ifndef ROCKSDB_LITE
 #include <deque>
 #include <string>
 #include <vector>
@@ -15,6 +16,7 @@
 #include "rocksdb/merge_operator.h"
 #include "rocksdb/system_clock.h"
 #include "rocksdb/utilities/db_ttl.h"
+#include "rocksdb/utilities/utility_db.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 
 #ifdef _WIN32
@@ -36,7 +38,7 @@ class DBWithTTLImpl : public DBWithTTL {
 
   virtual ~DBWithTTLImpl();
 
-  Status Close() override;
+  virtual Status Close() override;
 
   Status CreateColumnFamilyWithTtl(const ColumnFamilyOptions& options,
                                    const std::string& column_family_name,
@@ -48,36 +50,40 @@ class DBWithTTLImpl : public DBWithTTL {
                             ColumnFamilyHandle** handle) override;
 
   using StackableDB::Put;
-  Status Put(const WriteOptions& options, ColumnFamilyHandle* column_family,
-             const Slice& key, const Slice& val) override;
+  virtual Status Put(const WriteOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     const Slice& val) override;
 
   using StackableDB::Get;
-  Status Get(const ReadOptions& options, ColumnFamilyHandle* column_family,
-             const Slice& key, PinnableSlice* value,
-             std::string* timestamp) override;
+  virtual Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     PinnableSlice* value) override;
 
   using StackableDB::MultiGet;
-  void MultiGet(const ReadOptions& options, const size_t num_keys,
-                ColumnFamilyHandle** column_families, const Slice* keys,
-                PinnableSlice* values, std::string* timestamps,
-                Status* statuses, const bool sorted_input) override;
+  virtual std::vector<Status> MultiGet(
+      const ReadOptions& options,
+      const std::vector<ColumnFamilyHandle*>& column_family,
+      const std::vector<Slice>& keys,
+      std::vector<std::string>* values) override;
 
   using StackableDB::KeyMayExist;
-  bool KeyMayExist(const ReadOptions& options,
-                   ColumnFamilyHandle* column_family, const Slice& key,
-                   std::string* value, bool* value_found = nullptr) override;
+  virtual bool KeyMayExist(const ReadOptions& options,
+                           ColumnFamilyHandle* column_family, const Slice& key,
+                           std::string* value,
+                           bool* value_found = nullptr) override;
 
   using StackableDB::Merge;
-  Status Merge(const WriteOptions& options, ColumnFamilyHandle* column_family,
-               const Slice& key, const Slice& value) override;
+  virtual Status Merge(const WriteOptions& options,
+                       ColumnFamilyHandle* column_family, const Slice& key,
+                       const Slice& value) override;
 
-  Status Write(const WriteOptions& opts, WriteBatch* updates) override;
+  virtual Status Write(const WriteOptions& opts, WriteBatch* updates) override;
 
   using StackableDB::NewIterator;
-  Iterator* NewIterator(const ReadOptions& _read_options,
-                        ColumnFamilyHandle* column_family) override;
+  virtual Iterator* NewIterator(const ReadOptions& opts,
+                                ColumnFamilyHandle* column_family) override;
 
-  DB* GetBaseDB() override { return db_; }
+  virtual DB* GetBaseDB() override { return db_; }
 
   static bool IsStale(const Slice& value, int32_t ttl, SystemClock* clock);
 
@@ -98,7 +104,7 @@ class DBWithTTLImpl : public DBWithTTL {
 
   void SetTtl(int32_t ttl) override { SetTtl(DefaultColumnFamily(), ttl); }
 
-  void SetTtl(ColumnFamilyHandle* h, int32_t ttl) override;
+  void SetTtl(ColumnFamilyHandle *h, int32_t ttl) override;
 
  private:
   // remember whether the Close completes or not
@@ -106,6 +112,7 @@ class DBWithTTLImpl : public DBWithTTL {
 };
 
 class TtlIterator : public Iterator {
+
  public:
   explicit TtlIterator(Iterator* iter) : iter_(iter) { assert(iter_); }
 
@@ -153,8 +160,8 @@ class TtlCompactionFilter : public LayeredCompactionFilterBase {
                       std::unique_ptr<const CompactionFilter>
                           _user_comp_filter_from_factory = nullptr);
 
-  bool Filter(int level, const Slice& key, const Slice& old_val,
-              std::string* new_val, bool* value_changed) const override;
+  virtual bool Filter(int level, const Slice& key, const Slice& old_val,
+                      std::string* new_val, bool* value_changed) const override;
 
   const char* Name() const override { return kClassName(); }
   static const char* kClassName() { return "TtlCompactionFilter"; }
@@ -183,7 +190,9 @@ class TtlCompactionFilterFactory : public CompactionFilterFactory {
 
   std::unique_ptr<CompactionFilter> CreateCompactionFilter(
       const CompactionFilter::Context& context) override;
-  void SetTtl(int32_t ttl) { ttl_ = ttl; }
+  void SetTtl(int32_t ttl) {
+    ttl_ = ttl;
+  }
 
   const char* Name() const override { return kClassName(); }
   static const char* kClassName() { return "TtlCompactionFilterFactory"; }
@@ -201,6 +210,7 @@ class TtlCompactionFilterFactory : public CompactionFilterFactory {
 };
 
 class TtlMergeOperator : public MergeOperator {
+
  public:
   explicit TtlMergeOperator(const std::shared_ptr<MergeOperator>& merge_op,
                             SystemClock* clock);
@@ -237,3 +247,4 @@ int RegisterTtlObjects(ObjectLibrary& library, const std::string& /*arg*/);
 }  // extern "C"
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

@@ -56,7 +56,7 @@ struct DBOptions;
 
 using KeyHandle = void*;
 
-Slice GetLengthPrefixedSlice(const char* data);
+extern Slice GetLengthPrefixedSlice(const char* data);
 
 class MemTableRep {
  public:
@@ -300,9 +300,6 @@ class MemTableRepFactory : public Customizable {
   static Status CreateFromString(const ConfigOptions& config_options,
                                  const std::string& id,
                                  std::unique_ptr<MemTableRepFactory>* factory);
-  static Status CreateFromString(const ConfigOptions& config_options,
-                                 const std::string& id,
-                                 std::shared_ptr<MemTableRepFactory>* factory);
 
   virtual MemTableRep* CreateMemTableRep(const MemTableRep::KeyComparator&,
                                          Allocator*, const SliceTransform*,
@@ -341,15 +338,15 @@ class SkipListFactory : public MemTableRepFactory {
   // Methods for Configurable/Customizable class overrides
   static const char* kClassName() { return "SkipListFactory"; }
   static const char* kNickName() { return "skip_list"; }
-  const char* Name() const override { return kClassName(); }
-  const char* NickName() const override { return kNickName(); }
+  virtual const char* Name() const override { return kClassName(); }
+  virtual const char* NickName() const override { return kNickName(); }
   std::string GetId() const override;
 
   // Methods for MemTableRepFactory class overrides
   using MemTableRepFactory::CreateMemTableRep;
-  MemTableRep* CreateMemTableRep(const MemTableRep::KeyComparator&, Allocator*,
-                                 const SliceTransform*,
-                                 Logger* logger) override;
+  virtual MemTableRep* CreateMemTableRep(const MemTableRep::KeyComparator&,
+                                         Allocator*, const SliceTransform*,
+                                         Logger* logger) override;
 
   bool IsInsertConcurrentlySupported() const override { return true; }
 
@@ -359,6 +356,7 @@ class SkipListFactory : public MemTableRepFactory {
   size_t lookahead_;
 };
 
+#ifndef ROCKSDB_LITE
 // This creates MemTableReps that are backed by an std::vector. On iteration,
 // the vector is sorted. This is useful for workloads where iteration is very
 // rare and writes are generally not issued after reads begin.
@@ -381,9 +379,9 @@ class VectorRepFactory : public MemTableRepFactory {
 
   // Methods for MemTableRepFactory class overrides
   using MemTableRepFactory::CreateMemTableRep;
-  MemTableRep* CreateMemTableRep(const MemTableRep::KeyComparator&, Allocator*,
-                                 const SliceTransform*,
-                                 Logger* logger) override;
+  virtual MemTableRep* CreateMemTableRep(const MemTableRep::KeyComparator&,
+                                         Allocator*, const SliceTransform*,
+                                         Logger* logger) override;
 };
 
 // This class contains a fixed array of buckets, each
@@ -392,7 +390,7 @@ class VectorRepFactory : public MemTableRepFactory {
 // skiplist_height: the max height of the skiplist
 // skiplist_branching_factor: probabilistic size ratio between adjacent
 //                            link lists in the skiplist
-MemTableRepFactory* NewHashSkipListRepFactory(
+extern MemTableRepFactory* NewHashSkipListRepFactory(
     size_t bucket_count = 1000000, int32_t skiplist_height = 4,
     int32_t skiplist_branching_factor = 4);
 
@@ -412,10 +410,11 @@ MemTableRepFactory* NewHashSkipListRepFactory(
 //                                 entries when flushing.
 // @threshold_use_skiplist: a bucket switches to skip list if number of
 //                          entries exceed this parameter.
-MemTableRepFactory* NewHashLinkListRepFactory(
+extern MemTableRepFactory* NewHashLinkListRepFactory(
     size_t bucket_count = 50000, size_t huge_page_tlb_size = 0,
     int bucket_entries_logging_threshold = 4096,
     bool if_log_bucket_dist_when_flash = true,
     uint32_t threshold_use_skiplist = 256);
 
+#endif  // ROCKSDB_LITE
 }  // namespace ROCKSDB_NAMESPACE

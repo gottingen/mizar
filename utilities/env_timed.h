@@ -7,6 +7,7 @@
 #pragma once
 #include "rocksdb/file_system.h"
 namespace ROCKSDB_NAMESPACE {
+#ifndef ROCKSDB_LITE
 class TimedFileSystem : public FileSystemWrapper {
  public:
   explicit TimedFileSystem(const std::shared_ptr<FileSystem>& base);
@@ -92,4 +93,5 @@ class TimedFileSystem : public FileSystemWrapper {
                      IODebugContext* dbg) override;
 };
 
+#endif  // ROCKSDB_LITE
 }  // namespace ROCKSDB_NAMESPACE

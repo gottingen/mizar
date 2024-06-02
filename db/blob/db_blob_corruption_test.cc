@@ -34,6 +34,7 @@ class DBBlobCorruptionTest : public DBTestBase {
   }
 };
 
+#ifndef ROCKSDB_LITE
 TEST_F(DBBlobCorruptionTest, VerifyWholeBlobFileChecksum) {
   Options options = GetDefaultOptions();
   options.enable_blob_files = true;
@@ -70,6 +71,7 @@ TEST_F(DBBlobCorruptionTest, VerifyWholeBlobFileChecksum) {
   ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
+#endif  // !ROCKSDB_LITE
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {

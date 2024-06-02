@@ -25,7 +25,6 @@
 //
 
 #include "util/timer_queue.h"
-
 #include <future>
 
 namespace Timing {

@@ -10,7 +10,6 @@ import static org.rocksdb.AbstractEventListener.EnabledEventCallback.*;
 /**
  * Base class for Event Listeners.
  */
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public abstract class AbstractEventListener extends RocksCallbackObject implements EventListener {
   public enum EnabledEventCallback {
     ON_FLUSH_COMPLETED((byte) 0x0),
@@ -59,7 +58,7 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
      * @throws IllegalArgumentException if the value is unknown.
      */
     static EnabledEventCallback fromValue(final byte value) {
-      for (final EnabledEventCallback enabledEventCallback : values()) {
+      for (final EnabledEventCallback enabledEventCallback : EnabledEventCallback.values()) {
         if (enabledEventCallback.value == value) {
           return enabledEventCallback;
         }
@@ -72,8 +71,8 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
 
   /**
    * Creates an Event Listener that will
-   * receive all callbacks from C++.
-   * <p>
+   * received all callbacks from C++.
+   *
    * If you don't need all callbacks, it is much more efficient to
    * just register for the ones you need by calling
    * {@link #AbstractEventListener(EnabledEventCallback...)} instead.
@@ -107,8 +106,8 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    */
   private static long packToLong(final EnabledEventCallback... enabledEventCallbacks) {
     long l = 0;
-    for (final EnabledEventCallback enabledEventCallback : enabledEventCallbacks) {
-      l |= 1L << enabledEventCallback.getValue();
+    for (int i = 0; i < enabledEventCallbacks.length; i++) {
+      l |= 1 << enabledEventCallbacks[i].getValue();
     }
     return l;
   }
@@ -125,9 +124,8 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param dbHandle native handle of the database
    * @param flushJobInfo the flush job info
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onFlushCompletedProxy(final long dbHandle, final FlushJobInfo flushJobInfo) {
-    final RocksDB db = new RocksDB(dbHandle); // NOPMD - CloseResource
+    final RocksDB db = new RocksDB(dbHandle);
     db.disOwnNativeHandle(); // we don't own this!
     onFlushCompleted(db, flushJobInfo);
   }
@@ -144,9 +142,8 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param dbHandle native handle of the database
    * @param flushJobInfo the flush job info
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onFlushBeginProxy(final long dbHandle, final FlushJobInfo flushJobInfo) {
-    final RocksDB db = new RocksDB(dbHandle); // NOPMD - CloseResource
+    final RocksDB db = new RocksDB(dbHandle);
     db.disOwnNativeHandle(); // we don't own this!
     onFlushBegin(db, flushJobInfo);
   }
@@ -168,10 +165,9 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param dbHandle native handle of the database
    * @param compactionJobInfo the flush job info
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onCompactionBeginProxy(
       final long dbHandle, final CompactionJobInfo compactionJobInfo) {
-    final RocksDB db = new RocksDB(dbHandle); // NOPMD - CloseResource
+    final RocksDB db = new RocksDB(dbHandle);
     db.disOwnNativeHandle(); // we don't own this!
     onCompactionBegin(db, compactionJobInfo);
   }
@@ -188,10 +184,9 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param dbHandle native handle of the database
    * @param compactionJobInfo the flush job info
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onCompactionCompletedProxy(
       final long dbHandle, final CompactionJobInfo compactionJobInfo) {
-    final RocksDB db = new RocksDB(dbHandle); // NOPMD - CloseResource
+    final RocksDB db = new RocksDB(dbHandle);
     db.disOwnNativeHandle(); // we don't own this!
     onCompactionCompleted(db, compactionJobInfo);
   }
@@ -230,10 +225,9 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param dbHandle native handle of the database
    * @param externalFileIngestionInfo the flush job info
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onExternalFileIngestedProxy(
       final long dbHandle, final ExternalFileIngestionInfo externalFileIngestionInfo) {
-    final RocksDB db = new RocksDB(dbHandle); // NOPMD - CloseResource
+    final RocksDB db = new RocksDB(dbHandle);
     db.disOwnNativeHandle(); // we don't own this!
     onExternalFileIngested(db, externalFileIngestionInfo);
   }
@@ -251,7 +245,6 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param reasonByte byte value representing error reason
    * @param backgroundError status with error code
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private void onBackgroundErrorProxy(final byte reasonByte, final Status backgroundError) {
     onBackgroundError(BackgroundErrorReason.fromValue(reasonByte), backgroundError);
   }
@@ -314,7 +307,6 @@ public abstract class AbstractEventListener extends RocksCallbackObject implemen
    * @param reasonByte byte value representing error reason
    * @param backgroundError status with error code
    */
-  @SuppressWarnings("PMD.UnusedPrivateMethod")
   private boolean onErrorRecoveryBeginProxy(final byte reasonByte, final Status backgroundError) {
     return onErrorRecoveryBegin(BackgroundErrorReason.fromValue(reasonByte), backgroundError);
   }

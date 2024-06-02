@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import org.junit.ClassRule;
@@ -26,11 +27,11 @@ public class ColumnFamilyOptionsTest {
 
   @Test
   public void copyConstructor() {
-    final ColumnFamilyOptions origOpts = new ColumnFamilyOptions();
+    ColumnFamilyOptions origOpts = new ColumnFamilyOptions();
     origOpts.setNumLevels(rand.nextInt(8));
     origOpts.setTargetFileSizeMultiplier(rand.nextInt(100));
     origOpts.setLevel0StopWritesTrigger(rand.nextInt(50));
-    final ColumnFamilyOptions copyOpts = new ColumnFamilyOptions(origOpts);
+    ColumnFamilyOptions copyOpts = new ColumnFamilyOptions(origOpts);
     assertThat(origOpts.numLevels()).isEqualTo(copyOpts.numLevels());
     assertThat(origOpts.targetFileSizeMultiplier()).isEqualTo(copyOpts.targetFileSizeMultiplier());
     assertThat(origOpts.level0StopWritesTrigger()).isEqualTo(copyOpts.level0StopWritesTrigger());
@@ -38,7 +39,7 @@ public class ColumnFamilyOptionsTest {
 
   @Test
   public void getColumnFamilyOptionsFromProps() {
-    final Properties properties = new Properties();
+    Properties properties = new Properties();
     properties.put("write_buffer_size", "112");
     properties.put("max_write_buffer_number", "13");
 
@@ -89,15 +90,16 @@ public class ColumnFamilyOptionsTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void failColumnFamilyOptionsFromPropsWithNullValue() {
-    try (final ColumnFamilyOptions ignored =
+    try (final ColumnFamilyOptions opt =
              ColumnFamilyOptions.getColumnFamilyOptionsFromProps(null)) {
     }
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void failColumnFamilyOptionsFromPropsWithEmptyProps() {
-    try (final ColumnFamilyOptions ignored =
-             ColumnFamilyOptions.getColumnFamilyOptionsFromProps(new Properties())) {
+    try (final ColumnFamilyOptions opt =
+             ColumnFamilyOptions.getColumnFamilyOptionsFromProps(
+                 new Properties())) {
     }
   }
 
@@ -330,24 +332,6 @@ public class ColumnFamilyOptionsTest {
   }
 
   @Test
-  public void experimentalMempurgeThreshold() {
-    try (final ColumnFamilyOptions opt = new ColumnFamilyOptions()) {
-      final double doubleValue = rand.nextDouble();
-      opt.setExperimentalMempurgeThreshold(doubleValue);
-      assertThat(opt.experimentalMempurgeThreshold()).isEqualTo(doubleValue);
-    }
-  }
-
-  @Test
-  public void memtableWholeKeyFiltering() {
-    try (final ColumnFamilyOptions opt = new ColumnFamilyOptions()) {
-      final boolean booleanValue = rand.nextBoolean();
-      opt.setMemtableWholeKeyFiltering(booleanValue);
-      assertThat(opt.memtableWholeKeyFiltering()).isEqualTo(booleanValue);
-    }
-  }
-
-  @Test
   public void memtableHugePageSize() {
     try (final ColumnFamilyOptions opt = new ColumnFamilyOptions()) {
       final long longValue = rand.nextLong();
@@ -453,7 +437,7 @@ public class ColumnFamilyOptionsTest {
       }
       columnFamilyOptions.setCompressionPerLevel(compressionTypeList);
       compressionTypeList = columnFamilyOptions.compressionPerLevel();
-      for (final CompressionType compressionType : compressionTypeList) {
+      for (CompressionType compressionType : compressionTypeList) {
         assertThat(compressionType).isEqualTo(
             CompressionType.NO_COMPRESSION);
       }
@@ -707,16 +691,6 @@ public class ColumnFamilyOptionsTest {
       assertThat(options.cfPaths()).isEqualTo(Collections.emptyList());
       assertThat(options.setCfPaths(paths)).isEqualTo(options);
       assertThat(options.cfPaths()).isEqualTo(paths);
-    }
-  }
-
-  @Test
-  public void memtableMaxRangeDeletions() {
-    try (final ColumnFamilyOptions options = new ColumnFamilyOptions()) {
-      assertThat(options.memtableMaxRangeDeletions()).isEqualTo(0);
-      final int val = 32;
-      assertThat(options.setMemtableMaxRangeDeletions(val)).isEqualTo(options);
-      assertThat(options.memtableMaxRangeDeletions()).isEqualTo(val);
     }
   }
 }

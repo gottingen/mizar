@@ -137,11 +137,11 @@ then
   # should be relevant for formatting fixes.
   FORMAT_UPSTREAM_MERGE_BASE="$(git merge-base "$FORMAT_UPSTREAM" HEAD)"
   # Get the differences
-  diffs=$(git diff -U0 "$FORMAT_UPSTREAM_MERGE_BASE" | $CLANG_FORMAT_DIFF -p 1) || true
+  diffs=$(git diff -U0 "$FORMAT_UPSTREAM_MERGE_BASE" | $CLANG_FORMAT_DIFF -p 1)
   echo "Checking format of changes not yet in $FORMAT_UPSTREAM..."
 else
   # Check the format of uncommitted lines,
-  diffs=$(git diff -U0 HEAD | $CLANG_FORMAT_DIFF -p 1) || true
+  diffs=$(git diff -U0 HEAD | $CLANG_FORMAT_DIFF -p 1)
   echo "Checking format of uncommitted changes..."
 fi
 
@@ -149,9 +149,6 @@ if [ -z "$diffs" ]
 then
   echo "Nothing needs to be reformatted!"
   exit 0
-elif [ $? -ne 1 ]; then
-  # CLANG_FORMAT_DIFF will exit on 1 while there is suggested changes.
-  exit $?
 elif [ $CHECK_ONLY ]
 then
   echo "Your change has unformatted code. Please run make format!"
@@ -172,6 +169,11 @@ echo -e "Detect lines that doesn't follow the format rules:\r"
 echo "$diffs" |
   sed -e "s/\(^-.*$\)/`echo -e \"$COLOR_RED\1$COLOR_END\"`/" |
   sed -e "s/\(^+.*$\)/`echo -e \"$COLOR_GREEN\1$COLOR_END\"`/"
+
+if [[ "$OPT" == *"-DTRAVIS"* ]]
+then
+  exit 1
+fi
 
 echo -e "Would you like to fix the format automatically (y/n): \c"
 

@@ -4,6 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
+#ifndef ROCKSDB_LITE
 
 #ifdef GFLAGS
 #ifdef NUMA
@@ -100,7 +101,7 @@ DEFINE_bool(convert_to_human_readable_trace, false,
             "You can specify 'no_key' to reduce the size, if key is not "
             "needed in the next step.\n"
             "File name: <prefix>_human_readable_trace.txt\n"
-            "Format:[<key> type_id cf_id value_size time_in_micorsec].");
+            "Format:[type_id cf_id value_size time_in_micorsec <key>].");
 DEFINE_bool(output_qps_stats, false,
             "Output the query per second(qps) statistics \n"
             "For the overall qps, it will contain all qps of each query type. "
@@ -170,26 +171,18 @@ namespace ROCKSDB_NAMESPACE {
 const size_t kShadowValueSize = 10;
 
 std::map<std::string, int> taOptToIndex = {
-    {"get", kGet},
-    {"put", kPut},
-    {"delete", kDelete},
-    {"single_delete", kSingleDelete},
-    {"range_delete", kRangeDelete},
-    {"merge", kMerge},
-    {"iterator_Seek", kIteratorSeek},
-    {"iterator_SeekForPrev", kIteratorSeekForPrev},
-    {"multiget", kMultiGet}};
+    {"get", 0},           {"put", 1},
+    {"delete", 2},        {"single_delete", 3},
+    {"range_delete", 4},  {"merge", 5},
+    {"iterator_Seek", 6}, {"iterator_SeekForPrev", 7},
+    {"multiget", 8}};
 
 std::map<int, std::string> taIndexToOpt = {
-    {kGet, "get"},
-    {kPut, "put"},
-    {kDelete, "delete"},
-    {kSingleDelete, "single_delete"},
-    {kRangeDelete, "range_delete"},
-    {kMerge, "merge"},
-    {kIteratorSeek, "iterator_Seek"},
-    {kIteratorSeekForPrev, "iterator_SeekForPrev"},
-    {kMultiGet, "multiget"}};
+    {0, "get"},           {1, "put"},
+    {2, "delete"},        {3, "single_delete"},
+    {4, "range_delete"},  {5, "merge"},
+    {6, "iterator_Seek"}, {7, "iterator_SeekForPrev"},
+    {8, "multiget"}};
 
 namespace {
 
@@ -197,7 +190,7 @@ uint64_t MultiplyCheckOverflow(uint64_t op1, uint64_t op2) {
   if (op1 == 0 || op2 == 0) {
     return 0;
   }
-  if (std::numeric_limits<uint64_t>::max() / op1 < op2) {
+  if (port::kMaxUint64 / op1 < op2) {
     return op1;
   }
   return (op1 * op2);
@@ -209,7 +202,7 @@ uint64_t MultiplyCheckOverflow(uint64_t op1, uint64_t op2) {
 AnalyzerOptions::AnalyzerOptions()
     : correlation_map(kTaTypeNum, std::vector<int>(kTaTypeNum, -1)) {}
 
-AnalyzerOptions::~AnalyzerOptions() = default;
+AnalyzerOptions::~AnalyzerOptions() {}
 
 void AnalyzerOptions::SparseCorrelationInput(const std::string& in_str) {
   std::string cur = in_str;
@@ -222,14 +215,14 @@ void AnalyzerOptions::SparseCorrelationInput(const std::string& in_str) {
       exit(1);
     }
     std::string opt1, opt2;
-    std::size_t split = cur.find_first_of(',');
+    std::size_t split = cur.find_first_of(",");
     if (split != std::string::npos) {
       opt1 = cur.substr(1, split - 1);
     } else {
       fprintf(stderr, "Invalid correlation input: %s\n", in_str.c_str());
       exit(1);
     }
-    std::size_t end = cur.find_first_of(']');
+    std::size_t end = cur.find_first_of("]");
     if (end != std::string::npos) {
       opt2 = cur.substr(split + 1, end - split - 1);
     } else {
@@ -240,7 +233,8 @@ void AnalyzerOptions::SparseCorrelationInput(const std::string& in_str) {
 
     if (taOptToIndex.find(opt1) != taOptToIndex.end() &&
         taOptToIndex.find(opt2) != taOptToIndex.end()) {
-      correlation_list.emplace_back(taOptToIndex[opt1], taOptToIndex[opt2]);
+      correlation_list.push_back(
+          std::make_pair(taOptToIndex[opt1], taOptToIndex[opt2]));
     } else {
       fprintf(stderr, "Invalid correlation input: %s\n", in_str.c_str());
       exit(1);
@@ -252,6 +246,7 @@ void AnalyzerOptions::SparseCorrelationInput(const std::string& in_str) {
     correlation_map[it.first][it.second] = sequence;
     sequence++;
   }
+  return;
 }
 
 // The trace statistic struct constructor
@@ -270,7 +265,7 @@ TraceStats::TraceStats() {
   a_ave_qps = 0.0;
 }
 
-TraceStats::~TraceStats() = default;
+TraceStats::~TraceStats() {}
 
 // The trace analyzer constructor
 TraceAnalyzer::TraceAnalyzer(std::string& trace_path, std::string& output_path,
@@ -301,66 +296,66 @@ TraceAnalyzer::TraceAnalyzer(std::string& trace_path, std::string& output_path,
   }
 
   ta_.resize(kTaTypeNum);
-  ta_[kGet].type_name = "get";
+  ta_[0].type_name = "get";
   if (FLAGS_analyze_get) {
-    ta_[kGet].enabled = true;
+    ta_[0].enabled = true;
   } else {
-    ta_[kGet].enabled = false;
+    ta_[0].enabled = false;
   }
-  ta_[kPut].type_name = "put";
+  ta_[1].type_name = "put";
   if (FLAGS_analyze_put) {
-    ta_[kPut].enabled = true;
+    ta_[1].enabled = true;
   } else {
-    ta_[kPut].enabled = false;
+    ta_[1].enabled = false;
   }
-  ta_[kDelete].type_name = "delete";
+  ta_[2].type_name = "delete";
   if (FLAGS_analyze_delete) {
-    ta_[kDelete].enabled = true;
+    ta_[2].enabled = true;
   } else {
-    ta_[kDelete].enabled = false;
+    ta_[2].enabled = false;
   }
-  ta_[kSingleDelete].type_name = "single_delete";
+  ta_[3].type_name = "single_delete";
   if (FLAGS_analyze_single_delete) {
-    ta_[kSingleDelete].enabled = true;
+    ta_[3].enabled = true;
   } else {
-    ta_[kSingleDelete].enabled = false;
+    ta_[3].enabled = false;
   }
-  ta_[kRangeDelete].type_name = "range_delete";
+  ta_[4].type_name = "range_delete";
   if (FLAGS_analyze_range_delete) {
-    ta_[kRangeDelete].enabled = true;
+    ta_[4].enabled = true;
   } else {
-    ta_[kRangeDelete].enabled = false;
+    ta_[4].enabled = false;
   }
-  ta_[kMerge].type_name = "merge";
+  ta_[5].type_name = "merge";
   if (FLAGS_analyze_merge) {
-    ta_[kMerge].enabled = true;
+    ta_[5].enabled = true;
   } else {
-    ta_[kMerge].enabled = false;
+    ta_[5].enabled = false;
   }
-  ta_[kIteratorSeek].type_name = "iterator_Seek";
+  ta_[6].type_name = "iterator_Seek";
   if (FLAGS_analyze_iterator) {
-    ta_[kIteratorSeek].enabled = true;
+    ta_[6].enabled = true;
   } else {
-    ta_[kIteratorSeek].enabled = false;
+    ta_[6].enabled = false;
   }
-  ta_[kIteratorSeekForPrev].type_name = "iterator_SeekForPrev";
+  ta_[7].type_name = "iterator_SeekForPrev";
   if (FLAGS_analyze_iterator) {
-    ta_[kIteratorSeekForPrev].enabled = true;
+    ta_[7].enabled = true;
   } else {
-    ta_[kIteratorSeekForPrev].enabled = false;
+    ta_[7].enabled = false;
   }
-  ta_[kMultiGet].type_name = "multiget";
+  ta_[8].type_name = "multiget";
   if (FLAGS_analyze_multiget) {
-    ta_[kMultiGet].enabled = true;
+    ta_[8].enabled = true;
   } else {
-    ta_[kMultiGet].enabled = false;
+    ta_[8].enabled = false;
   }
   for (int i = 0; i < kTaTypeNum; i++) {
     ta_[i].sample_count = 0;
   }
 }
 
-TraceAnalyzer::~TraceAnalyzer() = default;
+TraceAnalyzer::~TraceAnalyzer() {}
 
 // Prepare the processing
 // Initiate the global trace reader and writer here
@@ -1059,8 +1054,7 @@ Status TraceAnalyzer::ReProcessing() {
         LineFileReader lf_reader(
             std::move(file), whole_key_path,
             kTraceFileReadaheadSize /* filereadahead_size */);
-        for (cfs_[cf_id].w_count = 0; lf_reader.ReadLine(
-                 &get_key, Env::IO_TOTAL /* rate_limiter_priority */);
+        for (cfs_[cf_id].w_count = 0; lf_reader.ReadLine(&get_key);
              ++cfs_[cf_id].w_count) {
           input_key = ROCKSDB_NAMESPACE::LDBCommand::HexToString(get_key);
           for (int type = 0; type < kTaTypeNum; type++) {
@@ -1587,12 +1581,6 @@ Status TraceAnalyzer::PutCF(uint32_t column_family_id, const Slice& key,
                               column_family_id, key, value.size());
 }
 
-Status TraceAnalyzer::PutEntityCF(uint32_t column_family_id, const Slice& key,
-                                  const Slice& value) {
-  return OutputAnalysisResult(TraceOperationType::kPutEntity, write_batch_ts_,
-                              column_family_id, key, value.size());
-}
-
 // Handle the Delete request in the write batch of the trace
 Status TraceAnalyzer::DeleteCF(uint32_t column_family_id, const Slice& key) {
   return OutputAnalysisResult(TraceOperationType::kDelete, write_batch_ts_,
@@ -1933,3 +1921,4 @@ int trace_analyzer_tool(int argc, char** argv) {
 }  // namespace ROCKSDB_NAMESPACE
 
 #endif  // Endif of Gflag
+#endif  // RocksDB LITE

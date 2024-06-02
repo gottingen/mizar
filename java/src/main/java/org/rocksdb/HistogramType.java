@@ -13,205 +13,175 @@ public enum HistogramType {
 
   COMPACTION_TIME((byte) 0x2),
 
-  COMPACTION_CPU_TIME((byte) 0x3),
+  SUBCOMPACTION_SETUP_TIME((byte) 0x3),
 
-  SUBCOMPACTION_SETUP_TIME((byte) 0x4),
+  TABLE_SYNC_MICROS((byte) 0x4),
 
-  TABLE_SYNC_MICROS((byte) 0x5),
+  COMPACTION_OUTFILE_SYNC_MICROS((byte) 0x5),
 
-  COMPACTION_OUTFILE_SYNC_MICROS((byte) 0x6),
+  WAL_FILE_SYNC_MICROS((byte) 0x6),
 
-  WAL_FILE_SYNC_MICROS((byte) 0x7),
-
-  MANIFEST_FILE_SYNC_MICROS((byte) 0x8),
+  MANIFEST_FILE_SYNC_MICROS((byte) 0x7),
 
   /**
    * TIME SPENT IN IO DURING TABLE OPEN.
    */
-  TABLE_OPEN_IO_MICROS((byte) 0x9),
+  TABLE_OPEN_IO_MICROS((byte) 0x8),
 
-  DB_MULTIGET((byte) 0xA),
+  DB_MULTIGET((byte) 0x9),
 
-  READ_BLOCK_COMPACTION_MICROS((byte) 0xB),
+  READ_BLOCK_COMPACTION_MICROS((byte) 0xA),
 
-  READ_BLOCK_GET_MICROS((byte) 0xC),
+  READ_BLOCK_GET_MICROS((byte) 0xB),
 
-  WRITE_RAW_BLOCK_MICROS((byte) 0xD),
+  WRITE_RAW_BLOCK_MICROS((byte) 0xC),
 
-  NUM_FILES_IN_SINGLE_COMPACTION((byte) 0xE),
+  STALL_L0_SLOWDOWN_COUNT((byte) 0xD),
 
-  DB_SEEK((byte) 0xF),
+  STALL_MEMTABLE_COMPACTION_COUNT((byte) 0xE),
 
-  WRITE_STALL((byte) 0x10),
+  STALL_L0_NUM_FILES_COUNT((byte) 0xF),
 
-  SST_READ_MICROS((byte) 0x11),
+  HARD_RATE_LIMIT_DELAY_COUNT((byte) 0x10),
 
-  FILE_READ_FLUSH_MICROS((byte) 0x12),
+  SOFT_RATE_LIMIT_DELAY_COUNT((byte) 0x11),
 
-  FILE_READ_COMPACTION_MICROS((byte) 0x13),
+  NUM_FILES_IN_SINGLE_COMPACTION((byte) 0x12),
 
-  FILE_READ_DB_OPEN_MICROS((byte) 0x14),
+  DB_SEEK((byte) 0x13),
 
-  FILE_READ_GET_MICROS((byte) 0x15),
+  WRITE_STALL((byte) 0x14),
 
-  FILE_READ_MULTIGET_MICROS((byte) 0x16),
-
-  FILE_READ_DB_ITERATOR_MICROS((byte) 0x17),
-
-  FILE_READ_VERIFY_DB_CHECKSUM_MICROS((byte) 0x18),
-
-  FILE_READ_VERIFY_FILE_CHECKSUMS_MICROS((byte) 0x19),
-
-  SST_WRITE_MICROS((byte) 0x1A),
-
-  FILE_WRITE_FLUSH_MICROS((byte) 0x1B),
-
-  FILE_WRITE_COMPACTION_MICROS((byte) 0x1C),
-
-  FILE_WRITE_DB_OPEN_MICROS((byte) 0x1D),
+  SST_READ_MICROS((byte) 0x15),
 
   /**
    * The number of subcompactions actually scheduled during a compaction.
    */
-  NUM_SUBCOMPACTIONS_SCHEDULED((byte) 0x1E),
+  NUM_SUBCOMPACTIONS_SCHEDULED((byte) 0x16),
 
   /**
    * Value size distribution in each operation.
    */
-  BYTES_PER_READ((byte) 0x1F),
-  BYTES_PER_WRITE((byte) 0x20),
-  BYTES_PER_MULTIGET((byte) 0x21),
-
-  COMPRESSION_TIMES_NANOS((byte) 0x22),
-
-  DECOMPRESSION_TIMES_NANOS((byte) 0x23),
-
-  READ_NUM_MERGE_OPERANDS((byte) 0x24),
+  BYTES_PER_READ((byte) 0x17),
+  BYTES_PER_WRITE((byte) 0x18),
+  BYTES_PER_MULTIGET((byte) 0x19),
 
   /**
-   * Size of keys written to BlobDB.
+   * number of bytes compressed.
    */
-  BLOB_DB_KEY_SIZE((byte) 0x25),
+  BYTES_COMPRESSED((byte) 0x1A),
 
   /**
-   * Size of values written to BlobDB.
+   * number of bytes decompressed.
+   *
+   * number of bytes is when uncompressed; i.e. before/after respectively
    */
-  BLOB_DB_VALUE_SIZE((byte) 0x26),
+  BYTES_DECOMPRESSED((byte) 0x1B),
 
-  /**
-   * BlobDB Put/PutWithTTL/PutUntil/Write latency.
-   */
-  BLOB_DB_WRITE_MICROS((byte) 0x27),
+  COMPRESSION_TIMES_NANOS((byte) 0x1C),
 
-  /**
-   * BlobDB Get lagency.
-   */
-  BLOB_DB_GET_MICROS((byte) 0x28),
+  DECOMPRESSION_TIMES_NANOS((byte) 0x1D),
 
-  /**
-   * BlobDB MultiGet latency.
-   */
-  BLOB_DB_MULTIGET_MICROS((byte) 0x29),
-
-  /**
-   * BlobDB Seek/SeekToFirst/SeekToLast/SeekForPrev latency.
-   */
-  BLOB_DB_SEEK_MICROS((byte) 0x2A),
-
-  /**
-   * BlobDB Next latency.
-   */
-  BLOB_DB_NEXT_MICROS((byte) 0x2B),
-
-  /**
-   * BlobDB Prev latency.
-   */
-  BLOB_DB_PREV_MICROS((byte) 0x2C),
-
-  /**
-   * Blob file write latency.
-   */
-  BLOB_DB_BLOB_FILE_WRITE_MICROS((byte) 0x2D),
-
-  /**
-   * Blob file read latency.
-   */
-  BLOB_DB_BLOB_FILE_READ_MICROS((byte) 0x2E),
-
-  /**
-   * Blob file sync latency.
-   */
-  BLOB_DB_BLOB_FILE_SYNC_MICROS((byte) 0x2F),
-
-  /**
-   * BlobDB compression time.
-   */
-  BLOB_DB_COMPRESSION_MICROS((byte) 0x30),
-
-  /**
-   * BlobDB decompression time.
-   */
-  BLOB_DB_DECOMPRESSION_MICROS((byte) 0x31),
+  READ_NUM_MERGE_OPERANDS((byte) 0x1E),
 
   /**
    * Time spent flushing memtable to disk.
    */
-  FLUSH_TIME((byte) 0x32),
+  FLUSH_TIME((byte) 0x20),
 
   /**
-   * Number of MultiGet batch keys overlapping a file
+   * Size of keys written to BlobDB.
    */
-  SST_BATCH_SIZE((byte) 0x33),
+  BLOB_DB_KEY_SIZE((byte) 0x21),
 
   /**
-   * Size of a single IO batch issued by MultiGet
+   * Size of values written to BlobDB.
    */
-  MULTIGET_IO_BATCH_SIZE((byte) 0x34),
+  BLOB_DB_VALUE_SIZE((byte) 0x22),
+
+  /**
+   * BlobDB Put/PutWithTTL/PutUntil/Write latency.
+   */
+  BLOB_DB_WRITE_MICROS((byte) 0x23),
+
+  /**
+   * BlobDB Get lagency.
+   */
+  BLOB_DB_GET_MICROS((byte) 0x24),
+
+  /**
+   * BlobDB MultiGet latency.
+   */
+  BLOB_DB_MULTIGET_MICROS((byte) 0x25),
+
+  /**
+   * BlobDB Seek/SeekToFirst/SeekToLast/SeekForPrev latency.
+   */
+  BLOB_DB_SEEK_MICROS((byte) 0x26),
+
+  /**
+   * BlobDB Next latency.
+   */
+  BLOB_DB_NEXT_MICROS((byte) 0x27),
+
+  /**
+   * BlobDB Prev latency.
+   */
+  BLOB_DB_PREV_MICROS((byte) 0x28),
+
+  /**
+   * Blob file write latency.
+   */
+  BLOB_DB_BLOB_FILE_WRITE_MICROS((byte) 0x29),
+
+  /**
+   * Blob file read latency.
+   */
+  BLOB_DB_BLOB_FILE_READ_MICROS((byte) 0x2A),
+
+  /**
+   * Blob file sync latency.
+   */
+  BLOB_DB_BLOB_FILE_SYNC_MICROS((byte) 0x2B),
+
+  /**
+   * BlobDB garbage collection time.
+   */
+  BLOB_DB_GC_MICROS((byte) 0x2C),
+
+  /**
+   * BlobDB compression time.
+   */
+  BLOB_DB_COMPRESSION_MICROS((byte) 0x2D),
+
+  /**
+   * BlobDB decompression time.
+   */
+  BLOB_DB_DECOMPRESSION_MICROS((byte) 0x2E),
 
   /**
    * Num of Index and Filter blocks read from file system per level in MultiGet
    * request
    */
-  NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL((byte) 0x35),
+  NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL((byte) 0x2F),
+
+  /**
+   * Num of Data blocks read from file system per level in MultiGet request.
+   */
+  NUM_DATA_BLOCKS_READ_PER_LEVEL((byte) 0x30),
 
   /**
    * Num of SST files read from file system per level in MultiGet request.
    */
-  NUM_SST_READ_PER_LEVEL((byte) 0x36),
-
-  /**
-   * Num of LSM levels read from file system per MultiGet request.
-   */
-  NUM_LEVEL_READ_PER_MULTIGET((byte) 0x37),
+  NUM_SST_READ_PER_LEVEL((byte) 0x31),
 
   /**
    * The number of retry in auto resume
    */
-  ERROR_HANDLER_AUTORESUME_RETRY_COUNT((byte) 0x38),
+  ERROR_HANDLER_AUTORESUME_RETRY_COUNT((byte) 0x32),
 
-  ASYNC_READ_BYTES((byte) 0x39),
-
-  POLL_WAIT_MICROS((byte) 0x3A),
-
-  /**
-   * Number of prefetched bytes discarded by RocksDB.
-   */
-  PREFETCHED_BYTES_DISCARDED((byte) 0x3B),
-
-  /**
-   * Wait time for aborting async read in FilePrefetchBuffer destructor
-   */
-  ASYNC_PREFETCH_ABORT_MICROS((byte) 0x3C),
-
-  /**
-   * Number of bytes read for RocksDB's prefetching contents
-   * (as opposed to file system's prefetch)
-   * from the end of SST table during block based table open
-   */
-  TABLE_OPEN_PREFETCH_TAIL_READ_BYTES((byte) 0x3D),
-
-  // 0x3E for backwards compatibility on current minor version.
-  HISTOGRAM_ENUM_MAX((byte) 0x3E);
+  // 0x1F for backwards compatibility on current minor version.
+  HISTOGRAM_ENUM_MAX((byte) 0x1F);
 
   private final byte value;
 

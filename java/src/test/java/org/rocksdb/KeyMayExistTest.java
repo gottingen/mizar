@@ -261,12 +261,10 @@ public class KeyMayExistTest {
     keyBuffer.flip();
 
     assertThat(db.keyMayExist(keyBuffer)).isEqualTo(true);
-    keyBuffer.flip();
 
     final ByteBuffer valueBuffer = ByteBuffer.allocateDirect(value.length + 24);
     valueBuffer.position(12);
     KeyMayExist keyMayExist = db.keyMayExist(keyBuffer, valueBuffer);
-    keyBuffer.flip();
     assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
     assertThat(keyMayExist.valueLength).isEqualTo(value.length);
     assertThat(valueBuffer.position()).isEqualTo(12);
@@ -305,11 +303,10 @@ public class KeyMayExistTest {
 
     try (final ReadOptions readOptions = new ReadOptions()) {
       assertThat(db.keyMayExist(readOptions, keyBuffer)).isEqualTo(true);
-      keyBuffer.flip();
+
       final ByteBuffer valueBuffer = ByteBuffer.allocateDirect(value.length + 24);
       valueBuffer.position(12);
       KeyMayExist keyMayExist = db.keyMayExist(readOptions, keyBuffer, valueBuffer);
-      keyBuffer.flip();
       assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
       assertThat(keyMayExist.valueLength).isEqualTo(value.length);
       assertThat(valueBuffer.position()).isEqualTo(12);
@@ -321,7 +318,6 @@ public class KeyMayExistTest {
       valueBuffer.limit(value.length + 24);
       valueBuffer.position(25);
       keyMayExist = db.keyMayExist(readOptions, keyBuffer, valueBuffer);
-      keyBuffer.flip();
       assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
       assertThat(keyMayExist.valueLength).isEqualTo(value.length);
       assertThat(valueBuffer.position()).isEqualTo(25);
@@ -366,9 +362,7 @@ public class KeyMayExistTest {
     keyBuffer.flip();
 
     assertThat(db.keyMayExist(keyBuffer)).isEqualTo(true);
-    keyBuffer.flip();
     assertThat(db.keyMayExist(columnFamilyHandleList.get(1), keyBuffer)).isEqualTo(false);
-    keyBuffer.flip();
     assertThat(db.keyMayExist(columnFamilyHandleList.get(0), keyBuffer)).isEqualTo(true);
 
     // 1 is just a CF
@@ -378,11 +372,8 @@ public class KeyMayExistTest {
     keyBuffer.flip();
 
     assertThat(db.keyMayExist(keyBuffer)).isEqualTo(false);
-    keyBuffer.flip();
     assertThat(db.keyMayExist(columnFamilyHandleList.get(1), keyBuffer)).isEqualTo(true);
-    keyBuffer.flip();
     assertThat(db.keyMayExist(columnFamilyHandleList.get(0), keyBuffer)).isEqualTo(false);
-    keyBuffer.flip();
 
     exceptionRule.expect(AssertionError.class);
     exceptionRule.expectMessage(
@@ -404,10 +395,8 @@ public class KeyMayExistTest {
 
     try (final ReadOptions readOptions = new ReadOptions()) {
       assertThat(db.keyMayExist(keyBuffer)).isEqualTo(true);
-      keyBuffer.flip();
       assertThat(db.keyMayExist(columnFamilyHandleList.get(1), readOptions, keyBuffer))
           .isEqualTo(false);
-      keyBuffer.flip();
       assertThat(db.keyMayExist(columnFamilyHandleList.get(0), readOptions, keyBuffer))
           .isEqualTo(true);
 
@@ -418,10 +407,8 @@ public class KeyMayExistTest {
       keyBuffer.flip();
 
       assertThat(db.keyMayExist(readOptions, keyBuffer)).isEqualTo(false);
-      keyBuffer.flip();
       assertThat(db.keyMayExist(columnFamilyHandleList.get(1), readOptions, keyBuffer))
           .isEqualTo(true);
-      keyBuffer.flip();
       assertThat(db.keyMayExist(columnFamilyHandleList.get(0), readOptions, keyBuffer))
           .isEqualTo(false);
 
@@ -445,11 +432,10 @@ public class KeyMayExistTest {
     keyBuffer.flip();
 
     assertThat(db.keyMayExist(columnFamilyHandleList.get(1), keyBuffer)).isEqualTo(true);
-    keyBuffer.flip();
+
     final ByteBuffer valueBuffer = ByteBuffer.allocateDirect(value.length + 24);
     valueBuffer.position(12);
     KeyMayExist keyMayExist = db.keyMayExist(columnFamilyHandleList.get(1), keyBuffer, valueBuffer);
-    keyBuffer.flip();
     assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
     assertThat(keyMayExist.valueLength).isEqualTo(value.length);
     assertThat(valueBuffer.position()).isEqualTo(12);
@@ -488,12 +474,11 @@ public class KeyMayExistTest {
     try (final ReadOptions readOptions = new ReadOptions()) {
       assertThat(db.keyMayExist(columnFamilyHandleList.get(1), readOptions, keyBuffer))
           .isEqualTo(true);
-      keyBuffer.flip();
+
       final ByteBuffer valueBuffer = ByteBuffer.allocateDirect(value.length + 24);
       valueBuffer.position(12);
       KeyMayExist keyMayExist =
           db.keyMayExist(columnFamilyHandleList.get(1), readOptions, keyBuffer, valueBuffer);
-      keyBuffer.flip();
       assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
       assertThat(keyMayExist.valueLength).isEqualTo(value.length);
       assertThat(valueBuffer.position()).isEqualTo(12);
@@ -506,7 +491,6 @@ public class KeyMayExistTest {
       valueBuffer.position(25);
       keyMayExist =
           db.keyMayExist(columnFamilyHandleList.get(1), readOptions, keyBuffer, valueBuffer);
-      keyBuffer.flip();
       assertThat(keyMayExist.exists).isEqualTo(KeyMayExist.KeyMayExistEnum.kExistsWithValue);
       assertThat(keyMayExist.valueLength).isEqualTo(value.length);
       assertThat(valueBuffer.position()).isEqualTo(25);

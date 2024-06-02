@@ -1,5 +1,6 @@
 /* -*- mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 // vim: ft=cpp:expandtab:ts=8:sw=2:softtabstop=2:
+#ifndef ROCKSDB_LITE
 #ifndef OS_WIN
 #ident "$Id$"
 /*======
@@ -198,7 +199,8 @@ static bool determine_conflicting_txnids(
         if (other_txnid == TXNID_SHARED) {
           // Add all shared lock owners, except this transaction.
           for (TXNID shared_id : *lock.owners) {
-            if (shared_id != txnid) conflicts->add(shared_id);
+            if (shared_id != txnid)
+              conflicts->add(shared_id);
           }
         } else {
           conflicts->add(other_txnid);
@@ -1019,3 +1021,4 @@ DICTIONARY_ID locktree::get_dict_id() const { return m_dict_id; }
 
 } /* namespace toku */
 #endif  // OS_WIN
+#endif  // ROCKSDB_LITE

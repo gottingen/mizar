@@ -26,9 +26,5 @@ public class TimedEnv extends Env {
   }
 
   private static native long createTimedEnv(final long baseEnvHandle);
-  @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  @Override protected final native void disposeInternal(final long handle);
 }

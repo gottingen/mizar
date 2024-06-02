@@ -2,6 +2,7 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
+#ifndef ROCKSDB_LITE
 
 #include "utilities/ttl/db_ttl_impl.h"
 
@@ -19,9 +20,9 @@
 
 namespace ROCKSDB_NAMESPACE {
 static std::unordered_map<std::string, OptionTypeInfo> ttl_merge_op_type_info =
-    {{"user_operator", OptionTypeInfo::AsCustomSharedPtr<MergeOperator>(
-                           0, OptionVerificationType::kByNameAllowNull,
-                           OptionTypeFlags::kNone)}};
+    {{"user_operator",
+      OptionTypeInfo::AsCustomSharedPtr<MergeOperator>(
+          0, OptionVerificationType::kByName, OptionTypeFlags::kNone)}};
 
 TtlMergeOperator::TtlMergeOperator(
     const std::shared_ptr<MergeOperator>& merge_op, SystemClock* clock)
@@ -67,7 +68,6 @@ bool TtlMergeOperator::FullMergeV2(const MergeOperationInput& merge_in,
                             merge_in.logger),
         &user_merge_out);
   }
-  merge_out->op_failure_scope = user_merge_out.op_failure_scope;
 
   // Return false if the user merge operator returned false
   if (!good) {
@@ -109,7 +109,8 @@ bool TtlMergeOperator::PartialMergeMulti(const Slice& key,
       return false;
     }
 
-    operands_without_ts.emplace_back(operand.data(), operand.size() - ts_len);
+    operands_without_ts.push_back(
+        Slice(operand.data(), operand.size() - ts_len));
   }
 
   // Apply the user partial-merge operator (store result in *new_value)
@@ -326,6 +327,18 @@ Status DBWithTTLImpl::Close() {
   return ret;
 }
 
+Status UtilityDB::OpenTtlDB(const Options& options, const std::string& dbname,
+                            StackableDB** dbptr, int32_t ttl, bool read_only) {
+  DBWithTTL* db;
+  Status s = DBWithTTL::Open(options, dbname, &db, ttl, read_only);
+  if (s.ok()) {
+    *dbptr = db;
+  } else {
+    *dbptr = nullptr;
+  }
+  return s;
+}
+
 void DBWithTTLImpl::RegisterTtlClasses() {
   static std::once_flag once;
   std::call_once(once, [&]() {
@@ -338,7 +351,8 @@ Status DBWithTTL::Open(const Options& options, const std::string& dbname,
   DBOptions db_options(options);
   ColumnFamilyOptions cf_options(options);
   std::vector<ColumnFamilyDescriptor> column_families;
-  column_families.emplace_back(kDefaultColumnFamilyName, cf_options);
+  column_families.push_back(
+      ColumnFamilyDescriptor(kDefaultColumnFamilyName, cf_options));
   std::vector<ColumnFamilyHandle*> handles;
   Status s = DBWithTTL::Open(db_options, dbname, column_families, &handles,
                              dbptr, {ttl}, read_only);
@@ -449,11 +463,7 @@ bool DBWithTTLImpl::IsStale(const Slice& value, int32_t ttl,
   if (!clock->GetCurrentTime(&curtime).ok()) {
     return false;  // Treat the data as fresh if could not get current time
   }
-  /* int32_t may overflow when timestamp_value + ttl
-   * for example ttl = 86400 * 365 * 15
-   * convert timestamp_value to int64_t
-   */
-  int64_t timestamp_value =
+  int32_t timestamp_value =
       DecodeFixed32(value.data() + value.size() - kTSLength);
   return (timestamp_value + ttl) < curtime;
 }
@@ -491,11 +501,7 @@ Status DBWithTTLImpl::Put(const WriteOptions& options,
 
 Status DBWithTTLImpl::Get(const ReadOptions& options,
                           ColumnFamilyHandle* column_family, const Slice& key,
-                          PinnableSlice* value, std::string* timestamp) {
-  if (timestamp) {
-    return Status::NotSupported(
-        "Get() that returns timestamp is not supported");
-  }
+                          PinnableSlice* value) {
   Status st = db_->Get(options, column_family, key, value);
   if (!st.ok()) {
     return st;
@@ -507,34 +513,22 @@ Status DBWithTTLImpl::Get(const ReadOptions& options,
   return StripTS(value);
 }
 
-void DBWithTTLImpl::MultiGet(const ReadOptions& options, const size_t num_keys,
-                             ColumnFamilyHandle** column_families,
-                             const Slice* keys, PinnableSlice* values,
-                             std::string* timestamps, Status* statuses,
-                             const bool /*sorted_input*/) {
-  if (timestamps) {
-    for (size_t i = 0; i < num_keys; ++i) {
-      statuses[i] = Status::NotSupported(
-          "MultiGet() returning timestamps not implemented.");
-    }
-    return;
-  }
-
-  db_->MultiGet(options, num_keys, column_families, keys, values, timestamps,
-                statuses);
-  for (size_t i = 0; i < num_keys; ++i) {
+std::vector<Status> DBWithTTLImpl::MultiGet(
+    const ReadOptions& options,
+    const std::vector<ColumnFamilyHandle*>& column_family,
+    const std::vector<Slice>& keys, std::vector<std::string>* values) {
+  auto statuses = db_->MultiGet(options, column_family, keys, values);
+  for (size_t i = 0; i < keys.size(); ++i) {
     if (!statuses[i].ok()) {
       continue;
     }
-    PinnableSlice tmp_val = std::move(values[i]);
-    values[i].PinSelf(tmp_val);
-    assert(!values[i].IsPinned());
-    statuses[i] = SanityCheckTimestamp(values[i]);
+    statuses[i] = SanityCheckTimestamp((*values)[i]);
     if (!statuses[i].ok()) {
       continue;
     }
-    statuses[i] = StripTS(&values[i]);
+    statuses[i] = StripTS(&(*values)[i]);
   }
+  return statuses;
 }
 
 bool DBWithTTLImpl::KeyMayExist(const ReadOptions& options,
@@ -608,31 +602,21 @@ Status DBWithTTLImpl::Write(const WriteOptions& opts, WriteBatch* updates) {
   }
 }
 
-Iterator* DBWithTTLImpl::NewIterator(const ReadOptions& _read_options,
+Iterator* DBWithTTLImpl::NewIterator(const ReadOptions& opts,
                                      ColumnFamilyHandle* column_family) {
-  if (_read_options.io_activity != Env::IOActivity::kUnknown &&
-      _read_options.io_activity != Env::IOActivity::kDBIterator) {
-    return NewErrorIterator(Status::InvalidArgument(
-        "Can only call NewIterator with `ReadOptions::io_activity` is "
-        "`Env::IOActivity::kUnknown` or `Env::IOActivity::kDBIterator`"));
-  }
-  ReadOptions read_options(_read_options);
-  if (read_options.io_activity == Env::IOActivity::kUnknown) {
-    read_options.io_activity = Env::IOActivity::kDBIterator;
-  }
-  return new TtlIterator(db_->NewIterator(read_options, column_family));
+  return new TtlIterator(db_->NewIterator(opts, column_family));
 }
 
-void DBWithTTLImpl::SetTtl(ColumnFamilyHandle* h, int32_t ttl) {
+void DBWithTTLImpl::SetTtl(ColumnFamilyHandle *h, int32_t ttl) {
   std::shared_ptr<TtlCompactionFilterFactory> filter;
   Options opts;
   opts = GetOptions(h);
   filter = std::static_pointer_cast<TtlCompactionFilterFactory>(
-      opts.compaction_filter_factory);
-  if (!filter) {
+                                       opts.compaction_filter_factory);
+  if (!filter)
     return;
-  }
   filter->SetTtl(ttl);
 }
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

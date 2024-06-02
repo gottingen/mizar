@@ -21,7 +21,7 @@ import org.rocksdb.util.BytewiseComparator;
  * by a change made between 6.2.2 and 6.22.1,
  * to wit {@link <a href="https://github.com/facebook/rocksdb/commit/7242dae7">...</a>}
  * which as part of its effect, changed the Java bytewise comparators.
- * <p>
+ *
  * {@link <a href="https://github.com/facebook/rocksdb/issues/5891">...</a>}
  * {@link <a href="https://github.com/facebook/rocksdb/issues/2001">...</a>}
  */
@@ -34,8 +34,8 @@ public class BytewiseComparatorRegressionTest {
 
   @Rule public TemporaryFolder temporarySSTFolder = new TemporaryFolder();
 
-  private static final byte[][] testData = {{10, -11, 13}, {10, 11, 12}, {10, 11, 14}};
-  private static final byte[][] orderedData = {{10, 11, 12}, {10, 11, 14}, {10, -11, 13}};
+  private final static byte[][] testData = {{10, -11, 13}, {10, 11, 12}, {10, 11, 14}};
+  private final static byte[][] orderedData = {{10, 11, 12}, {10, 11, 14}, {10, -11, 13}};
 
   /**
    * {@link <a href="https://github.com/facebook/rocksdb/issues/5891">...</a>}
@@ -43,16 +43,12 @@ public class BytewiseComparatorRegressionTest {
   @Test
   public void testJavaComparator() throws RocksDBException {
     final BytewiseComparator comparator = new BytewiseComparator(new ComparatorOptions());
-    try (final Options options = new Options().setCreateIfMissing(true).setComparator(comparator)) {
-      performTest(options);
-    }
+    performTest(new Options().setCreateIfMissing(true).setComparator(comparator));
   }
 
   @Test
   public void testDefaultComparator() throws RocksDBException {
-    try (final Options options = new Options().setCreateIfMissing(true)) {
-      performTest(options);
-    }
+    performTest(new Options().setCreateIfMissing(true));
   }
 
   /**
@@ -60,10 +56,8 @@ public class BytewiseComparatorRegressionTest {
    */
   @Test
   public void testCppComparator() throws RocksDBException {
-    try (final Options options = new Options().setCreateIfMissing(true).setComparator(
-             BuiltinComparator.BYTEWISE_COMPARATOR)) {
-      performTest(options);
-    }
+    performTest(new Options().setCreateIfMissing(true).setComparator(
+        BuiltinComparator.BYTEWISE_COMPARATOR));
   }
 
   private void performTest(final Options options) throws RocksDBException {
@@ -118,15 +112,15 @@ public class BytewiseComparatorRegressionTest {
 
     final EnvOptions envOpts = new EnvOptions();
     final Options opts = new Options();
-    opts.setComparator(new BytewiseComparator(new ComparatorOptions()));
-    final SstFileWriter writer = new SstFileWriter(envOpts, opts);
+    final SstFileWriter writer =
+        new SstFileWriter(envOpts, opts, new BytewiseComparator(new ComparatorOptions()));
     writer.open(tempSSTFile.getAbsolutePath());
     final byte[] gKey =
         hexToByte("000000293030303030303030303030303030303030303032303736343730696E666F33");
     final byte[] wKey =
         hexToByte("0000008d3030303030303030303030303030303030303030303437363433696e666f34");
-    writer.put(new Slice(gKey), new Slice("dummyV1"));
-    writer.put(new Slice(wKey), new Slice("dummyV2"));
+    writer.add(new Slice(gKey), new Slice("dummyV1"));
+    writer.add(new Slice(wKey), new Slice("dummyV2"));
     writer.finish();
   }
 }

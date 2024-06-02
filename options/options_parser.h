@@ -14,6 +14,7 @@
 
 namespace ROCKSDB_NAMESPACE {
 
+#ifndef ROCKSDB_LITE
 struct ConfigOptions;
 class OptionTypeInfo;
 class TableFactory;
@@ -32,13 +33,11 @@ enum OptionSection : char {
 static const std::string opt_section_titles[] = {
     "Version", "DBOptions", "CFOptions", "TableOptions/", "Unknown"};
 
-Status PersistRocksDBOptions(const WriteOptions& write_options,
-                             const DBOptions& db_opt,
+Status PersistRocksDBOptions(const DBOptions& db_opt,
                              const std::vector<std::string>& cf_names,
                              const std::vector<ColumnFamilyOptions>& cf_opts,
                              const std::string& file_name, FileSystem* fs);
-Status PersistRocksDBOptions(const WriteOptions& write_options,
-                             const ConfigOptions& config_options,
+Status PersistRocksDBOptions(const ConfigOptions& config_options,
                              const DBOptions& db_opt,
                              const std::vector<std::string>& cf_names,
                              const std::vector<ColumnFamilyOptions>& cf_opts,
@@ -147,5 +146,6 @@ class RocksDBOptionsParser {
   int opt_file_version[3];
 };
 
+#endif  // !ROCKSDB_LITE
 
 }  // namespace ROCKSDB_NAMESPACE

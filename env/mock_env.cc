@@ -21,7 +21,7 @@
 #include "util/cast_util.h"
 #include "util/hash.h"
 #include "util/random.h"
-#include "util/rate_limiter_impl.h"
+#include "util/rate_limiter.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -33,6 +33,7 @@ int64_t MaybeCurrentTime(const std::shared_ptr<SystemClock>& clock) {
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> time_elapse_type_info = {
+#ifndef ROCKSDB_LITE
     {"time_elapse_only_sleep",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kCompareNever,
@@ -49,8 +50,10 @@ static std::unordered_map<std::string, OptionTypeInfo> time_elapse_type_info = {
         return Status::OK();
       },
       nullptr}},
+#endif  // ROCKSDB_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo> mock_sleep_type_info = {
+#ifndef ROCKSDB_LITE
     {"mock_sleep",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kCompareNever,
@@ -67,6 +70,7 @@ static std::unordered_map<std::string, OptionTypeInfo> mock_sleep_type_info = {
         return Status::OK();
       },
       nullptr}},
+#endif  // ROCKSDB_LITE
 };
 }  // namespace
 
@@ -443,11 +447,6 @@ class MockEnvDirectory : public FSDirectory {
                  IODebugContext* /*dbg*/) override {
     return IOStatus::OK();
   }
-
-  IOStatus Close(const IOOptions& /*options*/,
-                 IODebugContext* /*dbg*/) override {
-    return IOStatus::OK();
-  }
 };
 
 class MockEnvFileLock : public FileLock {
@@ -483,7 +482,7 @@ class TestMemLogger : public Logger {
         options_(options),
         dbg_(dbg),
         flush_pending_(false) {}
-  ~TestMemLogger() override = default;
+  ~TestMemLogger() override {}
 
   void Flush() override {
     if (flush_pending_) {
@@ -510,13 +509,13 @@ class TestMemLogger : public Logger {
       char* p = base;
       char* limit = base + bufsize;
 
-      port::TimeVal now_tv;
-      port::GetTimeOfDay(&now_tv, nullptr);
+      struct timeval now_tv;
+      gettimeofday(&now_tv, nullptr);
       const time_t seconds = now_tv.tv_sec;
       struct tm t;
       memset(&t, 0, sizeof(t));
       struct tm* ret __attribute__((__unused__));
-      ret = port::LocalTimeR(&seconds, &t);
+      ret = localtime_r(&seconds, &t);
       assert(ret);
       p += snprintf(p, limit - p, "%04d/%02d/%02d-%02d:%02d:%02d.%06d ",
                     t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour,
@@ -568,9 +567,11 @@ class TestMemLogger : public Logger {
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> mock_fs_type_info = {
+#ifndef ROCKSDB_LITE
     {"supports_direct_io",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kNone}},
+#endif  // ROCKSDB_LITE
 };
 }  // namespace
 
@@ -789,11 +790,7 @@ IOStatus MockFileSystem::GetChildren(const std::string& dir,
                                      IODebugContext* /*dbg*/) {
   MutexLock lock(&mutex_);
   bool found_dir = GetChildrenInternal(dir, result);
-#ifndef __clang_analyzer__
   return found_dir ? IOStatus::OK() : IOStatus::NotFound(dir);
-#else
-  return found_dir ? IOStatus::OK() : IOStatus::NotFound();
-#endif
 }
 
 void MockFileSystem::DeleteFileInternal(const std::string& fname) {
@@ -877,7 +874,6 @@ IOStatus MockFileSystem::GetFileSize(const std::string& fname,
                                      uint64_t* file_size,
                                      IODebugContext* /*dbg*/) {
   auto fn = NormalizeMockPath(fname);
-  TEST_SYNC_POINT_CALLBACK("MockFileSystem::GetFileSize:CheckFileType", &fn);
   MutexLock lock(&mutex_);
   auto iter = file_map_.find(fn);
   if (iter == file_map_.end()) {
@@ -1051,8 +1047,14 @@ Status MockEnv::CorruptBuffer(const std::string& fname) {
   return mock->CorruptBuffer(fname);
 }
 
+#ifndef ROCKSDB_LITE
 // This is to maintain the behavior before swithcing from InMemoryEnv to MockEnv
 Env* NewMemEnv(Env* base_env) { return MockEnv::Create(base_env); }
 
+#else  // ROCKSDB_LITE
+
+Env* NewMemEnv(Env* /*base_env*/) { return nullptr; }
+
+#endif  // !ROCKSDB_LITE
 
 }  // namespace ROCKSDB_NAMESPACE

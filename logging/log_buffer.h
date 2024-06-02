@@ -6,7 +6,6 @@
 #pragma once
 
 #include <ctime>
-
 #include "memory/arena.h"
 #include "port/sys_time.h"
 #include "rocksdb/env.h"
@@ -36,8 +35,8 @@ class LogBuffer {
  private:
   // One log entry with its timestamp
   struct BufferedLog {
-    port::TimeVal now_tv;  // Timestamp of the log
-    char message[1];       // Beginning of log message
+    struct timeval now_tv;  // Timestamp of the log
+    char message[1];        // Beginning of log message
   };
 
   const InfoLogLevel log_level_;
@@ -49,9 +48,9 @@ class LogBuffer {
 // Add log to the LogBuffer for a delayed info logging. It can be used when
 // we want to add some logs inside a mutex.
 // max_log_size indicates maximize log size, including some metadata.
-void LogToBuffer(LogBuffer* log_buffer, size_t max_log_size, const char* format,
-                 ...);
+extern void LogToBuffer(LogBuffer* log_buffer, size_t max_log_size,
+                        const char* format, ...);
 // Same as previous function, but with default max log size.
-void LogToBuffer(LogBuffer* log_buffer, const char* format, ...);
+extern void LogToBuffer(LogBuffer* log_buffer, const char* format, ...);
 
 }  // namespace ROCKSDB_NAMESPACE

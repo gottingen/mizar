@@ -44,7 +44,7 @@ public class SkipListMemTableConfig extends MemTableConfig {
     return newMemTableFactoryHandle0(lookahead_);
   }
 
-  private static native long newMemTableFactoryHandle0(long lookahead)
+  private native long newMemTableFactoryHandle0(long lookahead)
       throws IllegalArgumentException;
 
   private long lookahead_;

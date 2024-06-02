@@ -107,11 +107,7 @@ public class CompactionOptions extends RocksObject {
   }
 
   private static native long newCompactionOptions();
-  @Override
-  protected final void disposeInternal(final long handle) {
-    disposeInternalJni(handle);
-  }
-  private static native void disposeInternalJni(final long handle);
+  @Override protected final native void disposeInternal(final long handle);
 
   private static native byte compression(final long handle);
   private static native void setCompression(final long handle,

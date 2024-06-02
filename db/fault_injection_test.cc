@@ -338,7 +338,8 @@ class FaultInjectionTest
                      FaultInjectionTest::kValExpectNoError));
   }
 
-  void NoWriteTestPreFault() {}
+  void NoWriteTestPreFault() {
+  }
 
   void NoWriteTestReopenWithFault(ResetMethod reset_method) {
     CloseDB();
@@ -443,7 +444,7 @@ TEST_P(FaultInjectionTest, UninstalledCompaction) {
   options_.level0_stop_writes_trigger = 1 << 10;
   options_.level0_slowdown_writes_trigger = 1 << 10;
   options_.max_background_compactions = 1;
-  ASSERT_OK(OpenDB());
+  OpenDB();
 
   if (!sequential_order_) {
     ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
@@ -572,16 +573,14 @@ TEST_P(FaultInjectionTest, NoDuplicateTrailingEntries) {
     edit.SetColumnFamily(0);
     std::string buf;
     assert(edit.EncodeTo(&buf));
-    const Status s = log_writer->AddRecord(WriteOptions(), buf);
+    const Status s = log_writer->AddRecord(buf);
     ASSERT_NOK(s);
   }
 
   fault_fs->DisableWriteErrorInjection();
 
-  // Flush remaining data from its buffer to underlying file.
-  ASSERT_OK(log_writer->file()->writable_file()->Sync(IOOptions(),
-                                                      nullptr /* dbg */));
-  // Closing the log writer will cause WritableFileWriter::Close()
+  // Closing the log writer will cause WritableFileWriter::Close() and flush
+  // remaining data from its buffer to underlying file.
   log_writer.reset();
 
   {
@@ -632,7 +631,6 @@ INSTANTIATE_TEST_CASE_P(
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

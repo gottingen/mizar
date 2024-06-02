@@ -5,8 +5,6 @@
 //
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::WriteBatch methods testing from Java side.
-#include "rocksdb/write_batch.h"
-
 #include <memory>
 
 #include "db/memtable.h"
@@ -20,8 +18,10 @@
 #include "rocksdb/env.h"
 #include "rocksdb/memtablerep.h"
 #include "rocksdb/status.h"
+#include "rocksdb/write_batch.h"
 #include "rocksdb/write_buffer_manager.h"
 #include "rocksjni/portal.h"
+#include "table/scoped_arena_iterator.h"
 #include "test_util/testharness.h"
 #include "util/string_util.h"
 
@@ -58,9 +58,8 @@ jbyteArray Java_org_rocksdb_WriteBatchTest_getContents(JNIEnv* env,
                                                         nullptr, nullptr);
   unsigned int count = 0;
   ROCKSDB_NAMESPACE::Arena arena;
-  ROCKSDB_NAMESPACE::ScopedArenaPtr<ROCKSDB_NAMESPACE::InternalIterator> iter(
-      mem->NewIterator(ROCKSDB_NAMESPACE::ReadOptions(),
-                       /*seqno_to_time_mapping=*/nullptr, &arena));
+  ROCKSDB_NAMESPACE::ScopedArenaIterator iter(
+      mem->NewIterator(ROCKSDB_NAMESPACE::ReadOptions(), &arena));
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     ROCKSDB_NAMESPACE::ParsedInternalKey ikey;
     ikey.clear();
@@ -120,7 +119,7 @@ jbyteArray Java_org_rocksdb_WriteBatchTest_getContents(JNIEnv* env,
         break;
     }
     state.append("@");
-    state.append(std::to_string(ikey.sequence));
+    state.append(ROCKSDB_NAMESPACE::ToString(ikey.sequence));
   }
   if (!s.ok()) {
     state.append(s.ToString());

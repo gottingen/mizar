@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "table/cuckoo/cuckoo_table_builder.h"
 
@@ -41,13 +42,11 @@ class CuckooBuilderTest : public testing::Test {
   }
 
   void CheckFileContents(const std::vector<std::string>& keys,
-                         const std::vector<std::string>& values,
-                         const std::vector<uint64_t>& expected_locations,
-                         std::string expected_unused_bucket,
-                         uint64_t expected_table_size,
-                         uint32_t expected_num_hash_func,
-                         bool expected_is_last_level,
-                         uint32_t expected_cuckoo_block_size = 1) {
+      const std::vector<std::string>& values,
+      const std::vector<uint64_t>& expected_locations,
+      std::string expected_unused_bucket, uint64_t expected_table_size,
+      uint32_t expected_num_hash_func, bool expected_is_last_level,
+      uint32_t expected_cuckoo_block_size = 1) {
     uint64_t num_deletions = 0;
     for (const auto& key : keys) {
       ParsedInternalKey parsed;
@@ -70,49 +69,42 @@ class CuckooBuilderTest : public testing::Test {
 
     // Assert Table Properties.
     std::unique_ptr<TableProperties> props;
-    const ReadOptions read_options;
     ASSERT_OK(ReadTableProperties(file_reader.get(), read_file_size,
-                                  kCuckooTableMagicNumber, ioptions,
-                                  read_options, &props));
+                                  kCuckooTableMagicNumber, ioptions, &props));
     // Check unused bucket.
-    std::string unused_key =
-        props->user_collected_properties[CuckooTablePropertyNames::kEmptyKey];
-    ASSERT_EQ(expected_unused_bucket.substr(0, props->fixed_key_len),
-              unused_key);
+    std::string unused_key = props->user_collected_properties[
+      CuckooTablePropertyNames::kEmptyKey];
+    ASSERT_EQ(expected_unused_bucket.substr(0,
+          props->fixed_key_len), unused_key);
 
-    uint64_t value_len_found = *reinterpret_cast<const uint64_t*>(
-        props->user_collected_properties[CuckooTablePropertyNames::kValueLength]
-            .data());
+    uint64_t value_len_found =
+      *reinterpret_cast<const uint64_t*>(props->user_collected_properties[
+                CuckooTablePropertyNames::kValueLength].data());
     ASSERT_EQ(values.empty() ? 0 : values[0].size(), value_len_found);
-    ASSERT_EQ(props->raw_value_size, values.size() * value_len_found);
-    const uint64_t table_size = *reinterpret_cast<const uint64_t*>(
-        props
-            ->user_collected_properties
-                [CuckooTablePropertyNames::kHashTableSize]
-            .data());
+    ASSERT_EQ(props->raw_value_size, values.size()*value_len_found);
+    const uint64_t table_size =
+      *reinterpret_cast<const uint64_t*>(props->user_collected_properties[
+                CuckooTablePropertyNames::kHashTableSize].data());
     ASSERT_EQ(expected_table_size, table_size);
-    const uint32_t num_hash_func_found = *reinterpret_cast<const uint32_t*>(
-        props->user_collected_properties[CuckooTablePropertyNames::kNumHashFunc]
-            .data());
+    const uint32_t num_hash_func_found =
+      *reinterpret_cast<const uint32_t*>(props->user_collected_properties[
+                CuckooTablePropertyNames::kNumHashFunc].data());
     ASSERT_EQ(expected_num_hash_func, num_hash_func_found);
-    const uint32_t cuckoo_block_size = *reinterpret_cast<const uint32_t*>(
-        props
-            ->user_collected_properties
-                [CuckooTablePropertyNames::kCuckooBlockSize]
-            .data());
+    const uint32_t cuckoo_block_size =
+      *reinterpret_cast<const uint32_t*>(props->user_collected_properties[
+                CuckooTablePropertyNames::kCuckooBlockSize].data());
     ASSERT_EQ(expected_cuckoo_block_size, cuckoo_block_size);
-    const bool is_last_level_found = *reinterpret_cast<const bool*>(
-        props->user_collected_properties[CuckooTablePropertyNames::kIsLastLevel]
-            .data());
+    const bool is_last_level_found =
+      *reinterpret_cast<const bool*>(props->user_collected_properties[
+                CuckooTablePropertyNames::kIsLastLevel].data());
     ASSERT_EQ(expected_is_last_level, is_last_level_found);
 
     ASSERT_EQ(props->num_entries, keys.size());
     ASSERT_EQ(props->num_deletions, num_deletions);
     ASSERT_EQ(props->fixed_key_len, keys.empty() ? 0 : keys[0].size());
-    ASSERT_EQ(props->data_size,
-              expected_unused_bucket.size() *
-                  (expected_table_size + expected_cuckoo_block_size - 1));
-    ASSERT_EQ(props->raw_key_size, keys.size() * props->fixed_key_len);
+    ASSERT_EQ(props->data_size, expected_unused_bucket.size() *
+        (expected_table_size + expected_cuckoo_block_size - 1));
+    ASSERT_EQ(props->raw_key_size, keys.size()*props->fixed_key_len);
     ASSERT_EQ(props->column_family_id, 0);
     ASSERT_EQ(props->column_family_name, kDefaultColumnFamilyName);
 
@@ -163,6 +155,7 @@ class CuckooBuilderTest : public testing::Test {
     return NextPowOf2(static_cast<uint64_t>(num / kHashTableRatio));
   }
 
+
   Env* env_;
   FileOptions file_options_;
   std::string fname;
@@ -182,7 +175,7 @@ TEST_F(CuckooBuilderTest, SuccessWithEmptyFile) {
   ASSERT_OK(builder.status());
   ASSERT_EQ(0UL, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   CheckFileContents({}, {}, {}, "", 2, 2, false);
 }
 
@@ -229,7 +222,7 @@ TEST_F(CuckooBuilderTest, WriteSuccessNoCollisionFullKey) {
     size_t bucket_size = keys[0].size() + values[0].size();
     ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
     ASSERT_OK(builder.Finish());
-    ASSERT_OK(file_writer->Close(IOOptions()));
+    ASSERT_OK(file_writer->Close());
     ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
     std::string expected_unused_bucket = GetInternalKey("key00", true);
@@ -277,13 +270,13 @@ TEST_F(CuckooBuilderTest, WriteSuccessWithCollisionFullKey) {
   size_t bucket_size = keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = GetInternalKey("key00", true);
   expected_unused_bucket += std::string(values[0].size(), 'a');
-  CheckFileContents(keys, values, expected_locations, expected_unused_bucket,
-                    expected_table_size, 4, false);
+  CheckFileContents(keys, values, expected_locations,
+      expected_unused_bucket, expected_table_size, 4, false);
 }
 
 TEST_F(CuckooBuilderTest, WriteSuccessWithCollisionAndCuckooBlock) {
@@ -325,13 +318,13 @@ TEST_F(CuckooBuilderTest, WriteSuccessWithCollisionAndCuckooBlock) {
   size_t bucket_size = keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = GetInternalKey("key00", true);
   expected_unused_bucket += std::string(values[0].size(), 'a');
-  CheckFileContents(keys, values, expected_locations, expected_unused_bucket,
-                    expected_table_size, 3, false, cuckoo_block_size);
+  CheckFileContents(keys, values, expected_locations,
+      expected_unused_bucket, expected_table_size, 3, false, cuckoo_block_size);
 }
 
 TEST_F(CuckooBuilderTest, WithCollisionPathFullKey) {
@@ -339,14 +332,17 @@ TEST_F(CuckooBuilderTest, WithCollisionPathFullKey) {
   // Finally insert an element with hash value somewhere in the middle
   // so that it displaces all the elements after that.
   uint32_t num_hash_fun = 2;
-  std::vector<std::string> user_keys = {"key01", "key02", "key03", "key04",
-                                        "key05"};
+  std::vector<std::string> user_keys = {"key01", "key02", "key03",
+    "key04", "key05"};
   std::vector<std::string> values = {"v01", "v02", "v03", "v04", "v05"};
   // Need to have a temporary variable here as VS compiler does not currently
   // support operator= with initializer_list as a parameter
   std::unordered_map<std::string, std::vector<uint64_t>> hm = {
-      {user_keys[0], {0, 1}}, {user_keys[1], {1, 2}}, {user_keys[2], {2, 3}},
-      {user_keys[3], {3, 4}}, {user_keys[4], {0, 2}},
+      {user_keys[0], {0, 1}},
+      {user_keys[1], {1, 2}},
+      {user_keys[2], {2, 3}},
+      {user_keys[3], {3, 4}},
+      {user_keys[4], {0, 2}},
   };
   hash_map = std::move(hm);
 
@@ -374,25 +370,28 @@ TEST_F(CuckooBuilderTest, WithCollisionPathFullKey) {
   size_t bucket_size = keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = GetInternalKey("key00", true);
   expected_unused_bucket += std::string(values[0].size(), 'a');
-  CheckFileContents(keys, values, expected_locations, expected_unused_bucket,
-                    expected_table_size, 2, false);
+  CheckFileContents(keys, values, expected_locations,
+      expected_unused_bucket, expected_table_size, 2, false);
 }
 
 TEST_F(CuckooBuilderTest, WithCollisionPathFullKeyAndCuckooBlock) {
   uint32_t num_hash_fun = 2;
-  std::vector<std::string> user_keys = {"key01", "key02", "key03", "key04",
-                                        "key05"};
+  std::vector<std::string> user_keys = {"key01", "key02", "key03",
+    "key04", "key05"};
   std::vector<std::string> values = {"v01", "v02", "v03", "v04", "v05"};
   // Need to have a temporary variable here as VS compiler does not currently
   // support operator= with initializer_list as a parameter
   std::unordered_map<std::string, std::vector<uint64_t>> hm = {
-      {user_keys[0], {0, 1}}, {user_keys[1], {1, 2}}, {user_keys[2], {3, 4}},
-      {user_keys[3], {4, 5}}, {user_keys[4], {0, 3}},
+      {user_keys[0], {0, 1}},
+      {user_keys[1], {1, 2}},
+      {user_keys[2], {3, 4}},
+      {user_keys[3], {4, 5}},
+      {user_keys[4], {0, 3}},
   };
   hash_map = std::move(hm);
 
@@ -420,13 +419,13 @@ TEST_F(CuckooBuilderTest, WithCollisionPathFullKeyAndCuckooBlock) {
   size_t bucket_size = keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = GetInternalKey("key00", true);
   expected_unused_bucket += std::string(values[0].size(), 'a');
-  CheckFileContents(keys, values, expected_locations, expected_unused_bucket,
-                    expected_table_size, 2, false, 2);
+  CheckFileContents(keys, values, expected_locations,
+      expected_unused_bucket, expected_table_size, 2, false, 2);
 }
 
 TEST_F(CuckooBuilderTest, WriteSuccessNoCollisionUserKey) {
@@ -463,13 +462,13 @@ TEST_F(CuckooBuilderTest, WriteSuccessNoCollisionUserKey) {
   size_t bucket_size = user_keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = "key00";
   expected_unused_bucket += std::string(values[0].size(), 'a');
   CheckFileContents(user_keys, values, expected_locations,
-                    expected_unused_bucket, expected_table_size, 2, true);
+      expected_unused_bucket, expected_table_size, 2, true);
 }
 
 TEST_F(CuckooBuilderTest, WriteSuccessWithCollisionUserKey) {
@@ -507,25 +506,28 @@ TEST_F(CuckooBuilderTest, WriteSuccessWithCollisionUserKey) {
   size_t bucket_size = user_keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = "key00";
   expected_unused_bucket += std::string(values[0].size(), 'a');
   CheckFileContents(user_keys, values, expected_locations,
-                    expected_unused_bucket, expected_table_size, 4, true);
+      expected_unused_bucket, expected_table_size, 4, true);
 }
 
 TEST_F(CuckooBuilderTest, WithCollisionPathUserKey) {
   uint32_t num_hash_fun = 2;
-  std::vector<std::string> user_keys = {"key01", "key02", "key03", "key04",
-                                        "key05"};
+  std::vector<std::string> user_keys = {"key01", "key02", "key03",
+    "key04", "key05"};
   std::vector<std::string> values = {"v01", "v02", "v03", "v04", "v05"};
   // Need to have a temporary variable here as VS compiler does not currently
   // support operator= with initializer_list as a parameter
   std::unordered_map<std::string, std::vector<uint64_t>> hm = {
-      {user_keys[0], {0, 1}}, {user_keys[1], {1, 2}}, {user_keys[2], {2, 3}},
-      {user_keys[3], {3, 4}}, {user_keys[4], {0, 2}},
+      {user_keys[0], {0, 1}},
+      {user_keys[1], {1, 2}},
+      {user_keys[2], {2, 3}},
+      {user_keys[3], {3, 4}},
+      {user_keys[4], {0, 2}},
   };
   hash_map = std::move(hm);
 
@@ -550,13 +552,13 @@ TEST_F(CuckooBuilderTest, WithCollisionPathUserKey) {
   size_t bucket_size = user_keys[0].size() + values[0].size();
   ASSERT_EQ(expected_table_size * bucket_size - 1, builder.FileSize());
   ASSERT_OK(builder.Finish());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
   ASSERT_LE(expected_table_size * bucket_size, builder.FileSize());
 
   std::string expected_unused_bucket = "key00";
   expected_unused_bucket += std::string(values[0].size(), 'a');
   CheckFileContents(user_keys, values, expected_locations,
-                    expected_unused_bucket, expected_table_size, 2, true);
+      expected_unused_bucket, expected_table_size, 2, true);
 }
 
 TEST_F(CuckooBuilderTest, FailWhenCollisionPathTooLong) {
@@ -564,13 +566,16 @@ TEST_F(CuckooBuilderTest, FailWhenCollisionPathTooLong) {
   // Finally try inserting an element with hash value somewhere in the middle
   // and it should fail because the no. of elements to displace is too high.
   uint32_t num_hash_fun = 2;
-  std::vector<std::string> user_keys = {"key01", "key02", "key03", "key04",
-                                        "key05"};
+  std::vector<std::string> user_keys = {"key01", "key02", "key03",
+    "key04", "key05"};
   // Need to have a temporary variable here as VS compiler does not currently
   // support operator= with initializer_list as a parameter
   std::unordered_map<std::string, std::vector<uint64_t>> hm = {
-      {user_keys[0], {0, 1}}, {user_keys[1], {1, 2}}, {user_keys[2], {2, 3}},
-      {user_keys[3], {3, 4}}, {user_keys[4], {0, 1}},
+      {user_keys[0], {0, 1}},
+      {user_keys[1], {1, 2}},
+      {user_keys[2], {2, 3}},
+      {user_keys[3], {3, 4}},
+      {user_keys[4], {0, 1}},
   };
   hash_map = std::move(hm);
 
@@ -589,7 +594,7 @@ TEST_F(CuckooBuilderTest, FailWhenCollisionPathTooLong) {
     ASSERT_OK(builder.status());
   }
   ASSERT_TRUE(builder.Finish().IsNotSupported());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
 }
 
 TEST_F(CuckooBuilderTest, FailWhenSameKeyInserted) {
@@ -619,12 +624,21 @@ TEST_F(CuckooBuilderTest, FailWhenSameKeyInserted) {
   ASSERT_OK(builder.status());
 
   ASSERT_TRUE(builder.Finish().IsNotSupported());
-  ASSERT_OK(file_writer->Close(IOOptions()));
+  ASSERT_OK(file_writer->Close());
 }
 }  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
+#else
+#include <stdio.h>
+
+int main(int /*argc*/, char** /*argv*/) {
+  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in ROCKSDB_LITE\n");
+  return 0;
+}
+
+#endif  // ROCKSDB_LITE

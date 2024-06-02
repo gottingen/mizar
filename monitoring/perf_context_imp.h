@@ -9,11 +9,11 @@
 #include "util/stop_watch.h"
 
 namespace ROCKSDB_NAMESPACE {
-#if defined(NPERF_CONTEXT)
+#if defined(NPERF_CONTEXT) || !defined(ROCKSDB_SUPPORT_THREAD_LOCAL)
 extern PerfContext perf_context;
 #else
 #if defined(OS_SOLARIS)
-extern thread_local PerfContext perf_context_;
+extern __thread PerfContext perf_context_;
 #define perf_context (*get_perf_context())
 #else
 extern thread_local PerfContext perf_context;
@@ -29,7 +29,6 @@ extern thread_local PerfContext perf_context;
 #define PERF_CPU_TIMER_GUARD(metric, clock)
 #define PERF_CONDITIONAL_TIMER_FOR_MUTEX_GUARD(metric, condition, stats, \
                                                ticker_type)
-#define PERF_TIMER_FOR_WAIT_GUARD(metric)
 #define PERF_TIMER_MEASURE(metric)
 #define PERF_COUNTER_ADD(metric, value)
 #define PERF_COUNTER_BY_LEVEL_ADD(metric, value, level)
@@ -67,11 +66,6 @@ extern thread_local PerfContext perf_context;
     perf_step_timer_##metric.Start();                                          \
   }
 
-#define PERF_TIMER_FOR_WAIT_GUARD(metric)                                 \
-  PerfStepTimer perf_step_timer_##metric(&(perf_context.metric), nullptr, \
-                                         false, PerfLevel::kEnableWait);  \
-  perf_step_timer_##metric.Start();
-
 // Update metric with time elapsed since last START. start time is reset
 // to current timestamp.
 #define PERF_TIMER_MEASURE(metric) perf_step_timer_##metric.Measure();
@@ -80,8 +74,7 @@ extern thread_local PerfContext perf_context;
 #define PERF_COUNTER_ADD(metric, value)        \
   if (perf_level >= PerfLevel::kEnableCount) { \
     perf_context.metric += value;              \
-  }                                            \
-  static_assert(true, "semicolon required")
+  }
 
 // Increase metric value
 #define PERF_COUNTER_BY_LEVEL_ADD(metric, value, level)               \

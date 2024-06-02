@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-
 #include "port/port.h"
 #include "util/autovector.h"
 
@@ -38,11 +37,11 @@ namespace ROCKSDB_NAMESPACE {
 // std::priority_queue: the comparison operator is expected to provide the
 // less-than relation, but top() will return the maximum.
 
-template <typename T, typename Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 class BinaryHeap {
  public:
-  BinaryHeap() {}
-  explicit BinaryHeap(Compare cmp) : cmp_(std::move(cmp)) {}
+  BinaryHeap() { }
+  explicit BinaryHeap(Compare cmp) : cmp_(std::move(cmp)) { }
 
   void push(const T& value) {
     data_.push_back(value);
@@ -87,7 +86,7 @@ class BinaryHeap {
     }
   }
 
-  void swap(BinaryHeap& other) {
+  void swap(BinaryHeap &other) {
     std::swap(cmp_, other.cmp_);
     data_.swap(other.data_);
     std::swap(root_cmp_cache_, other.root_cmp_cache_);
@@ -102,9 +101,7 @@ class BinaryHeap {
 
   size_t size() const { return data_.size(); }
 
-  void reset_root_cmp_cache() {
-    root_cmp_cache_ = std::numeric_limits<size_t>::max();
-  }
+  void reset_root_cmp_cache() { root_cmp_cache_ = port::kMaxSizet; }
 
  private:
   static inline size_t get_root() { return 0; }
@@ -129,7 +126,7 @@ class BinaryHeap {
   void downheap(size_t index) {
     T v = std::move(data_[index]);
 
-    size_t picked_child = std::numeric_limits<size_t>::max();
+    size_t picked_child = port::kMaxSizet;
     while (1) {
       const size_t left_child = get_left(index);
       if (get_left(index) >= data_.size()) {
@@ -168,7 +165,7 @@ class BinaryHeap {
   Compare cmp_;
   autovector<T> data_;
   // Used to reduce number of cmp_ calls in downheap()
-  size_t root_cmp_cache_ = std::numeric_limits<size_t>::max();
+  size_t root_cmp_cache_ = port::kMaxSizet;
 };
 
 }  // namespace ROCKSDB_NAMESPACE

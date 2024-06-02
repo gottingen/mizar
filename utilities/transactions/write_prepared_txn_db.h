@@ -4,6 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
+#ifndef ROCKSDB_LITE
 
 #include <cinttypes>
 #include <mutex>
@@ -60,8 +61,9 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
 
   virtual ~WritePreparedTxnDB();
 
-  Status Initialize(const std::vector<size_t>& compaction_enabled_cf_indices,
-                    const std::vector<ColumnFamilyHandle*>& handles) override;
+  virtual Status Initialize(
+      const std::vector<size_t>& compaction_enabled_cf_indices,
+      const std::vector<ColumnFamilyHandle*>& handles) override;
 
   Transaction* BeginTransaction(const WriteOptions& write_options,
                                 const TransactionOptions& txn_options,
@@ -82,24 +84,26 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
                        size_t batch_cnt, WritePreparedTxn* txn);
 
   using DB::Get;
-  Status Get(const ReadOptions& _read_options,
-             ColumnFamilyHandle* column_family, const Slice& key,
-             PinnableSlice* value, std::string* timestamp) override;
+  virtual Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     PinnableSlice* value) override;
 
   using DB::MultiGet;
-  void MultiGet(const ReadOptions& _read_options, const size_t num_keys,
-                ColumnFamilyHandle** column_families, const Slice* keys,
-                PinnableSlice* values, std::string* timestamps,
-                Status* statuses, const bool sorted_input) override;
+  virtual std::vector<Status> MultiGet(
+      const ReadOptions& options,
+      const std::vector<ColumnFamilyHandle*>& column_family,
+      const std::vector<Slice>& keys,
+      std::vector<std::string>* values) override;
 
   using DB::NewIterator;
-  Iterator* NewIterator(const ReadOptions& _read_options,
-                        ColumnFamilyHandle* column_family) override;
+  virtual Iterator* NewIterator(const ReadOptions& options,
+                                ColumnFamilyHandle* column_family) override;
 
   using DB::NewIterators;
-  Status NewIterators(const ReadOptions& _read_options,
-                      const std::vector<ColumnFamilyHandle*>& column_families,
-                      std::vector<Iterator*>* iterators) override;
+  virtual Status NewIterators(
+      const ReadOptions& options,
+      const std::vector<ColumnFamilyHandle*>& column_families,
+      std::vector<Iterator*>* iterators) override;
 
   // Check whether the transaction that wrote the value with sequence number seq
   // is visible to the snapshot with sequence number snapshot_seq.
@@ -393,8 +397,8 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
       if (delta >= format.DELTA_UPPERBOUND) {
         throw std::runtime_error(
             "commit_seq >> prepare_seq. The allowed distance is " +
-            std::to_string(format.DELTA_UPPERBOUND) + " commit_seq is " +
-            std::to_string(cs) + " prepare_seq is " + std::to_string(ps));
+            ToString(format.DELTA_UPPERBOUND) + " commit_seq is " +
+            ToString(cs) + " prepare_seq is " + ToString(ps));
       }
       rep_ = (ps << format.PAD_BITS) & ~format.COMMIT_FILTER;
       rep_ = rep_ | delta;
@@ -437,11 +441,12 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
       const std::vector<ColumnFamilyHandle*>& handles) override;
   void UpdateCFComparatorMap(ColumnFamilyHandle* handle) override;
 
-  const Snapshot* GetSnapshot() override;
+  virtual const Snapshot* GetSnapshot() override;
   SnapshotImpl* GetSnapshotInternal(bool for_ww_conflict_check);
 
  protected:
-  Status VerifyCFOptions(const ColumnFamilyOptions& cf_options) override;
+  virtual Status VerifyCFOptions(
+      const ColumnFamilyOptions& cf_options) override;
   // Assign the min and max sequence numbers for reading from the db. A seq >
   // max is not valid, and a seq < min is valid, and a min <= seq < max requires
   // further checking. Normally max is defined by the snapshot and min is by
@@ -459,16 +464,6 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
       std::memory_order order = std::memory_order_relaxed);
   // Get a dummy snapshot that refers to kMaxSequenceNumber
   Snapshot* GetMaxSnapshot() { return &dummy_max_snapshot_; }
-
-  bool ShouldRollbackWithSingleDelete(ColumnFamilyHandle* column_family,
-                                      const Slice& key) {
-    return rollback_deletion_type_callback_
-               ? rollback_deletion_type_callback_(this, column_family, key)
-               : false;
-  }
-
-  std::function<bool(TransactionDB*, ColumnFamilyHandle*, const Slice&)>
-      rollback_deletion_type_callback_;
 
  private:
   friend class AddPreparedCallback;
@@ -508,28 +503,12 @@ class WritePreparedTxnDB : public PessimisticTransactionDB {
   friend class WriteUnpreparedTxn;
   friend class WriteUnpreparedTxnDB;
   friend class WriteUnpreparedTransactionTest_RecoveryTest_Test;
-  friend class MultiOpsTxnsStressTest;
 
-  void Init(const TransactionDBOptions& txn_db_opts);
+  void Init(const TransactionDBOptions& /* unused */);
 
   void WPRecordTick(uint32_t ticker_type) const {
     RecordTick(db_impl_->immutable_db_options_.statistics.get(), ticker_type);
   }
-
-  Status GetImpl(const ReadOptions& options, ColumnFamilyHandle* column_family,
-                 const Slice& key, std::string* value) {
-    assert(value != nullptr);
-    PinnableSlice pinnable_val(value);
-    assert(!pinnable_val.IsPinned());
-    auto s = GetImpl(options, column_family, key, &pinnable_val);
-    if (s.ok() && pinnable_val.IsPinned()) {
-      value->assign(pinnable_val.data(), pinnable_val.size());
-    }  // else value is already assigned
-    return s;
-  }
-
-  Status GetImpl(const ReadOptions& options, ColumnFamilyHandle* column_family,
-                 const Slice& key, PinnableSlice* value);
 
   // A heap with the amortized O(1) complexity for erase. It uses one extra heap
   // to keep track of erased entries that are not yet on top of the main heap.
@@ -841,7 +820,7 @@ class WritePreparedTxnReadCallback : public ReadCallback {
 
   // Will be called to see if the seq number visible; if not it moves on to
   // the next seq number.
-  inline bool IsVisibleFullCheck(SequenceNumber seq) override {
+  inline virtual bool IsVisibleFullCheck(SequenceNumber seq) override {
     auto snapshot = max_visible_seq_;
     bool snap_released = false;
     auto ret =
@@ -878,9 +857,10 @@ class AddPreparedCallback : public PreReleaseCallback {
         first_prepare_batch_(first_prepare_batch) {
     (void)two_write_queues_;  // to silence unused private field warning
   }
-  Status Callback(SequenceNumber prepare_seq,
-                  bool is_mem_disabled __attribute__((__unused__)),
-                  uint64_t log_number, size_t index, size_t total) override {
+  virtual Status Callback(SequenceNumber prepare_seq,
+                          bool is_mem_disabled __attribute__((__unused__)),
+                          uint64_t log_number, size_t index,
+                          size_t total) override {
     assert(index < total);
     // To reduce the cost of lock acquisition competing with the concurrent
     // prepare requests, lock on the first callback and unlock on the last.
@@ -941,9 +921,10 @@ class WritePreparedCommitEntryPreReleaseCallback : public PreReleaseCallback {
     assert((aux_batch_cnt_ > 0) != (aux_seq == kMaxSequenceNumber));  // xor
   }
 
-  Status Callback(SequenceNumber commit_seq,
-                  bool is_mem_disabled __attribute__((__unused__)), uint64_t,
-                  size_t /*index*/, size_t /*total*/) override {
+  virtual Status Callback(SequenceNumber commit_seq,
+                          bool is_mem_disabled __attribute__((__unused__)),
+                          uint64_t, size_t /*index*/,
+                          size_t /*total*/) override {
     // Always commit from the 2nd queue
     assert(!db_impl_->immutable_db_options().two_write_queues ||
            is_mem_disabled);
@@ -1090,9 +1071,7 @@ struct SubBatchCounter : public WriteBatch::Handler {
   }
   Status MarkBeginPrepare(bool) override { return Status::OK(); }
   Status MarkRollback(const Slice&) override { return Status::OK(); }
-  Handler::OptionState WriteAfterCommit() const override {
-    return Handler::OptionState::kDisabled;
-  }
+  bool WriteAfterCommit() const override { return false; }
 };
 
 SnapshotBackup WritePreparedTxnDB::AssignMinMaxSeqs(const Snapshot* snapshot,
@@ -1130,3 +1109,4 @@ bool WritePreparedTxnDB::ValidateSnapshot(
 }
 
 }  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

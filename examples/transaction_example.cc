@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
@@ -194,3 +195,4 @@ int main() {
   return 0;
 }
 
+#endif  // ROCKSDB_LITE

@@ -24,13 +24,9 @@
 #endif  // ROCKSDB_JEMALLOC && ROCKSDB_PLATFORM_POSIX
 
 namespace ROCKSDB_NAMESPACE {
-
-// Allocation requests are randomly sharded across
-// `JemallocAllocatorOptions::num_arenas` arenas to reduce contention on per-
-// arena mutexes.
 class JemallocNodumpAllocator : public BaseMemoryAllocator {
  public:
-  explicit JemallocNodumpAllocator(const JemallocAllocatorOptions& options);
+  explicit JemallocNodumpAllocator(JemallocAllocatorOptions& options);
 #ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
   ~JemallocNodumpAllocator();
 #endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
@@ -42,7 +38,7 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
     return IsSupported(&unused);
   }
   static bool IsSupported(std::string* why);
-  bool IsMutable() const { return !init_; }
+  bool IsMutable() const { return arena_index_ == 0; }
 
   Status PrepareOptions(const ConfigOptions& config_options) override;
 
@@ -56,7 +52,9 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
 #ifdef ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
   Status InitializeArenas();
 
-  uint32_t GetArenaIndex() const;
+  friend Status NewJemallocNodumpAllocator(
+      JemallocAllocatorOptions& options,
+      std::shared_ptr<MemoryAllocator>* memory_allocator);
 
   // Custom alloc hook to replace jemalloc default alloc.
   static void* Alloc(extent_hooks_t* extent, void* new_addr, size_t size,
@@ -64,7 +62,7 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
                      unsigned arena_ind);
 
   // Destroy arena on destruction of the allocator, or on failure.
-  static Status DestroyArena(uint32_t arena_index);
+  static Status DestroyArena(unsigned arena_index);
 
   // Destroy tcache on destruction of the allocator, or thread exit.
   static void DestroyThreadSpecificCache(void* ptr);
@@ -80,20 +78,17 @@ class JemallocNodumpAllocator : public BaseMemoryAllocator {
   // NewJemallocNodumpAllocator is thread-safe.
   //
   // Hack: original_alloc_ needs to be static for Alloc() to access it.
-  // alloc needs to be static to pass to jemalloc as function pointer. We can
-  // use a single process-wide value as long as we assume that any newly created
-  // arena has the same original value in its `alloc` function pointer.
+  // alloc needs to be static to pass to jemalloc as function pointer.
   static std::atomic<extent_alloc_t*> original_alloc_;
 
   // Custom hooks has to outlive corresponding arena.
-  std::vector<std::unique_ptr<extent_hooks_t>> per_arena_hooks_;
+  std::unique_ptr<extent_hooks_t> arena_hooks_;
 
   // Hold thread-local tcache index.
   ThreadLocalPtr tcache_;
-
-  std::vector<uint32_t> arena_indexes_;
 #endif  // ROCKSDB_JEMALLOC_NODUMP_ALLOCATOR
 
-  bool init_ = false;
+  // Arena index.
+  unsigned arena_index_;
 };
 }  // namespace ROCKSDB_NAMESPACE

@@ -11,7 +11,6 @@ import java.util.List;
 /**
  * The metadata that describes a level.
  */
-@SuppressWarnings("PMD.MissingStaticMethodInNonInstantiatableClass")
 public class LevelMetaData {
   private final int level;
   private final long size;

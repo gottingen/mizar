@@ -164,11 +164,10 @@ TEST_F(DynamicBloomTest, VaryingLengths) {
               "%5.2f%% @ num = %6u, bloom_bits = %6u\n",
               nonseq ? "nonseq" : "seq", rate * 100.0, num, bloom_bits);
 
-      if (rate > 0.0125) {
+      if (rate > 0.0125)
         mediocre_filters++;  // Allowed, but not too often
-      } else {
+      else
         good_filters++;
-      }
     }
   }
 
@@ -315,8 +314,7 @@ TEST_F(DynamicBloomTest, concurrent_with_perf) {
 
 }  // namespace ROCKSDB_NAMESPACE
 
-int main(int argc, char **argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   ParseCommandLineFlags(&argc, &argv, true);
 

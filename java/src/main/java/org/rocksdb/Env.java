@@ -7,13 +7,25 @@ package org.rocksdb;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Base class for all Env implementations in RocksDB.
  */
 public abstract class Env extends RocksObject {
-  private static final AtomicReference<RocksEnv> SINGULAR_DEFAULT_ENV = new AtomicReference<>(null);
+
+  static {
+    RocksDB.loadLibrary();
+  }
+
+  private static final Env DEFAULT_ENV = new RocksEnv(getDefaultEnvInternal());
+  static {
+    /**
+     * The Ownership of the Default Env belongs to C++
+     * and so we disown the native handle here so that
+     * we cannot accidentally free it from Java.
+     */
+    DEFAULT_ENV.disOwnNativeHandle();
+  }
 
   /**
    * <p>Returns the default environment suitable for the current operating
@@ -26,32 +38,8 @@ public abstract class Env extends RocksObject {
    *
    * @return the default {@link org.rocksdb.RocksEnv} instance.
    */
-  @SuppressWarnings({"PMD.CloseResource", "PMD.AssignmentInOperand"})
   public static Env getDefault() {
-    RocksEnv defaultEnv;
-    RocksEnv newDefaultEnv = null;
-
-    while ((defaultEnv = SINGULAR_DEFAULT_ENV.get()) == null) {
-      // construct the RocksEnv only once in this thread
-      if (newDefaultEnv == null) {
-        // load the library just in-case it isn't already loaded!
-        RocksDB.loadLibrary();
-
-        newDefaultEnv = new RocksEnv(getDefaultEnvInternal());
-
-        /*
-         * The Ownership of the Default Env belongs to C++
-         *  and so we disown the native handle here so that
-         * we cannot accidentally free it from Java.
-         */
-        newDefaultEnv.disOwnNativeHandle();
-      }
-
-      // use CAS to gracefully handle thread pre-emption
-      SINGULAR_DEFAULT_ENV.compareAndSet(null, newDefaultEnv);
-    }
-
-    return defaultEnv;
+    return DEFAULT_ENV;
   }
 
   /**
@@ -162,13 +150,18 @@ public abstract class Env extends RocksObject {
   }
 
   private static native long getDefaultEnvInternal();
-  private static native void setBackgroundThreads(
+  private native void setBackgroundThreads(
       final long handle, final int number, final byte priority);
-  private static native int getBackgroundThreads(final long handle, final byte priority);
-  private static native int getThreadPoolQueueLen(final long handle, final byte priority);
-  private static native void incBackgroundThreadsIfNeeded(
-      final long handle, final int number, final byte priority);
-  private static native void lowerThreadPoolIOPriority(final long handle, final byte priority);
-  private static native void lowerThreadPoolCPUPriority(final long handle, final byte priority);
-  private static native ThreadStatus[] getThreadList(final long handle) throws RocksDBException;
+  private native int getBackgroundThreads(final long handle,
+    final byte priority);
+  private native int getThreadPoolQueueLen(final long handle,
+      final byte priority);
+  private native void incBackgroundThreadsIfNeeded(final long handle,
+      final int number, final byte priority);
+  private native void lowerThreadPoolIOPriority(final long handle,
+      final byte priority);
+  private native void lowerThreadPoolCPUPriority(final long handle,
+      final byte priority);
+  private native ThreadStatus[] getThreadList(final long handle)
+      throws RocksDBException;
 }

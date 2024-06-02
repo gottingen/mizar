@@ -104,11 +104,11 @@ struct StandardKeyGen {
     return str_;
   }
 
-  bool operator==(const StandardKeyGen& other) const {
+  bool operator==(const StandardKeyGen& other) {
     // Same prefix is assumed
     return id_ == other.id_;
   }
-  bool operator!=(const StandardKeyGen& other) const {
+  bool operator!=(const StandardKeyGen& other) {
     // Same prefix is assumed
     return id_ != other.id_;
   }
@@ -144,8 +144,8 @@ struct SmallKeyGen {
     return str_;
   }
 
-  bool operator==(const SmallKeyGen& other) const { return id_ == other.id_; }
-  bool operator!=(const SmallKeyGen& other) const { return id_ != other.id_; }
+  bool operator==(const SmallKeyGen& other) { return id_ == other.id_; }
+  bool operator!=(const SmallKeyGen& other) { return id_ != other.id_; }
 
   uint64_t id_;
   std::string str_;
@@ -836,10 +836,9 @@ TYPED_TEST(RibbonTypeParamTest, CompactnessAndBacktrackAndFpRate) {
       double single_failure_rate = 1.0 * total_single_failures / total_singles;
       fprintf(stderr, "Add'l single, failure rate: %g\n", single_failure_rate);
       // A rough bound (one sided) based on nothing in particular
-      double expected_single_failures = 1.0 * total_singles /
-                                        (sizeof(CoeffRow) == 16 ? 128
-                                         : TypeParam::kUseSmash ? 64
-                                                                : 32);
+      double expected_single_failures =
+          1.0 * total_singles /
+          (sizeof(CoeffRow) == 16 ? 128 : TypeParam::kUseSmash ? 64 : 32);
       EXPECT_LE(total_single_failures,
                 InfrequentPoissonUpperBound(expected_single_failures));
     }
@@ -1069,11 +1068,11 @@ struct PhsfInputGen {
 
   const std::pair<std::string, uint8_t>* operator->() { return &**this; }
 
-  bool operator==(const PhsfInputGen& other) const {
+  bool operator==(const PhsfInputGen& other) {
     // Same prefix is assumed
     return id_ == other.id_;
   }
-  bool operator!=(const PhsfInputGen& other) const {
+  bool operator!=(const PhsfInputGen& other) {
     // Same prefix is assumed
     return id_ != other.id_;
   }
@@ -1129,7 +1128,8 @@ TYPED_TEST(RibbonTypeParamTest, FindOccupancy) {
     return;
   }
 
-  KeyGen cur(std::to_string(testing::UnitTest::GetInstance()->random_seed()),
+  KeyGen cur(ROCKSDB_NAMESPACE::ToString(
+                 testing::UnitTest::GetInstance()->random_seed()),
              0);
 
   Banding banding;
@@ -1247,7 +1247,8 @@ TYPED_TEST(RibbonTypeParamTest, OptimizeHomogAtScale) {
     return;
   }
 
-  KeyGen cur(std::to_string(testing::UnitTest::GetInstance()->random_seed()),
+  KeyGen cur(ROCKSDB_NAMESPACE::ToString(
+                 testing::UnitTest::GetInstance()->random_seed()),
              0);
 
   Banding banding;
@@ -1299,7 +1300,6 @@ TYPED_TEST(RibbonTypeParamTest, OptimizeHomogAtScale) {
 }
 
 int main(int argc, char** argv) {
-  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
 #ifdef GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);

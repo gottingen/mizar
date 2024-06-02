@@ -3,6 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/transaction_util.h"
 
@@ -78,7 +79,7 @@ Status TransactionUtil::CheckKey(DBImpl* db_impl, SuperVersion* sv,
       result = Status::TryAgain(
           "Transaction could not check for conflicts as the MemTable does not "
           "contain a long enough history to check write at SequenceNumber: ",
-          std::to_string(snap_seq));
+          ToString(snap_seq));
     }
   } else if (snap_seq < earliest_seq || min_uncommitted <= earliest_seq) {
     // Use <= for min_uncommitted since earliest_seq is actually the largest sec
@@ -163,7 +164,7 @@ Status TransactionUtil::CheckKeysForConflicts(DBImpl* db_impl,
     SuperVersion* sv = db_impl->GetAndRefSuperVersion(cf);
     if (sv == nullptr) {
       result = Status::InvalidArgument("Could not access column family " +
-                                       std::to_string(cf));
+                                       ToString(cf));
       break;
     }
 
@@ -202,3 +203,4 @@ Status TransactionUtil::CheckKeysForConflicts(DBImpl* db_impl,
 
 }  // namespace ROCKSDB_NAMESPACE
 
+#endif  // ROCKSDB_LITE
