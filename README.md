@@ -23,20 +23,9 @@ so the program executable file is independent of the system environment.
 ```bash
 git clone https://github.com/goettingen/essential.git
 cd essential
-./install.sh
+./install_base.sh
 ```
-### install gottingen/turbo
 
-```bash
-git clone https://github.com/goettingen/turbo.git
-cd turbo
-git checkout v0.5.6
-mkdir build
-cd build
-cmake ..
-make -j 6
-make pacakge
-sudo dpkg -i package/turbo-*.deb # or rpm -ivh package/turbo*.rpm
 ```
 using pacakge to install is convenient for uninstalling.
 
@@ -49,6 +38,7 @@ mkdir build
 cd build
 cmake ..
 make -j 6
+make package
 ```
 
 

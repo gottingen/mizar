@@ -1066,11 +1066,14 @@ if (MIZAR_BUILD_SHARED)
     endif ()
 endif ()
 
+set(MIZAR_LIB ${MIZAR_STATIC_LIB})
+#[[
 if (MIZAR_BUILD_SHARED AND NOT WIN32)
     set(MIZAR_LIB ${MIZAR_SHARED_LIB})
 else ()
     set(MIZAR_LIB ${MIZAR_STATIC_LIB})
 endif ()
+]]
 
 option(WITH_JNI "build with JNI" OFF)
 # Tests are excluded from Release builds
@@ -1484,3 +1487,4 @@ option(WITH_BENCHMARK "build benchmark tests" OFF)
 if (WITH_BENCHMARK)
     add_subdirectory(${PROJECT_SOURCE_DIR}/microbench/)
 endif ()
+include(cmake/mizar_cpack_config.cmake)
