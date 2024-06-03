@@ -89,5 +89,5 @@ endif()
 
 find_dependency(Threads)
 
-include("${CMAKE_CURRENT_LIST_DIR}/RocksDBTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/mizarTargets.cmake")
 check_required_components(RocksDB)
