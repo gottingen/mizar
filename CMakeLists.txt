@@ -99,10 +99,7 @@ else ()
     option(WITH_FOLLY_DISTRIBUTED_MUTEX "build with folly::DistributedMutex" OFF)
 endif ()
 
-if (NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
-endif ()
-
+set(CMAKE_CXX_STANDARD 17)
 include(CMakeDependentOption)
 set(THIRDPARTY_INCLUDE_DIRS)
 if (MSVC)
