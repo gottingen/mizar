@@ -1020,7 +1020,7 @@ endif ()
 
 set(MIZAR_STATIC_LIB mizar${ARTIFACT_SUFFIX})
 set(MIZAR_SHARED_LIB mizar-shared${ARTIFACT_SUFFIX})
-
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(MIZAR_BUILD_SHARED "Build shared versions of the mizar libraries" ON)
 
 option(WITH_LIBRADOS "Build with librados" OFF)
