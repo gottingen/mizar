@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::CompactionFilter.
 
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 
 #include <jni.h>
 

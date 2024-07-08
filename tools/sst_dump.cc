@@ -5,7 +5,7 @@
 //
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/sst_dump_tool.h"
+#include "mizar/sst_dump_tool.h"
 
 int main(int argc, char** argv) {
   ROCKSDB_NAMESPACE::SSTDumpTool tool;

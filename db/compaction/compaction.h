@@ -11,7 +11,7 @@
 #include "db/version_set.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

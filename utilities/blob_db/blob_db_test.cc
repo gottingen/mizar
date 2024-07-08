@@ -23,7 +23,7 @@
 #include "file/file_util.h"
 #include "file/sst_file_manager_impl.h"
 #include "port/port.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/utilities/debug.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"

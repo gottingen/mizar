@@ -7,7 +7,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 
 namespace ROCKSDB_NAMESPACE {
 

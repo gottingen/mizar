@@ -7,7 +7,7 @@
 
 #include "db/db_test_util.h"
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "test_util/testutil.h"
 #include "util/vector_iterator.h"
 

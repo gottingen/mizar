@@ -19,10 +19,10 @@
 #include "db/pre_release_callback.h"
 #include "db/write_callback.h"
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
+#include "mizar/write_batch.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

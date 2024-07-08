@@ -10,8 +10,8 @@
 #include "db/memtable.h"
 #include "db/range_del_aggregator.h"
 #include "port/stack_trace.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/memtablerep.h"
+#include "mizar/slice_transform.h"
 
 namespace ROCKSDB_NAMESPACE {
 

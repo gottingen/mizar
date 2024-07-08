@@ -12,8 +12,8 @@
 #include <stdint.h>
 
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
-#include "rocksdb/io_status.h"
+#include "mizar/env.h"
+#include "mizar/io_status.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 

@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"

@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 
 namespace ROCKSDB_NAMESPACE {
 

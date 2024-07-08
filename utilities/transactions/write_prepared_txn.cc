@@ -13,9 +13,9 @@
 
 #include "db/column_family.h"
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 #include "utilities/transactions/write_prepared_txn_db.h"

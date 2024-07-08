@@ -8,9 +8,9 @@
 #include <utility>
 
 #include "include/org_rocksdb_test_TestableEventListener.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/listener.h"
+#include "mizar/status.h"
+#include "mizar/table_properties.h"
 
 using ROCKSDB_NAMESPACE::BackgroundErrorReason;
 using ROCKSDB_NAMESPACE::CompactionJobInfo;

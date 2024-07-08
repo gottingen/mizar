@@ -15,9 +15,9 @@
 
 #include "env/composite_env_wrapper.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 class MemFile;

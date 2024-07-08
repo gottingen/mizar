@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #include <gtest/gtest.h>
 
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/data_structure.h"
-#include "rocksdb/types.h"
+#include "mizar/data_structure.h"
+#include "mizar/types.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

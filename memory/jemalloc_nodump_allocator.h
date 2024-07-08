@@ -10,7 +10,7 @@
 
 #include "port/jemalloc_helper.h"
 #include "port/port.h"
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 #include "util/thread_local.h"
 #include "utilities/memory_allocators.h"
 

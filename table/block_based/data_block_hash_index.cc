@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/coding.h"
 #include "util/hash.h"
 

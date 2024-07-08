@@ -11,8 +11,8 @@
 #include <atomic>
 #include <string>
 
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 // A SystemClock that can "mock" sleep and counts its operations.

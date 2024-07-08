@@ -15,7 +15,7 @@
 #include "db/snapshot_checker.h"
 #include "logging/logging.h"
 #include "port/likely.h"
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "table/internal_iterator.h"
 #include "test_util/sync_point.h"
 

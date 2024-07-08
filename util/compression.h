@@ -21,8 +21,8 @@
 #include <string>
 
 #include "memory/memory_allocator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 #include "table/block_based/block_type.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"

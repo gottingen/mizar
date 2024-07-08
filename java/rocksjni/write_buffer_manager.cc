@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 
 #include <jni.h>
 
 #include "include/org_rocksdb_WriteBufferManager.h"
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 
 /*

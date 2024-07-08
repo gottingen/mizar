@@ -10,8 +10,8 @@
 #include <unordered_map>
 
 #include "db/blob/blob_constants.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/status.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

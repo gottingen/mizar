@@ -18,8 +18,8 @@
 
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/table.h"
+#include "mizar/iterator.h"
+#include "mizar/table.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/get_context.h"
 #include "table/internal_iterator.h"

@@ -6,7 +6,7 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-#include "rocksdb/stats_history.h"
+#include "mizar/stats_history.h"
 
 #include <limits>
 #include <string>
@@ -19,9 +19,9 @@
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/rate_limiter.h"
 #include "test_util/mock_time_env.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"

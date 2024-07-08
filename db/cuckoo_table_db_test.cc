@@ -7,8 +7,8 @@
 
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
 #include "table/meta_blocks.h"

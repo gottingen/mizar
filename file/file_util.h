@@ -8,12 +8,12 @@
 
 #include "file/filename.h"
 #include "options/db_options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/sst_file_writer.h"
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/types.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/sst_file_writer.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
+#include "mizar/types.h"
 #include "trace_replay/io_tracer.h"
 
 namespace ROCKSDB_NAMESPACE {

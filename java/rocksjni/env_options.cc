@@ -10,7 +10,7 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_EnvOptions.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 
 #define ENV_OPTIONS_SET_BOOL(_jhandle, _opt)                          \

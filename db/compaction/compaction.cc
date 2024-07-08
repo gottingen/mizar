@@ -13,8 +13,8 @@
 #include <vector>
 
 #include "db/column_family.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/sst_partitioner.h"
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 

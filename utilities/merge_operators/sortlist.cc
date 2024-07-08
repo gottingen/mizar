@@ -4,8 +4,8 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #include "utilities/merge_operators/sortlist.h"
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 #include "utilities/merge_operators.h"
 
 namespace ROCKSDB_NAMESPACE {

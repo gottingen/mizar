@@ -20,7 +20,7 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/coding_lean.h"
 
 // Some processors does not allow unaligned access to memory

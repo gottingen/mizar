@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/flush_block_policy.h"
+#include "mizar/flush_block_policy.h"
 
 #include <cassert>
 #include <mutex>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/customizable_util.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/customizable_util.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/block_builder.h"
 #include "table/block_based/flush_block_policy.h"

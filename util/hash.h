@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/fastrange.h"
 
 namespace ROCKSDB_NAMESPACE {

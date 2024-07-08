@@ -7,14 +7,14 @@
 // calling C++ ROCKSDB_NAMESPACE::SstFileManager methods
 // from Java side.
 
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 
 #include <jni.h>
 
 #include <memory>
 
 #include "include/org_rocksdb_SstPartitionerFixedPrefixFactory.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/sst_file_manager.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

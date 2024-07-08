@@ -10,7 +10,7 @@
 #include <sstream>
 #include <string>
 
-#include "rocksdb/rate_limiter.h"
+#include "mizar/rate_limiter.h"
 #include "tools/simulated_hybrid_file_system.h"
 
 namespace ROCKSDB_NAMESPACE {

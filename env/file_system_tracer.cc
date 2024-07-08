@@ -5,9 +5,9 @@
 
 #include "env/file_system_tracer.h"
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
+#include "mizar/trace_record.h"
 
 namespace ROCKSDB_NAMESPACE {
 

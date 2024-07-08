@@ -12,10 +12,10 @@
 
 #include "db/dbformat.h"
 #include "db/read_callback.h"
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 
 namespace ROCKSDB_NAMESPACE {

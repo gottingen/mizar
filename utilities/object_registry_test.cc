@@ -5,10 +5,10 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/utilities/object_registry.h"
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/customizable.h"
+#include "mizar/convenience.h"
+#include "mizar/customizable.h"
 #include "test_util/testharness.h"
 
 namespace ROCKSDB_NAMESPACE {

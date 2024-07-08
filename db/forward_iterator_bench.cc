@@ -27,10 +27,10 @@ int main() { return 0; }
 #include <thread>
 
 #include "port/port.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/cache.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "test_util/testharness.h"
 #include "util/gflags_compat.h"
 

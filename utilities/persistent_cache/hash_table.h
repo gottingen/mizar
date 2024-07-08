@@ -16,7 +16,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/mutexlock.h"
 
 namespace ROCKSDB_NAMESPACE {

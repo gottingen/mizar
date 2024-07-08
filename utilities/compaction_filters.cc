@@ -5,10 +5,10 @@
 
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/options.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 #include "utilities/compaction_filters/remove_emptyvalue_compactionfilter.h"
 

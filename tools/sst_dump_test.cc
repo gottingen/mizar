@@ -12,9 +12,9 @@
 
 #include "file/random_access_file_reader.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/sst_dump_tool.h"
+#include "mizar/convenience.h"
+#include "mizar/filter_policy.h"
+#include "mizar/sst_dump_tool.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/table_builder.h"
 #include "test_util/testharness.h"

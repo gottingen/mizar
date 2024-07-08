@@ -9,7 +9,7 @@
 
 #include "block_cache.h"
 #include "index_builder.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/format.h"

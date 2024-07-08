@@ -11,8 +11,8 @@
 #include "db/db_test_util.h"
 #include "file/sst_file_manager_impl.h"
 #include "port/stack_trace.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/io_status.h"
+#include "mizar/sst_file_manager.h"
 #if !defined(ROCKSDB_LITE)
 #include "test_util/sync_point.h"
 #endif

@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::PersistentCache.
 
-#include "rocksdb/persistent_cache.h"
+#include "mizar/persistent_cache.h"
 
 #include <jni.h>
 

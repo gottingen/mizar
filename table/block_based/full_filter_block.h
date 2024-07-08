@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "table/block_based/filter_block_reader_common.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/parsed_full_filter_block.h"

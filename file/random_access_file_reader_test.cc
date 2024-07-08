@@ -10,7 +10,7 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

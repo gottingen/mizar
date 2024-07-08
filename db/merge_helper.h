@@ -12,11 +12,11 @@
 #include "db/merge_context.h"
 #include "db/range_del_aggregator.h"
 #include "db/snapshot_checker.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/env.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/wide_columns.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/env.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/wide_columns.h"
 #include "util/stop_watch.h"
 
 namespace ROCKSDB_NAMESPACE {

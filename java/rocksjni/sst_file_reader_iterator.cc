@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 #include "include/org_rocksdb_SstFileReaderIterator.h"
-#include "rocksdb/iterator.h"
+#include "mizar/iterator.h"
 #include "rocksjni/portal.h"
 
 /*

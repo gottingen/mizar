@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #include "env/composite_env_wrapper.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

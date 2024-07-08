@@ -9,7 +9,7 @@
 
 // Syncpoint prevents us building and running tests in release
 #ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/checkpoint.h"
+#include "mizar/utilities/checkpoint.h"
 
 #ifndef OS_WIN
 #include <unistd.h>
@@ -22,9 +22,9 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

@@ -11,9 +11,9 @@
 
 #include "cache/lru_cache.h"
 #include "memory/memory_allocator.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/compression.h"
 #include "util/mutexlock.h"
 

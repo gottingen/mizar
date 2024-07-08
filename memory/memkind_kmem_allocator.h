@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "rocksdb/memory_allocator.h"
+#include "mizar/memory_allocator.h"
 #include "utilities/memory_allocators.h"
 
 namespace ROCKSDB_NAMESPACE {

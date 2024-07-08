@@ -5,7 +5,7 @@
 //
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/ldb_tool.h"
+#include "mizar/ldb_tool.h"
 
 int main(int argc, char** argv) {
   ROCKSDB_NAMESPACE::LDBTool tool;

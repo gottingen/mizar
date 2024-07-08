@@ -18,7 +18,7 @@
 #include "db/range_del_aggregator.h"
 #include "db/snapshot_checker.h"
 #include "options/cf_options.h"
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 
 namespace ROCKSDB_NAMESPACE {
 

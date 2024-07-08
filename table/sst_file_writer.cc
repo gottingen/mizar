@@ -3,15 +3,15 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/sst_file_writer.h"
 
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
 #include "db/dbformat.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/table.h"
+#include "mizar/file_system.h"
+#include "mizar/table.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/sst_file_writer_collectors.h"
 #include "test_util/sync_point.h"

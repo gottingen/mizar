@@ -13,8 +13,8 @@
 
 #include "file/random_access_file_reader.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
 #include "util/crc32c.h"
 #include "util/mutexlock.h"
 #include "utilities/persistent_cache/block_cache_tier_file_buffer.h"

@@ -12,7 +12,7 @@
 #include "file/sequence_file_reader.h"
 #include "file/sst_file_manager_impl.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 

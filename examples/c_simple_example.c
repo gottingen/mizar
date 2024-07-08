@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "rocksdb/c.h"
+#include "mizar/c.h"
 
 #if defined(OS_WIN)
 #include <Windows.h>

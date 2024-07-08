@@ -5,8 +5,8 @@
  */
 
 #pragma once
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
 
 namespace ROCKSDB_NAMESPACE {
 

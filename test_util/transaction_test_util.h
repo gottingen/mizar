@@ -8,9 +8,9 @@
 #ifndef ROCKSDB_LITE
 
 #include "port/port.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 
 namespace ROCKSDB_NAMESPACE {
 

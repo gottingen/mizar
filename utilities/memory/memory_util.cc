@@ -5,7 +5,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/memory_util.h"
+#include "mizar/utilities/memory_util.h"
 
 #include "db/db_impl/db_impl.h"
 

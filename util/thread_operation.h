@@ -15,7 +15,7 @@
 
 #include <string>
 
-#include "rocksdb/thread_status.h"
+#include "mizar/thread_status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

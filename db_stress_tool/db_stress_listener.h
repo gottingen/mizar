@@ -11,12 +11,12 @@
 
 #include "file/filename.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/unique_id.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/listener.h"
+#include "mizar/table_properties.h"
+#include "mizar/unique_id.h"
 #include "util/gflags_compat.h"
 #include "util/random.h"
 

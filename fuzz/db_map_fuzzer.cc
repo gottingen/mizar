@@ -9,8 +9,8 @@
 #include <string>
 
 #include "proto/gen/db_operation.pb.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_system.h"
+#include "mizar/db.h"
+#include "mizar/file_system.h"
 #include "src/libfuzzer/libfuzzer_macro.h"
 #include "util.h"
 

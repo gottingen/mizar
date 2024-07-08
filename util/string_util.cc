@@ -19,7 +19,7 @@
 
 #include "port/port.h"
 #include "port/sys_time.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #ifndef __has_cpp_attribute
 #define ROCKSDB_HAS_CPP_ATTRIBUTE(x) 0

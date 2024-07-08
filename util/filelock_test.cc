@@ -5,8 +5,8 @@
 //
 #include <fcntl.h>
 
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
 #ifdef __FreeBSD__
 #include <sys/types.h>
 #include <sys/wait.h>

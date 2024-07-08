@@ -8,7 +8,7 @@
 
 #include "db/dbformat.h"
 #include "options/configurable_helper.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 #include "table/cuckoo/cuckoo_table_builder.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
 

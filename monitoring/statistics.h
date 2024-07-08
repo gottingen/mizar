@@ -12,7 +12,7 @@
 #include "monitoring/histogram.h"
 #include "port/likely.h"
 #include "port/port.h"
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 #include "util/core_local.h"
 #include "util/mutexlock.h"
 

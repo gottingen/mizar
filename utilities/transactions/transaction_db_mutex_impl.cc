@@ -12,7 +12,7 @@
 #include <functional>
 #include <mutex>
 
-#include "rocksdb/utilities/transaction_db_mutex.h"
+#include "mizar/utilities/transaction_db_mutex.h"
 
 namespace ROCKSDB_NAMESPACE {
 

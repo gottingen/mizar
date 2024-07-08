@@ -12,8 +12,8 @@
 
 #include <vector>
 
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
+#include "mizar/slice.h"
+#include "mizar/table.h"
 #include "table/block_based/data_block_hash_index.h"
 
 namespace ROCKSDB_NAMESPACE {

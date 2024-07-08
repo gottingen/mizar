@@ -11,7 +11,7 @@
 #include "db/error_handler.h"
 #include "db/event_helpers.h"
 #include "file/sst_file_manager_impl.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

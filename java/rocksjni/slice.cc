@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::Slice.
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #include <jni.h>
 #include <stdio.h>

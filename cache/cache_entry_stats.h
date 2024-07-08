@@ -13,9 +13,9 @@
 #include "cache/cache_key.h"
 #include "cache/typed_cache.h"
 #include "port/lang.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/cache.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/coding_lean.h"
 

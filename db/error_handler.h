@@ -6,9 +6,9 @@
 
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/status.h"
+#include "mizar/io_status.h"
+#include "mizar/listener.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

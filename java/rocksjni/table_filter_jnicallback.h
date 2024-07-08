@@ -14,7 +14,7 @@
 #include <functional>
 #include <memory>
 
-#include "rocksdb/table_properties.h"
+#include "mizar/table_properties.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

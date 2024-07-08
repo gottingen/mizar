@@ -8,8 +8,8 @@
 #include "db/periodic_task_scheduler.h"
 #include "db/seqno_to_time_mapping.h"
 #include "port/stack_trace.h"
-#include "rocksdb/iostats_context.h"
-#include "rocksdb/utilities/debug.h"
+#include "mizar/iostats_context.h"
+#include "mizar/utilities/debug.h"
 #include "test_util/mock_time_env.h"
 
 #ifndef ROCKSDB_LITE

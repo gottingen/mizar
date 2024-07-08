@@ -7,7 +7,7 @@
 
 #include <type_traits>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 namespace ROCKSDB_NAMESPACE {
 // The helper function to assert the move from dynamic_cast<> to

@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::Env methods from Java side.
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 #include <jni.h>
 

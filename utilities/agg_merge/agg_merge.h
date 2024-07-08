@@ -9,9 +9,9 @@
 #include <memory>
 #include <unordered_map>
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/agg_merge.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/agg_merge.h"
 #include "utilities/cassandra/cassandra_options.h"
 
 namespace ROCKSDB_NAMESPACE {

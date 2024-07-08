@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/trace_reader_writer.h"
 
 namespace ROCKSDB_NAMESPACE {
 

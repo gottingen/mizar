@@ -7,7 +7,7 @@
 #ifndef ROCKSDB_LITE
 
 #include "db/arena_wrapped_db_iter.h"
-#include "rocksdb/iterator.h"
+#include "mizar/iterator.h"
 #include "util/stop_watch.h"
 #include "utilities/blob_db/blob_db_impl.h"
 

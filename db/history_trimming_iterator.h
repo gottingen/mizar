@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/slice.h"
+#include "mizar/iterator.h"
+#include "mizar/slice.h"
 #include "table/internal_iterator.h"
 
 namespace ROCKSDB_NAMESPACE {

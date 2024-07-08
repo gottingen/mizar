@@ -13,7 +13,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "rocksdb/c.h"
+#include "mizar/c.h"
 #ifndef OS_WIN
 #include <unistd.h>
 #endif

@@ -6,7 +6,7 @@
 
 #include "db/periodic_task_scheduler.h"
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 #ifndef ROCKSDB_LITE
 namespace ROCKSDB_NAMESPACE {

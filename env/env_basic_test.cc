@@ -11,9 +11,9 @@
 
 #include "env/mock_env.h"
 #include "file/file_util.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env.h"
-#include "rocksdb/env_encryption.h"
+#include "mizar/convenience.h"
+#include "mizar/env.h"
+#include "mizar/env_encryption.h"
 #include "test_util/testharness.h"
 
 namespace ROCKSDB_NAMESPACE {

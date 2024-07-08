@@ -13,9 +13,9 @@
 #include <cstring>
 #include <memory>
 
-#include "rocksdb/cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/cache.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "table/block_based/reader_common.h"
 #include "util/coding.h"
 

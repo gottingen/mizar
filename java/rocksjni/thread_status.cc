@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::ThreadStatus methods from Java side.
 
-#include "rocksdb/thread_status.h"
+#include "mizar/thread_status.h"
 
 #include <jni.h>
 

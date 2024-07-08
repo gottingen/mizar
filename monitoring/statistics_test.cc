@@ -4,11 +4,11 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/options_type.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

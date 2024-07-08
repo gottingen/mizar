@@ -14,11 +14,11 @@
 #include "memtable/skiplist.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/comparator.h"
+#include "mizar/iterator.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/utilities/write_batch_with_index.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -5,7 +5,7 @@
 //
 #pragma once
 #include "monitoring/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 // Auto-scoped.

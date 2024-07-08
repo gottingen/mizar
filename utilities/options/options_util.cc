@@ -5,12 +5,12 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/utilities/options_util.h"
 
 #include "file/filename.h"
 #include "options/options_parser.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/options.h"
+#include "mizar/convenience.h"
+#include "mizar/options.h"
 #include "table/block_based/block_based_table_factory.h"
 
 namespace ROCKSDB_NAMESPACE {

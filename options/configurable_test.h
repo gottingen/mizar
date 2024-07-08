@@ -13,8 +13,8 @@
 #include <unordered_map>
 
 #include "options/configurable_helper.h"
-#include "rocksdb/configurable.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/configurable.h"
+#include "mizar/utilities/options_type.h"
 
 namespace ROCKSDB_NAMESPACE {
 struct ColumnFamilyOptions;

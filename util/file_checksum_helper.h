@@ -8,8 +8,8 @@
 #include <unordered_map>
 
 #include "port/port.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/status.h"
+#include "mizar/file_checksum.h"
+#include "mizar/status.h"
 #include "util/coding.h"
 #include "util/crc32c.h"
 #include "util/math.h"

@@ -10,8 +10,8 @@
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "util/file_checksum_helper.h"
 

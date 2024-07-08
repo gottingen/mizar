@@ -14,11 +14,11 @@
 
 #include "db/dbformat.h"
 #include "file/file_util.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/types.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/types.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

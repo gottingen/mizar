@@ -14,7 +14,7 @@
 #include "file/readahead_raf.h"
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/crc32c.h"

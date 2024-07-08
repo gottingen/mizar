@@ -8,9 +8,9 @@
 #include <string>
 
 #include "monitoring/thread_status_updater.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/thread_status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

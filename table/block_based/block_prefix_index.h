@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "db/dbformat.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

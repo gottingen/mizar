@@ -25,8 +25,8 @@
 #include "port/sys_time.h"
 #include "port/win/env_win.h"
 #include "port/win/io_win.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -10,9 +10,9 @@
 #include <cmath>
 #include <thread>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/system_clock.h"
 #include "util/threadpool_imp.h"
 
 namespace ROCKSDB_NAMESPACE {

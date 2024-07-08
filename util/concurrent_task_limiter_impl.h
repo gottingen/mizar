@@ -11,8 +11,8 @@
 #include <atomic>
 #include <memory>
 
-#include "rocksdb/concurrent_task_limiter.h"
-#include "rocksdb/env.h"
+#include "mizar/concurrent_task_limiter.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 

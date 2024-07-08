@@ -13,8 +13,8 @@
 
 #include <thread>
 
-#include "rocksdb/options.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/options.h"
+#include "mizar/rocksdb_namespace.h"
 
 // size_t printf formatting named in the manner of C99 standard formatting
 // strings such as PRIu64

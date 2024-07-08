@@ -8,7 +8,7 @@
 // 128-bit hash gets it own header so that more popular hash.h doesn't
 // depend on math128.h
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/math128.h"
 
 namespace ROCKSDB_NAMESPACE {

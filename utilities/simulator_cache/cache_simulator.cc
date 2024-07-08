@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "db/dbformat.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/trace_record.h"
 
 namespace ROCKSDB_NAMESPACE {
 

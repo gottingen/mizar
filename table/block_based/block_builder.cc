@@ -38,7 +38,7 @@
 #include <algorithm>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "table/block_based/data_block_footer.h"
 #include "util/coding.h"
 

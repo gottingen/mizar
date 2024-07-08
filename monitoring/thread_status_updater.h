@@ -37,8 +37,8 @@
 #include <vector>
 
 #include "port/port.h"
-#include "rocksdb/status.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/status.h"
+#include "mizar/thread_status.h"
 #include "util/thread_operation.h"
 
 namespace ROCKSDB_NAMESPACE {

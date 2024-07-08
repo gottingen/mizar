@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 
 namespace ROCKSDB_NAMESPACE {
 

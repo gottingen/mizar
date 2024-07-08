@@ -8,9 +8,9 @@
 #include <cstdint>
 #include <string>
 
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/status.h"
-#include "rocksdb/wide_columns.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/status.h"
+#include "mizar/wide_columns.h"
 
 namespace ROCKSDB_NAMESPACE {
 

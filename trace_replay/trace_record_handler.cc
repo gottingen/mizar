@@ -5,9 +5,9 @@
 
 #include "trace_replay/trace_record_handler.h"
 
-#include "rocksdb/iterator.h"
-#include "rocksdb/trace_record_result.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/iterator.h"
+#include "mizar/trace_record_result.h"
+#include "mizar/write_batch.h"
 
 namespace ROCKSDB_NAMESPACE {
 

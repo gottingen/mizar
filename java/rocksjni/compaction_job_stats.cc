@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::CompactionJobStats.
 
-#include "rocksdb/compaction_job_stats.h"
+#include "mizar/compaction_job_stats.h"
 
 #include <jni.h>
 

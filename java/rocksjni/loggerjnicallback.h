@@ -15,7 +15,7 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

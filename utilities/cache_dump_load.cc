@@ -5,12 +5,12 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/cache_dump_load.h"
+#include "mizar/utilities/cache_dump_load.h"
 
 #include "file/writable_file_writer.h"
 #include "port/lang.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
 #include "table/format.h"
 #include "util/crc32c.h"
 #include "utilities/cache_dump_load_impl.h"

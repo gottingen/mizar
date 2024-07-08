@@ -11,7 +11,7 @@
 
 #include "memory/allocator.h"
 #include "memory/arena.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 
 namespace ROCKSDB_NAMESPACE {
 

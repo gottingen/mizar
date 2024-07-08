@@ -6,13 +6,13 @@
 // This file implements the "bridge" between Java and C++
 // for ROCKSDB_NAMESPACE::TransactionDB.
 
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 
 #include <jni.h>
 
 #include "include/org_rocksdb_OptimisticTransactionDB.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/options.h"
+#include "mizar/utilities/transaction.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

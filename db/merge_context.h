@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "trace_replay/io_tracer.h"
 
 namespace ROCKSDB_NAMESPACE {

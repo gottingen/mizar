@@ -17,8 +17,8 @@
 #include "db/range_del_aggregator.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

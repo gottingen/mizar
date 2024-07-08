@@ -14,7 +14,7 @@
 #include <cmath>
 
 #include "port/port.h"  // for PREFETCH
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/hash.h"
 
 #ifdef HAVE_AVX2

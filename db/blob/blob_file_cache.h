@@ -9,7 +9,7 @@
 
 #include "cache/typed_cache.h"
 #include "db/blob/blob_file_reader.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 #include "util/mutexlock.h"
 
 namespace ROCKSDB_NAMESPACE {

@@ -12,7 +12,7 @@
 #include <mutex>
 
 #include "port/win/env_win.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 #include "util/compression_context_cache.h"
 #include "util/thread_local.h"

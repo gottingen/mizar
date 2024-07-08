@@ -15,9 +15,9 @@
 #include <vector>
 
 #include "port/stack_trace.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "utilities/table_properties_collectors/compact_on_deletion_collector.h"

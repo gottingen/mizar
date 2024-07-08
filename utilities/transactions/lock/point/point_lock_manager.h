@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/utilities/transaction.h"
 #include "util/autovector.h"
 #include "util/hash_containers.h"
 #include "util/hash_map.h"

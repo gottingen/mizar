@@ -6,7 +6,7 @@
 #include "db/db_test_util.h"
 #include "file/file_prefetch_buffer.h"
 #include "file/file_util.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/sync_point.h"
 #ifdef GFLAGS
 #include "tools/io_tracer_parser_tool.h"

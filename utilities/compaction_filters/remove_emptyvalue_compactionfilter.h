@@ -9,8 +9,8 @@
 
 #include <string>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/slice.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/slice.h"
 
 namespace ROCKSDB_NAMESPACE {
 

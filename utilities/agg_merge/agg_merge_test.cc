@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/agg_merge.h"
+#include "mizar/utilities/agg_merge.h"
 
 #include <gtest/gtest.h>
 
 #include <memory>
 
 #include "db/db_test_util.h"
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #include "test_util/testharness.h"
 #include "utilities/agg_merge/agg_merge.h"
 #include "utilities/agg_merge/test_agg_merge.h"

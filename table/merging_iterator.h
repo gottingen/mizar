@@ -10,8 +10,8 @@
 #pragma once
 
 #include "db/range_del_aggregator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/types.h"
+#include "mizar/slice.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 

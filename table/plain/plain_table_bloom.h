@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/bloom_impl.h"
 #include "util/hash.h"
 #include "util/math.h"

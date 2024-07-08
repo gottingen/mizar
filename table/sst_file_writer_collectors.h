@@ -7,7 +7,7 @@
 #include <string>
 
 #include "db/table_properties_collector.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 

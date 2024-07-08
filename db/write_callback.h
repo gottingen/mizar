@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

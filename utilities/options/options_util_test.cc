@@ -5,7 +5,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/utilities/options_util.h"
 
 #include <cctype>
 #include <cinttypes>
@@ -14,9 +14,9 @@
 #include "env/mock_env.h"
 #include "file/filename.h"
 #include "options/options_parser.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/table.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/table.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"

@@ -10,7 +10,7 @@
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 #if !defined(ROCKSDB_LITE)
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"
 #include "util/random.h"

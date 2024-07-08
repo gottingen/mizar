@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 
 namespace ROCKSDB_NAMESPACE {
 

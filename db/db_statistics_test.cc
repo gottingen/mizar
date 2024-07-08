@@ -8,7 +8,7 @@
 #include "db/db_test_util.h"
 #include "monitoring/thread_status_util.h"
 #include "port/stack_trace.h"
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 #include "util/random.h"
 
 namespace ROCKSDB_NAMESPACE {

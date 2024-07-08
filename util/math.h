@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 namespace ROCKSDB_NAMESPACE {
 

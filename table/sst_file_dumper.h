@@ -11,7 +11,7 @@
 #include "db/dbformat.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/advanced_options.h"
+#include "mizar/advanced_options.h"
 
 namespace ROCKSDB_NAMESPACE {
 

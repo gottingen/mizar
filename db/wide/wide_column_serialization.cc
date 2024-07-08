@@ -9,7 +9,7 @@
 #include <cassert>
 #include <limits>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "util/autovector.h"
 #include "util/coding.h"
 

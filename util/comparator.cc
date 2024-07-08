@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 
 #include <stdint.h>
 
@@ -19,10 +19,10 @@
 #include "db/dbformat.h"
 #include "port/lang.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
 
 namespace ROCKSDB_NAMESPACE {
 

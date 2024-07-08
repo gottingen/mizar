@@ -9,7 +9,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/env_mirror.h"
+#include "mizar/utilities/env_mirror.h"
 
 namespace ROCKSDB_NAMESPACE {
 

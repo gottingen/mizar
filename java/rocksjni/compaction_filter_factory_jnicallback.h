@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

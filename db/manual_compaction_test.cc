@@ -7,10 +7,10 @@
 #include <cstdlib>
 
 #include "port/port.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/slice.h"
+#include "mizar/write_batch.h"
 #include "test_util/testharness.h"
 
 using ROCKSDB_NAMESPACE::CompactionFilter;

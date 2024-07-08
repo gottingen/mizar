@@ -9,8 +9,8 @@
 
 #include <string>
 
-#include "rocksdb/options.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/table.h"
 
 namespace ROCKSDB_NAMESPACE {
 

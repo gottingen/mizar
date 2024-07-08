@@ -9,9 +9,9 @@
 #include <mutex>
 #include <string>
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyMetaData;
 using ROCKSDB_NAMESPACE::CompactionOptions;

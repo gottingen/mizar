@@ -13,8 +13,8 @@
 #include <iterator>
 #include <string>
 
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 

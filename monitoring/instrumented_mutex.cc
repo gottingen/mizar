@@ -7,7 +7,7 @@
 
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/thread_status_util.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 
 namespace ROCKSDB_NAMESPACE {

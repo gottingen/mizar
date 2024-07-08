@@ -20,8 +20,8 @@
 #include "db/table_properties_collector.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/options.h"
+#include "mizar/table_properties.h"
 #include "table/unique_id_impl.h"
 #include "trace_replay/block_cache_tracer.h"
 

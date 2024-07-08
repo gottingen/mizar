@@ -20,10 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/table.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/table.h"
 #include "table/format.h"
 #include "table/multiget_context.h"
 #include "trace_replay/block_cache_tracer.h"

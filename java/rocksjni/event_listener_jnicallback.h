@@ -14,7 +14,7 @@
 #include <memory>
 #include <set>
 
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

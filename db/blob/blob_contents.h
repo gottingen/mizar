@@ -8,10 +8,10 @@
 #include <memory>
 
 #include "memory/memory_allocator.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/cache.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

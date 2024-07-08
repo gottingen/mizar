@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for RateLimiter.
 
 #include "include/org_rocksdb_RateLimiter.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/rate_limiter.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

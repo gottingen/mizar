@@ -14,7 +14,7 @@
 #include "logging/logging.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/sync_point.h"
 #include "util/string_util.h"
 

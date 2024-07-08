@@ -12,10 +12,10 @@
 #include <string>
 
 #include "include/org_rocksdb_SstFileWriter.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/comparator.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/sst_file_writer.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

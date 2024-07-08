@@ -13,10 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include "rocksdb/env.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/env.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
+#include "mizar/write_batch.h"
 #include "trace_replay/trace_replay.h"
 
 namespace ROCKSDB_NAMESPACE {

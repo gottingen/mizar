@@ -9,9 +9,9 @@
 
 #include <memory>
 
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/merge_operators.h"
 

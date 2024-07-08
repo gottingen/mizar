@@ -9,7 +9,7 @@
 
 #include "memory/arena.h"
 #include "port/sys_time.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

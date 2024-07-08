@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/table_properties.h"
+#include "mizar/table_properties.h"
 
 namespace ROCKSDB_NAMESPACE {
 #ifndef NDEBUG

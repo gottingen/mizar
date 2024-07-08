@@ -10,10 +10,10 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/advanced_options.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 
 namespace ROCKSDB_NAMESPACE {
 struct ColumnFamilyOptions;

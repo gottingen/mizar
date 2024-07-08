@@ -19,8 +19,8 @@
 #include <sstream>
 
 #include "monitoring/histogram.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/trace_record.h"
+#include "mizar/system_clock.h"
+#include "mizar/trace_record.h"
 #include "util/gflags_compat.h"
 #include "util/string_util.h"
 

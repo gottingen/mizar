@@ -33,9 +33,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;
 using ROCKSDB_NAMESPACE::ColumnFamilyHandle;

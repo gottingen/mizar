@@ -7,7 +7,7 @@
 
 #if !defined(ROCKSDB_LITE)
 
-#include "rocksdb/env_encryption.h"
+#include "mizar/env_encryption.h"
 
 namespace ROCKSDB_NAMESPACE {
 // CTRCipherStream implements BlockAccessCipherStream using an

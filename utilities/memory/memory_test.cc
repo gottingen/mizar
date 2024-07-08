@@ -6,10 +6,10 @@
 #ifndef ROCKSDB_LITE
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/memory_util.h"
-#include "rocksdb/utilities/stackable_db.h"
+#include "mizar/cache.h"
+#include "mizar/table.h"
+#include "mizar/utilities/memory_util.h"
+#include "mizar/utilities/stackable_db.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

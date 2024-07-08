@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 
 namespace ROCKSDB_NAMESPACE {
 

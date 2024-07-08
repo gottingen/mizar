@@ -6,7 +6,7 @@
 
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 
 enum OperationType {
   kPut,

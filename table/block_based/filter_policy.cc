@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/filter_policy.h"
+#include "mizar/filter_policy.h"
 
 #include <array>
 #include <climits>
@@ -20,10 +20,10 @@
 #include "cache/cache_reservation_manager.h"
 #include "logging/logging.h"
 #include "port/lang.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/object_registry.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/full_filter_block.h"

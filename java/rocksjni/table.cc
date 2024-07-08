@@ -6,15 +6,15 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::Options.
 
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 
 #include <jni.h>
 
 #include "include/org_rocksdb_BlockBasedTableConfig.h"
 #include "include/org_rocksdb_PlainTableConfig.h"
 #include "portal.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/filter_policy.h"
+#include "mizar/cache.h"
+#include "mizar/filter_policy.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 
 /*

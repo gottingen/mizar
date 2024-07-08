@@ -16,8 +16,8 @@ int main() {
 #include <cstdio>
 
 #include "db/write_batch_internal.h"
-#include "rocksdb/db.h"
-#include "rocksdb/types.h"
+#include "mizar/db.h"
+#include "mizar/types.h"
 #include "test_util/testutil.h"
 #include "util/gflags_compat.h"
 

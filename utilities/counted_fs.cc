@@ -7,8 +7,8 @@
 
 #include <sstream>
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/file_system.h"
+#include "mizar/utilities/options_type.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {

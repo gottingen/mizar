@@ -12,13 +12,13 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_reader_writer.h"
-#include "rocksdb/trace_record.h"
-#include "rocksdb/trace_record_result.h"
-#include "rocksdb/utilities/replayer.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/trace_reader_writer.h"
+#include "mizar/trace_record.h"
+#include "mizar/trace_record_result.h"
+#include "mizar/utilities/replayer.h"
 #include "trace_replay/trace_replay.h"
 
 namespace ROCKSDB_NAMESPACE {

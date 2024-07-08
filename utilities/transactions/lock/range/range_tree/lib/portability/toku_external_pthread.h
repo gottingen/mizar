@@ -17,8 +17,8 @@
 #include <stdint.h>
 #include <time.h>
 
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/utilities/transaction_db_mutex.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db_mutex.h"
 #include "toku_portability.h"
 
 using ROCKSDB_NAMESPACE::TransactionDBCondVar;

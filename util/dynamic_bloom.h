@@ -11,7 +11,7 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "table/multiget_context.h"
 #include "util/hash.h"
 

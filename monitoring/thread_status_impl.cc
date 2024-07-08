@@ -6,8 +6,8 @@
 
 #include <sstream>
 
-#include "rocksdb/env.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/env.h"
+#include "mizar/thread_status.h"
 #include "util/string_util.h"
 #include "util/thread_operation.h"
 

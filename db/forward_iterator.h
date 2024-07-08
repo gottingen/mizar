@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #ifndef ROCKSDB_LITE
 
 #include <queue>
@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "memory/arena.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
 #include "table/internal_iterator.h"
 
 namespace ROCKSDB_NAMESPACE {

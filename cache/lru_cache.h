@@ -16,7 +16,7 @@
 #include "port/likely.h"
 #include "port/malloc.h"
 #include "port/port.h"
-#include "rocksdb/secondary_cache.h"
+#include "mizar/secondary_cache.h"
 #include "util/autovector.h"
 #include "util/distributed_mutex.h"
 

@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/utilities/object_registry.h"
 
 #include <ctype.h>
 
 #include "logging/logging.h"
 #include "port/lang.h"
-#include "rocksdb/customizable.h"
-#include "rocksdb/env.h"
+#include "mizar/customizable.h"
+#include "mizar/env.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

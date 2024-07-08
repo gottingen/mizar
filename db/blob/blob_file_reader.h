@@ -10,8 +10,8 @@
 
 #include "db/blob/blob_read_request.h"
 #include "file/random_access_file_reader.h"
-#include "rocksdb/compression_type.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/compression_type.h"
+#include "mizar/rocksdb_namespace.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

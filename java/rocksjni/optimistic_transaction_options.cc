@@ -9,8 +9,8 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_OptimisticTransactionOptions.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/comparator.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 
 /*

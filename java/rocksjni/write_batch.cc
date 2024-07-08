@@ -5,7 +5,7 @@
 //
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::WriteBatch methods from Java side.
-#include "rocksdb/write_batch.h"
+#include "mizar/write_batch.h"
 
 #include <memory>
 
@@ -14,11 +14,11 @@
 #include "include/org_rocksdb_WriteBatch.h"
 #include "include/org_rocksdb_WriteBatch_Handler.h"
 #include "logging/logging.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/status.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/memtablerep.h"
+#include "mizar/status.h"
+#include "mizar/write_buffer_manager.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 #include "rocksjni/writebatchhandlerjnicallback.h"

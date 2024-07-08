@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/backup_engine.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/backup_engine.h"
 
 using ROCKSDB_NAMESPACE::BackupEngine;
 using ROCKSDB_NAMESPACE::BackupEngineOptions;

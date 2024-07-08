@@ -18,12 +18,12 @@
 #include <vector>
 
 #include "include/org_rocksdb_RocksDB.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/types.h"
-#include "rocksdb/version.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/types.h"
+#include "mizar/version.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

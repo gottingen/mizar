@@ -8,11 +8,11 @@
 #include <map>
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/db_ttl.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/convenience.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/db_ttl.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/testharness.h"
 #include "util/string_util.h"
 #include "utilities/merge_operators/bytesxor.h"

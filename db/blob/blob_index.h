@@ -7,7 +7,7 @@
 #include <sstream>
 #include <string>
 
-#include "rocksdb/compression_type.h"
+#include "mizar/compression_type.h"
 #include "util/coding.h"
 #include "util/compression.h"
 #include "util/string_util.h"

@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 
 #ifdef _WIN32
 // Windows API macro interference

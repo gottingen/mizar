@@ -10,7 +10,7 @@
 
 #include "db/compaction/subcompaction_state.h"
 
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 
 namespace ROCKSDB_NAMESPACE {
 void SubcompactionState::AggregateCompactionStats(

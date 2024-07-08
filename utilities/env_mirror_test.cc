@@ -6,7 +6,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/env_mirror.h"
+#include "mizar/utilities/env_mirror.h"
 
 #include "env/mock_env.h"
 #include "test_util/testharness.h"

@@ -6,10 +6,10 @@
 #include <iostream>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/object_registry.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/object_registry.h"
 #include "test_util/testharness.h"
 #include "util/cast_util.h"
 #include "util/random.h"

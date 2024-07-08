@@ -6,9 +6,9 @@
 #pragma once
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/transaction.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/types.h"
+#include "mizar/utilities/transaction.h"
+#include "mizar/utilities/transaction_db.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 

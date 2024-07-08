@@ -6,7 +6,7 @@
 #pragma once
 #include "monitoring/perf_level_imp.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

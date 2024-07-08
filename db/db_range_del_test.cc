@@ -6,7 +6,7 @@
 #include "db/db_test_util.h"
 #include "db/version_set.h"
 #include "port/stack_trace.h"
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "utilities/merge_operators.h"

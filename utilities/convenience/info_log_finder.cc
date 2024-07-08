@@ -7,10 +7,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "rocksdb/utilities/info_log_finder.h"
+#include "mizar/utilities/info_log_finder.h"
 
 #include "file/filename.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 

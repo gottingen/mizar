@@ -3,15 +3,15 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/configurable.h"
+#include "mizar/configurable.h"
 
 #include "logging/logging.h"
 #include "options/configurable_helper.h"
 #include "options/options_helper.h"
-#include "rocksdb/customizable.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/customizable.h"
+#include "mizar/status.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 

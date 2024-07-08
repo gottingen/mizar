@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 // This file declares a wrapper around the efficient folly DistributedMutex
 // that falls back on a standard mutex when not available. See

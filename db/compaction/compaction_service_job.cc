@@ -14,7 +14,7 @@
 #include "monitoring/iostats_context_imp.h"
 #include "monitoring/thread_status_util.h"
 #include "options/options_helper.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 
 #ifndef ROCKSDB_LITE
 namespace ROCKSDB_NAMESPACE {

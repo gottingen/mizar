@@ -11,8 +11,8 @@
 #include <atomic>
 
 #include "file/sequence_file_reader.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
 
 namespace ROCKSDB_NAMESPACE {
 // Returns a WritableFile.

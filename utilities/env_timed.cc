@@ -6,9 +6,9 @@
 
 #include "env/composite_env_wrapper.h"
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/status.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

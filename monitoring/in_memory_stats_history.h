@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "rocksdb/stats_history.h"
+#include "mizar/stats_history.h"
 
 namespace ROCKSDB_NAMESPACE {
 

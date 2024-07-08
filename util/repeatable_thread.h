@@ -10,7 +10,7 @@
 
 #include "monitoring/instrumented_mutex.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "util/mutexlock.h"
 
 namespace ROCKSDB_NAMESPACE {

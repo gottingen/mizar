@@ -8,8 +8,8 @@
 #include "db/memtable.h"
 #include "memory/arena.h"
 #include "memtable/inlineskiplist.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/memtablerep.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

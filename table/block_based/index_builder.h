@@ -16,7 +16,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/block_based/block_builder.h"
 #include "table/format.h"

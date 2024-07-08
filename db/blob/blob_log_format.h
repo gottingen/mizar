@@ -10,10 +10,10 @@
 #include <memory>
 #include <utility>
 
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 

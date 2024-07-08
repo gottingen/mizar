@@ -36,7 +36,7 @@
 //    len: varint32
 //    data: uint8[len]
 
-#include "rocksdb/write_batch.h"
+#include "mizar/write_batch.h"
 
 #include <algorithm>
 #include <limits>
@@ -61,8 +61,8 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
 #include "port/lang.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/merge_operator.h"
+#include "mizar/system_clock.h"
 #include "util/autovector.h"
 #include "util/cast_util.h"
 #include "util/coding.h"

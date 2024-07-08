@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::Statistics methods from Java side.
 
-#include "rocksdb/statistics.h"
+#include "mizar/statistics.h"
 
 #include <jni.h>
 

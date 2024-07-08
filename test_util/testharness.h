@@ -54,7 +54,7 @@
 #include <string>
 
 #include "port/stack_trace.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace test {

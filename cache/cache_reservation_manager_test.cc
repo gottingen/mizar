@@ -13,8 +13,8 @@
 #include <memory>
 
 #include "cache/cache_entry_roles.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/slice.h"
+#include "mizar/cache.h"
+#include "mizar/slice.h"
 #include "test_util/testharness.h"
 #include "util/coding.h"
 

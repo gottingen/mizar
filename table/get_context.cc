@@ -13,9 +13,9 @@
 #include "monitoring/file_read_sample.h"
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/merge_operator.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

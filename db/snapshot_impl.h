@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

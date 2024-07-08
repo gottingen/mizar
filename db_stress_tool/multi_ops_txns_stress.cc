@@ -10,7 +10,7 @@
 #ifdef GFLAGS
 #include "db_stress_tool/multi_ops_txns_stress.h"
 
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 #include "util/defer.h"
 #include "utilities/fault_injection_fs.h"
 #include "utilities/transactions/write_prepared_txn_db.h"

@@ -9,8 +9,8 @@
 #include <string>
 
 #include "file/filename.h"
-#include "rocksdb/db.h"
-#include "rocksdb/utilities/checkpoint.h"
+#include "mizar/db.h"
+#include "mizar/utilities/checkpoint.h"
 
 namespace ROCKSDB_NAMESPACE {
 

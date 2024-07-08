@@ -13,7 +13,7 @@
 #include <unordered_set>
 
 #include "memory/concurrent_arena.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "util/hash.h"
 #include "util/random.h"

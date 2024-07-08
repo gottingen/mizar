@@ -7,7 +7,7 @@
 #include <mutex>
 
 #include "monitoring/thread_status_updater.h"
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 #include "test_util/testharness.h"
 
 #ifdef ROCKSDB_USING_THREAD_STATUS

@@ -7,7 +7,7 @@
 
 #include <array>
 
-#include "rocksdb/unique_id.h"
+#include "mizar/unique_id.h"
 
 namespace ROCKSDB_NAMESPACE {
 

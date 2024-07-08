@@ -13,7 +13,7 @@
 #include "memory/arena.h"
 #include "monitoring/histogram.h"
 #include "options/cf_options.h"
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
 namespace ROCKSDB_NAMESPACE {
 

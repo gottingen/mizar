@@ -8,7 +8,7 @@
 #include "utilities/transactions/write_unprepared_txn_db.h"
 
 #include "db/arena_wrapped_db_iter.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/utilities/transaction_db.h"
 #include "util/cast_util.h"
 
 namespace ROCKSDB_NAMESPACE {

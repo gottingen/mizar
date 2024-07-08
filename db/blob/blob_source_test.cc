@@ -22,7 +22,7 @@
 #include "file/filename.h"
 #include "file/read_write_util.h"
 #include "options/cf_options.h"
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #include "util/compression.h"
 #include "util/random.h"
 

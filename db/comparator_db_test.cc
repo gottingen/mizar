@@ -7,8 +7,8 @@
 #include <string>
 
 #include "memtable/stl_wrappers.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/hash.h"

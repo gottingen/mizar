@@ -10,7 +10,7 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_ConfigOptions.h"
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

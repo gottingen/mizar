@@ -9,9 +9,9 @@
 
 #include "benchmark/benchmark.h"
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/db.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
+#include "mizar/db.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_builder.h"
 #include "util/random.h"

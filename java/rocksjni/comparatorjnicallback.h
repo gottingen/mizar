@@ -15,8 +15,8 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
 #include "rocksjni/jnicallback.h"
 #include "util/thread_local.h"
 

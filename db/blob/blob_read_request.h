@@ -7,9 +7,9 @@
 
 #include <cinttypes>
 
-#include "rocksdb/compression_type.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/compression_type.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/autovector.h"
 
 namespace ROCKSDB_NAMESPACE {

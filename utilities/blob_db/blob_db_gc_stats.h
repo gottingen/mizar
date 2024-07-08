@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 #ifndef ROCKSDB_LITE
 

@@ -11,7 +11,7 @@
 
 #include <jni.h>
 
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/utilities/transaction.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

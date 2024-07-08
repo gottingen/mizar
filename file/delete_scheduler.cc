@@ -14,9 +14,9 @@
 #include "file/sst_file_manager_impl.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 

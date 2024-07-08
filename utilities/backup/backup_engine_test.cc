@@ -9,7 +9,7 @@
 
 #if !defined(ROCKSDB_LITE) && !defined(OS_WIN)
 
-#include "rocksdb/utilities/backup_engine.h"
+#include "mizar/utilities/backup_engine.h"
 
 #include <algorithm>
 #include <array>
@@ -31,15 +31,15 @@
 #include "file/filename.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/transaction_log.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/options_util.h"
-#include "rocksdb/utilities/stackable_db.h"
+#include "mizar/advanced_options.h"
+#include "mizar/env.h"
+#include "mizar/file_checksum.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/statistics.h"
+#include "mizar/transaction_log.h"
+#include "mizar/types.h"
+#include "mizar/utilities/options_util.h"
+#include "mizar/utilities/stackable_db.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

@@ -12,8 +12,8 @@
 #include <thread>
 #include <vector>
 
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/slice.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/slice.h"
 
 #ifdef NDEBUG
 // empty in release build

@@ -8,9 +8,9 @@
 #include <vector>
 
 #include "memory/arena.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "util/coding.h"
 #include "util/hash.h"
 

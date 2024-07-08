@@ -7,8 +7,8 @@
 
 #ifdef OS_LINUX
 #include "env/io_posix.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 class EnvWithCustomLogicalBlockSizeCache : public EnvWrapper {

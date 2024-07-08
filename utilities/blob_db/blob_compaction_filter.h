@@ -9,7 +9,7 @@
 
 #include "db/blob/blob_index.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 #include "utilities/blob_db/blob_db_gc_stats.h"
 #include "utilities/blob_db/blob_db_impl.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"

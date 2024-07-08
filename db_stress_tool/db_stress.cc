@@ -16,7 +16,7 @@ int main() {
 }
 #else
 #include "port/stack_trace.h"
-#include "rocksdb/db_stress_tool.h"
+#include "mizar/db_stress_tool.h"
 
 int main(int argc, char** argv) {
   ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();

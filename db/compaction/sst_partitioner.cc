@@ -4,13 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "rocksdb/sst_partitioner.h"
+#include "mizar/sst_partitioner.h"
 
 #include <algorithm>
 
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 
 namespace ROCKSDB_NAMESPACE {
 static std::unordered_map<std::string, OptionTypeInfo>

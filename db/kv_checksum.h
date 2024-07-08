@@ -33,7 +33,7 @@
 #include <type_traits>
 
 #include "db/dbformat.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 #include "util/hash.h"
 
 namespace ROCKSDB_NAMESPACE {

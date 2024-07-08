@@ -9,7 +9,7 @@
 
 #include <atomic>
 
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "util/mutexlock.h"
 #include "utilities/blob_db/blob_db_impl.h"
 

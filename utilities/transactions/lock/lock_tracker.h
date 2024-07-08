@@ -8,10 +8,10 @@
 
 #include <memory>
 
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/status.h"
-#include "rocksdb/types.h"
-#include "rocksdb/utilities/transaction_db.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/status.h"
+#include "mizar/types.h"
+#include "mizar/utilities/transaction_db.h"
 
 namespace ROCKSDB_NAMESPACE {
 

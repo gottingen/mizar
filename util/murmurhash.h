@@ -12,7 +12,7 @@
 #pragma once
 #include <stdint.h>
 
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 
 #if defined(__x86_64__)
 #define MURMUR_HASH MurmurHash64A

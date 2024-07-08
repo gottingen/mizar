@@ -12,10 +12,10 @@
 #include <vector>
 
 #include "db/version_edit.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/plain/plain_table_bloom.h"
 #include "table/plain/plain_table_index.h"
 #include "table/plain/plain_table_key_coding.h"

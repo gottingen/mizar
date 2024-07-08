@@ -11,7 +11,7 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "test_util/sync_point.h"
 #include "utilities/fault_injection_env.h"
 #include "utilities/fault_injection_fs.h"

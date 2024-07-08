@@ -5,8 +5,8 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/env.h"
-#include "rocksdb/perf_context.h"
+#include "mizar/env.h"
+#include "mizar/perf_context.h"
 #include "test_util/testharness.h"
 
 namespace ROCKSDB_NAMESPACE {

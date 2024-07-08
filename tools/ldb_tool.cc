@@ -4,9 +4,9 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #ifndef ROCKSDB_LITE
-#include "rocksdb/ldb_tool.h"
+#include "mizar/ldb_tool.h"
 
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 #include "tools/ldb_cmd_impl.h"
 
 namespace ROCKSDB_NAMESPACE {

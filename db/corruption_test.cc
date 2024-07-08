@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #ifndef ROCKSDB_LITE
 
 #include <fcntl.h>
@@ -22,13 +22,13 @@
 #include "db/version_set.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/transaction_db.h"
-#include "rocksdb/write_batch.h"
+#include "mizar/cache.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/table.h"
+#include "mizar/utilities/transaction_db.h"
+#include "mizar/write_batch.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/meta_blocks.h"
 #include "table/mock_table.h"

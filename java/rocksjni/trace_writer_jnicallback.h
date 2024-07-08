@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/trace_reader_writer.h"
 #include "rocksjni/jnicallback.h"
 
 namespace ROCKSDB_NAMESPACE {

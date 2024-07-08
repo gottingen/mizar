@@ -10,7 +10,7 @@
 #include <string>
 
 #include "env/fs_remap.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 
 namespace ROCKSDB_NAMESPACE {
 class ChrootFileSystem : public RemapFileSystem {

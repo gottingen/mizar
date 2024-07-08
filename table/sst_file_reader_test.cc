@@ -5,14 +5,14 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/sst_file_reader.h"
+#include "mizar/sst_file_reader.h"
 
 #include <cinttypes>
 
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/sst_file_writer.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/sst_file_writer.h"
 #include "table/sst_file_writer_collectors.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

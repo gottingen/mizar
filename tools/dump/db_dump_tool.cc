@@ -5,13 +5,13 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/db_dump_tool.h"
+#include "mizar/db_dump_tool.h"
 
 #include <cinttypes>
 #include <iostream>
 
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
 #include "util/coding.h"
 
 namespace ROCKSDB_NAMESPACE {

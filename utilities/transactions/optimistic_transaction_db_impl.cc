@@ -11,9 +11,9 @@
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 #include "utilities/transactions/optimistic_transaction.h"
 
 namespace ROCKSDB_NAMESPACE {

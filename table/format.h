@@ -19,9 +19,9 @@
 #include "options/cf_options.h"
 #include "port/malloc.h"
 #include "port/port.h"  // noexcept
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "util/hash.h"
 
 namespace ROCKSDB_NAMESPACE {

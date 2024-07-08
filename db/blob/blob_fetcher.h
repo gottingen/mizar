@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

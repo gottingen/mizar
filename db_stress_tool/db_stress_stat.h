@@ -11,9 +11,9 @@
 
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/snapshot.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/snapshot.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
 #include "util/gflags_compat.h"
 #include "util/random.h"
 

@@ -14,7 +14,7 @@
 #include <cerrno>
 #include <cstddef>
 
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 
 namespace ROCKSDB_NAMESPACE {
 

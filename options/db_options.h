@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
 namespace ROCKSDB_NAMESPACE {
 class SystemClock;

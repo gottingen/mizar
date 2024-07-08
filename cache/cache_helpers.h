@@ -7,8 +7,8 @@
 
 #include <cassert>
 
-#include "rocksdb/cache.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/cache.h"
+#include "mizar/rocksdb_namespace.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -10,13 +10,13 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/cache.h"
-#include "rocksdb/compaction_filter.h"
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/cache.h"
+#include "mizar/compaction_filter.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/table.h"
+#include "mizar/utilities/options_util.h"
 
 using ROCKSDB_NAMESPACE::BlockBasedTableOptions;
 using ROCKSDB_NAMESPACE::ColumnFamilyDescriptor;

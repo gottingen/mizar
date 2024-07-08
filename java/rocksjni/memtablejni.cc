@@ -9,7 +9,7 @@
 #include "include/org_rocksdb_HashSkipListMemTableConfig.h"
 #include "include/org_rocksdb_SkipListMemTableConfig.h"
 #include "include/org_rocksdb_VectorMemTableConfig.h"
-#include "rocksdb/memtablerep.h"
+#include "mizar/memtablerep.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

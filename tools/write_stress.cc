@@ -65,11 +65,11 @@ int main() {
 
 #include "file/filename.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/system_clock.h"
 #include "util/gflags_compat.h"
 
 using GFLAGS_NAMESPACE::ParseCommandLineFlags;

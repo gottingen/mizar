@@ -9,7 +9,7 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_CompactionJobInfo.h"
-#include "rocksdb/listener.h"
+#include "mizar/listener.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 

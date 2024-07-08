@@ -1,0 +1,98 @@
+@PACKAGE_INIT@
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules")
+
+include(CMakeFindDependencyMacro)
+
+if(@WITH_JEMALLOC@)
+  find_dependency(JeMalloc)
+endif()
+
+set(EA_INF /opt/EA/inf)
+list(APPEND CMAKE_PREFIX_PATH ${EA_INF})
+
+include(GNUInstallDirs)
+set(EA_INCLUDE_DIR ${EA_INF}/${CMAKE_INSTALL_INCLUDEDIR})
+set(EA_LIB_DIR ${EA_INF}/${CMAKE_INSTALL_LIBDIR})
+
+set(MIZAR_LIBS)
+set(MIZAR_LIBS_INCLUDE_DIRS)
+
+
+if (@WITH_LIBURING@)
+  find_package(uring)
+  if (uring_FOUND)
+    list(APPEND MIZAR_LIBS uring::uring)
+  else ()
+    message(FATAL_ERROR "liburing not found")
+  endif()
+endif()
+
+if(@WITH_SNAPPY@)
+  find_dependency(Snappy CONFIG)
+  if(NOT Snappy_FOUND)
+    find_dependency(Snappy)
+  endif()
+    if(NOT Snappy_FOUND)
+        message(FATAL_ERROR "snappy not found")
+    endif()
+    list(APPEND MIZAR_LIBS Snappy::snappy)
+endif()
+
+if(@WITH_ZLIB@)
+    find_path(ZLIB_INCLUDE_DIR zlib.h HINTS ${EA_INCLUDE_DIR})
+    find_library(ZLIB_LIBRARY NAMES z HINTS ${EA_LIB_DIR})
+    if(NOT ZLIB_INCLUDE_DIR OR NOT ZLIB_LIBRARY)
+      message(FATAL_ERROR "zlib not found")
+    endif()
+    list(APPEND MIZAR_LIBS ${ZLIB_LIBRARY})
+    list(APPEND MIZAR_LIBS_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
+endif()
+
+if(@WITH_BZ2@)
+    find_path(BZIP2_INCLUDE_DIR bzlib.h HINTS ${EA_INCLUDE_DIR})
+    find_library(BZIP2_LIBRARY NAMES bz2 HINTS ${EA_LIB_DIR})
+
+    if(NOT BZIP2_INCLUDE_DIR OR NOT BZIP2_LIBRARY)
+        message(FATAL_ERROR "bzip2 not found")
+    endif()
+    list(APPEND MIZAR_LIBS ${BZIP2_LIBRARY})
+    list(APPEND MIZAR_LIBS_INCLUDE_DIRS ${BZIP2_INCLUDE_DIR})
+endif()
+
+if(@WITH_LZ4@)
+        find_path(LZ4_INCLUDE_DIR lz4.h HINTS ${EA_INCLUDE_DIR})
+        find_library(LZ4_LIBRARY NAMES lz4 HINTS ${EA_LIB_DIR})
+        if(NOT LZ4_INCLUDE_DIR OR NOT LZ4_LIBRARY)
+            message(FATAL_ERROR "lz4 not found")
+        endif()
+        list(APPEND MIZAR_LIBS ${LZ4_LIBRARY})
+        list(APPEND MIZAR_LIBS_INCLUDE_DIRS ${LZ4_INCLUDE_DIR})
+endif()
+
+if(@WITH_ZSTD@)
+        find_path(ZSTD_INCLUDE_DIR zstd.h HINTS ${EA_INCLUDE_DIR})
+        find_library(ZSTD_LIBRARY NAMES zstd HINTS ${EA_LIB_DIR})
+        if(NOT ZSTD_INCLUDE_DIR OR NOT ZSTD_LIBRARY)
+            message(FATAL_ERROR "zstd not found")
+        endif()
+        list(APPEND MIZAR_LIBS ${ZSTD_LIBRARY})
+        list(APPEND MIZAR_LIBS_INCLUDE_DIRS ${ZSTD_INCLUDE_DIR})
+endif()
+
+if(@WITH_NUMA@)
+  find_dependency(NUMA)
+endif()
+
+if(@WITH_TBB@)
+  find_dependency(TBB)
+endif()
+
+find_dependency(Threads)
+
+include("${CMAKE_CURRENT_LIST_DIR}/mizarTargets.cmake")
+check_required_components(mizar)
+list(APPEND MIZAR_LIBS mizar::mizar)
+list(APPEND MIZAR_LIBS_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include)
+list(REMOVE_DUPLICATES MIZAR_LIBS_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES MIZAR_LIBS)

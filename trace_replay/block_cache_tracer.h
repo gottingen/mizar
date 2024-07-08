@@ -9,10 +9,10 @@
 #include <fstream>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/block_cache_trace_writer.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table_reader_caller.h"
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/block_cache_trace_writer.h"
+#include "mizar/options.h"
+#include "mizar/table_reader_caller.h"
+#include "mizar/trace_reader_writer.h"
 #include "trace_replay/trace_replay.h"
 
 namespace ROCKSDB_NAMESPACE {

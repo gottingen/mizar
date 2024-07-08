@@ -11,8 +11,8 @@
 #include <functional>
 #include <memory>
 
-#include "rocksdb/env.h"
-#include "rocksdb/threadpool.h"
+#include "mizar/env.h"
+#include "mizar/threadpool.h"
 
 namespace ROCKSDB_NAMESPACE {
 

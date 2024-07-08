@@ -11,8 +11,8 @@
 
 #include <algorithm>
 
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 
 namespace ROCKSDB_NAMESPACE {
 

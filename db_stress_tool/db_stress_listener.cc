@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include "file/file_util.h"
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 #include "util/coding_lean.h"
 
 namespace ROCKSDB_NAMESPACE {

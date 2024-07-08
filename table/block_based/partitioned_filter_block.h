@@ -11,9 +11,9 @@
 #include <unordered_map>
 
 #include "block_cache.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
 #include "table/block_based/block.h"
 #include "table/block_based/filter_block_reader_common.h"
 #include "table/block_based/full_filter_block.h"

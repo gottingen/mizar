@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 
 namespace ROCKSDB_NAMESPACE {

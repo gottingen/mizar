@@ -13,7 +13,7 @@
 
 #include "env/composite_env_wrapper.h"
 #include "env/fs_remap.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"  // errnoStr
 
 namespace ROCKSDB_NAMESPACE {

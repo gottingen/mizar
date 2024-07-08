@@ -24,9 +24,9 @@
 
 #include "env/composite_env_wrapper.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/system_clock.h"
 #include "util/threadpool_imp.h"
 
 #undef GetCurrentTime

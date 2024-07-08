@@ -17,8 +17,8 @@ int main() { fprintf(stderr, "Please install gflags to run tools\n"); }
 
 #include "monitoring/histogram.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 #include "table/block_based/block_builder.h"
 #include "util/gflags_compat.h"
 #include "util/mutexlock.h"

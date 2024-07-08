@@ -5,7 +5,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 
 #include <cinttypes>
 #include <cstdlib>
@@ -25,18 +25,18 @@
 #include "db/version_util.h"
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/experimental.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/table_properties.h"
-#include "rocksdb/utilities/backup_engine.h"
-#include "rocksdb/utilities/checkpoint.h"
-#include "rocksdb/utilities/debug.h"
-#include "rocksdb/utilities/options_util.h"
-#include "rocksdb/write_batch.h"
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/cache.h"
+#include "mizar/experimental.h"
+#include "mizar/file_checksum.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/table_properties.h"
+#include "mizar/utilities/backup_engine.h"
+#include "mizar/utilities/checkpoint.h"
+#include "mizar/utilities/debug.h"
+#include "mizar/utilities/options_util.h"
+#include "mizar/write_batch.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/scoped_arena_iterator.h"
 #include "table/sst_file_dumper.h"
 #include "tools/ldb_cmd_impl.h"

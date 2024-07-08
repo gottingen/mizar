@@ -14,8 +14,8 @@
 #include <mutex>
 #include <string>
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/status.h"
+#include "mizar/file_system.h"
+#include "mizar/status.h"
 #include "util/aligned_buffer.h"
 #include "util/string_util.h"
 

@@ -7,8 +7,8 @@
 
 #include <set>
 
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/status.h"
+#include "mizar/filter_policy.h"
+#include "mizar/status.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/mock_block_based_table.h"

@@ -16,8 +16,8 @@
 #include <string>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/flush_block_policy.h"
+#include "mizar/comparator.h"
+#include "mizar/flush_block_policy.h"
 #include "table/block_based/partitioned_filter_block.h"
 #include "table/format.h"
 

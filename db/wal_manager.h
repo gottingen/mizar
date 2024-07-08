@@ -21,10 +21,10 @@
 #include "file/file_util.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
-#include "rocksdb/transaction_log.h"
-#include "rocksdb/types.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
+#include "mizar/transaction_log.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 

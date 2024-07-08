@@ -8,7 +8,7 @@
 
 #include "cache/cache_key.h"
 #include "monitoring/statistics.h"
-#include "rocksdb/persistent_cache.h"
+#include "mizar/persistent_cache.h"
 
 namespace ROCKSDB_NAMESPACE {
 

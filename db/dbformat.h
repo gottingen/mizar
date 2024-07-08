@@ -14,10 +14,10 @@
 #include <string>
 #include <utility>
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/types.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/types.h"
 #include "util/coding.h"
 #include "util/user_comparator_wrapper.h"
 

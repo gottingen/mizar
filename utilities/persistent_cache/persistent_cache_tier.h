@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "monitoring/histogram.h"
-#include "rocksdb/env.h"
-#include "rocksdb/persistent_cache.h"
-#include "rocksdb/status.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/persistent_cache.h"
+#include "mizar/status.h"
+#include "mizar/system_clock.h"
 
 // Persistent Cache
 //

@@ -10,7 +10,7 @@
 #include <tuple>
 
 #include "memory/jemalloc_nodump_allocator.h"
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

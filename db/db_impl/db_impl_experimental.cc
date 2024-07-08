@@ -15,7 +15,7 @@
 #include "db/job_context.h"
 #include "db/version_set.h"
 #include "logging/logging.h"
-#include "rocksdb/status.h"
+#include "mizar/status.h"
 #include "util/cast_util.h"
 
 namespace ROCKSDB_NAMESPACE {

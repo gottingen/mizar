@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 
 #if defined(OS_WIN)
 std::string kDBPath = "C:\\Windows\\TEMP\\rocksdb_column_families_example";

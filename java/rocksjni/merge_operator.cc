@@ -7,7 +7,7 @@
 // This file implements the "bridge" between Java and C++
 // for ROCKSDB_NAMESPACE::MergeOperator.
 
-#include "rocksdb/merge_operator.h"
+#include "mizar/merge_operator.h"
 
 #include <jni.h>
 #include <stdio.h>
@@ -18,12 +18,12 @@
 
 #include "include/org_rocksdb_StringAppendOperator.h"
 #include "include/org_rocksdb_UInt64AddOperator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
+#include "mizar/db.h"
+#include "mizar/memtablerep.h"
+#include "mizar/options.h"
+#include "mizar/slice_transform.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 #include "utilities/merge_operators.h"

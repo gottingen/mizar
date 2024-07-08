@@ -7,9 +7,9 @@
 
 #include <string>
 
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/cassandra/merge_operator.h"
 

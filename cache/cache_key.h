@@ -7,8 +7,8 @@
 
 #include <cstdint>
 
-#include "rocksdb/rocksdb_namespace.h"
-#include "rocksdb/slice.h"
+#include "mizar/rocksdb_namespace.h"
+#include "mizar/slice.h"
 #include "table/unique_id_impl.h"
 
 namespace ROCKSDB_NAMESPACE {

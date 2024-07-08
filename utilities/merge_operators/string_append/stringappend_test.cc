@@ -19,9 +19,9 @@
 #include <tuple>
 
 #include "port/stack_trace.h"
-#include "rocksdb/db.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/utilities/db_ttl.h"
+#include "mizar/db.h"
+#include "mizar/merge_operator.h"
+#include "mizar/utilities/db_ttl.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "utilities/merge_operators.h"

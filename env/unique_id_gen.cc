@@ -11,8 +11,8 @@
 #include <random>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/version.h"
+#include "mizar/env.h"
+#include "mizar/version.h"
 #include "util/hash.h"
 
 namespace ROCKSDB_NAMESPACE {

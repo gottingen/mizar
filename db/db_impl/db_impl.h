@@ -50,18 +50,18 @@
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/status.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/memtablerep.h"
+#include "mizar/status.h"
 #ifndef ROCKSDB_LITE
-#include "rocksdb/trace_reader_writer.h"
+#include "mizar/trace_reader_writer.h"
 #endif  // ROCKSDB_LITE
-#include "rocksdb/transaction_log.h"
+#include "mizar/transaction_log.h"
 #ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/replayer.h"
+#include "mizar/utilities/replayer.h"
 #endif  // ROCKSDB_LITE
-#include "rocksdb/write_buffer_manager.h"
+#include "mizar/write_buffer_manager.h"
 #include "table/merging_iterator.h"
 #include "table/scoped_arena_iterator.h"
 #include "util/autovector.h"

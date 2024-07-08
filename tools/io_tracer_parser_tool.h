@@ -8,8 +8,8 @@
 
 #include <memory>
 
-#include "rocksdb/env.h"
-#include "rocksdb/status.h"
+#include "mizar/env.h"
+#include "mizar/status.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -7,7 +7,7 @@
 #include <string>
 
 #include "db/read_callback.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 class BlobFetcher;

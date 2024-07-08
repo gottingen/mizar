@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++
 // for ROCKSDB_NAMESPACE::Transaction.
 
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/utilities/transaction.h"
 
 #include <jni.h>
 

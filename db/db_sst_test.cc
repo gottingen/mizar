@@ -12,9 +12,9 @@
 #include "file/sst_file_manager_impl.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/sst_file_manager.h"
-#include "rocksdb/table.h"
+#include "mizar/cache.h"
+#include "mizar/sst_file_manager.h"
+#include "mizar/table.h"
 #include "util/random.h"
 
 namespace ROCKSDB_NAMESPACE {

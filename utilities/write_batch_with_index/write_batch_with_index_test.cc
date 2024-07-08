@@ -9,7 +9,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/write_batch_with_index.h"
+#include "mizar/utilities/write_batch_with_index.h"
 
 #include <map>
 #include <memory>

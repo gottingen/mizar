@@ -6,9 +6,9 @@
 #include <cstdio>
 #include <string>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
 
 using ROCKSDB_NAMESPACE::DB;
 using ROCKSDB_NAMESPACE::Options;

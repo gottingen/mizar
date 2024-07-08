@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/utilities/stackable_db.h"
+#include "mizar/db.h"
+#include "mizar/status.h"
+#include "mizar/utilities/stackable_db.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -6,7 +6,7 @@
 #pragma once
 #include <memory>
 
-#include "rocksdb/compaction_filter.h"
+#include "mizar/compaction_filter.h"
 
 namespace ROCKSDB_NAMESPACE {
 

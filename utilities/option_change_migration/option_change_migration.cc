@@ -3,10 +3,10 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/utilities/option_change_migration.h"
+#include "mizar/utilities/option_change_migration.h"
 
 #ifndef ROCKSDB_LITE
-#include "rocksdb/db.h"
+#include "mizar/db.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {

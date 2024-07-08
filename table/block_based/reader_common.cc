@@ -9,7 +9,7 @@
 #include "table/block_based/reader_common.h"
 
 #include "monitoring/perf_context_imp.h"
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 #include "table/format.h"
 #include "util/coding.h"
 #include "util/crc32c.h"

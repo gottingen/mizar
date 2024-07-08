@@ -11,7 +11,7 @@
 #include <string>
 
 #include "logging/log_buffer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 
 namespace ROCKSDB_NAMESPACE {
 

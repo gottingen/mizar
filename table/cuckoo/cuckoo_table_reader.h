@@ -15,8 +15,8 @@
 #include <vector>
 
 #include "file/random_access_file_reader.h"
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 #include "table/table_reader.h"
 
 namespace ROCKSDB_NAMESPACE {

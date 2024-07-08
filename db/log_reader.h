@@ -14,9 +14,9 @@
 
 #include "db/log_format.h"
 #include "file/sequence_file_reader.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/compression.h"
 #include "util/xxhash.h"
 

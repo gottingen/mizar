@@ -7,11 +7,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/db_bench_tool.h"
+#include "mizar/db_bench_tool.h"
 
 #include "db/db_impl/db_impl.h"
 #include "options/options_parser.h"
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/utilities/options_util.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"

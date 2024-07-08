@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/table.h"
+#include "mizar/filter_policy.h"
+#include "mizar/table.h"
 
 namespace ROCKSDB_NAMESPACE {
 

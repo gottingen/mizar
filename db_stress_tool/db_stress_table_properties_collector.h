@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/table.h"
+#include "mizar/table.h"
 #include "util/gflags_compat.h"
 #include "util/random.h"
 

@@ -10,9 +10,9 @@
 
 #include "db/dbformat.h"
 #include "file/readahead_file_info.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/status.h"
+#include "mizar/comparator.h"
+#include "mizar/iterator.h"
+#include "mizar/status.h"
 #include "table/format.h"
 
 namespace ROCKSDB_NAMESPACE {

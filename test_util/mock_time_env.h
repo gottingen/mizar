@@ -8,7 +8,7 @@
 #include <atomic>
 #include <limits>
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

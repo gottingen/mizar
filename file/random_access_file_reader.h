@@ -14,10 +14,10 @@
 
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/listener.h"
-#include "rocksdb/options.h"
-#include "rocksdb/rate_limiter.h"
+#include "mizar/file_system.h"
+#include "mizar/listener.h"
+#include "mizar/options.h"
+#include "mizar/rate_limiter.h"
 #include "util/aligned_buffer.h"
 
 namespace ROCKSDB_NAMESPACE {

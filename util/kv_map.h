@@ -7,8 +7,8 @@
 #include <map>
 #include <string>
 
-#include "rocksdb/comparator.h"
-#include "rocksdb/slice.h"
+#include "mizar/comparator.h"
+#include "mizar/slice.h"
 #include "util/coding.h"
 
 namespace ROCKSDB_NAMESPACE {

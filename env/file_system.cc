@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#include "rocksdb/file_system.h"
+#include "mizar/file_system.h"
 
 #include "env/composite_env_wrapper.h"
 #include "env/env_chroot.h"
@@ -12,10 +12,10 @@
 #include "env/mock_env.h"
 #include "logging/env_logger.h"
 #include "options/db_options.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 #include "utilities/counted_fs.h"
 #include "utilities/env_timed.h"

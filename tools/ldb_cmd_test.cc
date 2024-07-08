@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 #ifndef ROCKSDB_LITE
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/utilities/ldb_cmd.h"
 
 #include <cinttypes>
 
@@ -14,12 +14,12 @@
 #include "env/composite_env_wrapper.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "rocksdb/advanced_options.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/utilities/options_util.h"
+#include "mizar/advanced_options.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/file_checksum.h"
+#include "mizar/file_system.h"
+#include "mizar/utilities/options_util.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"

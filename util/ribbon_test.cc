@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "util/bloom_impl.h"
 #include "util/coding.h"

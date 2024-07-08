@@ -16,7 +16,7 @@
 
 #include "db/db_test_util.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "util/random.h"

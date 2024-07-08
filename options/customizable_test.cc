@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "rocksdb/customizable.h"
+#include "mizar/customizable.h"
 
 #include <cctype>
 #include <cinttypes>
@@ -21,19 +21,19 @@
 #include "options/options_helper.h"
 #include "options/options_parser.h"
 #include "port/stack_trace.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/env_encryption.h"
-#include "rocksdb/file_checksum.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/memory_allocator.h"
-#include "rocksdb/secondary_cache.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/sst_partitioner.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/env_encryption.h"
+#include "mizar/file_checksum.h"
+#include "mizar/filter_policy.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/memory_allocator.h"
+#include "mizar/secondary_cache.h"
+#include "mizar/slice_transform.h"
+#include "mizar/sst_partitioner.h"
+#include "mizar/statistics.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
 #include "table/block_based/filter_policy_internal.h"
 #include "table/block_based/flush_block_policy.h"
 #include "table/mock_table.h"

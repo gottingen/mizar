@@ -11,7 +11,7 @@
 #include <folly/container/F14Map.h>
 #endif
 
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/rocksdb_namespace.h"
 
 namespace ROCKSDB_NAMESPACE {
 

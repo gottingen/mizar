@@ -9,7 +9,7 @@
 
 #include "util/concurrent_task_limiter_impl.h"
 
-#include "rocksdb/concurrent_task_limiter.h"
+#include "mizar/concurrent_task_limiter.h"
 
 namespace ROCKSDB_NAMESPACE {
 

@@ -10,7 +10,7 @@
 
 #include "file/random_access_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/utilities/cache_dump_load.h"
+#include "mizar/utilities/cache_dump_load.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_type.h"
 #include "table/block_based/cachable_entry.h"

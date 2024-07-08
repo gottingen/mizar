@@ -8,7 +8,7 @@
 #include <array>
 #include <cstdint>
 
-#include "rocksdb/cache.h"
+#include "mizar/cache.h"
 
 namespace ROCKSDB_NAMESPACE {
 

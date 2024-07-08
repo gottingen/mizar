@@ -15,9 +15,9 @@
 #include "db/range_del_aggregator.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/wide_columns.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
+#include "mizar/wide_columns.h"
 #include "table/iterator_wrapper.h"
 #include "util/autovector.h"
 

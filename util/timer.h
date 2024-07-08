@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "monitoring/instrumented_mutex.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 

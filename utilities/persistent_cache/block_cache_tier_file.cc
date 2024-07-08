@@ -16,7 +16,7 @@
 #include "env/composite_env_wrapper.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "util/crc32c.h"
 
 namespace ROCKSDB_NAMESPACE {

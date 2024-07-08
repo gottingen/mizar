@@ -19,8 +19,8 @@
 #include "cache/cache_entry_roles.h"
 #include "cache/cache_key.h"
 #include "cache/typed_cache.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/coding.h"
 
 namespace ROCKSDB_NAMESPACE {

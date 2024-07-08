@@ -8,9 +8,9 @@
 #include <atomic>
 #include <memory>
 
-#include "rocksdb/file_system.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/file_system.h"
+#include "mizar/io_status.h"
+#include "mizar/rocksdb_namespace.h"
 
 namespace ROCKSDB_NAMESPACE {
 class Logger;

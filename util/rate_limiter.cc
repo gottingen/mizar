@@ -13,7 +13,7 @@
 
 #include "monitoring/statistics.h"
 #include "port/port.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/aligned_buffer.h"
 

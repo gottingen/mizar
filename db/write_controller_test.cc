@@ -8,7 +8,7 @@
 #include <array>
 #include <ratio>
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 
 namespace ROCKSDB_NAMESPACE {

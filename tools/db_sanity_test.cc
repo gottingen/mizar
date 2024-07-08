@@ -9,15 +9,15 @@
 #include <vector>
 
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/env.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/env.h"
+#include "mizar/filter_policy.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/slice_transform.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/cleanable.h"
+#include "mizar/cleanable.h"
 
 #include <gtest/gtest.h>
 
@@ -11,8 +11,8 @@
 
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "rocksdb/iostats_context.h"
-#include "rocksdb/perf_context.h"
+#include "mizar/iostats_context.h"
+#include "mizar/perf_context.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

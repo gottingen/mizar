@@ -14,9 +14,9 @@
 
 #include "db/version_edit.h"
 #include "port/port.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/io_status.h"
+#include "mizar/table.h"
 #include "table/internal_iterator.h"
 #include "table/table_builder.h"
 #include "table/table_reader.h"

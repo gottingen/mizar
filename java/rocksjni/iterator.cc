@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ and enables
 // calling c++ ROCKSDB_NAMESPACE::Iterator methods from Java side.
 
-#include "rocksdb/iterator.h"
+#include "mizar/iterator.h"
 
 #include <jni.h>
 #include <stdio.h>

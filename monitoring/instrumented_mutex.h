@@ -7,9 +7,9 @@
 
 #include "monitoring/statistics.h"
 #include "port/port.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/system_clock.h"
-#include "rocksdb/thread_status.h"
+#include "mizar/statistics.h"
+#include "mizar/system_clock.h"
+#include "mizar/thread_status.h"
 #include "util/stop_watch.h"
 
 namespace ROCKSDB_NAMESPACE {

@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "table/internal_iterator.h"
 
 namespace ROCKSDB_NAMESPACE {

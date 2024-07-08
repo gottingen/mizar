@@ -6,8 +6,8 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_RocksDBExceptionTest.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "rocksjni/portal.h"
 
 /*

@@ -5,11 +5,11 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
-#include "rocksdb/utilities/transaction.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
+#include "mizar/utilities/transaction.h"
 
 using ROCKSDB_NAMESPACE::DB;
 using ROCKSDB_NAMESPACE::OptimisticTransactionDB;

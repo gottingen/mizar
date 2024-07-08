@@ -15,8 +15,8 @@
 
 #include "cache/cache_reservation_manager.h"
 #include "port/port.h"
-#include "rocksdb/flush_block_policy.h"
-#include "rocksdb/table.h"
+#include "mizar/flush_block_policy.h"
+#include "mizar/table.h"
 
 namespace ROCKSDB_NAMESPACE {
 struct ColumnFamilyOptions;

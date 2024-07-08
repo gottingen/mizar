@@ -6,8 +6,8 @@
 #include "monitoring/thread_status_util.h"
 
 #include "monitoring/thread_status_updater.h"
-#include "rocksdb/env.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/env.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

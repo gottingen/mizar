@@ -20,8 +20,8 @@
 #include "logging/logging.h"
 #include "monitoring/persistent_stats_history.h"
 #include "options/options_helper.h"
-#include "rocksdb/table.h"
-#include "rocksdb/wal_filter.h"
+#include "mizar/table.h"
+#include "mizar/wal_filter.h"
 #include "test_util/sync_point.h"
 #include "util/rate_limiter.h"
 

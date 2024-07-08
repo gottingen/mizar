@@ -9,10 +9,10 @@
 #include <cinttypes>
 #include <cstdio>
 
-#include "rocksdb/convenience.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/convenience.h"
+#include "mizar/statistics.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/options_type.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

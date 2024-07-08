@@ -12,11 +12,11 @@
 #include <memory>
 
 #include "db/log_format.h"
-#include "rocksdb/compression_type.h"
-#include "rocksdb/env.h"
-#include "rocksdb/io_status.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/status.h"
+#include "mizar/compression_type.h"
+#include "mizar/env.h"
+#include "mizar/io_status.h"
+#include "mizar/slice.h"
+#include "mizar/status.h"
 #include "util/compression.h"
 
 namespace ROCKSDB_NAMESPACE {

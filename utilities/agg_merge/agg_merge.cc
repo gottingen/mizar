@@ -15,10 +15,10 @@
 
 #include "port/lang.h"
 #include "port/likely.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/utilities/agg_merge.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/merge_operator.h"
+#include "mizar/slice.h"
+#include "mizar/utilities/agg_merge.h"
+#include "mizar/utilities/options_type.h"
 #include "util/coding.h"
 #include "utilities/merge_operators.h"
 

@@ -10,7 +10,7 @@
 #include <cassert>
 #include <ratio>
 
-#include "rocksdb/system_clock.h"
+#include "mizar/system_clock.h"
 
 namespace ROCKSDB_NAMESPACE {
 

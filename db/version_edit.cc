@@ -12,7 +12,7 @@
 #include "db/blob/blob_index.h"
 #include "db/version_set.h"
 #include "logging/event_logger.h"
-#include "rocksdb/slice.h"
+#include "mizar/slice.h"
 #include "table/unique_id_impl.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"

@@ -6,7 +6,7 @@
 #pragma once
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/backup_engine.h"
+#include "mizar/utilities/backup_engine.h"
 
 namespace ROCKSDB_NAMESPACE {
 

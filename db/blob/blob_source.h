@@ -13,8 +13,8 @@
 #include "db/blob/blob_contents.h"
 #include "db/blob/blob_file_cache.h"
 #include "db/blob/blob_read_request.h"
-#include "rocksdb/cache.h"
-#include "rocksdb/rocksdb_namespace.h"
+#include "mizar/cache.h"
+#include "mizar/rocksdb_namespace.h"
 #include "table/block_based/cachable_entry.h"
 #include "util/autovector.h"
 

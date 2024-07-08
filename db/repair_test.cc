@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 #ifndef ROCKSDB_LITE
 
 #include <algorithm>
@@ -13,9 +13,9 @@
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "file/file_util.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/db.h"
-#include "rocksdb/transaction_log.h"
+#include "mizar/comparator.h"
+#include "mizar/db.h"
+#include "mizar/transaction_log.h"
 #include "table/unique_id_impl.h"
 #include "util/string_util.h"
 

@@ -11,8 +11,8 @@
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/sst_file_manager.h"
+#include "mizar/env.h"
+#include "mizar/sst_file_manager.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 

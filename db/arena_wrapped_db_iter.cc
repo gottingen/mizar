@@ -10,9 +10,9 @@
 #include "db/arena_wrapped_db_iter.h"
 
 #include "memory/arena.h"
-#include "rocksdb/env.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
 #include "table/internal_iterator.h"
 #include "table/iterator_wrapper.h"
 #include "util/user_comparator_wrapper.h"

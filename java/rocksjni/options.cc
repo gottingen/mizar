@@ -6,7 +6,7 @@
 // This file implements the "bridge" between Java and C++ for
 // ROCKSDB_NAMESPACE::Options.
 
-#include "rocksdb/options.h"
+#include "mizar/options.h"
 
 #include <jni.h>
 #include <stdio.h>
@@ -22,16 +22,16 @@
 #include "include/org_rocksdb_Options.h"
 #include "include/org_rocksdb_ReadOptions.h"
 #include "include/org_rocksdb_WriteOptions.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/db.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/merge_operator.h"
-#include "rocksdb/rate_limiter.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/sst_partitioner.h"
-#include "rocksdb/statistics.h"
-#include "rocksdb/table.h"
+#include "mizar/comparator.h"
+#include "mizar/convenience.h"
+#include "mizar/db.h"
+#include "mizar/memtablerep.h"
+#include "mizar/merge_operator.h"
+#include "mizar/rate_limiter.h"
+#include "mizar/slice_transform.h"
+#include "mizar/sst_partitioner.h"
+#include "mizar/statistics.h"
+#include "mizar/table.h"
 #include "rocksjni/comparatorjnicallback.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"

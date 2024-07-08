@@ -5,15 +5,15 @@
 //
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/sst_dump_tool.h"
+#include "mizar/sst_dump_tool.h"
 
 #include <cinttypes>
 #include <iostream>
 
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "rocksdb/convenience.h"
-#include "rocksdb/utilities/ldb_cmd.h"
+#include "mizar/convenience.h"
+#include "mizar/utilities/ldb_cmd.h"
 #include "table/sst_file_dumper.h"
 
 namespace ROCKSDB_NAMESPACE {

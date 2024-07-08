@@ -3,15 +3,15 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "rocksdb/trace_record.h"
+#include "mizar/trace_record.h"
 
 #include <utility>
 
-#include "rocksdb/db.h"
-#include "rocksdb/iterator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/status.h"
-#include "rocksdb/trace_record_result.h"
+#include "mizar/db.h"
+#include "mizar/iterator.h"
+#include "mizar/options.h"
+#include "mizar/status.h"
+#include "mizar/trace_record_result.h"
 #include "trace_replay/trace_record_handler.h"
 
 namespace ROCKSDB_NAMESPACE {

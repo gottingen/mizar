@@ -5,10 +5,10 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/utilities/debug.h"
+#include "mizar/utilities/debug.h"
 
 #include "db/db_impl/db_impl.h"
-#include "rocksdb/utilities/options_type.h"
+#include "mizar/utilities/options_type.h"
 
 namespace ROCKSDB_NAMESPACE {
 

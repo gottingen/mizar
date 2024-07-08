@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/options.h"
-#include "rocksdb/perf_context.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/statistics.h"
+#include "mizar/comparator.h"
+#include "mizar/options.h"
+#include "mizar/perf_context.h"
+#include "mizar/slice.h"
+#include "mizar/statistics.h"
 #include "table/iterator_wrapper.h"
 #include "table/merging_iterator.h"
 #include "test_util/sync_point.h"

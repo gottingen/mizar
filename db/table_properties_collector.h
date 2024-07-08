@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/comparator.h"
+#include "mizar/table_properties.h"
 
 namespace ROCKSDB_NAMESPACE {
 

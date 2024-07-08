@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/configurable.h"
-#include "rocksdb/convenience.h"
+#include "mizar/configurable.h"
+#include "mizar/convenience.h"
 
 namespace ROCKSDB_NAMESPACE {
 // Helper class defining static methods for supporting the Configurable

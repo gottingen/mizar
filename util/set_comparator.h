@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 
 namespace ROCKSDB_NAMESPACE {
 // A comparator to be used in std::set

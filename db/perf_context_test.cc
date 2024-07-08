@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#include "rocksdb/perf_context.h"
+#include "mizar/perf_context.h"
 
 #include <algorithm>
 #include <iostream>
@@ -15,10 +15,10 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/thread_status_util.h"
 #include "port/port.h"
-#include "rocksdb/db.h"
-#include "rocksdb/memtablerep.h"
-#include "rocksdb/slice_transform.h"
-#include "rocksdb/system_clock.h"
+#include "mizar/db.h"
+#include "mizar/memtablerep.h"
+#include "mizar/slice_transform.h"
+#include "mizar/system_clock.h"
 #include "test_util/testharness.h"
 #include "util/stop_watch.h"
 #include "util/string_util.h"

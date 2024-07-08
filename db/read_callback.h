@@ -6,7 +6,7 @@
 #pragma once
 
 #include "db/dbformat.h"
-#include "rocksdb/types.h"
+#include "mizar/types.h"
 
 namespace ROCKSDB_NAMESPACE {
 

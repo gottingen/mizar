@@ -17,7 +17,7 @@
 #include "options/configurable_helper.h"
 #include "options/options_helper.h"
 #include "options/options_parser.h"
-#include "rocksdb/configurable.h"
+#include "mizar/configurable.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

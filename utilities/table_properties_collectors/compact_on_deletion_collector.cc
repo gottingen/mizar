@@ -8,10 +8,10 @@
 #include <memory>
 #include <sstream>
 
-#include "rocksdb/utilities/customizable_util.h"
-#include "rocksdb/utilities/object_registry.h"
-#include "rocksdb/utilities/options_type.h"
-#include "rocksdb/utilities/table_properties_collectors.h"
+#include "mizar/utilities/customizable_util.h"
+#include "mizar/utilities/object_registry.h"
+#include "mizar/utilities/options_type.h"
+#include "mizar/utilities/table_properties_collectors.h"
 #include "util/string_util.h"
 
 namespace ROCKSDB_NAMESPACE {

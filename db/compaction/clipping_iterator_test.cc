@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/vector_iterator.h"

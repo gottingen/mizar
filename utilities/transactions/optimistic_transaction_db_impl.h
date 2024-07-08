@@ -10,9 +10,9 @@
 #include <mutex>
 #include <vector>
 
-#include "rocksdb/db.h"
-#include "rocksdb/options.h"
-#include "rocksdb/utilities/optimistic_transaction_db.h"
+#include "mizar/db.h"
+#include "mizar/options.h"
+#include "mizar/utilities/optimistic_transaction_db.h"
 
 namespace ROCKSDB_NAMESPACE {
 

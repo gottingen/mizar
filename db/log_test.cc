@@ -11,7 +11,7 @@
 #include "db/log_writer.h"
 #include "file/sequence_file_reader.h"
 #include "file/writable_file_writer.h"
-#include "rocksdb/env.h"
+#include "mizar/env.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"

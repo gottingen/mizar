@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "rocksdb/env.h"
-#include "rocksdb/options.h"
+#include "mizar/env.h"
+#include "mizar/options.h"
 
 namespace ROCKSDB_NAMESPACE {
 

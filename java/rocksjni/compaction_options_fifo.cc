@@ -9,7 +9,7 @@
 #include <jni.h>
 
 #include "include/org_rocksdb_CompactionOptionsFIFO.h"
-#include "rocksdb/advanced_options.h"
+#include "mizar/advanced_options.h"
 #include "rocksjni/cplusplus_to_java_convert.h"
 
 /*

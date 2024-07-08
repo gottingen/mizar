@@ -20,9 +20,9 @@
 #include <string>
 
 #include "port/port.h"
-#include "rocksdb/env.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/io_status.h"
+#include "mizar/env.h"
+#include "mizar/file_system.h"
+#include "mizar/io_status.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 #include "util/thread_local.h"

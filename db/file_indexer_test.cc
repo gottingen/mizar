@@ -14,7 +14,7 @@
 #include "db/dbformat.h"
 #include "db/version_edit.h"
 #include "port/stack_trace.h"
-#include "rocksdb/comparator.h"
+#include "mizar/comparator.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 

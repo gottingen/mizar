@@ -14,9 +14,9 @@
 
 #include "db/version_edit.h"
 #include "port/port.h"
-#include "rocksdb/status.h"
-#include "rocksdb/table.h"
-#include "rocksdb/table_properties.h"
+#include "mizar/status.h"
+#include "mizar/table.h"
+#include "mizar/table_properties.h"
 #include "table/table_builder.h"
 #include "util/autovector.h"
 

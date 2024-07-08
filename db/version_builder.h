@@ -12,9 +12,9 @@
 #include <memory>
 
 #include "db/version_edit.h"
-#include "rocksdb/file_system.h"
-#include "rocksdb/metadata.h"
-#include "rocksdb/slice_transform.h"
+#include "mizar/file_system.h"
+#include "mizar/metadata.h"
+#include "mizar/slice_transform.h"
 
 namespace ROCKSDB_NAMESPACE {
 

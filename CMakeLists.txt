@@ -37,9 +37,9 @@ cmake_minimum_required(VERSION 3.10)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
 include(ReadVersion)
 include(GoogleTest)
-get_rocksdb_version(rocksdb_VERSION)
-project(rocksdb
-  VERSION ${rocksdb_VERSION}
+get_rocksdb_version(mizar_VERSION)
+project(mizar
+  VERSION ${mizar_VERSION}
   DESCRIPTION "An embeddable persistent key-value store for fast storage"
   HOMEPAGE_URL https://rocksdb.org/
   LANGUAGES CXX C ASM)
@@ -1075,8 +1075,8 @@ if(USE_FOLLY_LITE)
   list(APPEND THIRDPARTY_LIBS glog)
 endif()
 
-set(ROCKSDB_STATIC_LIB rocksdb${ARTIFACT_SUFFIX})
-set(ROCKSDB_SHARED_LIB rocksdb-shared${ARTIFACT_SUFFIX})
+set(ROCKSDB_STATIC_LIB mizar${ARTIFACT_SUFFIX})
+set(ROCKSDB_SHARED_LIB mizar-shared${ARTIFACT_SUFFIX})
 
 
 if(WIN32)
@@ -1165,8 +1165,8 @@ if(ROCKSDB_BUILD_SHARED)
   else()
     set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
                           LINKER_LANGUAGE CXX
-                          VERSION ${rocksdb_VERSION}
-                          SOVERSION ${rocksdb_VERSION_MAJOR}
+                          VERSION ${mizar_VERSION}
+                          SOVERSION ${mizar_VERSION_MAJOR}
                           OUTPUT_NAME "rocksdb${ARTIFACT_SUFFIX}")
   endif()
 endif()
@@ -1201,25 +1201,25 @@ if(WIN32)
 endif()
 if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
   if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    #if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
       # Change default installation prefix on Linux to /usr
-      set(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
-    endif()
+      #set(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
+    #endif()
   endif()
 
   include(GNUInstallDirs)
   include(CMakePackageConfigHelpers)
 
-  set(package_config_destination ${CMAKE_INSTALL_LIBDIR}/cmake/rocksdb)
+  set(package_config_destination ${CMAKE_INSTALL_LIBDIR}/cmake/mizar)
 
   configure_package_config_file(
-    ${CMAKE_CURRENT_LIST_DIR}/cmake/RocksDBConfig.cmake.in RocksDBConfig.cmake
+    ${CMAKE_CURRENT_LIST_DIR}/cmake/mizarConfig.cmake.in mizarConfig.cmake
     INSTALL_DESTINATION ${package_config_destination}
   )
 
   write_basic_package_version_file(
-    RocksDBConfigVersion.cmake
-    VERSION ${rocksdb_VERSION}
+   mizarConfigVersion.cmake
+    VERSION ${mizar_VERSION}
     COMPATIBILITY SameMajorVersion
   )
 
@@ -1229,7 +1229,7 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
     @ONLY
   )
 
-  install(DIRECTORY include/rocksdb COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+  install(DIRECTORY include/mizar COMPONENT devel DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
   foreach (plugin ${PLUGINS})
     foreach (header ${${plugin}_HEADERS})
@@ -1241,7 +1241,7 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
 
   install(
     TARGETS ${ROCKSDB_STATIC_LIB}
-    EXPORT RocksDBTargets
+    EXPORT mizarTargets
     COMPONENT devel
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
@@ -1250,7 +1250,7 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
   if(ROCKSDB_BUILD_SHARED)
     install(
       TARGETS ${ROCKSDB_SHARED_LIB}
-      EXPORT RocksDBTargets
+      EXPORT mizarTargets
       COMPONENT runtime
       ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
       RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -1260,16 +1260,16 @@ if(NOT WIN32 OR ROCKSDB_INSTALL_ON_WINDOWS)
   endif()
 
   install(
-    EXPORT RocksDBTargets
+    EXPORT mizarTargets
     COMPONENT devel
     DESTINATION ${package_config_destination}
-    NAMESPACE RocksDB::
+    NAMESPACE ${PROJECT_NAME}::
   )
 
   install(
     FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/RocksDBConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/mizarConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/mizarConfigVersion.cmake
     COMPONENT devel
     DESTINATION ${package_config_destination}
   )

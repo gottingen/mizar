@@ -6,7 +6,7 @@
 
 #ifndef ROCKSDB_LITE
 
-#include "rocksdb/convenience.h"
+#include "mizar/convenience.h"
 
 #include "db/db_impl/db_impl.h"
 #include "util/cast_util.h"
