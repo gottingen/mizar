@@ -3,11 +3,11 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "mizar/compaction_job_stats.h"
+#include "rocksdb/compaction_job_stats.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 void CompactionJobStats::Reset() {
   elapsed_micros = 0;
@@ -95,6 +95,6 @@ void CompactionJobStats::Reset() {}
 
 void CompactionJobStats::Add(const CompactionJobStats& /*stats*/) {}
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

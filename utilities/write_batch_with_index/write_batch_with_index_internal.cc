@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/write_batch_with_index/write_batch_with_index_internal.h"
 
@@ -11,14 +11,14 @@
 #include "db/db_impl/db_impl.h"
 #include "db/merge_context.h"
 #include "db/merge_helper.h"
-#include "mizar/comparator.h"
-#include "mizar/db.h"
-#include "mizar/utilities/write_batch_with_index.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/db.h"
+#include "rocksdb/utilities/write_batch_with_index.h"
 #include "util/cast_util.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 BaseDeltaIterator::BaseDeltaIterator(ColumnFamilyHandle* column_family,
                                      Iterator* base_iterator,
                                      WBWIIteratorImpl* delta_iterator,
@@ -33,6 +33,7 @@ BaseDeltaIterator::BaseDeltaIterator(ColumnFamilyHandle* column_family,
       comparator_(comparator),
       iterate_upper_bound_(read_options ? read_options->iterate_upper_bound
                                         : nullptr) {
+  assert(comparator_);
   wbwii_.reset(new WriteBatchWithIndexInternal(column_family));
 }
 
@@ -95,8 +96,9 @@ void BaseDeltaIterator::Next() {
       AdvanceBase();
     }
     if (DeltaValid() && BaseValid()) {
-      if (comparator_->Equal(delta_iterator_->Entry().key,
-                             base_iterator_->key())) {
+      if (0 == comparator_->CompareWithoutTimestamp(
+                   delta_iterator_->Entry().key, /*a_has_ts=*/false,
+                   base_iterator_->key(), /*b_has_ts=*/false)) {
         equal_keys_ = true;
       }
     }
@@ -131,8 +133,9 @@ void BaseDeltaIterator::Prev() {
       AdvanceBase();
     }
     if (DeltaValid() && BaseValid()) {
-      if (comparator_->Equal(delta_iterator_->Entry().key,
-                             base_iterator_->key())) {
+      if (0 == comparator_->CompareWithoutTimestamp(
+                   delta_iterator_->Entry().key, /*a_has_ts=*/false,
+                   base_iterator_->key(), /*b_has_ts=*/false)) {
         equal_keys_ = true;
       }
     }
@@ -218,8 +221,9 @@ void BaseDeltaIterator::AssertInvariants() {
   // we don't support those yet
   assert(delta_iterator_->Entry().type != kMergeRecord &&
          delta_iterator_->Entry().type != kLogDataRecord);
-  int compare =
-      comparator_->Compare(delta_iterator_->Entry().key, base_iterator_->key());
+  int compare = comparator_->CompareWithoutTimestamp(
+      delta_iterator_->Entry().key, /*a_has_ts=*/false, base_iterator_->key(),
+      /*b_has_ts=*/false);
   if (forward_) {
     // current_at_base -> compare < 0
     assert(!current_at_base_ || compare < 0);
@@ -301,7 +305,9 @@ void BaseDeltaIterator::UpdateCurrent() {
         return;
       }
       if (iterate_upper_bound_) {
-        if (comparator_->Compare(delta_entry.key, *iterate_upper_bound_) >= 0) {
+        if (comparator_->CompareWithoutTimestamp(
+                delta_entry.key, /*a_has_ts=*/false, *iterate_upper_bound_,
+                /*b_has_ts=*/false) >= 0) {
           // out of upper bound -> finished.
           return;
         }
@@ -319,8 +325,9 @@ void BaseDeltaIterator::UpdateCurrent() {
       return;
     } else {
       int compare =
-          (forward_ ? 1 : -1) *
-          comparator_->Compare(delta_entry.key, base_iterator_->key());
+          (forward_ ? 1 : -1) * comparator_->CompareWithoutTimestamp(
+                                    delta_entry.key, /*a_has_ts=*/false,
+                                    base_iterator_->key(), /*b_has_ts=*/false);
       if (compare <= 0) {  // delta bigger or equal
         if (compare == 0) {
           equal_keys_ = true;
@@ -507,7 +514,7 @@ Status ReadableWriteBatch::GetEntryFromDataOffset(size_t data_offset,
       break;
     default:
       return Status::Corruption("unknown WriteBatch tag ",
-                                ToString(static_cast<unsigned int>(tag)));
+                                std::to_string(static_cast<unsigned int>(tag)));
   }
   return Status::OK();
 }
@@ -572,10 +579,26 @@ int WriteBatchEntryComparator::CompareKey(uint32_t column_family,
                                           const Slice& key2) const {
   if (column_family < cf_comparators_.size() &&
       cf_comparators_[column_family] != nullptr) {
-    return cf_comparators_[column_family]->Compare(key1, key2);
+    return cf_comparators_[column_family]->CompareWithoutTimestamp(
+        key1, /*a_has_ts=*/false, key2, /*b_has_ts=*/false);
   } else {
-    return default_comparator_->Compare(key1, key2);
+    return default_comparator_->CompareWithoutTimestamp(
+        key1, /*a_has_ts=*/false, key2, /*b_has_ts=*/false);
   }
+}
+
+const Comparator* WriteBatchEntryComparator::GetComparator(
+    const ColumnFamilyHandle* column_family) const {
+  return column_family ? column_family->GetComparator() : default_comparator_;
+}
+
+const Comparator* WriteBatchEntryComparator::GetComparator(
+    uint32_t column_family) const {
+  if (column_family < cf_comparators_.size() &&
+      cf_comparators_[column_family]) {
+    return cf_comparators_[column_family];
+  }
+  return default_comparator_;
 }
 
 WriteEntry WBWIIteratorImpl::Entry() const {
@@ -591,6 +614,12 @@ WriteEntry WBWIIteratorImpl::Entry() const {
   assert(ret.type == kPutRecord || ret.type == kDeleteRecord ||
          ret.type == kSingleDeleteRecord || ret.type == kDeleteRangeRecord ||
          ret.type == kMergeRecord);
+  // Make sure entry.key does not include user-defined timestamp.
+  const Comparator* const ucmp = comparator_->GetComparator(column_family_id_);
+  size_t ts_sz = ucmp->timestamp_size();
+  if (ts_sz > 0) {
+    ret.key = StripTimestampFromUserKey(ret.key, ts_sz);
+  }
   return ret;
 }
 
@@ -635,22 +664,34 @@ Status WriteBatchWithIndexInternal::MergeKey(const Slice& key,
       Statistics* statistics = immutable_db_options.statistics.get();
       Logger* logger = immutable_db_options.info_log.get();
       SystemClock* clock = immutable_db_options.clock;
-      return MergeHelper::TimedFullMerge(merge_operator, key, value,
-                                         context.GetOperands(), result, logger,
-                                         statistics, clock);
+      // `op_failure_scope` (an output parameter) is not provided (set to
+      // nullptr) since a failure must be propagated regardless of its value.
+      return MergeHelper::TimedFullMerge(
+          merge_operator, key, value, context.GetOperands(), result, logger,
+          statistics, clock, /* result_operand */ nullptr,
+          /* update_num_ops_stats */ false,
+          /* op_failure_scope */ nullptr);
     } else if (db_options_ != nullptr) {
       Statistics* statistics = db_options_->statistics.get();
       Env* env = db_options_->env;
       Logger* logger = db_options_->info_log.get();
       SystemClock* clock = env->GetSystemClock().get();
-      return MergeHelper::TimedFullMerge(merge_operator, key, value,
-                                         context.GetOperands(), result, logger,
-                                         statistics, clock);
+      // `op_failure_scope` (an output parameter) is not provided (set to
+      // nullptr) since a failure must be propagated regardless of its value.
+      return MergeHelper::TimedFullMerge(
+          merge_operator, key, value, context.GetOperands(), result, logger,
+          statistics, clock, /* result_operand */ nullptr,
+          /* update_num_ops_stats */ false,
+          /* op_failure_scope */ nullptr);
     } else {
       const auto cf_opts = cfh->cfd()->ioptions();
+      // `op_failure_scope` (an output parameter) is not provided (set to
+      // nullptr) since a failure must be propagated regardless of its value.
       return MergeHelper::TimedFullMerge(
           merge_operator, key, value, context.GetOperands(), result,
-          cf_opts->logger, cf_opts->stats, cf_opts->clock);
+          cf_opts->logger, cf_opts->stats, cf_opts->clock,
+          /* result_operand */ nullptr, /* update_num_ops_stats */ false,
+          /* op_failure_scope */ nullptr);
     }
   } else {
     return Status::InvalidArgument("Must provide a column_family");
@@ -671,7 +712,7 @@ WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetFromBatch(
   auto result = iter->FindLatestUpdate(key, context);
   if (result == WBWIIteratorImpl::kError) {
     (*s) = Status::Corruption("Unexpected entry in WriteBatchWithIndex:",
-                              ToString(iter->Entry().type));
+                              std::to_string(iter->Entry().type));
     return result;
   } else if (result == WBWIIteratorImpl::kNotFound) {
     return result;
@@ -698,6 +739,6 @@ WBWIIteratorImpl::Result WriteBatchWithIndexInternal::GetFromBatch(
   return result;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

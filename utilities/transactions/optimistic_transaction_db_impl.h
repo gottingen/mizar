@@ -4,17 +4,17 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
+#include <algorithm>
 #include <mutex>
 #include <vector>
-#include <algorithm>
 
-#include "mizar/db.h"
-#include "mizar/options.h"
-#include "mizar/utilities/optimistic_transaction_db.h"
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
+#include "rocksdb/utilities/optimistic_transaction_db.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class OptimisticTransactionDBImpl : public OptimisticTransactionDB {
  public:
@@ -47,6 +47,7 @@ class OptimisticTransactionDBImpl : public OptimisticTransactionDB {
                                 Transaction* old_txn) override;
 
   // Transactional `DeleteRange()` is not yet supported.
+  using StackableDB::DeleteRange;
   virtual Status DeleteRange(const WriteOptions&, ColumnFamilyHandle*,
                              const Slice&, const Slice&) override {
     return Status::NotSupported();
@@ -83,5 +84,5 @@ class OptimisticTransactionDBImpl : public OptimisticTransactionDB {
                                    OptimisticTransactionOptions());
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

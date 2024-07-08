@@ -7,15 +7,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "mizar/utilities/leveldb_options.h"
-#include "mizar/cache.h"
-#include "mizar/comparator.h"
-#include "mizar/env.h"
-#include "mizar/filter_policy.h"
-#include "mizar/options.h"
-#include "mizar/table.h"
+#include "rocksdb/utilities/leveldb_options.h"
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/cache.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/env.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/options.h"
+#include "rocksdb/table.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 LevelDBOptions::LevelDBOptions()
     : comparator(BytewiseComparator()),
@@ -53,4 +54,4 @@ Options ConvertOptions(const LevelDBOptions& leveldb_options) {
   return options;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

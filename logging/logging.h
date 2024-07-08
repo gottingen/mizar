@@ -15,10 +15,10 @@
 // Helper macros that include information about file name and line number
 #define ROCKS_LOG_STRINGIFY(x) #x
 #define ROCKS_LOG_TOSTRING(x) ROCKS_LOG_STRINGIFY(x)
-#define ROCKS_LOG_PREPEND_FILE_LINE(FMT) ("[%s:" ROCKS_LOG_TOSTRING(__LINE__) "] " FMT)
+#define ROCKS_LOG_PREPEND_FILE_LINE(FMT) \
+  ("[%s:" ROCKS_LOG_TOSTRING(__LINE__) "] " FMT)
 
-inline const char* RocksLogShorterFileName(const char* file)
-{
+inline const char* RocksLogShorterFileName(const char* file) {
   // 18 is the length of "logging/logging.h".
   // If the name of this file changed, please change this number, too.
   return file + (sizeof(__FILE__) > 18 ? sizeof(__FILE__) - 18 : 0);
@@ -26,40 +26,34 @@ inline const char* RocksLogShorterFileName(const char* file)
 
 // Don't inclide file/line info in HEADER level
 #define ROCKS_LOG_HEADER(LGR, FMT, ...) \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::HEADER_LEVEL, LGR, FMT, ##__VA_ARGS__)
+  ROCKSDB_NAMESPACE::Log(InfoLogLevel::HEADER_LEVEL, LGR, FMT, ##__VA_ARGS__)
 
-#define ROCKS_LOG_DEBUG(LGR, FMT, ...)                     \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::DEBUG_LEVEL, LGR,   \
-                         ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
+#define ROCKS_LOG_AT_LEVEL(LGR, LVL, FMT, ...)                           \
+  ROCKSDB_NAMESPACE::Log((LVL), (LGR), ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
                          RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
 
-#define ROCKS_LOG_INFO(LGR, FMT, ...)                      \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::INFO_LEVEL, LGR,    \
-                         ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
-                         RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
+#define ROCKS_LOG_DEBUG(LGR, FMT, ...) \
+  ROCKS_LOG_AT_LEVEL((LGR), InfoLogLevel::DEBUG_LEVEL, FMT, ##__VA_ARGS__)
 
-#define ROCKS_LOG_WARN(LGR, FMT, ...)                      \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::WARN_LEVEL, LGR,    \
-                         ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
-                         RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
+#define ROCKS_LOG_INFO(LGR, FMT, ...) \
+  ROCKS_LOG_AT_LEVEL((LGR), InfoLogLevel::INFO_LEVEL, FMT, ##__VA_ARGS__)
 
-#define ROCKS_LOG_ERROR(LGR, FMT, ...)                     \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::ERROR_LEVEL, LGR,   \
-                         ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
-                         RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
+#define ROCKS_LOG_WARN(LGR, FMT, ...) \
+  ROCKS_LOG_AT_LEVEL((LGR), InfoLogLevel::WARN_LEVEL, FMT, ##__VA_ARGS__)
 
-#define ROCKS_LOG_FATAL(LGR, FMT, ...)                     \
-  MIZAR_NAMESPACE::Log(InfoLogLevel::FATAL_LEVEL, LGR,   \
-                         ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
-                         RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
+#define ROCKS_LOG_ERROR(LGR, FMT, ...) \
+  ROCKS_LOG_AT_LEVEL((LGR), InfoLogLevel::ERROR_LEVEL, FMT, ##__VA_ARGS__)
+
+#define ROCKS_LOG_FATAL(LGR, FMT, ...) \
+  ROCKS_LOG_AT_LEVEL((LGR), InfoLogLevel::FATAL_LEVEL, FMT, ##__VA_ARGS__)
 
 #define ROCKS_LOG_BUFFER(LOG_BUF, FMT, ...)                                 \
-  MIZAR_NAMESPACE::LogToBuffer(LOG_BUF, ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
+  ROCKSDB_NAMESPACE::LogToBuffer(LOG_BUF, ROCKS_LOG_PREPEND_FILE_LINE(FMT), \
                                  RocksLogShorterFileName(__FILE__),         \
                                  ##__VA_ARGS__)
 
 #define ROCKS_LOG_BUFFER_MAX_SZ(LOG_BUF, MAX_LOG_SIZE, FMT, ...) \
-  MIZAR_NAMESPACE::LogToBuffer(                                \
+  ROCKSDB_NAMESPACE::LogToBuffer(                                \
       LOG_BUF, MAX_LOG_SIZE, ROCKS_LOG_PREPEND_FILE_LINE(FMT),   \
       RocksLogShorterFileName(__FILE__), ##__VA_ARGS__)
 

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <memory>
 #include <string>
@@ -11,10 +11,10 @@
 
 #include "db/blob/blob_log_format.h"
 #include "file/random_access_file_reader.h"
-#include "mizar/slice.h"
-#include "mizar/status.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace blob_db {
 
 class BlobDumpTool {
@@ -53,6 +53,6 @@ class BlobDumpTool {
 };
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

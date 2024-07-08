@@ -6,13 +6,13 @@
 
 #include "env/composite_env_wrapper.h"
 #include "monitoring/perf_context_imp.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
-#include "mizar/status.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TimedFileSystem::TimedFileSystem(const std::shared_ptr<FileSystem>& base)
     : FileSystemWrapper(base) {}
 IOStatus TimedFileSystem::NewSequentialFile(
@@ -178,10 +178,10 @@ Env* NewTimedEnv(Env* base_env) {
   return new CompositeEnvWrapper(base_env, timed_fs);
 }
 
-#else  // MIZAR_LITE
+#else  // ROCKSDB_LITE
 
 Env* NewTimedEnv(Env* /*base_env*/) { return nullptr; }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -10,17 +10,17 @@
 #include <thread>
 
 #include "db/db_impl/db_impl.h"
-#include "mizar/env.h"
-#include "mizar/iterator.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/system_clock.h"
-#include "mizar/trace_reader_writer.h"
-#include "mizar/write_batch.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/system_clock.h"
+#include "rocksdb/trace_reader_writer.h"
+#include "rocksdb/write_batch.h"
 #include "util/coding.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 const std::string kTraceMagic = "feedcafedeadbeef";
 
@@ -317,7 +317,7 @@ Status TracerHelper::DecodeTraceRecord(Trace* trace, int trace_file_version,
       cf_ids.reserve(multiget_size);
       multiget_keys.reserve(multiget_size);
       for (uint32_t i = 0; i < multiget_size; i++) {
-        uint32_t tmp_cfid;
+        uint32_t tmp_cfid = 0;
         Slice tmp_key;
         GetFixed32(&cfids_payload, &tmp_cfid);
         GetLengthPrefixedSlice(&keys_payload, &tmp_key);
@@ -619,4 +619,4 @@ Status Tracer::WriteTrace(const Trace& trace) {
 
 Status Tracer::Close() { return WriteFooter(); }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

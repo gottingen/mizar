@@ -18,13 +18,13 @@
 #include <atomic>
 #include <memory>
 
-#include "mizar/env.h"
+#include "rocksdb/env.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class SystemClock;
 
 namespace port {
-class WinLogger : public MIZAR_NAMESPACE::Logger {
+class WinLogger : public ROCKSDB_NAMESPACE::Logger {
  public:
   WinLogger(uint64_t (*gettid)(), SystemClock* clock, HANDLE file,
             const InfoLogLevel log_level = InfoLogLevel::ERROR_LEVEL);
@@ -37,16 +37,15 @@ class WinLogger : public MIZAR_NAMESPACE::Logger {
 
   void Flush() override;
 
-  using MIZAR_NAMESPACE::Logger::Logv;
+  using ROCKSDB_NAMESPACE::Logger::Logv;
   void Logv(const char* format, va_list ap) override;
 
   size_t GetLogFileSize() const override;
 
   void DebugWriter(const char* str, int len);
 
-protected:
-
-    Status CloseImpl() override;
+ protected:
+  Status CloseImpl() override;
 
  private:
   HANDLE file_;
@@ -60,6 +59,6 @@ protected:
 
   const static uint64_t flush_every_seconds_ = 5;
 };
-}
+}  // namespace port
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

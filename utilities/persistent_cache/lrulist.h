@@ -5,13 +5,13 @@
 //
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <atomic>
 
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // LRU element definition
 //
@@ -169,6 +169,6 @@ class LRUList {
   T* tail_ = nullptr;         // back (hot)
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

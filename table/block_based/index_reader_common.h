@@ -9,10 +9,9 @@
 #pragma once
 
 #include "table/block_based/block_based_table_reader.h"
-
 #include "table/block_based/reader_common.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // Encapsulates common functionality for the various index reader
 // implementations. Provides access to the index block regardless of whether
 // it is owned by the reader or stored in the cache, or whether it is pinned
@@ -66,7 +65,8 @@ class BlockBasedTable::IndexReaderCommon : public BlockBasedTable::IndexReader {
     return table_->get_rep()->table_options.cache_index_and_filter_blocks;
   }
 
-  Status GetOrReadIndexBlock(bool no_io, GetContext* get_context,
+  Status GetOrReadIndexBlock(bool no_io, Env::IOPriority rate_limiter_priority,
+                             GetContext* get_context,
                              BlockCacheLookupContext* lookup_context,
                              CachableEntry<Block>* index_block) const;
 
@@ -82,4 +82,4 @@ class BlockBasedTable::IndexReaderCommon : public BlockBasedTable::IndexReader {
   CachableEntry<Block> index_block_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

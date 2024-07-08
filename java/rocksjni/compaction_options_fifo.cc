@@ -4,22 +4,23 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::CompactionOptionsFIFO.
+// ROCKSDB_NAMESPACE::CompactionOptionsFIFO.
 
 #include <jni.h>
 
 #include "include/org_rocksdb_CompactionOptionsFIFO.h"
-#include "mizar/advanced_options.h"
+#include "rocksdb/advanced_options.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 
 /*
  * Class:     org_rocksdb_CompactionOptionsFIFO
  * Method:    newCompactionOptionsFIFO
  * Signature: ()J
  */
-jlong Java_org_rocksdb_CompactionOptionsFIFO_newCompactionOptionsFIFO(
-    JNIEnv*, jclass) {
-  const auto* opt = new MIZAR_NAMESPACE::CompactionOptionsFIFO();
-  return reinterpret_cast<jlong>(opt);
+jlong Java_org_rocksdb_CompactionOptionsFIFO_newCompactionOptionsFIFO(JNIEnv*,
+                                                                      jclass) {
+  const auto* opt = new ROCKSDB_NAMESPACE::CompactionOptionsFIFO();
+  return GET_CPLUSPLUS_POINTER(opt);
 }
 
 /*
@@ -30,7 +31,7 @@ jlong Java_org_rocksdb_CompactionOptionsFIFO_newCompactionOptionsFIFO(
 void Java_org_rocksdb_CompactionOptionsFIFO_setMaxTableFilesSize(
     JNIEnv*, jobject, jlong jhandle, jlong jmax_table_files_size) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
   opt->max_table_files_size = static_cast<uint64_t>(jmax_table_files_size);
 }
 
@@ -39,10 +40,10 @@ void Java_org_rocksdb_CompactionOptionsFIFO_setMaxTableFilesSize(
  * Method:    maxTableFilesSize
  * Signature: (J)J
  */
-jlong Java_org_rocksdb_CompactionOptionsFIFO_maxTableFilesSize(
-    JNIEnv*, jobject, jlong jhandle) {
+jlong Java_org_rocksdb_CompactionOptionsFIFO_maxTableFilesSize(JNIEnv*, jobject,
+                                                               jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
   return static_cast<jlong>(opt->max_table_files_size);
 }
 
@@ -54,7 +55,7 @@ jlong Java_org_rocksdb_CompactionOptionsFIFO_maxTableFilesSize(
 void Java_org_rocksdb_CompactionOptionsFIFO_setAllowCompaction(
     JNIEnv*, jobject, jlong jhandle, jboolean allow_compaction) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
   opt->allow_compaction = static_cast<bool>(allow_compaction);
 }
 
@@ -63,10 +64,11 @@ void Java_org_rocksdb_CompactionOptionsFIFO_setAllowCompaction(
  * Method:    allowCompaction
  * Signature: (J)Z
  */
-jboolean Java_org_rocksdb_CompactionOptionsFIFO_allowCompaction(
-    JNIEnv*, jobject, jlong jhandle) {
+jboolean Java_org_rocksdb_CompactionOptionsFIFO_allowCompaction(JNIEnv*,
+                                                                jobject,
+                                                                jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
   return static_cast<jboolean>(opt->allow_compaction);
 }
 
@@ -75,7 +77,7 @@ jboolean Java_org_rocksdb_CompactionOptionsFIFO_allowCompaction(
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_org_rocksdb_CompactionOptionsFIFO_disposeInternal(
-    JNIEnv*, jobject, jlong jhandle) {
-  delete reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
+void Java_org_rocksdb_CompactionOptionsFIFO_disposeInternal(JNIEnv*, jobject,
+                                                            jlong jhandle) {
+  delete reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsFIFO*>(jhandle);
 }

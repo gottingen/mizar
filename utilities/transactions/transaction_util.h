@@ -5,20 +5,20 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <string>
 #include <unordered_map>
 
 #include "db/dbformat.h"
 #include "db/read_callback.h"
-#include "mizar/db.h"
-#include "mizar/slice.h"
-#include "mizar/status.h"
-#include "mizar/types.h"
+#include "rocksdb/db.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/status.h"
+#include "rocksdb/types.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBImpl;
 struct SuperVersion;
@@ -80,6 +80,6 @@ class TransactionUtil {
                          SequenceNumber min_uncommitted = kMaxSequenceNumber);
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

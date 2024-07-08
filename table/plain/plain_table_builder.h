@@ -5,21 +5,23 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #include <stdint.h>
+
 #include <string>
 #include <vector>
+
 #include "db/version_edit.h"
-#include "mizar/options.h"
-#include "mizar/status.h"
-#include "mizar/table.h"
-#include "mizar/table_properties.h"
+#include "rocksdb/options.h"
+#include "rocksdb/status.h"
+#include "rocksdb/table.h"
+#include "rocksdb/table_properties.h"
 #include "table/plain/plain_table_bloom.h"
 #include "table/plain/plain_table_index.h"
 #include "table/plain/plain_table_key_coding.h"
 #include "table/table_builder.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class BlockBuilder;
 class BlockHandle;
@@ -29,7 +31,7 @@ class TableBuilder;
 // The builder class of PlainTable. For description of PlainTable format
 // See comments of class PlainTableFactory, where instances of
 // PlainTableReader are created.
-class PlainTableBuilder: public TableBuilder {
+class PlainTableBuilder : public TableBuilder {
  public:
   // Create a builder that will store the contents of the table it is
   // building in *file.  Does not close the file.  It is up to the
@@ -94,6 +96,9 @@ class PlainTableBuilder: public TableBuilder {
   // Get file checksum function name
   const char* GetFileChecksumFuncName() const override;
 
+  void SetSeqnoTimeTableProperties(const std::string& string,
+                                   uint64_t uint_64) override;
+
  private:
   Arena arena_;
   const ImmutableOptions& ioptions_;
@@ -122,15 +127,11 @@ class PlainTableBuilder: public TableBuilder {
 
   Slice GetPrefix(const Slice& target) const {
     assert(target.size() >= 8);  // target is internal key
-    return GetPrefixFromUserKey(GetUserKey(target));
+    return GetPrefixFromUserKey(ExtractUserKey(target));
   }
 
   Slice GetPrefix(const ParsedInternalKey& target) const {
     return GetPrefixFromUserKey(target.user_key);
-  }
-
-  Slice GetUserKey(const Slice& key) const {
-    return Slice(key.data(), key.size() - 8);
   }
 
   Slice GetPrefixFromUserKey(const Slice& user_key) const {
@@ -148,6 +149,6 @@ class PlainTableBuilder: public TableBuilder {
   bool IsTotalOrderMode() const { return (prefix_extractor_ == nullptr); }
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

@@ -11,26 +11,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Slice;
 
 extern std::vector<std::string> StringSplit(const std::string& arg, char delim);
-
-template <typename T>
-inline std::string ToString(T value) {
-#if !(defined OS_ANDROID) && !(defined CYGWIN) && !(defined OS_FREEBSD)
-  return std::to_string(value);
-#else
-  // Andorid or cygwin doesn't support all of C++11, std::to_string() being
-  // one of the not supported features.
-  std::ostringstream os;
-  os << value;
-  return os.str();
-#endif
-}
 
 // Append a human-readable printout of "num" to *str
 extern void AppendNumberTo(std::string* str, uint64_t num);
@@ -156,7 +143,7 @@ bool EndsWith(const std::string& string, const std::string& pattern);
 // Returns true if "string" starts with "pattern"
 bool StartsWith(const std::string& string, const std::string& pattern);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 bool ParseBoolean(const std::string& type, const std::string& value);
 
 uint8_t ParseUint8(const std::string& value);
@@ -186,4 +173,4 @@ extern const std::string kNullptrString;
 // the argument err
 extern std::string errnoStr(int err);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

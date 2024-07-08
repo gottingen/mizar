@@ -1,0 +1,12 @@
+############
+# ea recipes
+############
+gottingen/carbin-recipes@ea
+
+#########################
+# testing tools googlegtest benchmark
+testing/googletest
+testing/benchmark
+inf/snappy
+inf/liburing
+

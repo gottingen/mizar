@@ -1,15 +1,21 @@
-#ifndef MIZAR_LITE
+//  Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
+
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 
 #include "db/db_test_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/sst_file_writer.h"
+#include "rocksdb/sst_file_writer.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class ImportColumnFamilyTest : public DBTestBase {
  public:
@@ -130,6 +136,12 @@ TEST_F(ImportColumnFamilyTest, ImportSSTFileWriterFiles) {
     ASSERT_OK(db_->Get(ReadOptions(), import_cfh_, "K4", &value));
     ASSERT_EQ(value, "V2");
   }
+  EXPECT_OK(db_->DestroyColumnFamilyHandle(import_cfh_));
+  import_cfh_ = nullptr;
+
+  // verify sst unique id during reopen
+  options.verify_sst_unique_id_in_manifest = true;
+  ReopenWithColumnFamilies({"default", "koko", "yoyo"}, options);
 }
 
 TEST_F(ImportColumnFamilyTest, ImportSSTFileWriterFilesWithOverlap) {
@@ -544,10 +556,9 @@ TEST_F(ImportColumnFamilyTest, ImportColumnFamilyNegativeTest) {
         LiveFileMetaDataInit(file2_sst_name, sst_files_dir_, 1, 10, 19));
     metadata.db_comparator_name = options.comparator->Name();
 
-    ASSERT_EQ(db_->CreateColumnFamilyWithImport(ColumnFamilyOptions(), "yoyo",
-                                                ImportColumnFamilyOptions(),
-                                                metadata, &import_cfh_),
-              Status::InvalidArgument("Files have overlapping ranges"));
+    ASSERT_NOK(db_->CreateColumnFamilyWithImport(ColumnFamilyOptions(), "yoyo",
+                                                 ImportColumnFamilyOptions(),
+                                                 metadata, &import_cfh_));
     ASSERT_EQ(import_cfh_, nullptr);
   }
 
@@ -611,10 +622,10 @@ TEST_F(ImportColumnFamilyTest, ImportColumnFamilyNegativeTest) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -625,8 +636,8 @@ int main(int argc, char** argv) {
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
           "SKIPPED as External SST File Writer and Import are not supported "
-          "in MIZAR_LITE\n");
+          "in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

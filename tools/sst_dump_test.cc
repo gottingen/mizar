@@ -6,22 +6,21 @@
 // Copyright (c) 2012 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <stdint.h>
 
 #include "file/random_access_file_reader.h"
 #include "port/stack_trace.h"
-#include "mizar/convenience.h"
-#include "mizar/filter_policy.h"
-#include "mizar/sst_dump_tool.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/sst_dump_tool.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "table/table_builder.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 const uint32_t kOptLength = 1024;
 
@@ -31,6 +30,12 @@ static std::string MakeKey(int i) {
   snprintf(buf, sizeof(buf), "k_%04d", i);
   InternalKey key(std::string(buf), 0, ValueType::kTypeValue);
   return key.Encode().ToString();
+}
+
+static std::string MakeKeyWithTimeStamp(int i, uint64_t ts) {
+  char buf[100];
+  snprintf(buf, sizeof(buf), "k_%04d", i);
+  return test::KeyStr(ts, std::string(buf), /*seq=*/0, kTypeValue);
 }
 
 static std::string MakeValue(int i) {
@@ -96,7 +101,7 @@ class SSTDumpToolTest : public testing::Test {
     ReadOptions read_options;
     const ImmutableOptions imoptions(opts);
     const MutableCFOptions moptions(opts);
-    MIZAR_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
+    ROCKSDB_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
     std::unique_ptr<TableBuilder> tb;
 
     IntTblPropCollectorFactories int_tbl_prop_collector_factories;
@@ -116,8 +121,21 @@ class SSTDumpToolTest : public testing::Test {
 
     // Populate slightly more than 1K keys
     uint32_t num_keys = kNumKey;
-    for (uint32_t i = 0; i < num_keys; i++) {
-      tb->Add(MakeKey(i), MakeValue(i));
+    const char* comparator_name = ikc.user_comparator()->Name();
+    if (strcmp(comparator_name, ReverseBytewiseComparator()->Name()) == 0) {
+      for (int32_t i = num_keys; i >= 0; i--) {
+        tb->Add(MakeKey(i), MakeValue(i));
+      }
+    } else if (strcmp(comparator_name,
+                      test::BytewiseComparatorWithU64TsWrapper()->Name()) ==
+               0) {
+      for (uint32_t i = 0; i < num_keys; i++) {
+        tb->Add(MakeKeyWithTimeStamp(i, 100 + i), MakeValue(i));
+      }
+    } else {
+      for (uint32_t i = 0; i < num_keys; i++) {
+        tb->Add(MakeKey(i), MakeValue(i));
+      }
     }
     ASSERT_OK(tb->Finish());
     ASSERT_OK(file_writer->Close());
@@ -133,7 +151,7 @@ TEST_F(SSTDumpToolTest, HelpAndVersion) {
   Options opts;
   opts.env = env();
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
 
   static const char* help[] = {"./sst_dump", "--help"};
   ASSERT_TRUE(!tool.Run(2, help, opts));
@@ -152,7 +170,55 @@ TEST_F(SSTDumpToolTest, EmptyFilter) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=raw", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
+  ASSERT_TRUE(!tool.Run(3, usage, opts));
+
+  cleanup(opts, file_path);
+  for (int i = 0; i < 3; i++) {
+    delete[] usage[i];
+  }
+}
+
+TEST_F(SSTDumpToolTest, SstDumpReverseBytewiseComparator) {
+  Options opts;
+  opts.env = env();
+  opts.comparator = ReverseBytewiseComparator();
+  BlockBasedTableOptions table_opts;
+  table_opts.filter_policy.reset(
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, false));
+  opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
+  std::string file_path =
+      MakeFilePath("rocksdb_sst_reverse_bytewise_comparator.sst");
+  createSST(opts, file_path);
+
+  char* usage[3];
+  PopulateCommandArgs(file_path, "--command=raw", usage);
+
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
+  ASSERT_TRUE(!tool.Run(3, usage, opts));
+
+  cleanup(opts, file_path);
+  for (int i = 0; i < 3; i++) {
+    delete[] usage[i];
+  }
+}
+
+TEST_F(SSTDumpToolTest, SstDumpComparatorWithU64Ts) {
+  Options opts;
+  opts.env = env();
+  opts.comparator = test::BytewiseComparatorWithU64TsWrapper();
+  BlockBasedTableOptions table_opts;
+  table_opts.filter_policy.reset(
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, false));
+  opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
+  std::string file_path =
+      MakeFilePath("rocksdb_sst_comparator_with_u64_ts.sst");
+  createSST(opts, file_path);
+
+  char* usage[3];
+  PopulateCommandArgs(file_path, "--command=raw", usage);
+
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -166,7 +232,7 @@ TEST_F(SSTDumpToolTest, FilterBlock) {
   opts.env = env();
   BlockBasedTableOptions table_opts;
   table_opts.filter_policy.reset(
-      MIZAR_NAMESPACE::NewBloomFilterPolicy(10, true));
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, true));
   opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
   std::string file_path = MakeFilePath("rocksdb_sst_test.sst");
   createSST(opts, file_path);
@@ -174,7 +240,7 @@ TEST_F(SSTDumpToolTest, FilterBlock) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=raw", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -188,7 +254,7 @@ TEST_F(SSTDumpToolTest, FullFilterBlock) {
   opts.env = env();
   BlockBasedTableOptions table_opts;
   table_opts.filter_policy.reset(
-      MIZAR_NAMESPACE::NewBloomFilterPolicy(10, false));
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, false));
   opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
   std::string file_path = MakeFilePath("rocksdb_sst_test.sst");
   createSST(opts, file_path);
@@ -196,7 +262,7 @@ TEST_F(SSTDumpToolTest, FullFilterBlock) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=raw", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -210,7 +276,7 @@ TEST_F(SSTDumpToolTest, GetProperties) {
   opts.env = env();
   BlockBasedTableOptions table_opts;
   table_opts.filter_policy.reset(
-      MIZAR_NAMESPACE::NewBloomFilterPolicy(10, false));
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, false));
   opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
   std::string file_path = MakeFilePath("rocksdb_sst_test.sst");
   createSST(opts, file_path);
@@ -218,7 +284,7 @@ TEST_F(SSTDumpToolTest, GetProperties) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--show_properties", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -232,7 +298,7 @@ TEST_F(SSTDumpToolTest, CompressedSizes) {
   opts.env = env();
   BlockBasedTableOptions table_opts;
   table_opts.filter_policy.reset(
-      MIZAR_NAMESPACE::NewBloomFilterPolicy(10, false));
+      ROCKSDB_NAMESPACE::NewBloomFilterPolicy(10, false));
   opts.table_factory.reset(new BlockBasedTableFactory(table_opts));
   std::string file_path = MakeFilePath("rocksdb_sst_test.sst");
   createSST(opts, file_path);
@@ -240,7 +306,7 @@ TEST_F(SSTDumpToolTest, CompressedSizes) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=recompress", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -259,7 +325,7 @@ TEST_F(SSTDumpToolTest, MemEnv) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=verify_checksum", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   cleanup(opts, file_path);
@@ -306,7 +372,7 @@ TEST_F(SSTDumpToolTest, NoSstFile) {
   std::string file_path = MakeFilePath("no_such_file.sst");
   char* usage[3];
   PopulateCommandArgs(file_path, "", usage);
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   for (const auto& command :
        {"--command=check", "--command=dump", "--command=raw",
         "--command=verify", "--command=recompress", "--command=verify_checksum",
@@ -366,7 +432,7 @@ TEST_F(SSTDumpToolTest, RawOutput) {
   char* usage[3];
   PopulateCommandArgs(file_path, "--command=raw", usage);
 
-  MIZAR_NAMESPACE::SSTDumpTool tool;
+  ROCKSDB_NAMESPACE::SSTDumpTool tool;
   ASSERT_TRUE(!tool.Run(3, usage, opts));
 
   const std::string raw_path = MakeFilePath("rocksdb_sst_test_dump.txt");
@@ -395,10 +461,10 @@ TEST_F(SSTDumpToolTest, RawOutput) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -408,8 +474,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as SSTDumpTool is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "SKIPPED as SSTDumpTool is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE  return RUN_ALL_TESTS();
+#endif  // !ROCKSDB_LITE  return RUN_ALL_TESTS();

@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/transaction_util.h"
 
@@ -12,12 +12,12 @@
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "mizar/status.h"
-#include "mizar/utilities/write_batch_with_index.h"
+#include "rocksdb/status.h"
+#include "rocksdb/utilities/write_batch_with_index.h"
 #include "util/cast_util.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 Status TransactionUtil::CheckKeyForConflicts(
     DBImpl* db_impl, ColumnFamilyHandle* column_family, const std::string& key,
@@ -79,7 +79,7 @@ Status TransactionUtil::CheckKey(DBImpl* db_impl, SuperVersion* sv,
       result = Status::TryAgain(
           "Transaction could not check for conflicts as the MemTable does not "
           "contain a long enough history to check write at SequenceNumber: ",
-          ToString(snap_seq));
+          std::to_string(snap_seq));
     }
   } else if (snap_seq < earliest_seq || min_uncommitted <= earliest_seq) {
     // Use <= for min_uncommitted since earliest_seq is actually the largest sec
@@ -164,7 +164,7 @@ Status TransactionUtil::CheckKeysForConflicts(DBImpl* db_impl,
     SuperVersion* sv = db_impl->GetAndRefSuperVersion(cf);
     if (sv == nullptr) {
       result = Status::InvalidArgument("Could not access column family " +
-                                       ToString(cf));
+                                       std::to_string(cf));
       break;
     }
 
@@ -201,6 +201,6 @@ Status TransactionUtil::CheckKeysForConflicts(DBImpl* db_impl,
   return result;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

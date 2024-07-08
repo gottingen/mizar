@@ -8,10 +8,10 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 
-#include "mizar/cache.h"
-#include "mizar/table.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/table.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // Release the cached entry and decrement its ref count.
 extern void ForceReleaseCachedEntry(void* arg, void* h);
 
@@ -35,4 +35,4 @@ extern Status VerifyBlockChecksum(ChecksumType type, const char* data,
                                   size_t block_size,
                                   const std::string& file_name,
                                   uint64_t offset);
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

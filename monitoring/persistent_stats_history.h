@@ -9,9 +9,9 @@
 #pragma once
 
 #include "db/db_impl/db_impl.h"
-#include "mizar/stats_history.h"
+#include "rocksdb/stats_history.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 extern const std::string kFormatVersionKeyString;
 extern const std::string kCompatibleVersionKeyString;
@@ -80,4 +80,4 @@ class PersistentStatsHistoryIterator final : public StatsHistoryIterator {
   DBImpl* db_impl_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

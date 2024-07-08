@@ -5,14 +5,14 @@
 
 #pragma once
 
-#if !defined(MIZAR_LITE) && !defined(OS_WIN)
+#if !defined(ROCKSDB_LITE) && !defined(OS_WIN)
 
 #include <string>
 
 #include "env/fs_remap.h"
-#include "mizar/file_system.h"
+#include "rocksdb/file_system.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class ChrootFileSystem : public RemapFileSystem {
  public:
   ChrootFileSystem(const std::shared_ptr<FileSystem>& base,
@@ -50,6 +50,6 @@ Env* NewChrootEnv(Env* base_env, const std::string& chroot_dir);
 std::shared_ptr<FileSystem> NewChrootFileSystem(
     const std::shared_ptr<FileSystem>& base, const std::string& chroot_dir);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // !defined(MIZAR_LITE) && !defined(OS_WIN)
+#endif  // !defined(ROCKSDB_LITE) && !defined(OS_WIN)

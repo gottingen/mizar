@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -13,7 +13,7 @@ int main() {
 #else
 #include "tools/trace_analyzer_tool.h"
 int main(int argc, char** argv) {
-  return MIZAR_NAMESPACE::trace_analyzer_tool(argc, argv);
+  return ROCKSDB_NAMESPACE::trace_analyzer_tool(argc, argv);
 }
 #endif
 #else
@@ -22,4 +22,4 @@ int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr, "Not supported in lite mode.\n");
   return 1;
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

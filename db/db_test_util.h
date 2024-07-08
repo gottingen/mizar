@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <thread>
@@ -23,18 +24,21 @@
 
 #include "db/db_impl/db_impl.h"
 #include "file/filename.h"
-#include "mizar/cache.h"
-#include "mizar/compaction_filter.h"
-#include "mizar/convenience.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/filter_policy.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/sst_file_writer.h"
-#include "mizar/statistics.h"
-#include "mizar/table.h"
-#include "mizar/utilities/checkpoint.h"
+#include "rocksdb/advanced_options.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/io_status.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/sst_file_writer.h"
+#include "rocksdb/statistics.h"
+#include "rocksdb/table.h"
+#include "rocksdb/utilities/checkpoint.h"
 #include "table/mock_table.h"
 #include "table/scoped_arena_iterator.h"
 #include "test_util/sync_point.h"
@@ -45,7 +49,10 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
-namespace MIZAR_NAMESPACE {
+// In case defined by Windows headers
+#undef small
+
+namespace ROCKSDB_NAMESPACE {
 class MockEnv;
 
 namespace anon {
@@ -100,6 +107,9 @@ struct OptionsOverride {
   std::shared_ptr<const FilterPolicy> filter_policy = nullptr;
   // These will be used only if filter_policy is set
   bool partition_filters = false;
+  // Force using a default block cache. (Setting to false allows ASAN build
+  // use a trivially small block cache for better UAF error detection.)
+  bool full_block_cache = false;
   uint64_t metadata_block_size = 1024;
 
   // Used as a bit mask of individual enums in which to skip an XF test point
@@ -210,9 +220,7 @@ class SpecialEnv : public EnvWrapper {
       Env::IOPriority GetIOPriority() override {
         return base_->GetIOPriority();
       }
-      bool use_direct_io() const override {
-        return base_->use_direct_io();
-      }
+      bool use_direct_io() const override { return base_->use_direct_io(); }
       Status Allocate(uint64_t offset, uint64_t len) override {
         return base_->Allocate(offset, len);
       }
@@ -581,6 +589,7 @@ class SpecialEnv : public EnvWrapper {
         ~NoopDirectory() {}
 
         Status Fsync() override { return Status::OK(); }
+        Status Close() override { return Status::OK(); }
       };
 
       result->reset(new NoopDirectory());
@@ -686,7 +695,142 @@ class SpecialEnv : public EnvWrapper {
   bool no_slowdown_;
 };
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
+class FileTemperatureTestFS : public FileSystemWrapper {
+ public:
+  explicit FileTemperatureTestFS(const std::shared_ptr<FileSystem>& fs)
+      : FileSystemWrapper(fs) {}
+
+  static const char* kClassName() { return "FileTemperatureTestFS"; }
+  const char* Name() const override { return kClassName(); }
+
+  IOStatus NewSequentialFile(const std::string& fname, const FileOptions& opts,
+                             std::unique_ptr<FSSequentialFile>* result,
+                             IODebugContext* dbg) override {
+    IOStatus s = target()->NewSequentialFile(fname, opts, result, dbg);
+    uint64_t number;
+    FileType type;
+    if (ParseFileName(GetFileName(fname), &number, &type) &&
+        type == kTableFile) {
+      MutexLock lock(&mu_);
+      requested_sst_file_temperatures_.emplace_back(number, opts.temperature);
+      if (s.ok()) {
+        if (opts.temperature != Temperature::kUnknown) {
+          // Be extra picky and don't open if a wrong non-unknown temperature is
+          // provided
+          auto e = current_sst_file_temperatures_.find(number);
+          if (e != current_sst_file_temperatures_.end() &&
+              e->second != opts.temperature) {
+            result->reset();
+            return IOStatus::PathNotFound("Temperature mismatch on " + fname);
+          }
+        }
+        *result = WrapWithTemperature<FSSequentialFileOwnerWrapper>(
+            number, std::move(*result));
+      }
+    }
+    return s;
+  }
+
+  IOStatus NewRandomAccessFile(const std::string& fname,
+                               const FileOptions& opts,
+                               std::unique_ptr<FSRandomAccessFile>* result,
+                               IODebugContext* dbg) override {
+    IOStatus s = target()->NewRandomAccessFile(fname, opts, result, dbg);
+    uint64_t number;
+    FileType type;
+    if (ParseFileName(GetFileName(fname), &number, &type) &&
+        type == kTableFile) {
+      MutexLock lock(&mu_);
+      requested_sst_file_temperatures_.emplace_back(number, opts.temperature);
+      if (s.ok()) {
+        if (opts.temperature != Temperature::kUnknown) {
+          // Be extra picky and don't open if a wrong non-unknown temperature is
+          // provided
+          auto e = current_sst_file_temperatures_.find(number);
+          if (e != current_sst_file_temperatures_.end() &&
+              e->second != opts.temperature) {
+            result->reset();
+            return IOStatus::PathNotFound("Temperature mismatch on " + fname);
+          }
+        }
+        *result = WrapWithTemperature<FSRandomAccessFileOwnerWrapper>(
+            number, std::move(*result));
+      }
+    }
+    return s;
+  }
+
+  void PopRequestedSstFileTemperatures(
+      std::vector<std::pair<uint64_t, Temperature>>* out = nullptr) {
+    MutexLock lock(&mu_);
+    if (out) {
+      *out = std::move(requested_sst_file_temperatures_);
+      assert(requested_sst_file_temperatures_.empty());
+    } else {
+      requested_sst_file_temperatures_.clear();
+    }
+  }
+
+  IOStatus NewWritableFile(const std::string& fname, const FileOptions& opts,
+                           std::unique_ptr<FSWritableFile>* result,
+                           IODebugContext* dbg) override {
+    uint64_t number;
+    FileType type;
+    if (ParseFileName(GetFileName(fname), &number, &type) &&
+        type == kTableFile) {
+      MutexLock lock(&mu_);
+      current_sst_file_temperatures_[number] = opts.temperature;
+    }
+    return target()->NewWritableFile(fname, opts, result, dbg);
+  }
+
+  void CopyCurrentSstFileTemperatures(std::map<uint64_t, Temperature>* out) {
+    MutexLock lock(&mu_);
+    *out = current_sst_file_temperatures_;
+  }
+
+  void OverrideSstFileTemperature(uint64_t number, Temperature temp) {
+    MutexLock lock(&mu_);
+    current_sst_file_temperatures_[number] = temp;
+  }
+
+ protected:
+  port::Mutex mu_;
+  std::vector<std::pair<uint64_t, Temperature>>
+      requested_sst_file_temperatures_;
+  std::map<uint64_t, Temperature> current_sst_file_temperatures_;
+
+  std::string GetFileName(const std::string& fname) {
+    auto filename = fname.substr(fname.find_last_of(kFilePathSeparator) + 1);
+    // workaround only for Windows that the file path could contain both Windows
+    // FilePathSeparator and '/'
+    filename = filename.substr(filename.find_last_of('/') + 1);
+    return filename;
+  }
+
+  template <class FileOwnerWrapperT, /*inferred*/ class FileT>
+  std::unique_ptr<FileT> WrapWithTemperature(uint64_t number,
+                                             std::unique_ptr<FileT>&& t) {
+    class FileWithTemp : public FileOwnerWrapperT {
+     public:
+      FileWithTemp(FileTemperatureTestFS* fs, uint64_t number,
+                   std::unique_ptr<FileT>&& t)
+          : FileOwnerWrapperT(std::move(t)), fs_(fs), number_(number) {}
+
+      Temperature GetTemperature() const override {
+        MutexLock lock(&fs_->mu_);
+        return fs_->current_sst_file_temperatures_[number_];
+      }
+
+     private:
+      FileTemperatureTestFS* fs_;
+      uint64_t number_;
+    };
+    return std::make_unique<FileWithTemp>(this, number, std::move(t));
+  }
+};
+
 class OnFileDeletionListener : public EventListener {
  public:
   OnFileDeletionListener() : matched_count_(0), expected_file_name_("") {}
@@ -729,17 +873,34 @@ class FlushCounterListener : public EventListener {
 #endif
 
 // A test merge operator mimics put but also fails if one of merge operands is
-// "corrupted".
+// "corrupted", "corrupted_try_merge", or "corrupted_must_merge".
 class TestPutOperator : public MergeOperator {
  public:
   virtual bool FullMergeV2(const MergeOperationInput& merge_in,
                            MergeOperationOutput* merge_out) const override {
+    static const std::map<std::string, MergeOperator::OpFailureScope>
+        bad_operand_to_op_failure_scope = {
+            {"corrupted", MergeOperator::OpFailureScope::kDefault},
+            {"corrupted_try_merge", MergeOperator::OpFailureScope::kTryMerge},
+            {"corrupted_must_merge",
+             MergeOperator::OpFailureScope::kMustMerge}};
+    auto check_operand =
+        [](Slice operand_val,
+           MergeOperator::OpFailureScope* op_failure_scope) -> bool {
+      auto iter = bad_operand_to_op_failure_scope.find(operand_val.ToString());
+      if (iter != bad_operand_to_op_failure_scope.end()) {
+        *op_failure_scope = iter->second;
+        return false;
+      }
+      return true;
+    };
     if (merge_in.existing_value != nullptr &&
-        *(merge_in.existing_value) == "corrupted") {
+        !check_operand(*merge_in.existing_value,
+                       &merge_out->op_failure_scope)) {
       return false;
     }
     for (auto value : merge_in.operand_list) {
-      if (value == "corrupted") {
+      if (!check_operand(value, &merge_out->op_failure_scope)) {
         return false;
       }
     }
@@ -759,27 +920,28 @@ class CacheWrapper : public Cache {
 
   const char* Name() const override { return target_->Name(); }
 
-  using Cache::Insert;
-  Status Insert(const Slice& key, void* value, size_t charge,
-                void (*deleter)(const Slice& key, void* value),
+  Status Insert(const Slice& key, ObjectPtr value,
+                const CacheItemHelper* helper, size_t charge,
                 Handle** handle = nullptr,
                 Priority priority = Priority::LOW) override {
-    return target_->Insert(key, value, charge, deleter, handle, priority);
+    return target_->Insert(key, value, helper, charge, handle, priority);
   }
 
-  using Cache::Lookup;
-  Handle* Lookup(const Slice& key, Statistics* stats = nullptr) override {
-    return target_->Lookup(key, stats);
+  Handle* Lookup(const Slice& key, const CacheItemHelper* helper,
+                 CreateContext* create_context,
+                 Priority priority = Priority::LOW, bool wait = true,
+                 Statistics* stats = nullptr) override {
+    return target_->Lookup(key, helper, create_context, priority, wait, stats);
   }
 
   bool Ref(Handle* handle) override { return target_->Ref(handle); }
 
   using Cache::Release;
-  bool Release(Handle* handle, bool force_erase = false) override {
-    return target_->Release(handle, force_erase);
+  bool Release(Handle* handle, bool erase_if_last_ref = false) override {
+    return target_->Release(handle, erase_if_last_ref);
   }
 
-  void* Value(Handle* handle) override { return target_->Value(handle); }
+  ObjectPtr Value(Handle* handle) override { return target_->Value(handle); }
 
   void Erase(const Slice& key) override { target_->Erase(key); }
   uint64_t NewId() override { return target_->NewId(); }
@@ -808,18 +970,13 @@ class CacheWrapper : public Cache {
     return target_->GetCharge(handle);
   }
 
-  DeleterFn GetDeleter(Handle* handle) const override {
-    return target_->GetDeleter(handle);
-  }
-
-  void ApplyToAllCacheEntries(void (*callback)(void*, size_t),
-                              bool thread_safe) override {
-    target_->ApplyToAllCacheEntries(callback, thread_safe);
+  const CacheItemHelper* GetCacheItemHelper(Handle* handle) const override {
+    return target_->GetCacheItemHelper(handle);
   }
 
   void ApplyToAllEntries(
-      const std::function<void(const Slice& key, void* value, size_t charge,
-                               DeleterFn deleter)>& callback,
+      const std::function<void(const Slice& key, ObjectPtr value, size_t charge,
+                               const CacheItemHelper* helper)>& callback,
       const ApplyToAllEntriesOptions& opts) override {
     target_->ApplyToAllEntries(callback, opts);
   }
@@ -828,6 +985,50 @@ class CacheWrapper : public Cache {
 
  protected:
   std::shared_ptr<Cache> target_;
+};
+
+/*
+ * A cache wrapper that tracks certain CacheEntryRole's cache charge, its
+ * peaks and increments
+ *
+ *        p0
+ *       / \   p1
+ *      /   \  /\
+ *     /     \/  \
+ *  a /       b   \
+ * peaks = {p0, p1}
+ * increments = {p1-a, p2-b}
+ */
+template <CacheEntryRole R>
+class TargetCacheChargeTrackingCache : public CacheWrapper {
+ public:
+  explicit TargetCacheChargeTrackingCache(std::shared_ptr<Cache> target);
+
+  Status Insert(const Slice& key, ObjectPtr value,
+                const CacheItemHelper* helper, size_t charge,
+                Handle** handle = nullptr,
+                Priority priority = Priority::LOW) override;
+
+  using Cache::Release;
+  bool Release(Handle* handle, bool erase_if_last_ref = false) override;
+
+  std::size_t GetCacheCharge() { return cur_cache_charge_; }
+
+  std::deque<std::size_t> GetChargedCachePeaks() { return cache_charge_peaks_; }
+
+  std::size_t GetChargedCacheIncrementSum() {
+    return cache_charge_increments_sum_;
+  }
+
+ private:
+  static const Cache::CacheItemHelper* kCrmHelper;
+
+  std::size_t cur_cache_charge_;
+  std::size_t cache_charge_peak_;
+  std::size_t cache_charge_increment_;
+  bool last_peak_tracked_;
+  std::deque<std::size_t> cache_charge_peaks_;
+  std::size_t cache_charge_increments_sum_;
 };
 
 class DBTestBase : public testing::Test {
@@ -857,7 +1058,7 @@ class DBTestBase : public testing::Test {
     kUniversalCompactionMultiLevel = 20,
     kCompressedBlockCache = 21,
     kInfiniteMaxOpenFiles = 22,
-    kXXH3Checksum = 23,
+    kCRC32cChecksum = 23,
     kFIFOCompaction = 24,
     kOptimizeFiltersForHits = 25,
     kRowCache = 26,
@@ -1022,8 +1223,6 @@ class DBTestBase : public testing::Test {
 
   Status SingleDelete(int cf, const std::string& k);
 
-  bool SetPreserveDeletesSequenceNumber(SequenceNumber sn);
-
   std::string Get(const std::string& k, const Snapshot* snapshot = nullptr);
 
   std::string Get(int cf, const std::string& k,
@@ -1034,10 +1233,12 @@ class DBTestBase : public testing::Test {
   std::vector<std::string> MultiGet(std::vector<int> cfs,
                                     const std::vector<std::string>& k,
                                     const Snapshot* snapshot,
-                                    const bool batched);
+                                    const bool batched,
+                                    const bool async = false);
 
   std::vector<std::string> MultiGet(const std::vector<std::string>& k,
-                                    const Snapshot* snapshot = nullptr);
+                                    const Snapshot* snapshot = nullptr,
+                                    const bool async = false);
 
   uint64_t GetNumSnapshots();
 
@@ -1051,7 +1252,16 @@ class DBTestBase : public testing::Test {
 
   std::string AllEntriesFor(const Slice& user_key, int cf = 0);
 
-#ifndef MIZAR_LITE
+  // Similar to AllEntriesFor but this function also covers reopen with fifo.
+  // Note that test cases with snapshots or entries in memtable should simply
+  // use AllEntriesFor instead as snapshots and entries in memtable will
+  // survive after db reopen.
+  void CheckAllEntriesWithFifoReopen(const std::string& expected_value,
+                                     const Slice& user_key, int cf,
+                                     const std::vector<std::string>& cfs,
+                                     const Options& options);
+
+#ifndef ROCKSDB_LITE
   int NumSortedRuns(int cf = 0);
 
   uint64_t TotalSize(int cf = 0);
@@ -1067,7 +1277,7 @@ class DBTestBase : public testing::Test {
   double CompressionRatioAtLevel(int level, int cf = 0);
 
   int TotalTableFiles(int cf = 0, int levels = -1);
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
   std::vector<uint64_t> GetBlobFileNumbers();
 
@@ -1103,9 +1313,9 @@ class DBTestBase : public testing::Test {
 
   void MoveFilesToLevel(int level, int cf = 0);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   void DumpFileCounts(const char* label);
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
   std::string DumpSSTableList();
 
@@ -1174,10 +1384,12 @@ class DBTestBase : public testing::Test {
   void VerifyDBInternal(
       std::vector<std::pair<std::string, std::string>> true_data);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   uint64_t GetNumberOfSstFilesForColumnFamily(DB* db,
                                               std::string column_family_name);
-#endif  // MIZAR_LITE
+
+  uint64_t GetSstSizeHelper(Temperature temperature);
+#endif  // ROCKSDB_LITE
 
   uint64_t TestGetTickerCount(const Options& options, Tickers ticker_type) {
     return options.statistics->getTickerCount(ticker_type);
@@ -1202,4 +1414,4 @@ class DBTestBase : public testing::Test {
 // unique ids.
 void VerifySstUniqueIds(const TablePropertiesCollection& props);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -10,20 +10,20 @@
 #include <memory>
 #include <string>
 
-#include "mizar/merge_operator.h"
-#include "mizar/slice.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/utilities/options_type.h"
 #include "utilities/merge_operators.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace {
 static std::unordered_map<std::string, OptionTypeInfo>
     stringappend2_merge_type_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"delimiter",
          {0, OptionType::kString, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 }  // namespace
 
@@ -129,4 +129,4 @@ MergeOperators::CreateStringAppendTESTOperator() {
   return std::make_shared<StringAppendTESTOperator>(',');
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

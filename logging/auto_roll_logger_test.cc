@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "logging/auto_roll_logger.h"
 
@@ -21,16 +21,17 @@
 
 #include "db/db_test_util.h"
 #include "env/emulated_clock.h"
+#include "logging/env_logger.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "mizar/db.h"
-#include "mizar/file_system.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/db.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/system_clock.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // In this test we only want to Log some simple log message with
 // no format. LogMessage() provides such a simple interface and
@@ -50,18 +51,29 @@ void LogMessage(const InfoLogLevel log_level, Logger* logger,
 class AutoRollLoggerTest : public testing::Test {
  public:
   static void InitTestDb() {
+    // TODO replace the `system` calls with Env/FileSystem APIs.
 #ifdef OS_WIN
     // Replace all slashes in the path so windows CompSpec does not
     // become confused
+    std::string testDbDir(kTestDbDir);
+    std::replace_if(
+        testDbDir.begin(), testDbDir.end(), [](char ch) { return ch == '/'; },
+        '\\');
+    std::string deleteDbDirCmd =
+        "if exist " + testDbDir + " rd /s /q " + testDbDir;
+    ASSERT_TRUE(system(deleteDbDirCmd.c_str()) == 0);
+
     std::string testDir(kTestDir);
-    std::replace_if(testDir.begin(), testDir.end(),
-                    [](char ch) { return ch == '/'; }, '\\');
+    std::replace_if(
+        testDir.begin(), testDir.end(), [](char ch) { return ch == '/'; },
+        '\\');
     std::string deleteCmd = "if exist " + testDir + " rd /s /q " + testDir;
 #else
-    std::string deleteCmd = "rm -rf " + kTestDir;
+    std::string deleteCmd = "rm -rf " + kTestDir + " " + kTestDbDir;
 #endif
     ASSERT_TRUE(system(deleteCmd.c_str()) == 0);
     ASSERT_OK(Env::Default()->CreateDir(kTestDir));
+    ASSERT_OK(Env::Default()->CreateDir(kTestDbDir));
   }
 
   void RollLogFileBySizeTest(AutoRollLogger* logger, size_t log_max_size,
@@ -108,6 +120,7 @@ class AutoRollLoggerTest : public testing::Test {
 
   static const std::string kSampleMessage;
   static const std::string kTestDir;
+  static const std::string kTestDbDir;
   static const std::string kLogFile;
   static Env* default_env;
 };
@@ -116,6 +129,8 @@ const std::string AutoRollLoggerTest::kSampleMessage(
     "this is the message to be written to the log file!!");
 const std::string AutoRollLoggerTest::kTestDir(
     test::PerThreadDBPath("db_log_test"));
+const std::string AutoRollLoggerTest::kTestDbDir(
+    test::PerThreadDBPath("db_log_test_db"));
 const std::string AutoRollLoggerTest::kLogFile(
     test::PerThreadDBPath("db_log_test") + "/LOG");
 Env* AutoRollLoggerTest::default_env = Env::Default();
@@ -189,15 +204,15 @@ void AutoRollLoggerTest::RollLogFileByTimeTest(
 }
 
 TEST_F(AutoRollLoggerTest, RollLogFileBySize) {
-    InitTestDb();
-    size_t log_max_size = 1024 * 5;
-    size_t keep_log_file_num = 10;
+  InitTestDb();
+  size_t log_max_size = 1024 * 5;
+  size_t keep_log_file_num = 10;
 
-    AutoRollLogger logger(FileSystem::Default(), SystemClock::Default(),
-                          kTestDir, "", log_max_size, 0, keep_log_file_num);
+  AutoRollLogger logger(FileSystem::Default(), SystemClock::Default(), kTestDir,
+                        "", log_max_size, 0, keep_log_file_num);
 
-    RollLogFileBySizeTest(&logger, log_max_size,
-                          kSampleMessage + ":RollLogFileBySize");
+  RollLogFileBySizeTest(&logger, log_max_size,
+                        kSampleMessage + ":RollLogFileBySize");
 }
 
 TEST_F(AutoRollLoggerTest, RollLogFileByTime) {
@@ -286,7 +301,7 @@ TEST_F(AutoRollLoggerTest, CompositeRollByTimeAndSizeLogger) {
 }
 
 #ifndef OS_WIN
-// TODO: does not build for Windows because of PosixLogger use below. Need to
+// TODO: does not build for Windows because of EnvLogger use below. Need to
 // port
 TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
   DBOptions options;
@@ -298,18 +313,17 @@ TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
 
   // Normal logger
   ASSERT_OK(CreateLoggerFromOptions(kTestDir, options, &logger));
-  ASSERT_TRUE(dynamic_cast<PosixLogger*>(logger.get()));
+  ASSERT_TRUE(dynamic_cast<EnvLogger*>(logger.get()));
 
   // Only roll by size
   InitTestDb();
   options.max_log_file_size = 1024;
   ASSERT_OK(CreateLoggerFromOptions(kTestDir, options, &logger));
   AutoRollLogger* auto_roll_logger =
-    dynamic_cast<AutoRollLogger*>(logger.get());
+      dynamic_cast<AutoRollLogger*>(logger.get());
   ASSERT_TRUE(auto_roll_logger);
-  RollLogFileBySizeTest(
-      auto_roll_logger, options.max_log_file_size,
-      kSampleMessage + ":CreateLoggerFromOptions - size");
+  RollLogFileBySizeTest(auto_roll_logger, options.max_log_file_size,
+                        kSampleMessage + ":CreateLoggerFromOptions - size");
 
   // Only roll by Time
   options.env = nse.get();
@@ -317,8 +331,7 @@ TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
   options.max_log_file_size = 0;
   options.log_file_time_to_roll = 2;
   ASSERT_OK(CreateLoggerFromOptions(kTestDir, options, &logger));
-  auto_roll_logger =
-    dynamic_cast<AutoRollLogger*>(logger.get());
+  auto_roll_logger = dynamic_cast<AutoRollLogger*>(logger.get());
   RollLogFileByTimeTest(options.env->GetFileSystem(), nsc, auto_roll_logger,
                         options.log_file_time_to_roll,
                         kSampleMessage + ":CreateLoggerFromOptions - time");
@@ -328,8 +341,7 @@ TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
   options.max_log_file_size = 1024 * 5;
   options.log_file_time_to_roll = 2;
   ASSERT_OK(CreateLoggerFromOptions(kTestDir, options, &logger));
-  auto_roll_logger =
-    dynamic_cast<AutoRollLogger*>(logger.get());
+  auto_roll_logger = dynamic_cast<AutoRollLogger*>(logger.get());
   RollLogFileBySizeTest(auto_roll_logger, options.max_log_file_size,
                         kSampleMessage + ":CreateLoggerFromOptions - both");
   RollLogFileByTimeTest(options.env->GetFileSystem(), nsc, auto_roll_logger,
@@ -371,7 +383,7 @@ TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
     options.log_file_time_to_roll = 2;
     options.keep_log_file_num = kFileNum;
     options.db_log_dir = kTestDir;
-    ASSERT_OK(CreateLoggerFromOptions("/dummy/db/name", options, &logger));
+    ASSERT_OK(CreateLoggerFromOptions(kTestDbDir, options, &logger));
     auto_roll_logger = dynamic_cast<AutoRollLogger*>(logger.get());
 
     // Roll the log 4 times, and it will trim to 3 files.
@@ -387,7 +399,7 @@ TEST_F(AutoRollLoggerTest, CreateLoggerFromOptions) {
     std::vector<std::string> files = GetLogFiles();
     ASSERT_EQ(kFileNum, files.size());
     for (const auto& f : files) {
-      ASSERT_TRUE(f.find("dummy") != std::string::npos);
+      ASSERT_TRUE(f.find("db_log_test_db") != std::string::npos);
     }
 
     // Cleaning up those files.
@@ -448,27 +460,22 @@ TEST_F(AutoRollLoggerTest, LogFlushWhileRolling) {
   AutoRollLogger* auto_roll_logger =
       dynamic_cast<AutoRollLogger*>(logger.get());
   ASSERT_TRUE(auto_roll_logger);
-  MIZAR_NAMESPACE::port::Thread flush_thread;
+  ROCKSDB_NAMESPACE::port::Thread flush_thread;
 
   // Notes:
   // (1) Need to pin the old logger before beginning the roll, as rolling grabs
   //     the mutex, which would prevent us from accessing the old logger. This
   //     also marks flush_thread with AutoRollLogger::Flush:PinnedLogger.
-  // (2) Need to reset logger during PosixLogger::Flush() to exercise a race
-  //     condition case, which is executing the flush with the pinned (old)
-  //     logger after auto-roll logger has cut over to a new logger.
-  // (3) PosixLogger::Flush() happens in both threads but its SyncPoints only
+  // (2) New logger will be cut in AutoRollLogger::RollLogFile only when flush
+  //     is completed and reference to pinned logger is released.
+  // (3) EnvLogger::Flush() happens in both threads but its SyncPoints only
   //     are enabled in flush_thread (the one pinning the old logger).
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependencyAndMarkers(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependencyAndMarkers(
       {{"AutoRollLogger::Flush:PinnedLogger",
-        "AutoRollLoggerTest::LogFlushWhileRolling:PreRollAndPostThreadInit"},
-       {"PosixLogger::Flush:Begin1",
-        "AutoRollLogger::ResetLogger:BeforeNewLogger"},
-       {"AutoRollLogger::ResetLogger:AfterNewLogger",
-        "PosixLogger::Flush:Begin2"}},
-      {{"AutoRollLogger::Flush:PinnedLogger", "PosixLogger::Flush:Begin1"},
-       {"AutoRollLogger::Flush:PinnedLogger", "PosixLogger::Flush:Begin2"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+        "AutoRollLoggerTest::LogFlushWhileRolling:PreRollAndPostThreadInit"}},
+      {{"AutoRollLogger::Flush:PinnedLogger", "EnvLogger::Flush:Begin1"},
+       {"AutoRollLogger::Flush:PinnedLogger", "EnvLogger::Flush:Begin2"}});
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   flush_thread = port::Thread([&]() { auto_roll_logger->Flush(); });
   TEST_SYNC_POINT(
@@ -476,7 +483,7 @@ TEST_F(AutoRollLoggerTest, LogFlushWhileRolling) {
   RollLogFileBySizeTest(auto_roll_logger, options.max_log_file_size,
                         kSampleMessage + ":LogFlushWhileRolling");
   flush_thread.join();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 #endif  // OS_WIN
@@ -518,7 +525,7 @@ TEST_F(AutoRollLoggerTest, InfoLogLevel) {
   }
   std::ifstream inFile(AutoRollLoggerTest::kLogFile.c_str());
   size_t lines = std::count(std::istreambuf_iterator<char>(inFile),
-                         std::istreambuf_iterator<char>(), '\n');
+                            std::istreambuf_iterator<char>(), '\n');
   ASSERT_EQ(log_lines, lines);
   inFile.close();
 }
@@ -558,7 +565,7 @@ TEST_F(AutoRollLoggerTest, Close) {
 
   std::ifstream inFile(AutoRollLoggerTest::kLogFile.c_str());
   size_t lines = std::count(std::istreambuf_iterator<char>(inFile),
-                         std::istreambuf_iterator<char>(), '\n');
+                            std::istreambuf_iterator<char>(), '\n');
   ASSERT_EQ(log_lines, lines);
   inFile.close();
 }
@@ -593,7 +600,6 @@ TEST_F(AutoRollLoggerTest, LogHeaderTest) {
   // test_num == 0 -> standard call to Header()
   // test_num == 1 -> call to Log() with InfoLogLevel::HEADER_LEVEL
   for (int test_num = 0; test_num < 2; test_num++) {
-
     InitTestDb();
 
     AutoRollLogger logger(FileSystem::Default(), SystemClock::Default(),
@@ -631,7 +637,7 @@ TEST_F(AutoRollLoggerTest, LogHeaderTest) {
 
     const auto oldfiles = GetOldFileNames(newfname);
 
-    ASSERT_EQ(oldfiles.size(), (size_t) 2);
+    ASSERT_EQ(oldfiles.size(), (size_t)2);
 
     for (auto& oldfname : oldfiles) {
       // verify that the files rolled over
@@ -643,14 +649,14 @@ TEST_F(AutoRollLoggerTest, LogHeaderTest) {
 }
 
 TEST_F(AutoRollLoggerTest, LogFileExistence) {
-  MIZAR_NAMESPACE::DB* db;
-  MIZAR_NAMESPACE::Options options;
+  ROCKSDB_NAMESPACE::DB* db;
+  ROCKSDB_NAMESPACE::Options options;
 #ifdef OS_WIN
   // Replace all slashes in the path so windows CompSpec does not
   // become confused
   std::string testDir(kTestDir);
-  std::replace_if(testDir.begin(), testDir.end(),
-    [](char ch) { return ch == '/'; }, '\\');
+  std::replace_if(
+      testDir.begin(), testDir.end(), [](char ch) { return ch == '/'; }, '\\');
   std::string deleteCmd = "if exist " + testDir + " rd /s /q " + testDir;
 #else
   std::string deleteCmd = "rm -rf " + kTestDir;
@@ -658,7 +664,7 @@ TEST_F(AutoRollLoggerTest, LogFileExistence) {
   ASSERT_EQ(system(deleteCmd.c_str()), 0);
   options.max_log_file_size = 100 * 1024 * 1024;
   options.create_if_missing = true;
-  ASSERT_OK(MIZAR_NAMESPACE::DB::Open(options, kTestDir, &db));
+  ASSERT_OK(ROCKSDB_NAMESPACE::DB::Open(options, kTestDir, &db));
   ASSERT_OK(default_env->FileExists(kLogFile));
   delete db;
 }
@@ -716,9 +722,10 @@ TEST_F(AutoRollLoggerTest, RenameError) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -728,8 +735,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as AutoRollLogger is not supported in MIZAR_LITE\n");
+          "SKIPPED as AutoRollLogger is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

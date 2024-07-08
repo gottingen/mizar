@@ -4,18 +4,18 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::TableFilter.
+// ROCKSDB_NAMESPACE::TableFilter.
 
 #include "rocksjni/table_filter_jnicallback.h"
+
 #include "rocksjni/portal.h"
 
-namespace MIZAR_NAMESPACE {
-TableFilterJniCallback::TableFilterJniCallback(
-    JNIEnv* env, jobject jtable_filter)
+namespace ROCKSDB_NAMESPACE {
+TableFilterJniCallback::TableFilterJniCallback(JNIEnv* env,
+                                               jobject jtable_filter)
     : JniCallback(env, jtable_filter) {
-  m_jfilter_methodid =
-      AbstractTableFilterJni::getFilterMethod(env);
-  if(m_jfilter_methodid == nullptr) {
+  m_jfilter_methodid = AbstractTableFilterJni::getFilterMethod(env);
+  if (m_jfilter_methodid == nullptr) {
     // exception thrown: NoSuchMethodException or OutOfMemoryError
     return;
   }
@@ -27,7 +27,7 @@ TableFilterJniCallback::TableFilterJniCallback(
   it may be called from multiple threads
   */
   m_table_filter_function =
-      [this](const MIZAR_NAMESPACE::TableProperties& table_properties) {
+      [this](const ROCKSDB_NAMESPACE::TableProperties& table_properties) {
         jboolean attached_thread = JNI_FALSE;
         JNIEnv* thread_env = getJniEnv(&attached_thread);
         assert(thread_env != nullptr);
@@ -58,9 +58,9 @@ TableFilterJniCallback::TableFilterJniCallback(
       };
 }
 
-std::function<bool(const MIZAR_NAMESPACE::TableProperties&)>
+std::function<bool(const ROCKSDB_NAMESPACE::TableProperties&)>
 TableFilterJniCallback::GetTableFilterFunction() {
   return m_table_filter_function;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

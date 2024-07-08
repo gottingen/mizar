@@ -4,16 +4,16 @@
 // (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <memory>
 
-#include "mizar/rocksdb_namespace.h"
-#include "mizar/status.h"
-#include "mizar/types.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/rocksdb_namespace.h"
+#include "rocksdb/status.h"
+#include "rocksdb/types.h"
+#include "rocksdb/utilities/transaction_db.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Request for locking a single key.
 struct PointLockRequest {
@@ -205,5 +205,5 @@ class LockTrackerFactory {
   virtual ~LockTrackerFactory() {}
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

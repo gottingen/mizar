@@ -9,17 +9,17 @@
 
 #include <memory>
 
-#include "mizar/merge_operator.h"
-#include "mizar/slice.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/merge_operators.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace cassandra {
 static std::unordered_map<std::string, OptionTypeInfo>
     merge_operator_options_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"gc_grace_period_in_seconds",
          {offsetof(struct CassandraOptions, gc_grace_period_in_seconds),
           OptionType::kUInt32T, OptionVerificationType::kNormal,
@@ -27,7 +27,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
         {"operands_limit",
          {offsetof(struct CassandraOptions, operands_limit), OptionType::kSizeT,
           OptionVerificationType::kNormal, OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 CassandraValueMergeOperator::CassandraValueMergeOperator(
@@ -44,9 +44,8 @@ bool CassandraValueMergeOperator::FullMergeV2(
   merge_out->new_value.clear();
   std::vector<RowValue> row_values;
   if (merge_in.existing_value) {
-    row_values.push_back(
-      RowValue::Deserialize(merge_in.existing_value->data(),
-                            merge_in.existing_value->size()));
+    row_values.push_back(RowValue::Deserialize(
+        merge_in.existing_value->data(), merge_in.existing_value->size()));
   }
 
   for (auto& operand : merge_in.operand_list) {
@@ -78,6 +77,6 @@ bool CassandraValueMergeOperator::PartialMergeMulti(
   return true;
 }
 
-} // namespace cassandra
+}  // namespace cassandra
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

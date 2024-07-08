@@ -15,10 +15,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "util/autovector.h"
 #include "port/port.h"
+#include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Cleanup function that will be called for a stored thread local
 // pointer (if not NULL) when one of the following happens:
@@ -91,11 +91,10 @@ class ThreadLocalPtr {
 
   class StaticMeta;
 
-private:
-
+ private:
   static StaticMeta* Instance();
 
   const uint32_t id_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

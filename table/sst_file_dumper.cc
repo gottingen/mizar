@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "table/sst_file_dumper.h"
 
@@ -20,13 +20,13 @@
 #include "db/write_batch_internal.h"
 #include "options/cf_options.h"
 #include "port/port.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/iterator.h"
-#include "mizar/slice_transform.h"
-#include "mizar/status.h"
-#include "mizar/table_properties.h"
-#include "mizar/utilities/ldb_cmd.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/status.h"
+#include "rocksdb/table_properties.h"
+#include "rocksdb/utilities/ldb_cmd.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -38,15 +38,17 @@
 #include "util/compression.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 SstFileDumper::SstFileDumper(const Options& options,
                              const std::string& file_path,
-                             size_t readahead_size, bool verify_checksum,
-                             bool output_hex, bool decode_blob_index,
-                             const EnvOptions& soptions, bool silent)
+                             Temperature file_temp, size_t readahead_size,
+                             bool verify_checksum, bool output_hex,
+                             bool decode_blob_index, const EnvOptions& soptions,
+                             bool silent)
     : file_name_(file_path),
       read_num_(0),
+      file_temp_(file_temp),
       output_hex_(output_hex),
       decode_blob_index_(decode_blob_index),
       soptions_(soptions),
@@ -82,8 +84,9 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
   const auto& fs = options_.env->GetFileSystem();
   std::unique_ptr<FSRandomAccessFile> file;
   uint64_t file_size = 0;
-  Status s = fs->NewRandomAccessFile(file_path, FileOptions(soptions_), &file,
-                                     nullptr);
+  FileOptions fopts = soptions_;
+  fopts.temperature = file_temp_;
+  Status s = fs->NewRandomAccessFile(file_path, fopts, &file, nullptr);
   if (s.ok()) {
     s = fs->GetFileSize(file_path, IOOptions(), &file_size, nullptr);
   }
@@ -107,9 +110,10 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
     uint64_t prefetch_off = file_size - prefetch_size;
     IOOptions opts;
     s = prefetch_buffer.Prefetch(opts, file_.get(), prefetch_off,
-                                 static_cast<size_t>(prefetch_size));
+                                 static_cast<size_t>(prefetch_size),
+                                 Env::IO_TOTAL /* rate_limiter_priority */);
 
-    s = ReadFooterFromFile(opts, file_.get(), &prefetch_buffer, file_size,
+    s = ReadFooterFromFile(opts, file_.get(), *fs, &prefetch_buffer, file_size,
                            &footer);
   }
   if (s.ok()) {
@@ -121,11 +125,10 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
         magic_number == kLegacyPlainTableMagicNumber) {
       soptions_.use_mmap_reads = true;
 
-      fs->NewRandomAccessFile(file_path, FileOptions(soptions_), &file,
-                              nullptr);
+      fs->NewRandomAccessFile(file_path, fopts, &file, nullptr);
       file_.reset(new RandomAccessFileReader(std::move(file), file_path));
     }
-    options_.comparator = &internal_comparator_;
+
     // For old sst format, ReadTableProperties might fail but file can be read
     if (ReadTableProperties(magic_number, file_.get(), file_size,
                             (magic_number == kBlockBasedTableMagicNumber)
@@ -133,9 +136,23 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
                                 : nullptr)
             .ok()) {
       s = SetTableOptionsByMagicNumber(magic_number);
+      if (s.ok()) {
+        if (table_properties_ && !table_properties_->comparator_name.empty()) {
+          ConfigOptions config_options;
+          const Comparator* user_comparator = nullptr;
+          s = Comparator::CreateFromString(config_options,
+                                           table_properties_->comparator_name,
+                                           &user_comparator);
+          if (s.ok()) {
+            assert(user_comparator);
+            internal_comparator_ = InternalKeyComparator(user_comparator);
+          }
+        }
+      }
     } else {
       s = SetOldTableOptions();
     }
+    options_.comparator = internal_comparator_.user_comparator();
   }
 
   if (s.ok()) {
@@ -206,9 +223,8 @@ Status SstFileDumper::CalculateCompressedTableSize(
   table_options.block_size = block_size;
   BlockBasedTableFactory block_based_tf(table_options);
   std::unique_ptr<TableBuilder> table_builder;
-  table_builder.reset(block_based_tf.NewTableBuilder(
-      tb_options,
-      dest_writer.get()));
+  table_builder.reset(
+      block_based_tf.NewTableBuilder(tb_options, dest_writer.get()));
   std::unique_ptr<InternalIterator> iter(table_reader_->NewIterator(
       read_options_, moptions_.prefix_extractor.get(), /*arena=*/nullptr,
       /*skip_filters=*/false, TableReaderCaller::kSSTDumpTool));
@@ -235,7 +251,7 @@ Status SstFileDumper::ShowAllCompressionSizes(
         compression_types,
     int32_t compress_level_from, int32_t compress_level_to,
     uint32_t max_dict_bytes, uint32_t zstd_max_train_bytes,
-    uint64_t max_dict_buffer_bytes) {
+    uint64_t max_dict_buffer_bytes, bool use_zstd_dict_trainer) {
   fprintf(stdout, "Block Size: %" ROCKSDB_PRIszt "\n", block_size);
   for (auto& i : compression_types) {
     if (CompressionTypeSupported(i.first)) {
@@ -244,6 +260,7 @@ Status SstFileDumper::ShowAllCompressionSizes(
       compress_opt.max_dict_bytes = max_dict_bytes;
       compress_opt.zstd_max_train_bytes = zstd_max_train_bytes;
       compress_opt.max_dict_buffer_bytes = max_dict_buffer_bytes;
+      compress_opt.use_zstd_dict_trainer = use_zstd_dict_trainer;
       for (int32_t j = compress_level_from; j <= compress_level_to; j++) {
         fprintf(stdout, "Compression level: %d", j);
         compress_opt.level = j;
@@ -263,12 +280,12 @@ Status SstFileDumper::ShowCompressionSize(
     size_t block_size, CompressionType compress_type,
     const CompressionOptions& compress_opt) {
   Options opts;
-  opts.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  opts.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   opts.statistics->set_stats_level(StatsLevel::kAll);
   const ImmutableOptions imoptions(opts);
   const ColumnFamilyOptions cfo(opts);
   const MutableCFOptions moptions(cfo);
-  MIZAR_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
+  ROCKSDB_NAMESPACE::InternalKeyComparator ikc(opts.comparator);
   IntTblPropCollectorFactories block_based_table_factories;
 
   std::string column_family_name;
@@ -339,7 +356,7 @@ Status SstFileDumper::ReadTableProperties(uint64_t table_magic_number,
                                           RandomAccessFileReader* file,
                                           uint64_t file_size,
                                           FilePrefetchBuffer* prefetch_buffer) {
-  Status s = MIZAR_NAMESPACE::ReadTableProperties(
+  Status s = ROCKSDB_NAMESPACE::ReadTableProperties(
       file, file_size, table_magic_number, ioptions_, &table_properties_,
       /* memory_allocator= */ nullptr, prefetch_buffer);
   if (!s.ok()) {
@@ -497,6 +514,6 @@ Status SstFileDumper::ReadTableProperties(
   *table_properties = table_reader_->GetTableProperties();
   return init_result_;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

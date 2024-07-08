@@ -11,13 +11,13 @@
 #if !defined(OS_WIN)
 
 #include <dirent.h>
-#ifndef MIZAR_NO_DYNAMIC_EXTENSION
+#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
 #include <dlfcn.h>
 #endif
 #include <errno.h>
 #include <fcntl.h>
 
-#if defined(MIZAR_IOURING_PRESENT)
+#if defined(ROCKSDB_IOURING_PRESENT)
 #include <liburing.h>
 #endif
 #include <pthread.h>
@@ -33,7 +33,7 @@
 #include <sys/statvfs.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#if defined(MIZAR_IOURING_PRESENT)
+#if defined(ROCKSDB_IOURING_PRESENT)
 #include <sys/uio.h>
 #endif
 #include <time.h>
@@ -55,14 +55,14 @@
 
 #include "env/composite_env_wrapper.h"
 #include "env/io_posix.h"
-#include "logging/posix_logger.h"
 #include "monitoring/iostats_context_imp.h"
 #include "monitoring/thread_status_updater.h"
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/system_clock.h"
+#include "port/sys_time.h"
+#include "rocksdb/env.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/system_clock.h"
 #include "test_util/sync_point.h"
 #include "util/coding.h"
 #include "util/compression_context_cache.h"
@@ -81,7 +81,7 @@
 #define EXT4_SUPER_MAGIC 0xEF53
 #endif
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 #if defined(OS_WIN)
 static const std::string kSharedLibExt = ".dll";
 static const char kPathSeparator = ';';
@@ -100,7 +100,7 @@ ThreadStatusUpdater* CreateThreadStatusUpdater() {
   return new ThreadStatusUpdater();
 }
 
-#ifndef MIZAR_NO_DYNAMIC_EXTENSION
+#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
 class PosixDynamicLibrary : public DynamicLibrary {
  public:
   PosixDynamicLibrary(const std::string& name, void* handle)
@@ -125,17 +125,17 @@ class PosixDynamicLibrary : public DynamicLibrary {
   std::string name_;
   void* handle_;
 };
-#endif  // !MIZAR_NO_DYNAMIC_EXTENSION
+#endif  // !ROCKSDB_NO_DYNAMIC_EXTENSION
 
 class PosixClock : public SystemClock {
  public:
   static const char* kClassName() { return "PosixClock"; }
-  const char* Name() const override { return kClassName(); }
-  const char* NickName() const override { return kDefaultName(); }
+  const char* Name() const override { return kDefaultName(); }
+  const char* NickName() const override { return kClassName(); }
 
   uint64_t NowMicros() override {
-    struct timeval tv;
-    gettimeofday(&tv, nullptr);
+    port::TimeVal tv;
+    port::GetTimeOfDay(&tv, nullptr);
     return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
   }
 
@@ -166,7 +166,7 @@ class PosixClock : public SystemClock {
     defined(OS_AIX) || (defined(__MACH__) && defined(__MAC_10_12))
     struct timespec ts;
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
-    return static_cast<uint64_t>(ts.tv_sec) * 1000000000;
+    return (static_cast<uint64_t>(ts.tv_sec) * 1000000000 + ts.tv_nsec) / 1000;
 #endif
     return 0;
   }
@@ -200,7 +200,7 @@ class PosixClock : public SystemClock {
     dummy.reserve(maxsize);
     dummy.resize(maxsize);
     char* p = &dummy[0];
-    localtime_r(&seconds, &t);
+    port::LocalTimeR(&seconds, &t);
     snprintf(p, maxsize, "%04d/%02d/%02d-%02d:%02d:%02d ", t.tm_year + 1900,
              t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
     return dummy;
@@ -235,7 +235,7 @@ class PosixEnv : public CompositeEnv {
     }
   }
 
-#ifndef MIZAR_NO_DYNAMIC_EXTENSION
+#ifndef ROCKSDB_NO_DYNAMIC_EXTENSION
   // Loads the named library into the result.
   // If the input name is empty, the current executable is loaded
   // On *nix systems, a "lib" prefix is added to the name if one is not supplied
@@ -288,7 +288,7 @@ class PosixEnv : public CompositeEnv {
     return Status::IOError(
         IOErrorMsg("Failed to open shared library: xs", name), dlerror());
   }
-#endif  // !MIZAR_NO_DYNAMIC_EXTENSION
+#endif  // !ROCKSDB_NO_DYNAMIC_EXTENSION
 
   void Schedule(void (*function)(void* arg1), void* arg, Priority pri = LOW,
                 void* tag = nullptr,
@@ -301,6 +301,10 @@ class PosixEnv : public CompositeEnv {
   void WaitForJoin() override;
 
   unsigned int GetThreadPoolQueueLen(Priority pri = LOW) const override;
+
+  int ReserveThreads(int threads_to_be_reserved, Priority pri) override;
+
+  int ReleaseThreads(int threads_to_be_released, Priority pri) override;
 
   Status GetThreadList(std::vector<ThreadStatus>* thread_list) override {
     assert(thread_status_updater_);
@@ -437,6 +441,16 @@ unsigned int PosixEnv::GetThreadPoolQueueLen(Priority pri) const {
   return thread_pools_[pri].GetQueueLen();
 }
 
+int PosixEnv::ReserveThreads(int threads_to_reserved, Priority pri) {
+  assert(pri >= Priority::BOTTOM && pri <= Priority::HIGH);
+  return thread_pools_[pri].ReserveThreads(threads_to_reserved);
+}
+
+int PosixEnv::ReleaseThreads(int threads_to_released, Priority pri) {
+  assert(pri >= Priority::BOTTOM && pri <= Priority::HIGH);
+  return thread_pools_[pri].ReleaseThreads(threads_to_released);
+}
+
 struct StartThreadState {
   void (*user_function)(void*);
   void* arg;
@@ -488,6 +502,7 @@ Env* Env::Default() {
   CompressionContextCache::InitSingleton();
   INIT_SYNC_POINT_SINGLETONS();
   // ~PosixEnv must be called on exit
+  //**TODO: Can we make this a STATIC_AVOID_DESTRUCTION?
   static PosixEnv default_env;
   return &default_env;
 }
@@ -496,10 +511,10 @@ Env* Env::Default() {
 // Default Posix SystemClock
 //
 const std::shared_ptr<SystemClock>& SystemClock::Default() {
-  static std::shared_ptr<SystemClock> default_clock =
-      std::make_shared<PosixClock>();
-  return default_clock;
+  STATIC_AVOID_DESTRUCTION(std::shared_ptr<SystemClock>, instance)
+  (std::make_shared<PosixClock>());
+  return instance;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

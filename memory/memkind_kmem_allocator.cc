@@ -10,7 +10,7 @@
 
 #include "memory/memkind_kmem_allocator.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 Status MemkindKmemAllocator::PrepareOptions(const ConfigOptions& options) {
   std::string message;
   if (!IsSupported(&message)) {
@@ -33,12 +33,12 @@ void MemkindKmemAllocator::Deallocate(void* p) {
   memkind_free(MEMKIND_DAX_KMEM, p);
 }
 
-#ifdef MIZAR_MALLOC_USABLE_SIZE
+#ifdef ROCKSDB_MALLOC_USABLE_SIZE
 size_t MemkindKmemAllocator::UsableSize(void* p,
                                         size_t /*allocation_size*/) const {
   return memkind_malloc_usable_size(MEMKIND_DAX_KMEM, p);
 }
-#endif  // MIZAR_MALLOC_USABLE_SIZE
+#endif  // ROCKSDB_MALLOC_USABLE_SIZE
 #endif  // MEMKIND
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

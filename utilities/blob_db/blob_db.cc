@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/blob_db/blob_db.h"
 
@@ -12,7 +12,7 @@
 #include "logging/logging.h"
 #include "utilities/blob_db/blob_db_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace blob_db {
 
 Status BlobDB::Open(const Options& options, const BlobDBOptions& bdb_options,
@@ -110,5 +110,5 @@ void BlobDBOptions::Dump(Logger* log) const {
 }
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif

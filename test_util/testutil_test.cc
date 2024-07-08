@@ -10,7 +10,7 @@
 #include "port/stack_trace.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 void CreateFile(Env* env, const std::string& path) {
   std::unique_ptr<WritableFile> f;
@@ -34,10 +34,10 @@ TEST(TestUtil, DestroyDirRecursively) {
   ASSERT_TRUE(s.IsNotFound());
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

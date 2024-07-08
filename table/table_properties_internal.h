@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "mizar/table_properties.h"
+#include "rocksdb/table_properties.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 #ifndef NDEBUG
 void TEST_SetRandomTableProperties(TableProperties* props);
 #endif
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

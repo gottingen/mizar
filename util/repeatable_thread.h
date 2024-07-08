@@ -10,10 +10,10 @@
 
 #include "monitoring/instrumented_mutex.h"
 #include "port/port.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Simple wrapper around port::Thread that supports calling a callback every
 // X seconds. If you pass in 0, then it will call your callback repeatedly
@@ -146,4 +146,4 @@ class RepeatableThread {
   port::Thread thread_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

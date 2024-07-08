@@ -24,18 +24,19 @@
 #include <type_traits>
 #include <vector>
 
-#include "mizar/convenience.h"
-#include "mizar/db.h"
-#include "mizar/filter_policy.h"
-#include "mizar/rate_limiter.h"
-#include "mizar/status.h"
-#include "mizar/table.h"
-#include "mizar/utilities/backupable_db.h"
-#include "mizar/utilities/memory_util.h"
-#include "mizar/utilities/transaction_db.h"
-#include "mizar/utilities/write_batch_with_index.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/db.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/rate_limiter.h"
+#include "rocksdb/status.h"
+#include "rocksdb/table.h"
+#include "rocksdb/utilities/backup_engine.h"
+#include "rocksdb/utilities/memory_util.h"
+#include "rocksdb/utilities/transaction_db.h"
+#include "rocksdb/utilities/write_batch_with_index.h"
 #include "rocksjni/compaction_filter_factory_jnicallback.h"
 #include "rocksjni/comparatorjnicallback.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/event_listener_jnicallback.h"
 #include "rocksjni/loggerjnicallback.h"
 #include "rocksjni/table_filter_jnicallback.h"
@@ -49,7 +50,7 @@
 #undef DELETE
 #endif
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class JavaClass {
  public:
@@ -72,14 +73,13 @@ class JavaClass {
 };
 
 // Native class template
-template<class PTR, class DERIVED> class RocksDBNativeClass : public JavaClass {
-};
+template <class PTR, class DERIVED>
+class RocksDBNativeClass : public JavaClass {};
 
 // Native class template for sub-classes of RocksMutableObject
-template<class PTR, class DERIVED> class NativeRocksMutableObject
-    : public RocksDBNativeClass<PTR, DERIVED> {
+template <class PTR, class DERIVED>
+class NativeRocksMutableObject : public RocksDBNativeClass<PTR, DERIVED> {
  public:
-
   /**
    * Gets the Java Method ID for the
    * RocksMutableObject#setNativeHandle(long, boolean) method
@@ -91,12 +91,11 @@ template<class PTR, class DERIVED> class NativeRocksMutableObject
    */
   static jmethodID getSetNativeHandleMethod(JNIEnv* env) {
     static jclass jclazz = DERIVED::getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "setNativeHandle", "(JZ)V");
+    static jmethodID mid = env->GetMethodID(jclazz, "setNativeHandle", "(JZ)V");
     assert(mid != nullptr);
     return mid;
   }
@@ -113,15 +112,16 @@ template<class PTR, class DERIVED> class NativeRocksMutableObject
    * @return true if a Java exception is pending, false otherwise
    */
   static bool setHandle(JNIEnv* env, jobject jobj, PTR ptr,
-      jboolean java_owns_handle) {
+                        jboolean java_owns_handle) {
     assert(jobj != nullptr);
     static jmethodID mid = getSetNativeHandleMethod(env);
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       return true;  // signal exception
     }
 
-    env->CallVoidMethod(jobj, mid, reinterpret_cast<jlong>(ptr), java_owns_handle);
-    if(env->ExceptionCheck()) {
+    env->CallVoidMethod(jobj, mid, GET_CPLUSPLUS_POINTER(ptr),
+                        java_owns_handle);
+    if (env->ExceptionCheck()) {
       return true;  // signal exception
     }
 
@@ -130,7 +130,8 @@ template<class PTR, class DERIVED> class NativeRocksMutableObject
 };
 
 // Java Exception template
-template<class DERIVED> class JavaException : public JavaClass {
+template <class DERIVED>
+class JavaException : public JavaClass {
  public:
   /**
    * Create and throw a java exception with the provided message
@@ -142,16 +143,18 @@ template<class DERIVED> class JavaException : public JavaClass {
    */
   static bool ThrowNew(JNIEnv* env, const std::string& msg) {
     jclass jclazz = DERIVED::getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
-      std::cerr << "JavaException::ThrowNew - Error: unexpected exception!" << std::endl;
+      std::cerr << "JavaException::ThrowNew - Error: unexpected exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
     const jint rs = env->ThrowNew(jclazz, msg.c_str());
-    if(rs != JNI_OK) {
+    if (rs != JNI_OK) {
       // exception could not be thrown
-      std::cerr << "JavaException::ThrowNew - Fatal: could not throw exception!" << std::endl;
+      std::cerr << "JavaException::ThrowNew - Fatal: could not throw exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
@@ -160,8 +163,8 @@ template<class DERIVED> class JavaException : public JavaClass {
 };
 
 // The portal class for java.lang.IllegalArgumentException
-class IllegalArgumentExceptionJni :
-    public JavaException<IllegalArgumentExceptionJni> {
+class IllegalArgumentExceptionJni
+    : public JavaException<IllegalArgumentExceptionJni> {
  public:
   /**
    * Get the Java Class java.lang.IllegalArgumentException
@@ -194,9 +197,11 @@ class IllegalArgumentExceptionJni :
 
     // get the IllegalArgumentException class
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
-      std::cerr << "IllegalArgumentExceptionJni::ThrowNew/class - Error: unexpected exception!" << std::endl;
+      std::cerr << "IllegalArgumentExceptionJni::ThrowNew/class - Error: "
+                   "unexpected exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
@@ -230,13 +235,12 @@ class CodeJni : public JavaClass {
    */
   static jmethodID getValueMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jclazz, "getValue", "()b");
+    static jmethodID mid = env->GetMethodID(jclazz, "getValue", "()b");
     assert(mid != nullptr);
     return mid;
   }
@@ -268,47 +272,46 @@ class SubCodeJni : public JavaClass {
    */
   static jmethodID getValueMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jclazz, "getValue", "()b");
+    static jmethodID mid = env->GetMethodID(jclazz, "getValue", "()b");
     assert(mid != nullptr);
     return mid;
   }
 
-  static MIZAR_NAMESPACE::Status::SubCode toCppSubCode(
+  static ROCKSDB_NAMESPACE::Status::SubCode toCppSubCode(
       const jbyte jsub_code) {
     switch (jsub_code) {
       case 0x0:
-        return MIZAR_NAMESPACE::Status::SubCode::kNone;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kNone;
       case 0x1:
-        return MIZAR_NAMESPACE::Status::SubCode::kMutexTimeout;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kMutexTimeout;
       case 0x2:
-        return MIZAR_NAMESPACE::Status::SubCode::kLockTimeout;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kLockTimeout;
       case 0x3:
-        return MIZAR_NAMESPACE::Status::SubCode::kLockLimit;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kLockLimit;
       case 0x4:
-        return MIZAR_NAMESPACE::Status::SubCode::kNoSpace;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kNoSpace;
       case 0x5:
-        return MIZAR_NAMESPACE::Status::SubCode::kDeadlock;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kDeadlock;
       case 0x6:
-        return MIZAR_NAMESPACE::Status::SubCode::kStaleFile;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kStaleFile;
       case 0x7:
-        return MIZAR_NAMESPACE::Status::SubCode::kMemoryLimit;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kMemoryLimit;
 
       case 0x7F:
       default:
-        return MIZAR_NAMESPACE::Status::SubCode::kNone;
+        return ROCKSDB_NAMESPACE::Status::SubCode::kNone;
     }
   }
 };
 
 // The portal class for org.rocksdb.Status
 class StatusJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::Status*, StatusJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Status*, StatusJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Status
@@ -333,7 +336,7 @@ class StatusJni
    */
   static jmethodID getCodeMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -354,13 +357,13 @@ class StatusJni
    */
   static jmethodID getSubCodeMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jclazz, "getSubCode", "()Lorg/rocksdb/Status$SubCode;");
+    static jmethodID mid = env->GetMethodID(jclazz, "getSubCode",
+                                            "()Lorg/rocksdb/Status$SubCode;");
     assert(mid != nullptr);
     return mid;
   }
@@ -375,7 +378,7 @@ class StatusJni
    */
   static jmethodID getStateMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -388,24 +391,24 @@ class StatusJni
 
   /**
    * Create a new Java org.rocksdb.Status object with the same properties as
-   * the provided C++ MIZAR_NAMESPACE::Status object
+   * the provided C++ ROCKSDB_NAMESPACE::Status object
    *
    * @param env A pointer to the Java environment
-   * @param status The MIZAR_NAMESPACE::Status object
+   * @param status The ROCKSDB_NAMESPACE::Status object
    *
    * @return A reference to a Java org.rocksdb.Status object, or nullptr
    *     if an an exception occurs
    */
   static jobject construct(JNIEnv* env, const Status& status) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jmethodID mid =
         env->GetMethodID(jclazz, "<init>", "(BBLjava/lang/String;)V");
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
@@ -415,8 +418,8 @@ class StatusJni
     if (status.getState() != nullptr) {
       const char* const state = status.getState();
       jstate = env->NewStringUTF(state);
-      if(env->ExceptionCheck()) {
-        if(jstate != nullptr) {
+      if (env->ExceptionCheck()) {
+        if (jstate != nullptr) {
           env->DeleteLocalRef(jstate);
         }
         return nullptr;
@@ -425,16 +428,16 @@ class StatusJni
 
     jobject jstatus =
         env->NewObject(jclazz, mid, toJavaStatusCode(status.code()),
-            toJavaStatusSubCode(status.subcode()), jstate);
-    if(env->ExceptionCheck()) {
+                       toJavaStatusSubCode(status.subcode()), jstate);
+    if (env->ExceptionCheck()) {
       // exception occurred
-      if(jstate != nullptr) {
+      if (jstate != nullptr) {
         env->DeleteLocalRef(jstate);
       }
       return nullptr;
     }
 
-    if(jstate != nullptr) {
+    if (jstate != nullptr) {
       env->DeleteLocalRef(jstate);
     }
 
@@ -446,38 +449,38 @@ class StatusJni
   }
 
   // Returns the equivalent org.rocksdb.Status.Code for the provided
-  // C++ MIZAR_NAMESPACE::Status::Code enum
-  static jbyte toJavaStatusCode(const MIZAR_NAMESPACE::Status::Code& code) {
+  // C++ ROCKSDB_NAMESPACE::Status::Code enum
+  static jbyte toJavaStatusCode(const ROCKSDB_NAMESPACE::Status::Code& code) {
     switch (code) {
-      case MIZAR_NAMESPACE::Status::Code::kOk:
+      case ROCKSDB_NAMESPACE::Status::Code::kOk:
         return 0x0;
-      case MIZAR_NAMESPACE::Status::Code::kNotFound:
+      case ROCKSDB_NAMESPACE::Status::Code::kNotFound:
         return 0x1;
-      case MIZAR_NAMESPACE::Status::Code::kCorruption:
+      case ROCKSDB_NAMESPACE::Status::Code::kCorruption:
         return 0x2;
-      case MIZAR_NAMESPACE::Status::Code::kNotSupported:
+      case ROCKSDB_NAMESPACE::Status::Code::kNotSupported:
         return 0x3;
-      case MIZAR_NAMESPACE::Status::Code::kInvalidArgument:
+      case ROCKSDB_NAMESPACE::Status::Code::kInvalidArgument:
         return 0x4;
-      case MIZAR_NAMESPACE::Status::Code::kIOError:
+      case ROCKSDB_NAMESPACE::Status::Code::kIOError:
         return 0x5;
-      case MIZAR_NAMESPACE::Status::Code::kMergeInProgress:
+      case ROCKSDB_NAMESPACE::Status::Code::kMergeInProgress:
         return 0x6;
-      case MIZAR_NAMESPACE::Status::Code::kIncomplete:
+      case ROCKSDB_NAMESPACE::Status::Code::kIncomplete:
         return 0x7;
-      case MIZAR_NAMESPACE::Status::Code::kShutdownInProgress:
+      case ROCKSDB_NAMESPACE::Status::Code::kShutdownInProgress:
         return 0x8;
-      case MIZAR_NAMESPACE::Status::Code::kTimedOut:
+      case ROCKSDB_NAMESPACE::Status::Code::kTimedOut:
         return 0x9;
-      case MIZAR_NAMESPACE::Status::Code::kAborted:
+      case ROCKSDB_NAMESPACE::Status::Code::kAborted:
         return 0xA;
-      case MIZAR_NAMESPACE::Status::Code::kBusy:
+      case ROCKSDB_NAMESPACE::Status::Code::kBusy:
         return 0xB;
-      case MIZAR_NAMESPACE::Status::Code::kExpired:
+      case ROCKSDB_NAMESPACE::Status::Code::kExpired:
         return 0xC;
-      case MIZAR_NAMESPACE::Status::Code::kTryAgain:
+      case ROCKSDB_NAMESPACE::Status::Code::kTryAgain:
         return 0xD;
-      case MIZAR_NAMESPACE::Status::Code::kColumnFamilyDropped:
+      case ROCKSDB_NAMESPACE::Status::Code::kColumnFamilyDropped:
         return 0xE;
       default:
         return 0x7F;  // undefined
@@ -485,132 +488,132 @@ class StatusJni
   }
 
   // Returns the equivalent org.rocksdb.Status.SubCode for the provided
-  // C++ MIZAR_NAMESPACE::Status::SubCode enum
+  // C++ ROCKSDB_NAMESPACE::Status::SubCode enum
   static jbyte toJavaStatusSubCode(
-      const MIZAR_NAMESPACE::Status::SubCode& subCode) {
+      const ROCKSDB_NAMESPACE::Status::SubCode& subCode) {
     switch (subCode) {
-      case MIZAR_NAMESPACE::Status::SubCode::kNone:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kNone:
         return 0x0;
-      case MIZAR_NAMESPACE::Status::SubCode::kMutexTimeout:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kMutexTimeout:
         return 0x1;
-      case MIZAR_NAMESPACE::Status::SubCode::kLockTimeout:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kLockTimeout:
         return 0x2;
-      case MIZAR_NAMESPACE::Status::SubCode::kLockLimit:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kLockLimit:
         return 0x3;
-      case MIZAR_NAMESPACE::Status::SubCode::kNoSpace:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kNoSpace:
         return 0x4;
-      case MIZAR_NAMESPACE::Status::SubCode::kDeadlock:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kDeadlock:
         return 0x5;
-      case MIZAR_NAMESPACE::Status::SubCode::kStaleFile:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kStaleFile:
         return 0x6;
-      case MIZAR_NAMESPACE::Status::SubCode::kMemoryLimit:
+      case ROCKSDB_NAMESPACE::Status::SubCode::kMemoryLimit:
         return 0x7;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
       const jbyte jcode_value, const jbyte jsub_code_value) {
-    std::unique_ptr<MIZAR_NAMESPACE::Status> status;
+    std::unique_ptr<ROCKSDB_NAMESPACE::Status> status;
     switch (jcode_value) {
       case 0x0:
-        //Ok
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::OK()));
+        // Ok
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::OK()));
         break;
       case 0x1:
-        //NotFound
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::NotFound(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // NotFound
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::NotFound(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x2:
-        //Corruption
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Corruption(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // Corruption
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Corruption(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x3:
-        //NotSupported
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(
-                MIZAR_NAMESPACE::Status::NotSupported(
-                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
+        // NotSupported
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(
+                ROCKSDB_NAMESPACE::Status::NotSupported(
+                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x4:
-        //InvalidArgument
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(
-                MIZAR_NAMESPACE::Status::InvalidArgument(
-                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
+        // InvalidArgument
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(
+                ROCKSDB_NAMESPACE::Status::InvalidArgument(
+                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x5:
-        //IOError
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::IOError(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // IOError
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::IOError(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x6:
-        //MergeInProgress
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(
-                MIZAR_NAMESPACE::Status::MergeInProgress(
-                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
+        // MergeInProgress
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(
+                ROCKSDB_NAMESPACE::Status::MergeInProgress(
+                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x7:
-        //Incomplete
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Incomplete(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // Incomplete
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Incomplete(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0x8:
-        //ShutdownInProgress
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(
-                MIZAR_NAMESPACE::Status::ShutdownInProgress(
-                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
+        // ShutdownInProgress
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(
+                ROCKSDB_NAMESPACE::Status::ShutdownInProgress(
+                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x9:
-        //TimedOut
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::TimedOut(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // TimedOut
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::TimedOut(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xA:
-        //Aborted
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Aborted(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // Aborted
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Aborted(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xB:
-        //Busy
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Busy(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // Busy
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Busy(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xC:
-        //Expired
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::Expired(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // Expired
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::Expired(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xD:
-        //TryAgain
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Status::TryAgain(
-                MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
+        // TryAgain
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Status::TryAgain(
+                ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(jsub_code_value))));
         break;
       case 0xE:
         // ColumnFamilyDropped
-        status = std::unique_ptr<MIZAR_NAMESPACE::Status>(
-            new MIZAR_NAMESPACE::Status(
-                MIZAR_NAMESPACE::Status::ColumnFamilyDropped(
-                    MIZAR_NAMESPACE::SubCodeJni::toCppSubCode(
+        status = std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+            new ROCKSDB_NAMESPACE::Status(
+                ROCKSDB_NAMESPACE::Status::ColumnFamilyDropped(
+                    ROCKSDB_NAMESPACE::SubCodeJni::toCppSubCode(
                         jsub_code_value))));
         break;
       case 0x7F:
@@ -620,9 +623,9 @@ class StatusJni
     return status;
   }
 
-  // Returns the equivalent MIZAR_NAMESPACE::Status for the Java
+  // Returns the equivalent ROCKSDB_NAMESPACE::Status for the Java
   // org.rocksdb.Status
-  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
       JNIEnv* env, const jobject jstatus) {
     jmethodID mid_code = getCodeMethod(env);
     if (mid_code == nullptr) {
@@ -635,7 +638,7 @@ class StatusJni
       return nullptr;
     }
 
-    jmethodID mid_code_value = MIZAR_NAMESPACE::CodeJni::getValueMethod(env);
+    jmethodID mid_code_value = ROCKSDB_NAMESPACE::CodeJni::getValueMethod(env);
     if (mid_code_value == nullptr) {
       // exception occurred
       return nullptr;
@@ -666,7 +669,7 @@ class StatusJni
     jbyte jsub_code_value = 0x0;  // None
     if (jsubCode != nullptr) {
       jmethodID mid_subCode_value =
-          MIZAR_NAMESPACE::SubCodeJni::getValueMethod(env);
+          ROCKSDB_NAMESPACE::SubCodeJni::getValueMethod(env);
       if (mid_subCode_value == nullptr) {
         // exception occurred
         return nullptr;
@@ -698,7 +701,7 @@ class StatusJni
       return nullptr;
     }
 
-    std::unique_ptr<MIZAR_NAMESPACE::Status> status =
+    std::unique_ptr<ROCKSDB_NAMESPACE::Status> status =
         toCppStatus(jcode_value, jsub_code_value);
 
     // delete all local refs
@@ -717,8 +720,7 @@ class StatusJni
 };
 
 // The portal class for org.rocksdb.RocksDBException
-class RocksDBExceptionJni :
-    public JavaException<RocksDBExceptionJni> {
+class RocksDBExceptionJni : public JavaException<RocksDBExceptionJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.RocksDBException
@@ -756,7 +758,7 @@ class RocksDBExceptionJni :
    * @return true if an exception was thrown, false otherwise
    */
   static bool ThrowNew(JNIEnv* env, std::unique_ptr<Status>& s) {
-    return MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, *(s.get()));
+    return ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, *(s.get()));
   }
 
   /**
@@ -776,60 +778,71 @@ class RocksDBExceptionJni :
 
     // get the RocksDBException class
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
-      std::cerr << "RocksDBExceptionJni::ThrowNew/class - Error: unexpected exception!" << std::endl;
+      std::cerr << "RocksDBExceptionJni::ThrowNew/class - Error: unexpected "
+                   "exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
     // get the constructor of org.rocksdb.RocksDBException
     jmethodID mid =
         env->GetMethodID(jclazz, "<init>", "(Lorg/rocksdb/Status;)V");
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
-      std::cerr << "RocksDBExceptionJni::ThrowNew/cstr - Error: unexpected exception!" << std::endl;
+      std::cerr
+          << "RocksDBExceptionJni::ThrowNew/cstr - Error: unexpected exception!"
+          << std::endl;
       return env->ExceptionCheck();
     }
 
     // get the Java status object
     jobject jstatus = StatusJni::construct(env, s);
-    if(jstatus == nullptr) {
+    if (jstatus == nullptr) {
       // exception occcurred
-      std::cerr << "RocksDBExceptionJni::ThrowNew/StatusJni - Error: unexpected exception!" << std::endl;
+      std::cerr << "RocksDBExceptionJni::ThrowNew/StatusJni - Error: "
+                   "unexpected exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
     // construct the RocksDBException
-    jthrowable rocksdb_exception = reinterpret_cast<jthrowable>(env->NewObject(jclazz, mid, jstatus));
-    if(env->ExceptionCheck()) {
-      if(jstatus != nullptr) {
+    jthrowable rocksdb_exception =
+        reinterpret_cast<jthrowable>(env->NewObject(jclazz, mid, jstatus));
+    if (env->ExceptionCheck()) {
+      if (jstatus != nullptr) {
         env->DeleteLocalRef(jstatus);
       }
-      if(rocksdb_exception != nullptr) {
+      if (rocksdb_exception != nullptr) {
         env->DeleteLocalRef(rocksdb_exception);
       }
-      std::cerr << "RocksDBExceptionJni::ThrowNew/NewObject - Error: unexpected exception!" << std::endl;
+      std::cerr << "RocksDBExceptionJni::ThrowNew/NewObject - Error: "
+                   "unexpected exception!"
+                << std::endl;
       return true;
     }
 
     // throw the RocksDBException
     const jint rs = env->Throw(rocksdb_exception);
-    if(rs != JNI_OK) {
+    if (rs != JNI_OK) {
       // exception could not be thrown
-      std::cerr << "RocksDBExceptionJni::ThrowNew - Fatal: could not throw exception!" << std::endl;
-      if(jstatus != nullptr) {
+      std::cerr
+          << "RocksDBExceptionJni::ThrowNew - Fatal: could not throw exception!"
+          << std::endl;
+      if (jstatus != nullptr) {
         env->DeleteLocalRef(jstatus);
       }
-      if(rocksdb_exception != nullptr) {
+      if (rocksdb_exception != nullptr) {
         env->DeleteLocalRef(rocksdb_exception);
       }
       return env->ExceptionCheck();
     }
 
-    if(jstatus != nullptr) {
+    if (jstatus != nullptr) {
       env->DeleteLocalRef(jstatus);
     }
-    if(rocksdb_exception != nullptr) {
+    if (rocksdb_exception != nullptr) {
       env->DeleteLocalRef(rocksdb_exception);
     }
 
@@ -856,79 +869,92 @@ class RocksDBExceptionJni :
 
     // get the RocksDBException class
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
-      std::cerr << "RocksDBExceptionJni::ThrowNew/class - Error: unexpected exception!" << std::endl;
+      std::cerr << "RocksDBExceptionJni::ThrowNew/class - Error: unexpected "
+                   "exception!"
+                << std::endl;
       return env->ExceptionCheck();
     }
 
     // get the constructor of org.rocksdb.RocksDBException
-    jmethodID mid =
-        env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;Lorg/rocksdb/Status;)V");
-    if(mid == nullptr) {
+    jmethodID mid = env->GetMethodID(
+        jclazz, "<init>", "(Ljava/lang/String;Lorg/rocksdb/Status;)V");
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
-      std::cerr << "RocksDBExceptionJni::ThrowNew/cstr - Error: unexpected exception!" << std::endl;
+      std::cerr
+          << "RocksDBExceptionJni::ThrowNew/cstr - Error: unexpected exception!"
+          << std::endl;
       return env->ExceptionCheck();
     }
 
     jstring jmsg = env->NewStringUTF(msg.c_str());
-    if(jmsg == nullptr) {
+    if (jmsg == nullptr) {
       // exception thrown: OutOfMemoryError
-      std::cerr << "RocksDBExceptionJni::ThrowNew/msg - Error: unexpected exception!" << std::endl;
+      std::cerr
+          << "RocksDBExceptionJni::ThrowNew/msg - Error: unexpected exception!"
+          << std::endl;
       return env->ExceptionCheck();
     }
 
     // get the Java status object
     jobject jstatus = StatusJni::construct(env, s);
-    if(jstatus == nullptr) {
+    if (jstatus == nullptr) {
       // exception occcurred
-      std::cerr << "RocksDBExceptionJni::ThrowNew/StatusJni - Error: unexpected exception!" << std::endl;
-      if(jmsg != nullptr) {
+      std::cerr << "RocksDBExceptionJni::ThrowNew/StatusJni - Error: "
+                   "unexpected exception!"
+                << std::endl;
+      if (jmsg != nullptr) {
         env->DeleteLocalRef(jmsg);
       }
       return env->ExceptionCheck();
     }
 
     // construct the RocksDBException
-    jthrowable rocksdb_exception = reinterpret_cast<jthrowable>(env->NewObject(jclazz, mid, jmsg, jstatus));
-    if(env->ExceptionCheck()) {
-      if(jstatus != nullptr) {
+    jthrowable rocksdb_exception = reinterpret_cast<jthrowable>(
+        env->NewObject(jclazz, mid, jmsg, jstatus));
+    if (env->ExceptionCheck()) {
+      if (jstatus != nullptr) {
         env->DeleteLocalRef(jstatus);
       }
-      if(jmsg != nullptr) {
+      if (jmsg != nullptr) {
         env->DeleteLocalRef(jmsg);
       }
-      if(rocksdb_exception != nullptr) {
+      if (rocksdb_exception != nullptr) {
         env->DeleteLocalRef(rocksdb_exception);
       }
-      std::cerr << "RocksDBExceptionJni::ThrowNew/NewObject - Error: unexpected exception!" << std::endl;
+      std::cerr << "RocksDBExceptionJni::ThrowNew/NewObject - Error: "
+                   "unexpected exception!"
+                << std::endl;
       return true;
     }
 
     // throw the RocksDBException
     const jint rs = env->Throw(rocksdb_exception);
-    if(rs != JNI_OK) {
+    if (rs != JNI_OK) {
       // exception could not be thrown
-      std::cerr << "RocksDBExceptionJni::ThrowNew - Fatal: could not throw exception!" << std::endl;
-      if(jstatus != nullptr) {
+      std::cerr
+          << "RocksDBExceptionJni::ThrowNew - Fatal: could not throw exception!"
+          << std::endl;
+      if (jstatus != nullptr) {
         env->DeleteLocalRef(jstatus);
       }
-      if(jmsg != nullptr) {
+      if (jmsg != nullptr) {
         env->DeleteLocalRef(jmsg);
       }
-      if(rocksdb_exception != nullptr) {
+      if (rocksdb_exception != nullptr) {
         env->DeleteLocalRef(rocksdb_exception);
       }
       return env->ExceptionCheck();
     }
 
-    if(jstatus != nullptr) {
+    if (jstatus != nullptr) {
       env->DeleteLocalRef(jstatus);
     }
-    if(jmsg != nullptr) {
+    if (jmsg != nullptr) {
       env->DeleteLocalRef(jmsg);
     }
-    if(rocksdb_exception != nullptr) {
+    if (rocksdb_exception != nullptr) {
       env->DeleteLocalRef(rocksdb_exception);
     }
 
@@ -945,7 +971,7 @@ class RocksDBExceptionJni :
    */
   static jmethodID getStatusMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -956,31 +982,31 @@ class RocksDBExceptionJni :
     return mid;
   }
 
-  static std::unique_ptr<MIZAR_NAMESPACE::Status> toCppStatus(
+  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> toCppStatus(
       JNIEnv* env, jthrowable jrocksdb_exception) {
-    if(!env->IsInstanceOf(jrocksdb_exception, getJClass(env))) {
+    if (!env->IsInstanceOf(jrocksdb_exception, getJClass(env))) {
       // not an instance of RocksDBException
       return nullptr;
     }
 
     // get the java status object
     jmethodID mid = getStatusMethod(env);
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception occurred accessing class or method
       return nullptr;
     }
 
     jobject jstatus = env->CallObjectMethod(jrocksdb_exception, mid);
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       // exception occurred
       return nullptr;
     }
 
-    if(jstatus == nullptr) {
-      return nullptr;   // no status available
+    if (jstatus == nullptr) {
+      return nullptr;  // no status available
     }
 
-    return MIZAR_NAMESPACE::StatusJni::toCppStatus(env, jstatus);
+    return ROCKSDB_NAMESPACE::StatusJni::toCppStatus(env, jstatus);
   }
 };
 
@@ -1036,7 +1062,7 @@ class ListJni : public JavaClass {
    */
   static jmethodID getIteratorMethod(JNIEnv* env) {
     jclass jlist_clazz = getListClass(env);
-    if(jlist_clazz == nullptr) {
+    if (jlist_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1057,7 +1083,7 @@ class ListJni : public JavaClass {
    */
   static jmethodID getHasNextMethod(JNIEnv* env) {
     jclass jiterator_clazz = getIteratorClass(env);
-    if(jiterator_clazz == nullptr) {
+    if (jiterator_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1077,7 +1103,7 @@ class ListJni : public JavaClass {
    */
   static jmethodID getNextMethod(JNIEnv* env) {
     jclass jiterator_clazz = getIteratorClass(env);
-    if(jiterator_clazz == nullptr) {
+    if (jiterator_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1098,7 +1124,7 @@ class ListJni : public JavaClass {
    */
   static jmethodID getArrayListConstructorMethodId(JNIEnv* env) {
     jclass jarray_list_clazz = getArrayListClass(env);
-    if(jarray_list_clazz == nullptr) {
+    if (jarray_list_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1118,7 +1144,7 @@ class ListJni : public JavaClass {
    */
   static jmethodID getListAddMethodId(JNIEnv* env) {
     jclass jlist_clazz = getListClass(env);
-    if(jlist_clazz == nullptr) {
+    if (jlist_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1169,7 +1195,7 @@ class ByteJni : public JavaClass {
    */
   static jobjectArray new2dByteArray(JNIEnv* env, const jsize len) {
     jclass clazz = getArrayJClass(env);
-    if(clazz == nullptr) {
+    if (clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1187,7 +1213,7 @@ class ByteJni : public JavaClass {
    */
   static jmethodID getByteValueMethod(JNIEnv* env) {
     jclass clazz = getJClass(env);
-    if(clazz == nullptr) {
+    if (clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1202,8 +1228,8 @@ class ByteJni : public JavaClass {
    *
    * @param env A pointer to the Java environment
    *
-   * @return A constructing Byte object or nullptr if the class or method id could not
-   *     be retrieved, or an exception occurred
+   * @return A constructing Byte object or nullptr if the class or method id
+   * could not be retrieved, or an exception occurred
    */
   static jobject valueOf(JNIEnv* env, jbyte jprimitive_byte) {
     jclass clazz = getJClass(env);
@@ -1228,7 +1254,6 @@ class ByteJni : public JavaClass {
 
     return jbyte_obj;
   }
-
 };
 
 // The portal class for java.nio.ByteBuffer
@@ -1258,7 +1283,7 @@ class ByteBufferJni : public JavaClass {
    *     be retrieved
    */
   static jmethodID getAllocateMethodId(JNIEnv* env,
-      jclass jbytebuffer_clazz = nullptr) {
+                                       jclass jbytebuffer_clazz = nullptr) {
     const jclass jclazz =
         jbytebuffer_clazz == nullptr ? getJClass(env) : jbytebuffer_clazz;
     if (jclazz == nullptr) {
@@ -1266,8 +1291,8 @@ class ByteBufferJni : public JavaClass {
       return nullptr;
     }
 
-    static jmethodID mid = env->GetStaticMethodID(
-        jclazz, "allocate", "(I)Ljava/nio/ByteBuffer;");
+    static jmethodID mid =
+        env->GetStaticMethodID(jclazz, "allocate", "(I)Ljava/nio/ByteBuffer;");
     assert(mid != nullptr);
     return mid;
   }
@@ -1281,10 +1306,10 @@ class ByteBufferJni : public JavaClass {
    *     be retrieved
    */
   static jmethodID getArrayMethodId(JNIEnv* env,
-      jclass jbytebuffer_clazz = nullptr) {
+                                    jclass jbytebuffer_clazz = nullptr) {
     const jclass jclazz =
         jbytebuffer_clazz == nullptr ? getJClass(env) : jbytebuffer_clazz;
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -1294,9 +1319,9 @@ class ByteBufferJni : public JavaClass {
     return mid;
   }
 
-  static jobject construct(
-      JNIEnv* env, const bool direct, const size_t capacity,
-      jclass jbytebuffer_clazz = nullptr) {
+  static jobject construct(JNIEnv* env, const bool direct,
+                           const size_t capacity,
+                           jclass jbytebuffer_clazz = nullptr) {
     return constructWith(env, direct, nullptr, capacity, jbytebuffer_clazz);
   }
 
@@ -1309,7 +1334,8 @@ class ByteBufferJni : public JavaClass {
         buf = new char[capacity];
         allocated = true;
       }
-      jobject jbuf = env->NewDirectByteBuffer(const_cast<char*>(buf), static_cast<jlong>(capacity));
+      jobject jbuf = env->NewDirectByteBuffer(const_cast<char*>(buf),
+                                              static_cast<jlong>(capacity));
       if (jbuf == nullptr) {
         // exception occurred
         if (allocated) {
@@ -1320,14 +1346,16 @@ class ByteBufferJni : public JavaClass {
       return jbuf;
     } else {
       const jclass jclazz =
-        jbytebuffer_clazz == nullptr ? getJClass(env) : jbytebuffer_clazz;
+          jbytebuffer_clazz == nullptr ? getJClass(env) : jbytebuffer_clazz;
       if (jclazz == nullptr) {
         // exception occurred accessing class
         return nullptr;
       }
-      const jmethodID jmid_allocate = getAllocateMethodId(env, jbytebuffer_clazz);
+      const jmethodID jmid_allocate =
+          getAllocateMethodId(env, jbytebuffer_clazz);
       if (jmid_allocate == nullptr) {
-        // exception occurred accessing class, or NoSuchMethodException or OutOfMemoryError
+        // exception occurred accessing class, or NoSuchMethodException or
+        // OutOfMemoryError
         return nullptr;
       }
       const jobject jbuf = env->CallStaticObjectMethod(
@@ -1351,9 +1379,9 @@ class ByteBufferJni : public JavaClass {
             env->GetPrimitiveArrayCritical(jarray, &is_copy));
         if (ja == nullptr) {
           // exception occurred
-           env->DeleteLocalRef(jarray);
-           env->DeleteLocalRef(jbuf);
-           return nullptr;
+          env->DeleteLocalRef(jarray);
+          env->DeleteLocalRef(jbuf);
+          return nullptr;
         }
 
         memcpy(ja, const_cast<char*>(buf), capacity);
@@ -1368,10 +1396,11 @@ class ByteBufferJni : public JavaClass {
   }
 
   static jbyteArray array(JNIEnv* env, const jobject& jbyte_buffer,
-      jclass jbytebuffer_clazz = nullptr) {
+                          jclass jbytebuffer_clazz = nullptr) {
     const jmethodID mid = getArrayMethodId(env, jbytebuffer_clazz);
     if (mid == nullptr) {
-      // exception occurred accessing class, or NoSuchMethodException or OutOfMemoryError
+      // exception occurred accessing class, or NoSuchMethodException or
+      // OutOfMemoryError
       return nullptr;
     }
     const jobject jarray = env->CallObjectMethod(jbyte_buffer, mid);
@@ -1467,7 +1496,7 @@ class LongJni : public JavaClass {
 
 // The portal class for java.lang.StringBuilder
 class StringBuilderJni : public JavaClass {
-  public:
+ public:
   /**
    * Get the Java Class java.lang.StringBuilder
    *
@@ -1491,14 +1520,13 @@ class StringBuilderJni : public JavaClass {
    */
   static jmethodID getListAddMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jclazz, "append",
-            "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+    static jmethodID mid = env->GetMethodID(
+        jclazz, "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
     assert(mid != nullptr);
     return mid;
   }
@@ -1514,22 +1542,22 @@ class StringBuilderJni : public JavaClass {
    *     an exception occurs
    */
   static jobject append(JNIEnv* env, jobject jstring_builder,
-      const char* c_str) {
+                        const char* c_str) {
     jmethodID mid = getListAddMethodId(env);
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception occurred accessing class or method
       return nullptr;
     }
 
     jstring new_value_str = env->NewStringUTF(c_str);
-    if(new_value_str == nullptr) {
+    if (new_value_str == nullptr) {
       // exception thrown: OutOfMemoryError
       return nullptr;
     }
 
     jobject jresult_string_builder =
         env->CallObjectMethod(jstring_builder, mid, new_value_str);
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       // exception occurred
       env->DeleteLocalRef(new_value_str);
       return nullptr;
@@ -1542,815 +1570,863 @@ class StringBuilderJni : public JavaClass {
 // various utility functions for working with RocksDB and JNI
 class JniUtil {
  public:
-    /**
-     * Detect if jlong overflows size_t
-     *
-     * @param jvalue the jlong value
-     *
-     * @return
-     */
-    inline static Status check_if_jlong_fits_size_t(const jlong& jvalue) {
-      Status s = Status::OK();
-      if (static_cast<uint64_t>(jvalue) > std::numeric_limits<size_t>::max()) {
-        s = Status::InvalidArgument(Slice("jlong overflows 32 bit value."));
-      }
-      return s;
+  /**
+   * Detect if jlong overflows size_t
+   *
+   * @param jvalue the jlong value
+   *
+   * @return
+   */
+  inline static Status check_if_jlong_fits_size_t(const jlong& jvalue) {
+    Status s = Status::OK();
+    if (static_cast<uint64_t>(jvalue) > std::numeric_limits<size_t>::max()) {
+      s = Status::InvalidArgument(Slice("jlong overflows 32 bit value."));
     }
+    return s;
+  }
 
-    /**
-     * Obtains a reference to the JNIEnv from
-     * the JVM
-     *
-     * If the current thread is not attached to the JavaVM
-     * then it will be attached so as to retrieve the JNIEnv
-     *
-     * If a thread is attached, it must later be manually
-     * released by calling JavaVM::DetachCurrentThread.
-     * This can be handled by always matching calls to this
-     * function with calls to {@link JniUtil::releaseJniEnv(JavaVM*, jboolean)}
-     *
-     * @param jvm (IN) A pointer to the JavaVM instance
-     * @param attached (OUT) A pointer to a boolean which
-     *     will be set to JNI_TRUE if we had to attach the thread
-     *
-     * @return A pointer to the JNIEnv or nullptr if a fatal error
-     *     occurs and the JNIEnv cannot be retrieved
-     */
-    static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached) {
-      assert(jvm != nullptr);
+  /**
+   * Obtains a reference to the JNIEnv from
+   * the JVM
+   *
+   * If the current thread is not attached to the JavaVM
+   * then it will be attached so as to retrieve the JNIEnv
+   *
+   * If a thread is attached, it must later be manually
+   * released by calling JavaVM::DetachCurrentThread.
+   * This can be handled by always matching calls to this
+   * function with calls to {@link JniUtil::releaseJniEnv(JavaVM*, jboolean)}
+   *
+   * @param jvm (IN) A pointer to the JavaVM instance
+   * @param attached (OUT) A pointer to a boolean which
+   *     will be set to JNI_TRUE if we had to attach the thread
+   *
+   * @return A pointer to the JNIEnv or nullptr if a fatal error
+   *     occurs and the JNIEnv cannot be retrieved
+   */
+  static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached) {
+    assert(jvm != nullptr);
 
-      JNIEnv *env;
-      const jint env_rs = jvm->GetEnv(reinterpret_cast<void**>(&env),
-          JNI_VERSION_1_6);
+    JNIEnv* env;
+    const jint env_rs =
+        jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
 
-      if(env_rs == JNI_OK) {
-        // current thread is already attached, return the JNIEnv
-        *attached = JNI_FALSE;
+    if (env_rs == JNI_OK) {
+      // current thread is already attached, return the JNIEnv
+      *attached = JNI_FALSE;
+      return env;
+    } else if (env_rs == JNI_EDETACHED) {
+      // current thread is not attached, attempt to attach
+      const jint rs_attach =
+          jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), NULL);
+      if (rs_attach == JNI_OK) {
+        *attached = JNI_TRUE;
         return env;
-      } else if(env_rs == JNI_EDETACHED) {
-        // current thread is not attached, attempt to attach
-        const jint rs_attach = jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), NULL);
-        if(rs_attach == JNI_OK) {
-          *attached = JNI_TRUE;
-          return env;
-        } else {
-          // error, could not attach the thread
-          std::cerr << "JniUtil::getJniEnv - Fatal: could not attach current thread to JVM!" << std::endl;
-          return nullptr;
-        }
-      } else if(env_rs == JNI_EVERSION) {
-        // error, JDK does not support JNI_VERSION_1_6+
-        std::cerr << "JniUtil::getJniEnv - Fatal: JDK does not support JNI_VERSION_1_6" << std::endl;
-        return nullptr;
       } else {
-        std::cerr << "JniUtil::getJniEnv - Fatal: Unknown error: env_rs=" << env_rs << std::endl;
+        // error, could not attach the thread
+        std::cerr << "JniUtil::getJniEnv - Fatal: could not attach current "
+                     "thread to JVM!"
+                  << std::endl;
         return nullptr;
       }
-    }
-
-    /**
-     * Counterpart to {@link JniUtil::getJniEnv(JavaVM*, jboolean*)}
-     *
-     * Detachess the current thread from the JVM if it was previously
-     * attached
-     *
-     * @param jvm (IN) A pointer to the JavaVM instance
-     * @param attached (IN) JNI_TRUE if we previously had to attach the thread
-     *     to the JavaVM to get the JNIEnv
-     */
-    static void releaseJniEnv(JavaVM* jvm, jboolean& attached) {
-      assert(jvm != nullptr);
-      if(attached == JNI_TRUE) {
-        const jint rs_detach = jvm->DetachCurrentThread();
-        assert(rs_detach == JNI_OK);
-        if(rs_detach != JNI_OK) {
-          std::cerr << "JniUtil::getJniEnv - Warn: Unable to detach current thread from JVM!" << std::endl;
-        }
-      }
-    }
-
-    /**
-     * Copies a Java String[] to a C++ std::vector<std::string>
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param jss (IN) The Java String array to copy
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError or ArrayIndexOutOfBoundsException
-     *     exception occurs
-     *
-     * @return A std::vector<std:string> containing copies of the Java strings
-     */
-    static std::vector<std::string> copyStrings(JNIEnv* env,
-        jobjectArray jss, jboolean* has_exception) {
-      return MIZAR_NAMESPACE::JniUtil::copyStrings(
-          env, jss, env->GetArrayLength(jss), has_exception);
-    }
-
-    /**
-     * Copies a Java String[] to a C++ std::vector<std::string>
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param jss (IN) The Java String array to copy
-     * @param jss_len (IN) The length of the Java String array to copy
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError or ArrayIndexOutOfBoundsException
-     *     exception occurs
-     *
-     * @return A std::vector<std:string> containing copies of the Java strings
-     */
-    static std::vector<std::string> copyStrings(JNIEnv* env,
-        jobjectArray jss, const jsize jss_len, jboolean* has_exception) {
-      std::vector<std::string> strs;
-      strs.reserve(jss_len);
-      for (jsize i = 0; i < jss_len; i++) {
-        jobject js = env->GetObjectArrayElement(jss, i);
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          *has_exception = JNI_TRUE;
-          return strs;
-        }
-
-        jstring jstr = static_cast<jstring>(js);
-        const char* str = env->GetStringUTFChars(jstr, nullptr);
-        if(str == nullptr) {
-          // exception thrown: OutOfMemoryError
-          env->DeleteLocalRef(js);
-          *has_exception = JNI_TRUE;
-          return strs;
-        }
-
-        strs.push_back(std::string(str));
-
-        env->ReleaseStringUTFChars(jstr, str);
-        env->DeleteLocalRef(js);
-      }
-
-      *has_exception = JNI_FALSE;
-      return strs;
-    }
-
-    /**
-     * Copies a jstring to a C-style null-terminated byte string
-     * and releases the original jstring
-     *
-     * The jstring is copied as UTF-8
-     *
-     * If an exception occurs, then JNIEnv::ExceptionCheck()
-     * will have been called
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param js (IN) The java string to copy
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError exception occurs
-     *
-     * @return A pointer to the copied string, or a
-     *     nullptr if has_exception == JNI_TRUE
-     */
-    static std::unique_ptr<char[]> copyString(JNIEnv* env, jstring js,
-        jboolean* has_exception) {
-      const char *utf = env->GetStringUTFChars(js, nullptr);
-      if(utf == nullptr) {
-        // exception thrown: OutOfMemoryError
-        env->ExceptionCheck();
-        *has_exception = JNI_TRUE;
-        return nullptr;
-      } else if(env->ExceptionCheck()) {
-        // exception thrown
-        env->ReleaseStringUTFChars(js, utf);
-        *has_exception = JNI_TRUE;
-        return nullptr;
-      }
-
-      const jsize utf_len = env->GetStringUTFLength(js);
-      std::unique_ptr<char[]> str(new char[utf_len + 1]);  // Note: + 1 is needed for the c_str null terminator
-      std::strcpy(str.get(), utf);
-      env->ReleaseStringUTFChars(js, utf);
-      *has_exception = JNI_FALSE;
-      return str;
-    }
-
-    /**
-     * Copies a jstring to a std::string
-     * and releases the original jstring
-     *
-     * If an exception occurs, then JNIEnv::ExceptionCheck()
-     * will have been called
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param js (IN) The java string to copy
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError exception occurs
-     *
-     * @return A std:string copy of the jstring, or an
-     *     empty std::string if has_exception == JNI_TRUE
-     */
-    static std::string copyStdString(JNIEnv* env, jstring js,
-      jboolean* has_exception) {
-      const char *utf = env->GetStringUTFChars(js, nullptr);
-      if(utf == nullptr) {
-        // exception thrown: OutOfMemoryError
-        env->ExceptionCheck();
-        *has_exception = JNI_TRUE;
-        return std::string();
-      } else if(env->ExceptionCheck()) {
-        // exception thrown
-        env->ReleaseStringUTFChars(js, utf);
-        *has_exception = JNI_TRUE;
-        return std::string();
-      }
-
-      std::string name(utf);
-      env->ReleaseStringUTFChars(js, utf);
-      *has_exception = JNI_FALSE;
-      return name;
-    }
-
-    /**
-     * Copies bytes from a std::string to a jByteArray
-     *
-     * @param env A pointer to the java environment
-     * @param bytes The bytes to copy
-     *
-     * @return the Java byte[], or nullptr if an exception occurs
-     *
-     * @throws RocksDBException thrown
-     *   if memory size to copy exceeds general java specific array size limitation.
-     */
-    static jbyteArray copyBytes(JNIEnv* env, std::string bytes) {
-      return createJavaByteArrayWithSizeCheck(env, bytes.c_str(), bytes.size());
-    }
-
-    /**
-     * Given a Java byte[][] which is an array of java.lang.Strings
-     * where each String is a byte[], the passed function `string_fn`
-     * will be called on each String, the result is the collected by
-     * calling the passed function `collector_fn`
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param jbyte_strings (IN) A Java array of Strings expressed as bytes
-     * @param string_fn (IN) A transform function to call for each String
-     * @param collector_fn (IN) A collector which is called for the result
-     *     of each `string_fn`
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
-     *     exception occurs
-     */
-    template <typename T> static void byteStrings(JNIEnv* env,
-        jobjectArray jbyte_strings,
-        std::function<T(const char*, const size_t)> string_fn,
-        std::function<void(size_t, T)> collector_fn,
-        jboolean *has_exception) {
-      const jsize jlen = env->GetArrayLength(jbyte_strings);
-
-      for(jsize i = 0; i < jlen; i++) {
-        jobject jbyte_string_obj = env->GetObjectArrayElement(jbyte_strings, i);
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          *has_exception = JNI_TRUE;  // signal error
-          return;
-        }
-
-        jbyteArray jbyte_string_ary =
-            reinterpret_cast<jbyteArray>(jbyte_string_obj);
-        T result = byteString(env, jbyte_string_ary, string_fn, has_exception);
-
-        env->DeleteLocalRef(jbyte_string_obj);
-
-        if(*has_exception == JNI_TRUE) {
-          // exception thrown: OutOfMemoryError
-          return;
-        }
-
-        collector_fn(i, result);
-      }
-
-      *has_exception = JNI_FALSE;
-    }
-
-    /**
-     * Given a Java String which is expressed as a Java Byte Array byte[],
-     * the passed function `string_fn` will be called on the String
-     * and the result returned
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param jbyte_string_ary (IN) A Java String expressed in bytes
-     * @param string_fn (IN) A transform function to call on the String
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError exception occurs
-     */
-    template <typename T> static T byteString(JNIEnv* env,
-        jbyteArray jbyte_string_ary,
-        std::function<T(const char*, const size_t)> string_fn,
-        jboolean* has_exception) {
-      const jsize jbyte_string_len = env->GetArrayLength(jbyte_string_ary);
-      return byteString<T>(env, jbyte_string_ary, jbyte_string_len, string_fn,
-          has_exception);
-    }
-
-    /**
-     * Given a Java String which is expressed as a Java Byte Array byte[],
-     * the passed function `string_fn` will be called on the String
-     * and the result returned
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param jbyte_string_ary (IN) A Java String expressed in bytes
-     * @param jbyte_string_len (IN) The length of the Java String
-     *     expressed in bytes
-     * @param string_fn (IN) A transform function to call on the String
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an OutOfMemoryError exception occurs
-     */
-    template <typename T> static T byteString(JNIEnv* env,
-        jbyteArray jbyte_string_ary, const jsize jbyte_string_len,
-        std::function<T(const char*, const size_t)> string_fn,
-        jboolean* has_exception) {
-      jbyte* jbyte_string =
-          env->GetByteArrayElements(jbyte_string_ary, nullptr);
-      if(jbyte_string == nullptr) {
-        // exception thrown: OutOfMemoryError
-        *has_exception = JNI_TRUE;
-        return nullptr;  // signal error
-      }
-
-      T result =
-          string_fn(reinterpret_cast<char *>(jbyte_string), jbyte_string_len);
-
-      env->ReleaseByteArrayElements(jbyte_string_ary, jbyte_string, JNI_ABORT);
-
-      *has_exception = JNI_FALSE;
-      return result;
-    }
-
-    /**
-     * Converts a std::vector<string> to a Java byte[][] where each Java String
-     * is expressed as a Java Byte Array byte[].
-     *
-     * @param env A pointer to the java environment
-     * @param strings A vector of Strings
-     *
-     * @return A Java array of Strings expressed as bytes,
-     *     or nullptr if an exception is thrown
-     */
-    static jobjectArray stringsBytes(JNIEnv* env, std::vector<std::string> strings) {
-      jclass jcls_ba = ByteJni::getArrayJClass(env);
-      if(jcls_ba == nullptr) {
-        // exception occurred
-        return nullptr;
-      }
-
-      const jsize len = static_cast<jsize>(strings.size());
-
-      jobjectArray jbyte_strings = env->NewObjectArray(len, jcls_ba, nullptr);
-      if(jbyte_strings == nullptr) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      for (jsize i = 0; i < len; i++) {
-        std::string *str = &strings[i];
-        const jsize str_len = static_cast<jsize>(str->size());
-
-        jbyteArray jbyte_string_ary = env->NewByteArray(str_len);
-        if(jbyte_string_ary == nullptr) {
-          // exception thrown: OutOfMemoryError
-          env->DeleteLocalRef(jbyte_strings);
-          return nullptr;
-        }
-
-        env->SetByteArrayRegion(
-          jbyte_string_ary, 0, str_len,
-          const_cast<jbyte*>(reinterpret_cast<const jbyte*>(str->c_str())));
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          env->DeleteLocalRef(jbyte_string_ary);
-          env->DeleteLocalRef(jbyte_strings);
-          return nullptr;
-        }
-
-        env->SetObjectArrayElement(jbyte_strings, i, jbyte_string_ary);
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          // or ArrayStoreException
-          env->DeleteLocalRef(jbyte_string_ary);
-          env->DeleteLocalRef(jbyte_strings);
-          return nullptr;
-        }
-
-        env->DeleteLocalRef(jbyte_string_ary);
-      }
-
-      return jbyte_strings;
-    }
-
-     /**
-     * Converts a std::vector<std::string> to a Java String[].
-     *
-     * @param env A pointer to the java environment
-     * @param strings A vector of Strings
-     *
-     * @return A Java array of Strings,
-     *     or nullptr if an exception is thrown
-     */
-    static jobjectArray toJavaStrings(JNIEnv* env,
-        const std::vector<std::string>* strings) {
-      jclass jcls_str = env->FindClass("java/lang/String");
-      if(jcls_str == nullptr) {
-        // exception occurred
-        return nullptr;
-      }
-
-      const jsize len = static_cast<jsize>(strings->size());
-
-      jobjectArray jstrings = env->NewObjectArray(len, jcls_str, nullptr);
-      if(jstrings == nullptr) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      for (jsize i = 0; i < len; i++) {
-        const std::string *str = &((*strings)[i]);
-        jstring js = MIZAR_NAMESPACE::JniUtil::toJavaString(env, str);
-        if (js == nullptr) {
-          env->DeleteLocalRef(jstrings);
-          return nullptr;
-        }
-
-        env->SetObjectArrayElement(jstrings, i, js);
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          // or ArrayStoreException
-          env->DeleteLocalRef(js);
-          env->DeleteLocalRef(jstrings);
-          return nullptr;
-        }
-      }
-
-      return jstrings;
-    }
-
-    /**
-     * Creates a Java UTF String from a C++ std::string
-     *
-     * @param env A pointer to the java environment
-     * @param string the C++ std::string
-     * @param treat_empty_as_null true if empty strings should be treated as null
-     *
-     * @return the Java UTF string, or nullptr if the provided string
-     *     is null (or empty and treat_empty_as_null is set), or if an
-     *     exception occurs allocating the Java String.
-     */
-    static jstring toJavaString(JNIEnv* env, const std::string* string,
-        const bool treat_empty_as_null = false) {
-      if (string == nullptr) {
-        return nullptr;
-      }
-
-      if (treat_empty_as_null && string->empty()) {
-        return nullptr;
-      }
-
-      return env->NewStringUTF(string->c_str());
-    }
-
-    /**
-      * Copies bytes to a new jByteArray with the check of java array size limitation.
-      *
-      * @param bytes pointer to memory to copy to a new jByteArray
-      * @param size number of bytes to copy
-      *
-      * @return the Java byte[], or nullptr if an exception occurs
-      *
-      * @throws RocksDBException thrown
-      *   if memory size to copy exceeds general java array size limitation to avoid overflow.
-      */
-    static jbyteArray createJavaByteArrayWithSizeCheck(JNIEnv* env, const char* bytes, const size_t size) {
-      // Limitation for java array size is vm specific
-      // In general it cannot exceed Integer.MAX_VALUE (2^31 - 1)
-      // Current HotSpot VM limitation for array size is Integer.MAX_VALUE - 5 (2^31 - 1 - 5)
-      // It means that the next call to env->NewByteArray can still end with
-      // OutOfMemoryError("Requested array size exceeds VM limit") coming from VM
-      static const size_t MAX_JARRAY_SIZE = (static_cast<size_t>(1)) << 31;
-      if(size > MAX_JARRAY_SIZE) {
-        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
-            env, "Requested array size exceeds VM limit");
-        return nullptr;
-      }
-
-      const jsize jlen = static_cast<jsize>(size);
-      jbyteArray jbytes = env->NewByteArray(jlen);
-      if(jbytes == nullptr) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      env->SetByteArrayRegion(jbytes, 0, jlen,
-        const_cast<jbyte*>(reinterpret_cast<const jbyte*>(bytes)));
-      if(env->ExceptionCheck()) {
-        // exception thrown: ArrayIndexOutOfBoundsException
-        env->DeleteLocalRef(jbytes);
-        return nullptr;
-      }
-
-      return jbytes;
-    }
-
-    /**
-     * Copies bytes from a MIZAR_NAMESPACE::Slice to a jByteArray
-     *
-     * @param env A pointer to the java environment
-     * @param bytes The bytes to copy
-     *
-     * @return the Java byte[] or nullptr if an exception occurs
-     *
-     * @throws RocksDBException thrown
-     *   if memory size to copy exceeds general java specific array size
-     * limitation.
-     */
-    static jbyteArray copyBytes(JNIEnv* env, const Slice& bytes) {
-      return createJavaByteArrayWithSizeCheck(env, bytes.data(), bytes.size());
-    }
-
-    /*
-     * Helper for operations on a key and value
-     * for example WriteBatch->Put
-     *
-     * TODO(AR) could be used for RocksDB->Put etc.
-     */
-    static std::unique_ptr<MIZAR_NAMESPACE::Status> kv_op(
-        std::function<MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Slice,
-                                                MIZAR_NAMESPACE::Slice)>
-            op,
-        JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len,
-        jbyteArray jvalue, jint jvalue_len) {
-      jbyte* key = env->GetByteArrayElements(jkey, nullptr);
-      if(env->ExceptionCheck()) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      jbyte* value = env->GetByteArrayElements(jvalue, nullptr);
-      if(env->ExceptionCheck()) {
-        // exception thrown: OutOfMemoryError
-        if(key != nullptr) {
-          env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-        }
-        return nullptr;
-      }
-
-      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
-                                         jkey_len);
-      MIZAR_NAMESPACE::Slice value_slice(reinterpret_cast<char*>(value),
-                                           jvalue_len);
-
-      auto status = op(key_slice, value_slice);
-
-      if(value != nullptr) {
-        env->ReleaseByteArrayElements(jvalue, value, JNI_ABORT);
-      }
-      if(key != nullptr) {
-        env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-      }
-
-      return std::unique_ptr<MIZAR_NAMESPACE::Status>(
-          new MIZAR_NAMESPACE::Status(status));
-    }
-
-    /*
-     * Helper for operations on a key
-     * for example WriteBatch->Delete
-     *
-     * TODO(AR) could be used for RocksDB->Delete etc.
-     */
-    static std::unique_ptr<MIZAR_NAMESPACE::Status> k_op(
-        std::function<MIZAR_NAMESPACE::Status(MIZAR_NAMESPACE::Slice)> op,
-        JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len) {
-      jbyte* key = env->GetByteArrayElements(jkey, nullptr);
-      if(env->ExceptionCheck()) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
-                                         jkey_len);
-
-      auto status = op(key_slice);
-
-      if(key != nullptr) {
-        env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-      }
-
-      return std::unique_ptr<MIZAR_NAMESPACE::Status>(
-          new MIZAR_NAMESPACE::Status(status));
-    }
-
-    /*
-     * Helper for operations on a value
-     * for example WriteBatchWithIndex->GetFromBatch
-     */
-    static jbyteArray v_op(std::function<MIZAR_NAMESPACE::Status(
-                               MIZAR_NAMESPACE::Slice, std::string*)>
-                               op,
-                           JNIEnv* env, jbyteArray jkey, jint jkey_len) {
-      jbyte* key = env->GetByteArrayElements(jkey, nullptr);
-      if(env->ExceptionCheck()) {
-        // exception thrown: OutOfMemoryError
-        return nullptr;
-      }
-
-      MIZAR_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key),
-                                         jkey_len);
-
-      std::string value;
-      MIZAR_NAMESPACE::Status s = op(key_slice, &value);
-
-      if(key != nullptr) {
-        env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-      }
-
-      if (s.IsNotFound()) {
-        return nullptr;
-      }
-
-      if (s.ok()) {
-        jbyteArray jret_value =
-            env->NewByteArray(static_cast<jsize>(value.size()));
-        if(jret_value == nullptr) {
-          // exception thrown: OutOfMemoryError
-          return nullptr;
-        }
-
-        env->SetByteArrayRegion(jret_value, 0, static_cast<jsize>(value.size()),
-                                const_cast<jbyte*>(reinterpret_cast<const jbyte*>(value.c_str())));
-        if(env->ExceptionCheck()) {
-          // exception thrown: ArrayIndexOutOfBoundsException
-          if(jret_value != nullptr) {
-            env->DeleteLocalRef(jret_value);
-          }
-          return nullptr;
-        }
-
-        return jret_value;
-      }
-
-      MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, s);
+    } else if (env_rs == JNI_EVERSION) {
+      // error, JDK does not support JNI_VERSION_1_6+
+      std::cerr
+          << "JniUtil::getJniEnv - Fatal: JDK does not support JNI_VERSION_1_6"
+          << std::endl;
+      return nullptr;
+    } else {
+      std::cerr << "JniUtil::getJniEnv - Fatal: Unknown error: env_rs="
+                << env_rs << std::endl;
       return nullptr;
     }
+  }
 
-    /**
-     * Creates a vector<T*> of C++ pointers from
-     *     a Java array of C++ pointer addresses.
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param pointers (IN) A Java array of C++ pointer addresses
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
-     *     exception occurs.
-     *
-     * @return A vector of C++ pointers.
-     */
-    template<typename T> static std::vector<T*> fromJPointers(
-        JNIEnv* env, jlongArray jptrs, jboolean *has_exception) {
-      const jsize jptrs_len = env->GetArrayLength(jptrs);
-      std::vector<T*> ptrs;
-      jlong* jptr = env->GetLongArrayElements(jptrs, nullptr);
-      if (jptr == nullptr) {
-        // exception thrown: OutOfMemoryError
-        *has_exception = JNI_TRUE;
-        return ptrs;
+  /**
+   * Counterpart to {@link JniUtil::getJniEnv(JavaVM*, jboolean*)}
+   *
+   * Detachess the current thread from the JVM if it was previously
+   * attached
+   *
+   * @param jvm (IN) A pointer to the JavaVM instance
+   * @param attached (IN) JNI_TRUE if we previously had to attach the thread
+   *     to the JavaVM to get the JNIEnv
+   */
+  static void releaseJniEnv(JavaVM* jvm, jboolean& attached) {
+    assert(jvm != nullptr);
+    if (attached == JNI_TRUE) {
+      const jint rs_detach = jvm->DetachCurrentThread();
+      assert(rs_detach == JNI_OK);
+      if (rs_detach != JNI_OK) {
+        std::cerr << "JniUtil::getJniEnv - Warn: Unable to detach current "
+                     "thread from JVM!"
+                  << std::endl;
       }
-      ptrs.reserve(jptrs_len);
-      for (jsize i = 0; i < jptrs_len; i++) {
-        ptrs.push_back(reinterpret_cast<T*>(jptr[i]));
-      }
-      env->ReleaseLongArrayElements(jptrs, jptr, JNI_ABORT);
-      return ptrs;
     }
+  }
 
-    /**
-     * Creates a Java array of C++ pointer addresses
-     *     from a vector of C++ pointers.
-     *
-     * @param env (IN) A pointer to the java environment
-     * @param pointers (IN) A vector of C++ pointers
-     * @param has_exception (OUT) will be set to JNI_TRUE
-     *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
-     *     exception occurs
-     *
-     * @return Java array of C++ pointer addresses.
-     */
-    template<typename T> static jlongArray toJPointers(JNIEnv* env,
-        const std::vector<T*> &pointers,
-        jboolean *has_exception) {
-      const jsize len = static_cast<jsize>(pointers.size());
-      std::unique_ptr<jlong[]> results(new jlong[len]);
-      std::transform(pointers.begin(), pointers.end(), results.get(), [](T* pointer) -> jlong {
-        return reinterpret_cast<jlong>(pointer);
-      });
+  /**
+   * Copies a Java String[] to a C++ std::vector<std::string>
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param jss (IN) The Java String array to copy
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError or ArrayIndexOutOfBoundsException
+   *     exception occurs
+   *
+   * @return A std::vector<std:string> containing copies of the Java strings
+   */
+  static std::vector<std::string> copyStrings(JNIEnv* env, jobjectArray jss,
+                                              jboolean* has_exception) {
+    return ROCKSDB_NAMESPACE::JniUtil::copyStrings(
+        env, jss, env->GetArrayLength(jss), has_exception);
+  }
 
-      jlongArray jpointers = env->NewLongArray(len);
-      if (jpointers == nullptr) {
-        // exception thrown: OutOfMemoryError
-        *has_exception = JNI_TRUE;
-        return nullptr;
-      }
-
-      env->SetLongArrayRegion(jpointers, 0, len, results.get());
+  /**
+   * Copies a Java String[] to a C++ std::vector<std::string>
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param jss (IN) The Java String array to copy
+   * @param jss_len (IN) The length of the Java String array to copy
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError or ArrayIndexOutOfBoundsException
+   *     exception occurs
+   *
+   * @return A std::vector<std:string> containing copies of the Java strings
+   */
+  static std::vector<std::string> copyStrings(JNIEnv* env, jobjectArray jss,
+                                              const jsize jss_len,
+                                              jboolean* has_exception) {
+    std::vector<std::string> strs;
+    strs.reserve(jss_len);
+    for (jsize i = 0; i < jss_len; i++) {
+      jobject js = env->GetObjectArrayElement(jss, i);
       if (env->ExceptionCheck()) {
         // exception thrown: ArrayIndexOutOfBoundsException
         *has_exception = JNI_TRUE;
-        env->DeleteLocalRef(jpointers);
+        return strs;
+      }
+
+      jstring jstr = static_cast<jstring>(js);
+      const char* str = env->GetStringUTFChars(jstr, nullptr);
+      if (str == nullptr) {
+        // exception thrown: OutOfMemoryError
+        env->DeleteLocalRef(js);
+        *has_exception = JNI_TRUE;
+        return strs;
+      }
+
+      strs.push_back(std::string(str));
+
+      env->ReleaseStringUTFChars(jstr, str);
+      env->DeleteLocalRef(js);
+    }
+
+    *has_exception = JNI_FALSE;
+    return strs;
+  }
+
+  /**
+   * Copies a jstring to a C-style null-terminated byte string
+   * and releases the original jstring
+   *
+   * The jstring is copied as UTF-8
+   *
+   * If an exception occurs, then JNIEnv::ExceptionCheck()
+   * will have been called
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param js (IN) The java string to copy
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError exception occurs
+   *
+   * @return A pointer to the copied string, or a
+   *     nullptr if has_exception == JNI_TRUE
+   */
+  static std::unique_ptr<char[]> copyString(JNIEnv* env, jstring js,
+                                            jboolean* has_exception) {
+    const char* utf = env->GetStringUTFChars(js, nullptr);
+    if (utf == nullptr) {
+      // exception thrown: OutOfMemoryError
+      env->ExceptionCheck();
+      *has_exception = JNI_TRUE;
+      return nullptr;
+    } else if (env->ExceptionCheck()) {
+      // exception thrown
+      env->ReleaseStringUTFChars(js, utf);
+      *has_exception = JNI_TRUE;
+      return nullptr;
+    }
+
+    const jsize utf_len = env->GetStringUTFLength(js);
+    std::unique_ptr<char[]> str(
+        new char[utf_len +
+                 1]);  // Note: + 1 is needed for the c_str null terminator
+    std::strcpy(str.get(), utf);
+    env->ReleaseStringUTFChars(js, utf);
+    *has_exception = JNI_FALSE;
+    return str;
+  }
+
+  /**
+   * Copies a jstring to a std::string
+   * and releases the original jstring
+   *
+   * If an exception occurs, then JNIEnv::ExceptionCheck()
+   * will have been called
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param js (IN) The java string to copy
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError exception occurs
+   *
+   * @return A std:string copy of the jstring, or an
+   *     empty std::string if has_exception == JNI_TRUE
+   */
+  static std::string copyStdString(JNIEnv* env, jstring js,
+                                   jboolean* has_exception) {
+    const char* utf = env->GetStringUTFChars(js, nullptr);
+    if (utf == nullptr) {
+      // exception thrown: OutOfMemoryError
+      env->ExceptionCheck();
+      *has_exception = JNI_TRUE;
+      return std::string();
+    } else if (env->ExceptionCheck()) {
+      // exception thrown
+      env->ReleaseStringUTFChars(js, utf);
+      *has_exception = JNI_TRUE;
+      return std::string();
+    }
+
+    std::string name(utf);
+    env->ReleaseStringUTFChars(js, utf);
+    *has_exception = JNI_FALSE;
+    return name;
+  }
+
+  /**
+   * Copies bytes from a std::string to a jByteArray
+   *
+   * @param env A pointer to the java environment
+   * @param bytes The bytes to copy
+   *
+   * @return the Java byte[], or nullptr if an exception occurs
+   *
+   * @throws RocksDBException thrown
+   *   if memory size to copy exceeds general java specific array size
+   * limitation.
+   */
+  static jbyteArray copyBytes(JNIEnv* env, std::string bytes) {
+    return createJavaByteArrayWithSizeCheck(env, bytes.c_str(), bytes.size());
+  }
+
+  /**
+   * Given a Java byte[][] which is an array of java.lang.Strings
+   * where each String is a byte[], the passed function `string_fn`
+   * will be called on each String, the result is the collected by
+   * calling the passed function `collector_fn`
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param jbyte_strings (IN) A Java array of Strings expressed as bytes
+   * @param string_fn (IN) A transform function to call for each String
+   * @param collector_fn (IN) A collector which is called for the result
+   *     of each `string_fn`
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
+   *     exception occurs
+   */
+  template <typename T>
+  static void byteStrings(JNIEnv* env, jobjectArray jbyte_strings,
+                          std::function<T(const char*, const size_t)> string_fn,
+                          std::function<void(size_t, T)> collector_fn,
+                          jboolean* has_exception) {
+    const jsize jlen = env->GetArrayLength(jbyte_strings);
+
+    for (jsize i = 0; i < jlen; i++) {
+      jobject jbyte_string_obj = env->GetObjectArrayElement(jbyte_strings, i);
+      if (env->ExceptionCheck()) {
+        // exception thrown: ArrayIndexOutOfBoundsException
+        *has_exception = JNI_TRUE;  // signal error
+        return;
+      }
+
+      jbyteArray jbyte_string_ary =
+          reinterpret_cast<jbyteArray>(jbyte_string_obj);
+      T result = byteString(env, jbyte_string_ary, string_fn, has_exception);
+
+      env->DeleteLocalRef(jbyte_string_obj);
+
+      if (*has_exception == JNI_TRUE) {
+        // exception thrown: OutOfMemoryError
+        return;
+      }
+
+      collector_fn(i, result);
+    }
+
+    *has_exception = JNI_FALSE;
+  }
+
+  /**
+   * Given a Java String which is expressed as a Java Byte Array byte[],
+   * the passed function `string_fn` will be called on the String
+   * and the result returned
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param jbyte_string_ary (IN) A Java String expressed in bytes
+   * @param string_fn (IN) A transform function to call on the String
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError exception occurs
+   */
+  template <typename T>
+  static T byteString(JNIEnv* env, jbyteArray jbyte_string_ary,
+                      std::function<T(const char*, const size_t)> string_fn,
+                      jboolean* has_exception) {
+    const jsize jbyte_string_len = env->GetArrayLength(jbyte_string_ary);
+    return byteString<T>(env, jbyte_string_ary, jbyte_string_len, string_fn,
+                         has_exception);
+  }
+
+  /**
+   * Given a Java String which is expressed as a Java Byte Array byte[],
+   * the passed function `string_fn` will be called on the String
+   * and the result returned
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param jbyte_string_ary (IN) A Java String expressed in bytes
+   * @param jbyte_string_len (IN) The length of the Java String
+   *     expressed in bytes
+   * @param string_fn (IN) A transform function to call on the String
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an OutOfMemoryError exception occurs
+   */
+  template <typename T>
+  static T byteString(JNIEnv* env, jbyteArray jbyte_string_ary,
+                      const jsize jbyte_string_len,
+                      std::function<T(const char*, const size_t)> string_fn,
+                      jboolean* has_exception) {
+    jbyte* jbyte_string = env->GetByteArrayElements(jbyte_string_ary, nullptr);
+    if (jbyte_string == nullptr) {
+      // exception thrown: OutOfMemoryError
+      *has_exception = JNI_TRUE;
+      return nullptr;  // signal error
+    }
+
+    T result =
+        string_fn(reinterpret_cast<char*>(jbyte_string), jbyte_string_len);
+
+    env->ReleaseByteArrayElements(jbyte_string_ary, jbyte_string, JNI_ABORT);
+
+    *has_exception = JNI_FALSE;
+    return result;
+  }
+
+  /**
+   * Converts a std::vector<string> to a Java byte[][] where each Java String
+   * is expressed as a Java Byte Array byte[].
+   *
+   * @param env A pointer to the java environment
+   * @param strings A vector of Strings
+   *
+   * @return A Java array of Strings expressed as bytes,
+   *     or nullptr if an exception is thrown
+   */
+  static jobjectArray stringsBytes(JNIEnv* env,
+                                   std::vector<std::string> strings) {
+    jclass jcls_ba = ByteJni::getArrayJClass(env);
+    if (jcls_ba == nullptr) {
+      // exception occurred
+      return nullptr;
+    }
+
+    const jsize len = static_cast<jsize>(strings.size());
+
+    jobjectArray jbyte_strings = env->NewObjectArray(len, jcls_ba, nullptr);
+    if (jbyte_strings == nullptr) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    for (jsize i = 0; i < len; i++) {
+      std::string* str = &strings[i];
+      const jsize str_len = static_cast<jsize>(str->size());
+
+      jbyteArray jbyte_string_ary = env->NewByteArray(str_len);
+      if (jbyte_string_ary == nullptr) {
+        // exception thrown: OutOfMemoryError
+        env->DeleteLocalRef(jbyte_strings);
         return nullptr;
       }
 
-      *has_exception = JNI_FALSE;
-
-      return jpointers;
-    }
-
-    /*
-     * Helper for operations on a key and value
-     * for example WriteBatch->Put
-     *
-     * TODO(AR) could be extended to cover returning MIZAR_NAMESPACE::Status
-     * from `op` and used for RocksDB->Put etc.
-     */
-    static void kv_op_direct(std::function<void(MIZAR_NAMESPACE::Slice&,
-                                                MIZAR_NAMESPACE::Slice&)>
-                                 op,
-                             JNIEnv* env, jobject jkey, jint jkey_off,
-                             jint jkey_len, jobject jval, jint jval_off,
-                             jint jval_len) {
-      char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
-      if (key == nullptr ||
-          env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
-        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
-            env, "Invalid key argument");
-        return;
+      env->SetByteArrayRegion(
+          jbyte_string_ary, 0, str_len,
+          const_cast<jbyte*>(reinterpret_cast<const jbyte*>(str->c_str())));
+      if (env->ExceptionCheck()) {
+        // exception thrown: ArrayIndexOutOfBoundsException
+        env->DeleteLocalRef(jbyte_string_ary);
+        env->DeleteLocalRef(jbyte_strings);
+        return nullptr;
       }
 
-      char* value = reinterpret_cast<char*>(env->GetDirectBufferAddress(jval));
-      if (value == nullptr ||
-          env->GetDirectBufferCapacity(jval) < (jval_off + jval_len)) {
-        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
-            env, "Invalid value argument");
-        return;
+      env->SetObjectArrayElement(jbyte_strings, i, jbyte_string_ary);
+      if (env->ExceptionCheck()) {
+        // exception thrown: ArrayIndexOutOfBoundsException
+        // or ArrayStoreException
+        env->DeleteLocalRef(jbyte_string_ary);
+        env->DeleteLocalRef(jbyte_strings);
+        return nullptr;
       }
 
-      key += jkey_off;
-      value += jval_off;
-
-      MIZAR_NAMESPACE::Slice key_slice(key, jkey_len);
-      MIZAR_NAMESPACE::Slice value_slice(value, jval_len);
-
-      op(key_slice, value_slice);
+      env->DeleteLocalRef(jbyte_string_ary);
     }
 
-    /*
-     * Helper for operations on a key and value
-     * for example WriteBatch->Delete
-     *
-     * TODO(AR) could be extended to cover returning MIZAR_NAMESPACE::Status
-     * from `op` and used for RocksDB->Delete etc.
-     */
-    static void k_op_direct(std::function<void(MIZAR_NAMESPACE::Slice&)> op,
-                            JNIEnv* env, jobject jkey, jint jkey_off,
-                            jint jkey_len) {
-      char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
-      if (key == nullptr ||
-          env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
-        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
-            env, "Invalid key argument");
-        return;
+    return jbyte_strings;
+  }
+
+  /**
+   * Converts a std::vector<std::string> to a Java String[].
+   *
+   * @param env A pointer to the java environment
+   * @param strings A vector of Strings
+   *
+   * @return A Java array of Strings,
+   *     or nullptr if an exception is thrown
+   */
+  static jobjectArray toJavaStrings(JNIEnv* env,
+                                    const std::vector<std::string>* strings) {
+    jclass jcls_str = env->FindClass("java/lang/String");
+    if (jcls_str == nullptr) {
+      // exception occurred
+      return nullptr;
+    }
+
+    const jsize len = static_cast<jsize>(strings->size());
+
+    jobjectArray jstrings = env->NewObjectArray(len, jcls_str, nullptr);
+    if (jstrings == nullptr) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    for (jsize i = 0; i < len; i++) {
+      const std::string* str = &((*strings)[i]);
+      jstring js = ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, str);
+      if (js == nullptr) {
+        env->DeleteLocalRef(jstrings);
+        return nullptr;
       }
 
-      key += jkey_off;
-
-      MIZAR_NAMESPACE::Slice key_slice(key, jkey_len);
-
-      return op(key_slice);
+      env->SetObjectArrayElement(jstrings, i, js);
+      if (env->ExceptionCheck()) {
+        // exception thrown: ArrayIndexOutOfBoundsException
+        // or ArrayStoreException
+        env->DeleteLocalRef(js);
+        env->DeleteLocalRef(jstrings);
+        return nullptr;
+      }
     }
 
-    template <class T>
-    static jint copyToDirect(JNIEnv* env, T& source, jobject jtarget,
-                             jint jtarget_off, jint jtarget_len) {
-      char* target =
-          reinterpret_cast<char*>(env->GetDirectBufferAddress(jtarget));
-      if (target == nullptr ||
-          env->GetDirectBufferCapacity(jtarget) < (jtarget_off + jtarget_len)) {
-        MIZAR_NAMESPACE::RocksDBExceptionJni::ThrowNew(
-            env, "Invalid target argument");
-        return 0;
+    return jstrings;
+  }
+
+  /**
+   * Creates a Java UTF String from a C++ std::string
+   *
+   * @param env A pointer to the java environment
+   * @param string the C++ std::string
+   * @param treat_empty_as_null true if empty strings should be treated as null
+   *
+   * @return the Java UTF string, or nullptr if the provided string
+   *     is null (or empty and treat_empty_as_null is set), or if an
+   *     exception occurs allocating the Java String.
+   */
+  static jstring toJavaString(JNIEnv* env, const std::string* string,
+                              const bool treat_empty_as_null = false) {
+    if (string == nullptr) {
+      return nullptr;
+    }
+
+    if (treat_empty_as_null && string->empty()) {
+      return nullptr;
+    }
+
+    return env->NewStringUTF(string->c_str());
+  }
+
+  /**
+   * Copies bytes to a new jByteArray with the check of java array size
+   * limitation.
+   *
+   * @param bytes pointer to memory to copy to a new jByteArray
+   * @param size number of bytes to copy
+   *
+   * @return the Java byte[], or nullptr if an exception occurs
+   *
+   * @throws RocksDBException thrown
+   *   if memory size to copy exceeds general java array size limitation to
+   * avoid overflow.
+   */
+  static jbyteArray createJavaByteArrayWithSizeCheck(JNIEnv* env,
+                                                     const char* bytes,
+                                                     const size_t size) {
+    // Limitation for java array size is vm specific
+    // In general it cannot exceed Integer.MAX_VALUE (2^31 - 1)
+    // Current HotSpot VM limitation for array size is Integer.MAX_VALUE - 5
+    // (2^31 - 1 - 5) It means that the next call to env->NewByteArray can still
+    // end with OutOfMemoryError("Requested array size exceeds VM limit") coming
+    // from VM
+    static const size_t MAX_JARRAY_SIZE = (static_cast<size_t>(1)) << 31;
+    if (size > MAX_JARRAY_SIZE) {
+      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+          env, "Requested array size exceeds VM limit");
+      return nullptr;
+    }
+
+    const jsize jlen = static_cast<jsize>(size);
+    jbyteArray jbytes = env->NewByteArray(jlen);
+    if (jbytes == nullptr) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    env->SetByteArrayRegion(
+        jbytes, 0, jlen,
+        const_cast<jbyte*>(reinterpret_cast<const jbyte*>(bytes)));
+    if (env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      env->DeleteLocalRef(jbytes);
+      return nullptr;
+    }
+
+    return jbytes;
+  }
+
+  /**
+   * Copies bytes from a ROCKSDB_NAMESPACE::Slice to a jByteArray
+   *
+   * @param env A pointer to the java environment
+   * @param bytes The bytes to copy
+   *
+   * @return the Java byte[] or nullptr if an exception occurs
+   *
+   * @throws RocksDBException thrown
+   *   if memory size to copy exceeds general java specific array size
+   * limitation.
+   */
+  static jbyteArray copyBytes(JNIEnv* env, const Slice& bytes) {
+    return createJavaByteArrayWithSizeCheck(env, bytes.data(), bytes.size());
+  }
+
+  /*
+   * Helper for operations on a key and value
+   * for example WriteBatch->Put
+   *
+   * TODO(AR) could be used for RocksDB->Put etc.
+   */
+  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> kv_op(
+      std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice,
+                                              ROCKSDB_NAMESPACE::Slice)>
+          op,
+      JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len,
+      jbyteArray jvalue, jint jvalue_len) {
+    jbyte* key = env->GetByteArrayElements(jkey, nullptr);
+    if (env->ExceptionCheck()) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    jbyte* value = env->GetByteArrayElements(jvalue, nullptr);
+    if (env->ExceptionCheck()) {
+      // exception thrown: OutOfMemoryError
+      if (key != nullptr) {
+        env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
+      }
+      return nullptr;
+    }
+
+    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key), jkey_len);
+    ROCKSDB_NAMESPACE::Slice value_slice(reinterpret_cast<char*>(value),
+                                         jvalue_len);
+
+    auto status = op(key_slice, value_slice);
+
+    if (value != nullptr) {
+      env->ReleaseByteArrayElements(jvalue, value, JNI_ABORT);
+    }
+    if (key != nullptr) {
+      env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
+    }
+
+    return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+        new ROCKSDB_NAMESPACE::Status(status));
+  }
+
+  /*
+   * Helper for operations on a key
+   * for example WriteBatch->Delete
+   *
+   * TODO(AR) could be used for RocksDB->Delete etc.
+   */
+  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> k_op(
+      std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice)> op,
+      JNIEnv* env, jobject /*jobj*/, jbyteArray jkey, jint jkey_len) {
+    jbyte* key = env->GetByteArrayElements(jkey, nullptr);
+    if (env->ExceptionCheck()) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key), jkey_len);
+
+    auto status = op(key_slice);
+
+    if (key != nullptr) {
+      env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
+    }
+
+    return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
+        new ROCKSDB_NAMESPACE::Status(status));
+  }
+
+  /*
+   * Helper for operations on a key which is a region of an array
+   * Used to extract the common code from seek/seekForPrev.
+   * Possible that it can be generalised from that.
+   *
+   * We use GetByteArrayRegion to copy the key region of the whole array into
+   * a char[] We suspect this is not much slower than GetByteArrayElements,
+   * which probably copies anyway.
+   */
+  static void k_op_region(std::function<void(ROCKSDB_NAMESPACE::Slice&)> op,
+                          JNIEnv* env, jbyteArray jkey, jint jkey_off,
+                          jint jkey_len) {
+    const std::unique_ptr<char[]> key(new char[jkey_len]);
+    if (key == nullptr) {
+      jclass oom_class = env->FindClass("/lang/java/OutOfMemoryError");
+      env->ThrowNew(oom_class,
+                    "Memory allocation failed in RocksDB JNI function");
+      return;
+    }
+    env->GetByteArrayRegion(jkey, jkey_off, jkey_len,
+                            reinterpret_cast<jbyte*>(key.get()));
+    if (env->ExceptionCheck()) {
+      // exception thrown: OutOfMemoryError
+      return;
+    }
+
+    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key.get()),
+                                       jkey_len);
+    op(key_slice);
+  }
+
+  /*
+   * Helper for operations on a value
+   * for example WriteBatchWithIndex->GetFromBatch
+   */
+  static jbyteArray v_op(std::function<ROCKSDB_NAMESPACE::Status(
+                             ROCKSDB_NAMESPACE::Slice, std::string*)>
+                             op,
+                         JNIEnv* env, jbyteArray jkey, jint jkey_len) {
+    jbyte* key = env->GetByteArrayElements(jkey, nullptr);
+    if (env->ExceptionCheck()) {
+      // exception thrown: OutOfMemoryError
+      return nullptr;
+    }
+
+    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key), jkey_len);
+
+    std::string value;
+    ROCKSDB_NAMESPACE::Status s = op(key_slice, &value);
+
+    if (key != nullptr) {
+      env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
+    }
+
+    if (s.IsNotFound()) {
+      return nullptr;
+    }
+
+    if (s.ok()) {
+      jbyteArray jret_value =
+          env->NewByteArray(static_cast<jsize>(value.size()));
+      if (jret_value == nullptr) {
+        // exception thrown: OutOfMemoryError
+        return nullptr;
       }
 
-      target += jtarget_off;
+      env->SetByteArrayRegion(
+          jret_value, 0, static_cast<jsize>(value.size()),
+          const_cast<jbyte*>(reinterpret_cast<const jbyte*>(value.c_str())));
+      if (env->ExceptionCheck()) {
+        // exception thrown: ArrayIndexOutOfBoundsException
+        if (jret_value != nullptr) {
+          env->DeleteLocalRef(jret_value);
+        }
+        return nullptr;
+      }
 
-      const jint cvalue_len = static_cast<jint>(source.size());
-      const jint length = std::min(jtarget_len, cvalue_len);
-
-      memcpy(target, source.data(), length);
-
-      return cvalue_len;
+      return jret_value;
     }
+
+    ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, s);
+    return nullptr;
+  }
+
+  /**
+   * Creates a vector<T*> of C++ pointers from
+   *     a Java array of C++ pointer addresses.
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param pointers (IN) A Java array of C++ pointer addresses
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
+   *     exception occurs.
+   *
+   * @return A vector of C++ pointers.
+   */
+  template <typename T>
+  static std::vector<T*> fromJPointers(JNIEnv* env, jlongArray jptrs,
+                                       jboolean* has_exception) {
+    const jsize jptrs_len = env->GetArrayLength(jptrs);
+    std::vector<T*> ptrs;
+    jlong* jptr = env->GetLongArrayElements(jptrs, nullptr);
+    if (jptr == nullptr) {
+      // exception thrown: OutOfMemoryError
+      *has_exception = JNI_TRUE;
+      return ptrs;
+    }
+    ptrs.reserve(jptrs_len);
+    for (jsize i = 0; i < jptrs_len; i++) {
+      ptrs.push_back(reinterpret_cast<T*>(jptr[i]));
+    }
+    env->ReleaseLongArrayElements(jptrs, jptr, JNI_ABORT);
+    return ptrs;
+  }
+
+  /**
+   * Creates a Java array of C++ pointer addresses
+   *     from a vector of C++ pointers.
+   *
+   * @param env (IN) A pointer to the java environment
+   * @param pointers (IN) A vector of C++ pointers
+   * @param has_exception (OUT) will be set to JNI_TRUE
+   *     if an ArrayIndexOutOfBoundsException or OutOfMemoryError
+   *     exception occurs
+   *
+   * @return Java array of C++ pointer addresses.
+   */
+  template <typename T>
+  static jlongArray toJPointers(JNIEnv* env, const std::vector<T*>& pointers,
+                                jboolean* has_exception) {
+    const jsize len = static_cast<jsize>(pointers.size());
+    std::unique_ptr<jlong[]> results(new jlong[len]);
+    std::transform(
+        pointers.begin(), pointers.end(), results.get(),
+        [](T* pointer) -> jlong { return GET_CPLUSPLUS_POINTER(pointer); });
+
+    jlongArray jpointers = env->NewLongArray(len);
+    if (jpointers == nullptr) {
+      // exception thrown: OutOfMemoryError
+      *has_exception = JNI_TRUE;
+      return nullptr;
+    }
+
+    env->SetLongArrayRegion(jpointers, 0, len, results.get());
+    if (env->ExceptionCheck()) {
+      // exception thrown: ArrayIndexOutOfBoundsException
+      *has_exception = JNI_TRUE;
+      env->DeleteLocalRef(jpointers);
+      return nullptr;
+    }
+
+    *has_exception = JNI_FALSE;
+
+    return jpointers;
+  }
+
+  /*
+   * Helper for operations on a key and value
+   * for example WriteBatch->Put
+   *
+   * TODO(AR) could be extended to cover returning ROCKSDB_NAMESPACE::Status
+   * from `op` and used for RocksDB->Put etc.
+   */
+  static void kv_op_direct(
+      std::function<void(ROCKSDB_NAMESPACE::Slice&, ROCKSDB_NAMESPACE::Slice&)>
+          op,
+      JNIEnv* env, jobject jkey, jint jkey_off, jint jkey_len, jobject jval,
+      jint jval_off, jint jval_len) {
+    char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
+    if (key == nullptr ||
+        env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
+      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env,
+                                                       "Invalid key argument");
+      return;
+    }
+
+    char* value = reinterpret_cast<char*>(env->GetDirectBufferAddress(jval));
+    if (value == nullptr ||
+        env->GetDirectBufferCapacity(jval) < (jval_off + jval_len)) {
+      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+          env, "Invalid value argument");
+      return;
+    }
+
+    key += jkey_off;
+    value += jval_off;
+
+    ROCKSDB_NAMESPACE::Slice key_slice(key, jkey_len);
+    ROCKSDB_NAMESPACE::Slice value_slice(value, jval_len);
+
+    op(key_slice, value_slice);
+  }
+
+  /*
+   * Helper for operations on a key and value
+   * for example WriteBatch->Delete
+   *
+   * TODO(AR) could be extended to cover returning ROCKSDB_NAMESPACE::Status
+   * from `op` and used for RocksDB->Delete etc.
+   */
+  static void k_op_direct(std::function<void(ROCKSDB_NAMESPACE::Slice&)> op,
+                          JNIEnv* env, jobject jkey, jint jkey_off,
+                          jint jkey_len) {
+    char* key = reinterpret_cast<char*>(env->GetDirectBufferAddress(jkey));
+    if (key == nullptr ||
+        env->GetDirectBufferCapacity(jkey) < (jkey_off + jkey_len)) {
+      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env,
+                                                       "Invalid key argument");
+      return;
+    }
+
+    key += jkey_off;
+
+    ROCKSDB_NAMESPACE::Slice key_slice(key, jkey_len);
+
+    return op(key_slice);
+  }
+
+  template <class T>
+  static jint copyToDirect(JNIEnv* env, T& source, jobject jtarget,
+                           jint jtarget_off, jint jtarget_len) {
+    char* target =
+        reinterpret_cast<char*>(env->GetDirectBufferAddress(jtarget));
+    if (target == nullptr ||
+        env->GetDirectBufferCapacity(jtarget) < (jtarget_off + jtarget_len)) {
+      ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
+          env, "Invalid target argument");
+      return 0;
+    }
+
+    target += jtarget_off;
+
+    const jint cvalue_len = static_cast<jint>(source.size());
+    const jint length = std::min(jtarget_len, cvalue_len);
+
+    memcpy(target, source.data(), length);
+
+    return cvalue_len;
+  }
 };
 
 class MapJni : public JavaClass {
@@ -2378,13 +2454,14 @@ class MapJni : public JavaClass {
    */
   static jmethodID getMapPutMethodId(JNIEnv* env) {
     jclass jlist_clazz = getJClass(env);
-    if(jlist_clazz == nullptr) {
+    if (jlist_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jlist_clazz, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+    static jmethodID mid = env->GetMethodID(
+        jlist_clazz, "put",
+        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     assert(mid != nullptr);
     return mid;
   }
@@ -2426,7 +2503,8 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    jobject jhash_map = env->NewObject(jclazz, mid, static_cast<jint>(initial_capacity));
+    jobject jhash_map =
+        env->NewObject(jclazz, mid, static_cast<jint>(initial_capacity));
     if (env->ExceptionCheck()) {
       return nullptr;
     }
@@ -2441,26 +2519,33 @@ class HashMapJni : public JavaClass {
    *     if an error occurs during the mapping
    */
   template <typename K, typename V, typename JK, typename JV>
-  using FnMapKV = std::function<std::unique_ptr<std::pair<JK, JV>> (const std::pair<K, V>&)>;
+  using FnMapKV =
+      std::function<std::unique_ptr<std::pair<JK, JV>>(const std::pair<K, V>&)>;
 
-  // template <class I, typename K, typename V, typename K1, typename V1, typename std::enable_if<std::is_same<typename std::iterator_traits<I>::value_type, std::pair<const K,V>>::value, int32_t>::type = 0>
-  // static void putAll(JNIEnv* env, const jobject jhash_map, I iterator, const FnMapKV<const K,V,K1,V1> &fn_map_kv) {
+  // template <class I, typename K, typename V, typename K1, typename V1,
+  // typename std::enable_if<std::is_same<typename
+  // std::iterator_traits<I>::value_type, std::pair<const K,V>>::value,
+  // int32_t>::type = 0> static void putAll(JNIEnv* env, const jobject
+  // jhash_map, I iterator, const FnMapKV<const K,V,K1,V1> &fn_map_kv) {
   /**
    * Returns true if it succeeds, false if an error occurs
    */
-  template<class iterator_type, typename K, typename V>
-  static bool putAll(JNIEnv* env, const jobject jhash_map, iterator_type iterator, iterator_type end, const FnMapKV<K, V, jobject, jobject> &fn_map_kv) {
+  template <class iterator_type, typename K, typename V>
+  static bool putAll(JNIEnv* env, const jobject jhash_map,
+                     iterator_type iterator, iterator_type end,
+                     const FnMapKV<K, V, jobject, jobject>& fn_map_kv) {
     const jmethodID jmid_put =
-        MIZAR_NAMESPACE::MapJni::getMapPutMethodId(env);
+        ROCKSDB_NAMESPACE::MapJni::getMapPutMethodId(env);
     if (jmid_put == nullptr) {
       return false;
     }
 
     for (auto it = iterator; it != end; ++it) {
-      const std::unique_ptr<std::pair<jobject, jobject>> result = fn_map_kv(*it);
+      const std::unique_ptr<std::pair<jobject, jobject>> result =
+          fn_map_kv(*it);
       if (result == nullptr) {
-          // an error occurred during fn_map_kv
-          return false;
+        // an error occurred during fn_map_kv
+        return false;
       }
       env->CallObjectMethod(jhash_map, jmid_put, result->first, result->second);
       if (env->ExceptionCheck()) {
@@ -2479,14 +2564,17 @@ class HashMapJni : public JavaClass {
   }
 
   /**
-   * Creates a java.util.Map<String, String> from a std::map<std::string, std::string>
+   * Creates a java.util.Map<String, String> from a std::map<std::string,
+   * std::string>
    *
    * @param env A pointer to the Java environment
    * @param map the Cpp map
    *
-   * @return a reference to the Java java.util.Map object, or nullptr if an exception occcurred
+   * @return a reference to the Java java.util.Map object, or nullptr if an
+   * exception occcurred
    */
-  static jobject fromCppMap(JNIEnv* env, const std::map<std::string, std::string>* map) {
+  static jobject fromCppMap(JNIEnv* env,
+                            const std::map<std::string, std::string>* map) {
     if (map == nullptr) {
       return nullptr;
     }
@@ -2497,18 +2585,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
+    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const std::string, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const std::string>& kv) {
-              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jstring jvalue = MIZAR_NAMESPACE::JniUtil::toJavaString(
+              jstring jvalue = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.second), true);
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2531,14 +2619,17 @@ class HashMapJni : public JavaClass {
   }
 
   /**
-   * Creates a java.util.Map<String, Long> from a std::map<std::string, uint32_t>
+   * Creates a java.util.Map<String, Long> from a std::map<std::string,
+   * uint32_t>
    *
    * @param env A pointer to the Java environment
    * @param map the Cpp map
    *
-   * @return a reference to the Java java.util.Map object, or nullptr if an exception occcurred
+   * @return a reference to the Java java.util.Map object, or nullptr if an
+   * exception occcurred
    */
-  static jobject fromCppMap(JNIEnv* env, const std::map<std::string, uint32_t>* map) {
+  static jobject fromCppMap(JNIEnv* env,
+                            const std::map<std::string, uint32_t>* map) {
     if (map == nullptr) {
       return nullptr;
     }
@@ -2553,18 +2644,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
+    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const uint32_t, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const uint32_t>& kv) {
-              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jobject jvalue = MIZAR_NAMESPACE::IntegerJni::valueOf(
+              jobject jvalue = ROCKSDB_NAMESPACE::IntegerJni::valueOf(
                   env, static_cast<jint>(kv.second));
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2586,14 +2677,17 @@ class HashMapJni : public JavaClass {
   }
 
   /**
-   * Creates a java.util.Map<String, Long> from a std::map<std::string, uint64_t>
+   * Creates a java.util.Map<String, Long> from a std::map<std::string,
+   * uint64_t>
    *
    * @param env A pointer to the Java environment
    * @param map the Cpp map
    *
-   * @return a reference to the Java java.util.Map object, or nullptr if an exception occcurred
+   * @return a reference to the Java java.util.Map object, or nullptr if an
+   * exception occcurred
    */
-  static jobject fromCppMap(JNIEnv* env, const std::map<std::string, uint64_t>* map) {
+  static jobject fromCppMap(JNIEnv* env,
+                            const std::map<std::string, uint64_t>* map) {
     if (map == nullptr) {
       return nullptr;
     }
@@ -2604,18 +2698,18 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<
+    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<
         const std::string, const uint64_t, jobject, jobject>
         fn_map_kv =
             [env](const std::pair<const std::string, const uint64_t>& kv) {
-              jstring jkey = MIZAR_NAMESPACE::JniUtil::toJavaString(
+              jstring jkey = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
                   env, &(kv.first), false);
               if (env->ExceptionCheck()) {
                 // an error occurred
                 return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
               }
 
-              jobject jvalue = MIZAR_NAMESPACE::LongJni::valueOf(
+              jobject jvalue = ROCKSDB_NAMESPACE::LongJni::valueOf(
                   env, static_cast<jlong>(kv.second));
               if (env->ExceptionCheck()) {
                 // an error occurred
@@ -2636,15 +2730,17 @@ class HashMapJni : public JavaClass {
     return jhash_map;
   }
 
-    /**
+  /**
    * Creates a java.util.Map<String, Long> from a std::map<uint32_t, uint64_t>
    *
    * @param env A pointer to the Java environment
    * @param map the Cpp map
    *
-   * @return a reference to the Java java.util.Map object, or nullptr if an exception occcurred
+   * @return a reference to the Java java.util.Map object, or nullptr if an
+   * exception occcurred
    */
-  static jobject fromCppMap(JNIEnv* env, const std::map<uint32_t, uint64_t>* map) {
+  static jobject fromCppMap(JNIEnv* env,
+                            const std::map<uint32_t, uint64_t>* map) {
     if (map == nullptr) {
       return nullptr;
     }
@@ -2655,17 +2751,17 @@ class HashMapJni : public JavaClass {
       return nullptr;
     }
 
-    const MIZAR_NAMESPACE::HashMapJni::FnMapKV<const uint32_t, const uint64_t,
+    const ROCKSDB_NAMESPACE::HashMapJni::FnMapKV<const uint32_t, const uint64_t,
                                                  jobject, jobject>
         fn_map_kv = [env](const std::pair<const uint32_t, const uint64_t>& kv) {
-          jobject jkey = MIZAR_NAMESPACE::IntegerJni::valueOf(
+          jobject jkey = ROCKSDB_NAMESPACE::IntegerJni::valueOf(
               env, static_cast<jint>(kv.first));
           if (env->ExceptionCheck()) {
             // an error occurred
             return std::unique_ptr<std::pair<jobject, jobject>>(nullptr);
           }
 
-          jobject jvalue = MIZAR_NAMESPACE::LongJni::valueOf(
+          jobject jvalue = ROCKSDB_NAMESPACE::LongJni::valueOf(
               env, static_cast<jlong>(kv.second));
           if (env->ExceptionCheck()) {
             // an error occurred
@@ -2689,7 +2785,7 @@ class HashMapJni : public JavaClass {
 
 // The portal class for org.rocksdb.RocksDB
 class RocksDBJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::DB*, RocksDBJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::DB*, RocksDBJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.RocksDB
@@ -2707,7 +2803,7 @@ class RocksDBJni
 
 // The portal class for org.rocksdb.Options
 class OptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::Options*, OptionsJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Options*, OptionsJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Options
@@ -2725,7 +2821,7 @@ class OptionsJni
 
 // The portal class for org.rocksdb.DBOptions
 class DBOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::DBOptions*, DBOptionsJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::DBOptions*, DBOptionsJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.DBOptions
@@ -2743,7 +2839,7 @@ class DBOptionsJni
 
 // The portal class for org.rocksdb.ColumnFamilyOptions
 class ColumnFamilyOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::ColumnFamilyOptions*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ColumnFamilyOptions*,
                                 ColumnFamilyOptionsJni> {
  public:
   /**
@@ -2762,19 +2858,19 @@ class ColumnFamilyOptionsJni
 
   /**
    * Create a new Java org.rocksdb.ColumnFamilyOptions object with the same
-   * properties as the provided C++ MIZAR_NAMESPACE::ColumnFamilyOptions
+   * properties as the provided C++ ROCKSDB_NAMESPACE::ColumnFamilyOptions
    * object
    *
    * @param env A pointer to the Java environment
-   * @param cfoptions A pointer to MIZAR_NAMESPACE::ColumnFamilyOptions object
+   * @param cfoptions A pointer to ROCKSDB_NAMESPACE::ColumnFamilyOptions object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyOptions object, or
    * nullptr if an an exception occurs
    */
   static jobject construct(JNIEnv* env, const ColumnFamilyOptions* cfoptions) {
-    auto* cfo = new MIZAR_NAMESPACE::ColumnFamilyOptions(*cfoptions);
+    auto* cfo = new ROCKSDB_NAMESPACE::ColumnFamilyOptions(*cfoptions);
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2785,7 +2881,7 @@ class ColumnFamilyOptionsJni
       return nullptr;
     }
 
-    jobject jcfd = env->NewObject(jclazz, mid, reinterpret_cast<jlong>(cfo));
+    jobject jcfd = env->NewObject(jclazz, mid, GET_CPLUSPLUS_POINTER(cfo));
     if (env->ExceptionCheck()) {
       return nullptr;
     }
@@ -2796,7 +2892,7 @@ class ColumnFamilyOptionsJni
 
 // The portal class for org.rocksdb.WriteOptions
 class WriteOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteOptions*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteOptions*,
                                 WriteOptionsJni> {
  public:
   /**
@@ -2815,7 +2911,7 @@ class WriteOptionsJni
 
 // The portal class for org.rocksdb.ReadOptions
 class ReadOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::ReadOptions*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ReadOptions*,
                                 ReadOptionsJni> {
  public:
   /**
@@ -2834,7 +2930,7 @@ class ReadOptionsJni
 
 // The portal class for org.rocksdb.WriteBatch
 class WriteBatchJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteBatch*, WriteBatchJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteBatch*, WriteBatchJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.WriteBatch
@@ -2853,14 +2949,14 @@ class WriteBatchJni
    * Create a new Java org.rocksdb.WriteBatch object
    *
    * @param env A pointer to the Java environment
-   * @param wb A pointer to MIZAR_NAMESPACE::WriteBatch object
+   * @param wb A pointer to ROCKSDB_NAMESPACE::WriteBatch object
    *
    * @return A reference to a Java org.rocksdb.WriteBatch object, or
    * nullptr if an an exception occurs
    */
   static jobject construct(JNIEnv* env, const WriteBatch* wb) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2871,7 +2967,7 @@ class WriteBatchJni
       return nullptr;
     }
 
-    jobject jwb = env->NewObject(jclazz, mid, reinterpret_cast<jlong>(wb));
+    jobject jwb = env->NewObject(jclazz, mid, GET_CPLUSPLUS_POINTER(wb));
     if (env->ExceptionCheck()) {
       return nullptr;
     }
@@ -2883,7 +2979,7 @@ class WriteBatchJni
 // The portal class for org.rocksdb.WriteBatch.Handler
 class WriteBatchHandlerJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::WriteBatchHandlerJniCallback*,
+          const ROCKSDB_NAMESPACE::WriteBatchHandlerJniCallback*,
           WriteBatchHandlerJni> {
  public:
   /**
@@ -2896,8 +2992,7 @@ class WriteBatchHandlerJni
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/WriteBatch$Handler");
+    return RocksDBNativeClass::getJClass(env, "org/rocksdb/WriteBatch$Handler");
   }
 
   /**
@@ -2910,7 +3005,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getPutCfMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2930,7 +3025,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getPutMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2950,7 +3045,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMergeCfMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2970,7 +3065,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMergeMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -2990,7 +3085,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getDeleteCfMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3010,7 +3105,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getDeleteMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3030,7 +3125,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getSingleDeleteCfMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3050,7 +3145,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getSingleDeleteMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3110,7 +3205,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getLogDataMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3130,7 +3225,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getPutBlobIndexCfMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3150,7 +3245,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMarkBeginPrepareMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3170,7 +3265,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMarkEndPrepareMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3190,7 +3285,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMarkNoopMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3210,7 +3305,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMarkRollbackMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3230,7 +3325,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getMarkCommitMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3271,7 +3366,7 @@ class WriteBatchHandlerJni
    */
   static jmethodID getContinueMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3307,7 +3402,7 @@ class WriteBatchSavePointJni : public JavaClass {
    */
   static jmethodID getConstructorMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3321,15 +3416,15 @@ class WriteBatchSavePointJni : public JavaClass {
    * Create a new Java org.rocksdb.WriteBatch.SavePoint object
    *
    * @param env A pointer to the Java environment
-   * @param savePoint A pointer to MIZAR_NAMESPACE::WriteBatch::SavePoint
+   * @param savePoint A pointer to ROCKSDB_NAMESPACE::WriteBatch::SavePoint
    * object
    *
    * @return A reference to a Java org.rocksdb.WriteBatch.SavePoint object, or
    * nullptr if an an exception occurs
    */
-  static jobject construct(JNIEnv* env, const SavePoint &save_point) {
+  static jobject construct(JNIEnv* env, const SavePoint& save_point) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3340,10 +3435,10 @@ class WriteBatchSavePointJni : public JavaClass {
       return nullptr;
     }
 
-    jobject jsave_point = env->NewObject(jclazz, mid,
-        static_cast<jlong>(save_point.size),
-        static_cast<jlong>(save_point.count),
-        static_cast<jlong>(save_point.content_flags));
+    jobject jsave_point =
+        env->NewObject(jclazz, mid, static_cast<jlong>(save_point.size),
+                       static_cast<jlong>(save_point.count),
+                       static_cast<jlong>(save_point.content_flags));
     if (env->ExceptionCheck()) {
       return nullptr;
     }
@@ -3354,7 +3449,7 @@ class WriteBatchSavePointJni : public JavaClass {
 
 // The portal class for org.rocksdb.WriteBatchWithIndex
 class WriteBatchWithIndexJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::WriteBatchWithIndex*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::WriteBatchWithIndex*,
                                 WriteBatchWithIndexJni> {
  public:
   /**
@@ -3368,7 +3463,7 @@ class WriteBatchWithIndexJni
    */
   static jclass getJClass(JNIEnv* env) {
     return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/WriteBatchWithIndex");
+                                         "org/rocksdb/WriteBatchWithIndex");
   }
 };
 
@@ -3398,7 +3493,7 @@ class HistogramDataJni : public JavaClass {
    */
   static jmethodID getConstructorMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3409,13 +3504,13 @@ class HistogramDataJni : public JavaClass {
   }
 };
 
-// The portal class for org.rocksdb.BackupableDBOptions
-class BackupableDBOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::BackupableDBOptions*,
-                                BackupableDBOptionsJni> {
+// The portal class for org.rocksdb.BackupEngineOptions
+class BackupEngineOptionsJni
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::BackupEngineOptions*,
+                                BackupEngineOptionsJni> {
  public:
   /**
-   * Get the Java Class org.rocksdb.BackupableDBOptions
+   * Get the Java Class org.rocksdb.BackupEngineOptions
    *
    * @param env A pointer to the Java environment
    *
@@ -3425,17 +3520,17 @@ class BackupableDBOptionsJni
    */
   static jclass getJClass(JNIEnv* env) {
     return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/BackupableDBOptions");
+                                         "org/rocksdb/BackupEngineOptions");
   }
 };
 
 // The portal class for org.rocksdb.BackupEngine
 class BackupEngineJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::BackupEngine*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::BackupEngine*,
                                 BackupEngineJni> {
  public:
   /**
-   * Get the Java Class org.rocksdb.BackupableEngine
+   * Get the Java Class org.rocksdb.BackupEngine
    *
    * @param env A pointer to the Java environment
    *
@@ -3450,7 +3545,7 @@ class BackupEngineJni
 
 // The portal class for org.rocksdb.RocksIterator
 class IteratorJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::Iterator*, IteratorJni> {
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::Iterator*, IteratorJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.RocksIterator
@@ -3469,7 +3564,7 @@ class IteratorJni
 // The portal class for org.rocksdb.Filter
 class FilterJni
     : public RocksDBNativeClass<
-          std::shared_ptr<MIZAR_NAMESPACE::FilterPolicy>*, FilterJni> {
+          std::shared_ptr<ROCKSDB_NAMESPACE::FilterPolicy>*, FilterJni> {
  public:
   /**
    * Get the Java Class org.rocksdb.Filter
@@ -3487,16 +3582,16 @@ class FilterJni
 
 // The portal class for org.rocksdb.ColumnFamilyHandle
 class ColumnFamilyHandleJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::ColumnFamilyHandle*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::ColumnFamilyHandle*,
                                 ColumnFamilyHandleJni> {
  public:
   static jobject fromCppColumnFamilyHandle(
-      JNIEnv* env, const MIZAR_NAMESPACE::ColumnFamilyHandle* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::ColumnFamilyHandle* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
     assert(ctor != nullptr);
-    return env->NewObject(jclazz, ctor, reinterpret_cast<jlong>(info));
+    return env->NewObject(jclazz, ctor, GET_CPLUSPLUS_POINTER(info));
   }
 
   static jmethodID getConstructorMethodId(JNIEnv* env, jclass clazz) {
@@ -3513,14 +3608,13 @@ class ColumnFamilyHandleJni
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/ColumnFamilyHandle");
+    return RocksDBNativeClass::getJClass(env, "org/rocksdb/ColumnFamilyHandle");
   }
 };
 
 // The portal class for org.rocksdb.FlushOptions
 class FlushOptionsJni
-    : public RocksDBNativeClass<MIZAR_NAMESPACE::FlushOptions*,
+    : public RocksDBNativeClass<ROCKSDB_NAMESPACE::FlushOptions*,
                                 FlushOptionsJni> {
  public:
   /**
@@ -3540,7 +3634,7 @@ class FlushOptionsJni
 // The portal class for org.rocksdb.ComparatorOptions
 class ComparatorOptionsJni
     : public RocksDBNativeClass<
-          MIZAR_NAMESPACE::ComparatorJniCallbackOptions*,
+          ROCKSDB_NAMESPACE::ComparatorJniCallbackOptions*,
           ComparatorOptionsJni> {
  public:
   /**
@@ -3560,7 +3654,7 @@ class ComparatorOptionsJni
 // The portal class for org.rocksdb.AbstractCompactionFilterFactory
 class AbstractCompactionFilterFactoryJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::CompactionFilterFactoryJniCallback*,
+          const ROCKSDB_NAMESPACE::CompactionFilterFactoryJniCallback*,
           AbstractCompactionFilterFactoryJni> {
  public:
   /**
@@ -3573,8 +3667,8 @@ class AbstractCompactionFilterFactoryJni
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/AbstractCompactionFilterFactory");
+    return RocksDBNativeClass::getJClass(
+        env, "org/rocksdb/AbstractCompactionFilterFactory");
   }
 
   /**
@@ -3587,13 +3681,13 @@ class AbstractCompactionFilterFactoryJni
    */
   static jmethodID getNameMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "name", "()Ljava/lang/String;");
+    static jmethodID mid =
+        env->GetMethodID(jclazz, "name", "()Ljava/lang/String;");
     assert(mid != nullptr);
     return mid;
   }
@@ -3608,14 +3702,13 @@ class AbstractCompactionFilterFactoryJni
    */
   static jmethodID getCreateCompactionFilterMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(jclazz,
-      "createCompactionFilter",
-      "(ZZ)J");
+    static jmethodID mid =
+        env->GetMethodID(jclazz, "createCompactionFilter", "(ZZ)J");
     assert(mid != nullptr);
     return mid;
   }
@@ -3624,19 +3717,19 @@ class AbstractCompactionFilterFactoryJni
 // The portal class for org.rocksdb.AbstractTransactionNotifier
 class AbstractTransactionNotifierJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::TransactionNotifierJniCallback*,
+          const ROCKSDB_NAMESPACE::TransactionNotifierJniCallback*,
           AbstractTransactionNotifierJni> {
  public:
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/AbstractTransactionNotifier");
+    return RocksDBNativeClass::getJClass(
+        env, "org/rocksdb/AbstractTransactionNotifier");
   }
 
   // Get the java method `snapshotCreated`
   // of org.rocksdb.AbstractTransactionNotifier.
   static jmethodID getSnapshotCreatedMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3660,8 +3753,7 @@ class AbstractComparatorJniBridge : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/AbstractComparatorJniBridge");
+    return JavaClass::getJClass(env, "org/rocksdb/AbstractComparatorJniBridge");
   }
 
   /**
@@ -3676,7 +3768,8 @@ class AbstractComparatorJniBridge : public JavaClass {
   static jmethodID getCompareInternalMethodId(JNIEnv* env, jclass jclazz) {
     static jmethodID mid =
         env->GetStaticMethodID(jclazz, "compareInternal",
-            "(Lorg/rocksdb/AbstractComparator;Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;I)I");
+                               "(Lorg/rocksdb/AbstractComparator;Ljava/nio/"
+                               "ByteBuffer;ILjava/nio/ByteBuffer;I)I");
     assert(mid != nullptr);
     return mid;
   }
@@ -3690,10 +3783,12 @@ class AbstractComparatorJniBridge : public JavaClass {
    * @return The Java Method ID or nullptr if the class or method id could not
    *     be retrieved
    */
-  static jmethodID getFindShortestSeparatorInternalMethodId(JNIEnv* env, jclass jclazz) {
+  static jmethodID getFindShortestSeparatorInternalMethodId(JNIEnv* env,
+                                                            jclass jclazz) {
     static jmethodID mid =
         env->GetStaticMethodID(jclazz, "findShortestSeparatorInternal",
-            "(Lorg/rocksdb/AbstractComparator;Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;I)I");
+                               "(Lorg/rocksdb/AbstractComparator;Ljava/nio/"
+                               "ByteBuffer;ILjava/nio/ByteBuffer;I)I");
     assert(mid != nullptr);
     return mid;
   }
@@ -3707,10 +3802,11 @@ class AbstractComparatorJniBridge : public JavaClass {
    * @return The Java Method ID or nullptr if the class or method id could not
    *     be retrieved
    */
-  static jmethodID getFindShortSuccessorInternalMethodId(JNIEnv* env, jclass jclazz) {
-    static jmethodID mid =
-        env->GetStaticMethodID(jclazz, "findShortSuccessorInternal",
-            "(Lorg/rocksdb/AbstractComparator;Ljava/nio/ByteBuffer;I)I");
+  static jmethodID getFindShortSuccessorInternalMethodId(JNIEnv* env,
+                                                         jclass jclazz) {
+    static jmethodID mid = env->GetStaticMethodID(
+        jclazz, "findShortSuccessorInternal",
+        "(Lorg/rocksdb/AbstractComparator;Ljava/nio/ByteBuffer;I)I");
     assert(mid != nullptr);
     return mid;
   }
@@ -3718,7 +3814,7 @@ class AbstractComparatorJniBridge : public JavaClass {
 
 // The portal class for org.rocksdb.AbstractComparator
 class AbstractComparatorJni
-    : public RocksDBNativeClass<const MIZAR_NAMESPACE::ComparatorJniCallback*,
+    : public RocksDBNativeClass<const ROCKSDB_NAMESPACE::ComparatorJniCallback*,
                                 AbstractComparatorJni> {
  public:
   /**
@@ -3731,8 +3827,7 @@ class AbstractComparatorJni
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/AbstractComparator");
+    return RocksDBNativeClass::getJClass(env, "org/rocksdb/AbstractComparator");
   }
 
   /**
@@ -3745,7 +3840,7 @@ class AbstractComparatorJni
    */
   static jmethodID getNameMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -3759,7 +3854,7 @@ class AbstractComparatorJni
 
 // The portal class for org.rocksdb.AbstractSlice
 class AbstractSliceJni
-    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3778,7 +3873,7 @@ class AbstractSliceJni
 
 // The portal class for org.rocksdb.Slice
 class SliceJni
-    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3804,19 +3899,19 @@ class SliceJni
    */
   static jobject construct0(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     static jmethodID mid = env->GetMethodID(jclazz, "<init>", "()V");
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
 
     jobject jslice = env->NewObject(jclazz, mid);
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       return nullptr;
     }
 
@@ -3826,7 +3921,7 @@ class SliceJni
 
 // The portal class for org.rocksdb.DirectSlice
 class DirectSliceJni
-    : public NativeRocksMutableObject<const MIZAR_NAMESPACE::Slice*,
+    : public NativeRocksMutableObject<const ROCKSDB_NAMESPACE::Slice*,
                                       AbstractSliceJni> {
  public:
   /**
@@ -3852,19 +3947,19 @@ class DirectSliceJni
    */
   static jobject construct0(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     static jmethodID mid = env->GetMethodID(jclazz, "<init>", "()V");
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
 
     jobject jdirect_slice = env->NewObject(jclazz, mid);
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       return nullptr;
     }
 
@@ -3905,14 +4000,14 @@ class BackupInfoJni : public JavaClass {
                             uint64_t size, uint32_t number_files,
                             const std::string& app_metadata) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     static jmethodID mid =
         env->GetMethodID(jclazz, "<init>", "(IJJILjava/lang/String;)V");
-    if(mid == nullptr) {
+    if (mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
@@ -3928,7 +4023,7 @@ class BackupInfoJni : public JavaClass {
 
     jobject jbackup_info = env->NewObject(jclazz, mid, backup_id, timestamp,
                                           size, number_files, japp_metadata);
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       env->DeleteLocalRef(japp_metadata);
       return nullptr;
     }
@@ -3950,23 +4045,23 @@ class BackupInfoListJni {
    *     if an exception occurs
    */
   static jobject getBackupInfo(JNIEnv* env,
-      std::vector<BackupInfo> backup_infos) {
+                               std::vector<BackupInfo> backup_infos) {
     jclass jarray_list_clazz =
-        MIZAR_NAMESPACE::ListJni::getArrayListClass(env);
-    if(jarray_list_clazz == nullptr) {
+        ROCKSDB_NAMESPACE::ListJni::getArrayListClass(env);
+    if (jarray_list_clazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jmethodID cstr_mid =
-        MIZAR_NAMESPACE::ListJni::getArrayListConstructorMethodId(env);
-    if(cstr_mid == nullptr) {
+        ROCKSDB_NAMESPACE::ListJni::getArrayListConstructorMethodId(env);
+    if (cstr_mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
 
-    jmethodID add_mid = MIZAR_NAMESPACE::ListJni::getListAddMethodId(env);
-    if(add_mid == nullptr) {
+    jmethodID add_mid = ROCKSDB_NAMESPACE::ListJni::getListAddMethodId(env);
+    if (add_mid == nullptr) {
       // exception occurred accessing method
       return nullptr;
     }
@@ -3974,7 +4069,7 @@ class BackupInfoListJni {
     // create java list
     jobject jbackup_info_handle_list =
         env->NewObject(jarray_list_clazz, cstr_mid, backup_infos.size());
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       // exception occurred constructing object
       return nullptr;
     }
@@ -3984,15 +4079,15 @@ class BackupInfoListJni {
     for (auto it = backup_infos.begin(); it != end; ++it) {
       auto backup_info = *it;
 
-      jobject obj = MIZAR_NAMESPACE::BackupInfoJni::construct0(
+      jobject obj = ROCKSDB_NAMESPACE::BackupInfoJni::construct0(
           env, backup_info.backup_id, backup_info.timestamp, backup_info.size,
           backup_info.number_files, backup_info.app_metadata);
-      if(env->ExceptionCheck()) {
+      if (env->ExceptionCheck()) {
         // exception occurred constructing object
-        if(obj != nullptr) {
+        if (obj != nullptr) {
           env->DeleteLocalRef(obj);
         }
-        if(jbackup_info_handle_list != nullptr) {
+        if (jbackup_info_handle_list != nullptr) {
           env->DeleteLocalRef(jbackup_info_handle_list);
         }
         return nullptr;
@@ -4000,12 +4095,12 @@ class BackupInfoListJni {
 
       jboolean rs =
           env->CallBooleanMethod(jbackup_info_handle_list, add_mid, obj);
-      if(env->ExceptionCheck() || rs == JNI_FALSE) {
+      if (env->ExceptionCheck() || rs == JNI_FALSE) {
         // exception occurred calling method, or could not add
-        if(obj != nullptr) {
+        if (obj != nullptr) {
           env->DeleteLocalRef(obj);
         }
-        if(jbackup_info_handle_list != nullptr) {
+        if (jbackup_info_handle_list != nullptr) {
           env->DeleteLocalRef(jbackup_info_handle_list);
         }
         return nullptr;
@@ -4042,14 +4137,13 @@ class WBWIRocksIteratorJni : public JavaClass {
    */
   static jfieldID getWriteEntryField(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jfieldID fid =
-        env->GetFieldID(jclazz, "entry",
-            "Lorg/rocksdb/WBWIRocksIterator$WriteEntry;");
+    static jfieldID fid = env->GetFieldID(
+        jclazz, "entry", "Lorg/rocksdb/WBWIRocksIterator$WriteEntry;");
     assert(fid != nullptr);
     return fid;
   }
@@ -4067,7 +4161,7 @@ class WBWIRocksIteratorJni : public JavaClass {
     assert(jwbwi_rocks_iterator != nullptr);
 
     jfieldID jwrite_entry_field = getWriteEntryField(env);
-    if(jwrite_entry_field == nullptr) {
+    if (jwrite_entry_field == nullptr) {
       // exception occurred accessing the field
       return nullptr;
     }
@@ -4089,9 +4183,7 @@ class WriteTypeJni : public JavaClass {
    * @return A reference to the enum field value or a nullptr if
    *     the enum field value could not be retrieved
    */
-  static jobject PUT(JNIEnv* env) {
-    return getEnum(env, "PUT");
-  }
+  static jobject PUT(JNIEnv* env) { return getEnum(env, "PUT"); }
 
   /**
    * Get the MERGE enum field value of WBWIRocksIterator.WriteType
@@ -4101,9 +4193,7 @@ class WriteTypeJni : public JavaClass {
    * @return A reference to the enum field value or a nullptr if
    *     the enum field value could not be retrieved
    */
-  static jobject MERGE(JNIEnv* env) {
-    return getEnum(env, "MERGE");
-  }
+  static jobject MERGE(JNIEnv* env) { return getEnum(env, "MERGE"); }
 
   /**
    * Get the DELETE enum field value of WBWIRocksIterator.WriteType
@@ -4113,9 +4203,7 @@ class WriteTypeJni : public JavaClass {
    * @return A reference to the enum field value or a nullptr if
    *     the enum field value could not be retrieved
    */
-  static jobject DELETE(JNIEnv* env) {
-    return getEnum(env, "DELETE");
-  }
+  static jobject DELETE(JNIEnv* env) { return getEnum(env, "DELETE"); }
 
   /**
    * Get the LOG enum field value of WBWIRocksIterator.WriteType
@@ -4125,27 +4213,25 @@ class WriteTypeJni : public JavaClass {
    * @return A reference to the enum field value or a nullptr if
    *     the enum field value could not be retrieved
    */
-  static jobject LOG(JNIEnv* env) {
-    return getEnum(env, "LOG");
-  }
+  static jobject LOG(JNIEnv* env) { return getEnum(env, "LOG"); }
 
   // Returns the equivalent org.rocksdb.WBWIRocksIterator.WriteType for the
-  // provided C++ MIZAR_NAMESPACE::WriteType enum
-  static jbyte toJavaWriteType(const MIZAR_NAMESPACE::WriteType& writeType) {
+  // provided C++ ROCKSDB_NAMESPACE::WriteType enum
+  static jbyte toJavaWriteType(const ROCKSDB_NAMESPACE::WriteType& writeType) {
     switch (writeType) {
-      case MIZAR_NAMESPACE::WriteType::kPutRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kPutRecord:
         return 0x0;
-      case MIZAR_NAMESPACE::WriteType::kMergeRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kMergeRecord:
         return 0x1;
-      case MIZAR_NAMESPACE::WriteType::kDeleteRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kDeleteRecord:
         return 0x2;
-      case MIZAR_NAMESPACE::WriteType::kSingleDeleteRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kSingleDeleteRecord:
         return 0x3;
-      case MIZAR_NAMESPACE::WriteType::kDeleteRangeRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kDeleteRangeRecord:
         return 0x4;
-      case MIZAR_NAMESPACE::WriteType::kLogDataRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kLogDataRecord:
         return 0x5;
-      case MIZAR_NAMESPACE::WriteType::kXIDRecord:
+      case ROCKSDB_NAMESPACE::WriteType::kXIDRecord:
         return 0x6;
       default:
         return 0x7F;  // undefined
@@ -4177,18 +4263,17 @@ class WriteTypeJni : public JavaClass {
    */
   static jobject getEnum(JNIEnv* env, const char name[]) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jfieldID jfid =
-        env->GetStaticFieldID(jclazz, name,
-            "Lorg/rocksdb/WBWIRocksIterator$WriteType;");
-    if(env->ExceptionCheck()) {
+    jfieldID jfid = env->GetStaticFieldID(
+        jclazz, name, "Lorg/rocksdb/WBWIRocksIterator$WriteType;");
+    if (env->ExceptionCheck()) {
       // exception occurred while getting field
       return nullptr;
-    } else if(jfid == nullptr) {
+    } else if (jfid == nullptr) {
       return nullptr;
     }
 
@@ -4210,85 +4295,82 @@ class WriteEntryJni : public JavaClass {
    *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
-    static jclass getJClass(JNIEnv* env) {
-      return JavaClass::getJClass(env, "org/rocksdb/WBWIRocksIterator$WriteEntry");
-    }
+  static jclass getJClass(JNIEnv* env) {
+    return JavaClass::getJClass(env,
+                                "org/rocksdb/WBWIRocksIterator$WriteEntry");
+  }
 };
 
 // The portal class for org.rocksdb.InfoLogLevel
 class InfoLogLevelJni : public JavaClass {
  public:
-    /**
-     * Get the DEBUG_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject DEBUG_LEVEL(JNIEnv* env) {
-      return getEnum(env, "DEBUG_LEVEL");
-    }
+  /**
+   * Get the DEBUG_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject DEBUG_LEVEL(JNIEnv* env) {
+    return getEnum(env, "DEBUG_LEVEL");
+  }
 
-    /**
-     * Get the INFO_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject INFO_LEVEL(JNIEnv* env) {
-      return getEnum(env, "INFO_LEVEL");
-    }
+  /**
+   * Get the INFO_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject INFO_LEVEL(JNIEnv* env) { return getEnum(env, "INFO_LEVEL"); }
 
-    /**
-     * Get the WARN_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject WARN_LEVEL(JNIEnv* env) {
-      return getEnum(env, "WARN_LEVEL");
-    }
+  /**
+   * Get the WARN_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject WARN_LEVEL(JNIEnv* env) { return getEnum(env, "WARN_LEVEL"); }
 
-    /**
-     * Get the ERROR_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject ERROR_LEVEL(JNIEnv* env) {
-      return getEnum(env, "ERROR_LEVEL");
-    }
+  /**
+   * Get the ERROR_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject ERROR_LEVEL(JNIEnv* env) {
+    return getEnum(env, "ERROR_LEVEL");
+  }
 
-    /**
-     * Get the FATAL_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject FATAL_LEVEL(JNIEnv* env) {
-      return getEnum(env, "FATAL_LEVEL");
-    }
+  /**
+   * Get the FATAL_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject FATAL_LEVEL(JNIEnv* env) {
+    return getEnum(env, "FATAL_LEVEL");
+  }
 
-    /**
-     * Get the HEADER_LEVEL enum field value of InfoLogLevel
-     *
-     * @param env A pointer to the Java environment
-     *
-     * @return A reference to the enum field value or a nullptr if
-     *     the enum field value could not be retrieved
-     */
-    static jobject HEADER_LEVEL(JNIEnv* env) {
-      return getEnum(env, "HEADER_LEVEL");
-    }
+  /**
+   * Get the HEADER_LEVEL enum field value of InfoLogLevel
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return A reference to the enum field value or a nullptr if
+   *     the enum field value could not be retrieved
+   */
+  static jobject HEADER_LEVEL(JNIEnv* env) {
+    return getEnum(env, "HEADER_LEVEL");
+  }
 
  private:
   /**
@@ -4315,17 +4397,17 @@ class InfoLogLevelJni : public JavaClass {
    */
   static jobject getEnum(JNIEnv* env, const char name[]) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jfieldID jfid =
         env->GetStaticFieldID(jclazz, name, "Lorg/rocksdb/InfoLogLevel;");
-    if(env->ExceptionCheck()) {
+    if (env->ExceptionCheck()) {
       // exception occurred while getting field
       return nullptr;
-    } else if(jfid == nullptr) {
+    } else if (jfid == nullptr) {
       return nullptr;
     }
 
@@ -4338,7 +4420,7 @@ class InfoLogLevelJni : public JavaClass {
 // The portal class for org.rocksdb.Logger
 class LoggerJni
     : public RocksDBNativeClass<
-          std::shared_ptr<MIZAR_NAMESPACE::LoggerJniCallback>*, LoggerJni> {
+          std::shared_ptr<ROCKSDB_NAMESPACE::LoggerJniCallback>*, LoggerJni> {
  public:
   /**
    * Get the Java Class org/rocksdb/Logger
@@ -4363,14 +4445,13 @@ class LoggerJni
    */
   static jmethodID getLogMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid =
-        env->GetMethodID(jclazz, "log",
-            "(Lorg/rocksdb/InfoLogLevel;Ljava/lang/String;)V");
+    static jmethodID mid = env->GetMethodID(
+        jclazz, "log", "(Lorg/rocksdb/InfoLogLevel;Ljava/lang/String;)V");
     assert(mid != nullptr);
     return mid;
   }
@@ -4378,7 +4459,7 @@ class LoggerJni
 
 // The portal class for org.rocksdb.TransactionLogIterator.BatchResult
 class BatchResultJni : public JavaClass {
-  public:
+ public:
   /**
    * Get the Java Class org.rocksdb.TransactionLogIterator.BatchResult
    *
@@ -4389,40 +4470,39 @@ class BatchResultJni : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/TransactionLogIterator$BatchResult");
+    return JavaClass::getJClass(
+        env, "org/rocksdb/TransactionLogIterator$BatchResult");
   }
 
   /**
    * Create a new Java org.rocksdb.TransactionLogIterator.BatchResult object
-   * with the same properties as the provided C++ MIZAR_NAMESPACE::BatchResult
+   * with the same properties as the provided C++ ROCKSDB_NAMESPACE::BatchResult
    * object
    *
    * @param env A pointer to the Java environment
-   * @param batch_result The MIZAR_NAMESPACE::BatchResult object
+   * @param batch_result The ROCKSDB_NAMESPACE::BatchResult object
    *
    * @return A reference to a Java
    *     org.rocksdb.TransactionLogIterator.BatchResult object,
    *     or nullptr if an an exception occurs
    */
   static jobject construct(JNIEnv* env,
-                           MIZAR_NAMESPACE::BatchResult& batch_result) {
+                           ROCKSDB_NAMESPACE::BatchResult& batch_result) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(
-      jclazz, "<init>", "(JJ)V");
-    if(mid == nullptr) {
+    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(JJ)V");
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    jobject jbatch_result = env->NewObject(jclazz, mid,
-      batch_result.sequence, batch_result.writeBatchPtr.get());
-    if(jbatch_result == nullptr) {
+    jobject jbatch_result = env->NewObject(jclazz, mid, batch_result.sequence,
+                                           batch_result.writeBatchPtr.get());
+    if (jbatch_result == nullptr) {
       // exception thrown: InstantiationException or OutOfMemoryError
       return nullptr;
     }
@@ -4436,42 +4516,42 @@ class BatchResultJni : public JavaClass {
 class BottommostLevelCompactionJni {
  public:
   // Returns the equivalent org.rocksdb.BottommostLevelCompaction for the
-  // provided C++ MIZAR_NAMESPACE::BottommostLevelCompaction enum
+  // provided C++ ROCKSDB_NAMESPACE::BottommostLevelCompaction enum
   static jint toJavaBottommostLevelCompaction(
-      const MIZAR_NAMESPACE::BottommostLevelCompaction&
+      const ROCKSDB_NAMESPACE::BottommostLevelCompaction&
           bottommost_level_compaction) {
-    switch(bottommost_level_compaction) {
-      case MIZAR_NAMESPACE::BottommostLevelCompaction::kSkip:
+    switch (bottommost_level_compaction) {
+      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kSkip:
         return 0x0;
-      case MIZAR_NAMESPACE::BottommostLevelCompaction::
+      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::
           kIfHaveCompactionFilter:
         return 0x1;
-      case MIZAR_NAMESPACE::BottommostLevelCompaction::kForce:
+      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForce:
         return 0x2;
-      case MIZAR_NAMESPACE::BottommostLevelCompaction::kForceOptimized:
+      case ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForceOptimized:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::BottommostLevelCompaction
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::BottommostLevelCompaction
   // enum for the provided Java org.rocksdb.BottommostLevelCompaction
-  static MIZAR_NAMESPACE::BottommostLevelCompaction
+  static ROCKSDB_NAMESPACE::BottommostLevelCompaction
   toCppBottommostLevelCompaction(jint bottommost_level_compaction) {
-    switch(bottommost_level_compaction) {
+    switch (bottommost_level_compaction) {
       case 0x0:
-        return MIZAR_NAMESPACE::BottommostLevelCompaction::kSkip;
+        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kSkip;
       case 0x1:
-        return MIZAR_NAMESPACE::BottommostLevelCompaction::
+        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::
             kIfHaveCompactionFilter;
       case 0x2:
-        return MIZAR_NAMESPACE::BottommostLevelCompaction::kForce;
+        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForce;
       case 0x3:
-        return MIZAR_NAMESPACE::BottommostLevelCompaction::kForceOptimized;
+        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::kForceOptimized;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::BottommostLevelCompaction::
+        return ROCKSDB_NAMESPACE::BottommostLevelCompaction::
             kIfHaveCompactionFilter;
     }
   }
@@ -4481,14 +4561,14 @@ class BottommostLevelCompactionJni {
 class CompactionStopStyleJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionStopStyle for the provided
-  // C++ MIZAR_NAMESPACE::CompactionStopStyle enum
+  // C++ ROCKSDB_NAMESPACE::CompactionStopStyle enum
   static jbyte toJavaCompactionStopStyle(
-      const MIZAR_NAMESPACE::CompactionStopStyle& compaction_stop_style) {
-    switch(compaction_stop_style) {
-      case MIZAR_NAMESPACE::CompactionStopStyle::
+      const ROCKSDB_NAMESPACE::CompactionStopStyle& compaction_stop_style) {
+    switch (compaction_stop_style) {
+      case ROCKSDB_NAMESPACE::CompactionStopStyle::
           kCompactionStopStyleSimilarSize:
         return 0x0;
-      case MIZAR_NAMESPACE::CompactionStopStyle::
+      case ROCKSDB_NAMESPACE::CompactionStopStyle::
           kCompactionStopStyleTotalSize:
         return 0x1;
       default:
@@ -4496,20 +4576,20 @@ class CompactionStopStyleJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionStopStyle enum for
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionStopStyle enum for
   // the provided Java org.rocksdb.CompactionStopStyle
-  static MIZAR_NAMESPACE::CompactionStopStyle toCppCompactionStopStyle(
+  static ROCKSDB_NAMESPACE::CompactionStopStyle toCppCompactionStopStyle(
       jbyte jcompaction_stop_style) {
-    switch(jcompaction_stop_style) {
+    switch (jcompaction_stop_style) {
       case 0x0:
-        return MIZAR_NAMESPACE::CompactionStopStyle::
+        return ROCKSDB_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleSimilarSize;
       case 0x1:
-        return MIZAR_NAMESPACE::CompactionStopStyle::
+        return ROCKSDB_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleTotalSize;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::CompactionStopStyle::
+        return ROCKSDB_NAMESPACE::CompactionStopStyle::
             kCompactionStopStyleSimilarSize;
     }
   }
@@ -4519,56 +4599,56 @@ class CompactionStopStyleJni {
 class CompressionTypeJni {
  public:
   // Returns the equivalent org.rocksdb.CompressionType for the provided
-  // C++ MIZAR_NAMESPACE::CompressionType enum
+  // C++ ROCKSDB_NAMESPACE::CompressionType enum
   static jbyte toJavaCompressionType(
-      const MIZAR_NAMESPACE::CompressionType& compression_type) {
-    switch(compression_type) {
-      case MIZAR_NAMESPACE::CompressionType::kNoCompression:
+      const ROCKSDB_NAMESPACE::CompressionType& compression_type) {
+    switch (compression_type) {
+      case ROCKSDB_NAMESPACE::CompressionType::kNoCompression:
         return 0x0;
-      case MIZAR_NAMESPACE::CompressionType::kSnappyCompression:
+      case ROCKSDB_NAMESPACE::CompressionType::kSnappyCompression:
         return 0x1;
-      case MIZAR_NAMESPACE::CompressionType::kZlibCompression:
+      case ROCKSDB_NAMESPACE::CompressionType::kZlibCompression:
         return 0x2;
-      case MIZAR_NAMESPACE::CompressionType::kBZip2Compression:
+      case ROCKSDB_NAMESPACE::CompressionType::kBZip2Compression:
         return 0x3;
-      case MIZAR_NAMESPACE::CompressionType::kLZ4Compression:
+      case ROCKSDB_NAMESPACE::CompressionType::kLZ4Compression:
         return 0x4;
-      case MIZAR_NAMESPACE::CompressionType::kLZ4HCCompression:
+      case ROCKSDB_NAMESPACE::CompressionType::kLZ4HCCompression:
         return 0x5;
-      case MIZAR_NAMESPACE::CompressionType::kXpressCompression:
+      case ROCKSDB_NAMESPACE::CompressionType::kXpressCompression:
         return 0x6;
-      case MIZAR_NAMESPACE::CompressionType::kZSTD:
+      case ROCKSDB_NAMESPACE::CompressionType::kZSTD:
         return 0x7;
-      case MIZAR_NAMESPACE::CompressionType::kDisableCompressionOption:
+      case ROCKSDB_NAMESPACE::CompressionType::kDisableCompressionOption:
       default:
         return 0x7F;
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::CompressionType enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompressionType enum for the
   // provided Java org.rocksdb.CompressionType
-  static MIZAR_NAMESPACE::CompressionType toCppCompressionType(
+  static ROCKSDB_NAMESPACE::CompressionType toCppCompressionType(
       jbyte jcompression_type) {
-    switch(jcompression_type) {
+    switch (jcompression_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::CompressionType::kNoCompression;
+        return ROCKSDB_NAMESPACE::CompressionType::kNoCompression;
       case 0x1:
-        return MIZAR_NAMESPACE::CompressionType::kSnappyCompression;
+        return ROCKSDB_NAMESPACE::CompressionType::kSnappyCompression;
       case 0x2:
-        return MIZAR_NAMESPACE::CompressionType::kZlibCompression;
+        return ROCKSDB_NAMESPACE::CompressionType::kZlibCompression;
       case 0x3:
-        return MIZAR_NAMESPACE::CompressionType::kBZip2Compression;
+        return ROCKSDB_NAMESPACE::CompressionType::kBZip2Compression;
       case 0x4:
-        return MIZAR_NAMESPACE::CompressionType::kLZ4Compression;
+        return ROCKSDB_NAMESPACE::CompressionType::kLZ4Compression;
       case 0x5:
-        return MIZAR_NAMESPACE::CompressionType::kLZ4HCCompression;
+        return ROCKSDB_NAMESPACE::CompressionType::kLZ4HCCompression;
       case 0x6:
-        return MIZAR_NAMESPACE::CompressionType::kXpressCompression;
+        return ROCKSDB_NAMESPACE::CompressionType::kXpressCompression;
       case 0x7:
-        return MIZAR_NAMESPACE::CompressionType::kZSTD;
+        return ROCKSDB_NAMESPACE::CompressionType::kZSTD;
       case 0x7F:
       default:
-        return MIZAR_NAMESPACE::CompressionType::kDisableCompressionOption;
+        return ROCKSDB_NAMESPACE::CompressionType::kDisableCompressionOption;
     }
   }
 };
@@ -4577,39 +4657,43 @@ class CompressionTypeJni {
 class CompactionPriorityJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionPriority for the provided
-  // C++ MIZAR_NAMESPACE::CompactionPri enum
+  // C++ ROCKSDB_NAMESPACE::CompactionPri enum
   static jbyte toJavaCompactionPriority(
-      const MIZAR_NAMESPACE::CompactionPri& compaction_priority) {
-    switch(compaction_priority) {
-      case MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize:
+      const ROCKSDB_NAMESPACE::CompactionPri& compaction_priority) {
+    switch (compaction_priority) {
+      case ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize:
         return 0x0;
-      case MIZAR_NAMESPACE::CompactionPri::kOldestLargestSeqFirst:
+      case ROCKSDB_NAMESPACE::CompactionPri::kOldestLargestSeqFirst:
         return 0x1;
-      case MIZAR_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst:
+      case ROCKSDB_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst:
         return 0x2;
-      case MIZAR_NAMESPACE::CompactionPri::kMinOverlappingRatio:
+      case ROCKSDB_NAMESPACE::CompactionPri::kMinOverlappingRatio:
         return 0x3;
+      case ROCKSDB_NAMESPACE::CompactionPri::kRoundRobin:
+        return 0x4;
       default:
         return 0x0;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionPri enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionPri enum for the
   // provided Java org.rocksdb.CompactionPriority
-  static MIZAR_NAMESPACE::CompactionPri toCppCompactionPriority(
+  static ROCKSDB_NAMESPACE::CompactionPri toCppCompactionPriority(
       jbyte jcompaction_priority) {
-    switch(jcompaction_priority) {
+    switch (jcompaction_priority) {
       case 0x0:
-        return MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize;
+        return ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize;
       case 0x1:
-        return MIZAR_NAMESPACE::CompactionPri::kOldestLargestSeqFirst;
+        return ROCKSDB_NAMESPACE::CompactionPri::kOldestLargestSeqFirst;
       case 0x2:
-        return MIZAR_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst;
+        return ROCKSDB_NAMESPACE::CompactionPri::kOldestSmallestSeqFirst;
       case 0x3:
-        return MIZAR_NAMESPACE::CompactionPri::kMinOverlappingRatio;
+        return ROCKSDB_NAMESPACE::CompactionPri::kMinOverlappingRatio;
+      case 0x4:
+        return ROCKSDB_NAMESPACE::CompactionPri::kRoundRobin;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::CompactionPri::kByCompensatedSize;
+        return ROCKSDB_NAMESPACE::CompactionPri::kByCompensatedSize;
     }
   }
 };
@@ -4618,17 +4702,17 @@ class CompactionPriorityJni {
 class AccessHintJni {
  public:
   // Returns the equivalent org.rocksdb.AccessHint for the provided
-  // C++ MIZAR_NAMESPACE::DBOptions::AccessHint enum
+  // C++ ROCKSDB_NAMESPACE::DBOptions::AccessHint enum
   static jbyte toJavaAccessHint(
-      const MIZAR_NAMESPACE::DBOptions::AccessHint& access_hint) {
-    switch(access_hint) {
-      case MIZAR_NAMESPACE::DBOptions::AccessHint::NONE:
+      const ROCKSDB_NAMESPACE::DBOptions::AccessHint& access_hint) {
+    switch (access_hint) {
+      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::NONE:
         return 0x0;
-      case MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL:
+      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL:
         return 0x1;
-      case MIZAR_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL:
+      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL:
         return 0x2;
-      case MIZAR_NAMESPACE::DBOptions::AccessHint::WILLNEED:
+      case ROCKSDB_NAMESPACE::DBOptions::AccessHint::WILLNEED:
         return 0x3;
       default:
         // undefined/default
@@ -4636,22 +4720,22 @@ class AccessHintJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::DBOptions::AccessHint enum
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::DBOptions::AccessHint enum
   // for the provided Java org.rocksdb.AccessHint
-  static MIZAR_NAMESPACE::DBOptions::AccessHint toCppAccessHint(
+  static ROCKSDB_NAMESPACE::DBOptions::AccessHint toCppAccessHint(
       jbyte jaccess_hint) {
-    switch(jaccess_hint) {
+    switch (jaccess_hint) {
       case 0x0:
-        return MIZAR_NAMESPACE::DBOptions::AccessHint::NONE;
+        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NONE;
       case 0x1:
-        return MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL;
+        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL;
       case 0x2:
-        return MIZAR_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL;
+        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::SEQUENTIAL;
       case 0x3:
-        return MIZAR_NAMESPACE::DBOptions::AccessHint::WILLNEED;
+        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::WILLNEED;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::DBOptions::AccessHint::NORMAL;
+        return ROCKSDB_NAMESPACE::DBOptions::AccessHint::NORMAL;
     }
   }
 };
@@ -4660,17 +4744,17 @@ class AccessHintJni {
 class WALRecoveryModeJni {
  public:
   // Returns the equivalent org.rocksdb.WALRecoveryMode for the provided
-  // C++ MIZAR_NAMESPACE::WALRecoveryMode enum
+  // C++ ROCKSDB_NAMESPACE::WALRecoveryMode enum
   static jbyte toJavaWALRecoveryMode(
-      const MIZAR_NAMESPACE::WALRecoveryMode& wal_recovery_mode) {
-    switch(wal_recovery_mode) {
-      case MIZAR_NAMESPACE::WALRecoveryMode::kTolerateCorruptedTailRecords:
+      const ROCKSDB_NAMESPACE::WALRecoveryMode& wal_recovery_mode) {
+    switch (wal_recovery_mode) {
+      case ROCKSDB_NAMESPACE::WALRecoveryMode::kTolerateCorruptedTailRecords:
         return 0x0;
-      case MIZAR_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency:
+      case ROCKSDB_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency:
         return 0x1;
-      case MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery:
+      case ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery:
         return 0x2;
-      case MIZAR_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords:
+      case ROCKSDB_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords:
         return 0x3;
       default:
         // undefined/default
@@ -4678,23 +4762,23 @@ class WALRecoveryModeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::WALRecoveryMode enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::WALRecoveryMode enum for the
   // provided Java org.rocksdb.WALRecoveryMode
-  static MIZAR_NAMESPACE::WALRecoveryMode toCppWALRecoveryMode(
+  static ROCKSDB_NAMESPACE::WALRecoveryMode toCppWALRecoveryMode(
       jbyte jwal_recovery_mode) {
-    switch(jwal_recovery_mode) {
+    switch (jwal_recovery_mode) {
       case 0x0:
-        return MIZAR_NAMESPACE::WALRecoveryMode::
+        return ROCKSDB_NAMESPACE::WALRecoveryMode::
             kTolerateCorruptedTailRecords;
       case 0x1:
-        return MIZAR_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency;
+        return ROCKSDB_NAMESPACE::WALRecoveryMode::kAbsoluteConsistency;
       case 0x2:
-        return MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
+        return ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
       case 0x3:
-        return MIZAR_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords;
+        return ROCKSDB_NAMESPACE::WALRecoveryMode::kSkipAnyCorruptedRecords;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
+        return ROCKSDB_NAMESPACE::WALRecoveryMode::kPointInTimeRecovery;
     }
   }
 };
@@ -4703,349 +4787,375 @@ class WALRecoveryModeJni {
 class TickerTypeJni {
  public:
   // Returns the equivalent org.rocksdb.TickerType for the provided
-  // C++ MIZAR_NAMESPACE::Tickers enum
-  static jbyte toJavaTickerType(const MIZAR_NAMESPACE::Tickers& tickers) {
-    switch(tickers) {
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS:
+  // C++ ROCKSDB_NAMESPACE::Tickers enum
+  static jbyte toJavaTickerType(const ROCKSDB_NAMESPACE::Tickers& tickers) {
+    switch (tickers) {
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS:
         return 0x0;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_HIT:
         return 0x1;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD:
         return 0x2;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES:
         return 0x3;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS:
         return 0x4;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT:
         return 0x5;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD:
         return 0x6;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT:
         return 0x7;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT:
         return 0x8;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS:
         return 0x9;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT:
         return 0xA;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD:
         return 0xB;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT:
         return 0xC;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT:
         return 0xD;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS:
         return 0xE;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT:
         return 0xF;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD:
         return 0x10;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT:
         return 0x11;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ:
         return 0x12;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE:
         return 0x13;
-      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL:
+      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL:
         return 0x14;
-      case MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT:
         return 0x15;
-      case MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS:
         return 0x16;
-      case MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT:
         return 0x17;
-      case MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS:
         return 0x18;
-      case MIZAR_NAMESPACE::Tickers::MEMTABLE_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_HIT:
         return 0x19;
-      case MIZAR_NAMESPACE::Tickers::MEMTABLE_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_MISS:
         return 0x1A;
-      case MIZAR_NAMESPACE::Tickers::GET_HIT_L0:
+      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L0:
         return 0x1B;
-      case MIZAR_NAMESPACE::Tickers::GET_HIT_L1:
+      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L1:
         return 0x1C;
-      case MIZAR_NAMESPACE::Tickers::GET_HIT_L2_AND_UP:
+      case ROCKSDB_NAMESPACE::Tickers::GET_HIT_L2_AND_UP:
         return 0x1D;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY:
         return 0x1E;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE:
         return 0x1F;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL:
         return 0x20;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER:
         return 0x21;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE:
         return 0x22;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN:
         return 0x23;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_READ:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_READ:
         return 0x24;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED:
         return 0x25;
-      case MIZAR_NAMESPACE::Tickers::BYTES_WRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BYTES_WRITTEN:
         return 0x26;
-      case MIZAR_NAMESPACE::Tickers::BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::BYTES_READ:
         return 0x27;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK:
         return 0x28;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT:
         return 0x29;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV:
         return 0x2A;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND:
         return 0x2B;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND:
         return 0x2C;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND:
         return 0x2D;
-      case MIZAR_NAMESPACE::Tickers::ITER_BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::ITER_BYTES_READ:
         return 0x2E;
-      case MIZAR_NAMESPACE::Tickers::NO_FILE_CLOSES:
+      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_CLOSES:
         return 0x2F;
-      case MIZAR_NAMESPACE::Tickers::NO_FILE_OPENS:
+      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_OPENS:
         return 0x30;
-      case MIZAR_NAMESPACE::Tickers::NO_FILE_ERRORS:
+      case ROCKSDB_NAMESPACE::Tickers::NO_FILE_ERRORS:
         return 0x31;
-      case MIZAR_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS:
+      case ROCKSDB_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS:
         return 0x32;
-      case MIZAR_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS:
+      case ROCKSDB_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS:
         return 0x33;
-      case MIZAR_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS:
+      case ROCKSDB_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS:
         return 0x34;
-      case MIZAR_NAMESPACE::Tickers::STALL_MICROS:
+      case ROCKSDB_NAMESPACE::Tickers::STALL_MICROS:
         return 0x35;
-      case MIZAR_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS:
+      case ROCKSDB_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS:
         return 0x36;
-      case MIZAR_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS:
+      case ROCKSDB_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS:
         return 0x37;
-      case MIZAR_NAMESPACE::Tickers::NO_ITERATORS:
+      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATORS:
         return 0x38;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS:
         return 0x39;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ:
         return 0x3A;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ:
         return 0x3B;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES:
         return 0x3C;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES:
         return 0x3D;
-      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED:
         return 0x3E;
-      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL:
+      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL:
         return 0x3F;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION:
         return 0x40;
-      case MIZAR_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS:
+      case ROCKSDB_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS:
         return 0x41;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS:
         return 0x42;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT:
         return 0x43;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD:
         return 0x44;
-      case MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES:
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES:
         return 0x45;
-      case MIZAR_NAMESPACE::Tickers::WAL_FILE_SYNCED:
+      case ROCKSDB_NAMESPACE::Tickers::WAL_FILE_SYNCED:
         return 0x46;
-      case MIZAR_NAMESPACE::Tickers::WAL_FILE_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::WAL_FILE_BYTES:
         return 0x47;
-      case MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_SELF:
+      case ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_SELF:
         return 0x48;
-      case MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER:
+      case ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER:
         return 0x49;
-      case MIZAR_NAMESPACE::Tickers::WRITE_TIMEDOUT:
+      case ROCKSDB_NAMESPACE::Tickers::WRITE_TIMEDOUT:
         return 0x4A;
-      case MIZAR_NAMESPACE::Tickers::WRITE_WITH_WAL:
+      case ROCKSDB_NAMESPACE::Tickers::WRITE_WITH_WAL:
         return 0x4B;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES:
         return 0x4C;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES:
         return 0x4D;
-      case MIZAR_NAMESPACE::Tickers::FLUSH_WRITE_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::FLUSH_WRITE_BYTES:
         return 0x4E;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES:
         return 0x4F;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES:
         return 0x50;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES:
         return 0x51;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS:
         return 0x52;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED:
         return 0x53;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED:
         return 0x54;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED:
         return 0x55;
-      case MIZAR_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME:
+      case ROCKSDB_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME:
         return 0x56;
-      case MIZAR_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME:
+      case ROCKSDB_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME:
         return 0x57;
-      case MIZAR_NAMESPACE::Tickers::ROW_CACHE_HIT:
+      case ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_HIT:
         return 0x58;
-      case MIZAR_NAMESPACE::Tickers::ROW_CACHE_MISS:
+      case ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_MISS:
         return 0x59;
-      case MIZAR_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES:
         return 0x5A;
-      case MIZAR_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES:
         return 0x5B;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS:
         return 0x5C;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_ITER_SKIP:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_ITER_SKIP:
         return 0x5D;
-      case MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND:
+      case ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND:
         return 0x5E;
-      case MIZAR_NAMESPACE::Tickers::NO_ITERATOR_CREATED:
+      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_CREATED:
         // -0x01 so we can skip over the already taken 0x5F (TICKER_ENUM_MAX).
         return -0x01;
-      case MIZAR_NAMESPACE::Tickers::NO_ITERATOR_DELETED:
+      case ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_DELETED:
         return 0x60;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE:
         return 0x61;
-      case MIZAR_NAMESPACE::Tickers::COMPACTION_CANCELLED:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACTION_CANCELLED:
         return 0x62;
-      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE:
         return 0x63;
-      case MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE:
         return 0x64;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PUT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PUT:
         return 0x65;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE:
         return 0x66;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_GET:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_GET:
         return 0x67;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET:
         return 0x68;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK:
         return 0x69;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT:
         return 0x6A;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PREV:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PREV:
         return 0x6B;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN:
         return 0x6C;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ:
         return 0x6D;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN:
         return 0x6E;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_READ:
         return 0x6F;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED:
         return 0x70;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL:
         return 0x71;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB:
         return 0x72;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL:
         return 0x73;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN:
         return 0x74;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ:
         return 0x75;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED:
         return 0x76;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT:
         return 0x77;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE:
         return 0x78;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT:
         return 0x79;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE:
         return 0x7A;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES:
         return 0x7B;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES:
         return 0x7C;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES:
         return 0x7D;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN:
         return 0x7E;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED:
         return 0x7F;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED:
         return -0x02;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN:
         return -0x03;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED:
         return -0x04;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED:
         return -0x05;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED:
         return -0x06;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED:
         return -0x07;
-      case MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED:
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED:
         return -0x08;
-      case MIZAR_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD:
+      case ROCKSDB_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD:
         return -0x09;
-      case MIZAR_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD:
+      case ROCKSDB_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD:
         return -0x0A;
-      case MIZAR_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD:
+      case ROCKSDB_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD:
         return -0x0B;
-      case MIZAR_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD:
+      case ROCKSDB_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD:
         return -0x0C;
-      case MIZAR_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN:
+      case ROCKSDB_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN:
         return -0x0D;
-      case MIZAR_NAMESPACE::Tickers::FILES_MARKED_TRASH:
+      case ROCKSDB_NAMESPACE::Tickers::FILES_MARKED_TRASH:
         return -0x0E;
-      case MIZAR_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY:
+      case ROCKSDB_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY:
         return -0X0F;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED:
         return -0x10;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC:
         return -0x11;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL:
         return -0x12;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED:
         return -0x13;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC:
         return -0x14;
-      case MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL:
+      case ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL:
         return -0x15;
-      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT:
         return -0x16;
-      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT:
         return -0x17;
-      case MIZAR_NAMESPACE::Tickers::
+      case ROCKSDB_NAMESPACE::Tickers::
           ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT:
         return -0x18;
-      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT:
         return -0x19;
-      case MIZAR_NAMESPACE::Tickers::
+      case ROCKSDB_NAMESPACE::Tickers::
           ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT:
         return -0x1A;
-      case MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT:
         return -0x1B;
-      case MIZAR_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH:
+      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH:
         return -0x1C;
-      case MIZAR_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH:
+      case ROCKSDB_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH:
         return -0x1D;
-      case MIZAR_NAMESPACE::Tickers::SECONDARY_CACHE_HITS:
+      case ROCKSDB_NAMESPACE::Tickers::SECONDARY_CACHE_HITS:
         return -0x1E;
-      case MIZAR_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES:
         return -0x1F;
-      case MIZAR_NAMESPACE::Tickers::BACKUP_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::BACKUP_READ_BYTES:
         return -0x20;
-      case MIZAR_NAMESPACE::Tickers::BACKUP_WRITE_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::BACKUP_WRITE_BYTES:
         return -0x21;
-      case MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES:
         return -0x22;
-      case MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES:
         return -0x23;
-      case MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_BYTES:
         return -0x24;
-      case MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_BYTES:
         return -0x25;
-      case MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_BYTES:
+      case ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_BYTES:
         return -0x26;
-      case MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_COUNT:
         return -0x27;
-      case MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_COUNT:
         return -0x28;
-      case MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_COUNT:
+      case ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_COUNT:
         return -0x29;
-      case MIZAR_NAMESPACE::Tickers::TICKER_ENUM_MAX:
+      case ROCKSDB_NAMESPACE::Tickers::LAST_LEVEL_READ_BYTES:
+        return -0x2A;
+      case ROCKSDB_NAMESPACE::Tickers::LAST_LEVEL_READ_COUNT:
+        return -0x2B;
+      case ROCKSDB_NAMESPACE::Tickers::NON_LAST_LEVEL_READ_BYTES:
+        return -0x2C;
+      case ROCKSDB_NAMESPACE::Tickers::NON_LAST_LEVEL_READ_COUNT:
+        return -0x2D;
+      case ROCKSDB_NAMESPACE::Tickers::BLOCK_CHECKSUM_COMPUTE_COUNT:
+        return -0x2E;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_MISS:
+        return -0x2F;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_HIT:
+        return -0x30;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_ADD:
+        return -0x31;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_ADD_FAILURES:
+        return -0x32;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_BYTES_READ:
+        return -0x33;
+      case ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_BYTES_WRITE:
+        return -0x34;
+      case ROCKSDB_NAMESPACE::Tickers::READ_ASYNC_MICROS:
+        return -0x35;
+      case ROCKSDB_NAMESPACE::Tickers::ASYNC_READ_ERROR_COUNT:
+        return -0x36;
+      case ROCKSDB_NAMESPACE::Tickers::TICKER_ENUM_MAX:
         // 0x5F was the max value in the initial copy of tickers to Java.
         // Since these values are exposed directly to Java clients, we keep
         // the value the same forever.
@@ -5061,351 +5171,377 @@ class TickerTypeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::Tickers enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::Tickers enum for the
   // provided Java org.rocksdb.TickerType
-  static MIZAR_NAMESPACE::Tickers toCppTickers(jbyte jticker_type) {
-    switch(jticker_type) {
+  static ROCKSDB_NAMESPACE::Tickers toCppTickers(jbyte jticker_type) {
+    switch (jticker_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
       case 0x1:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_HIT;
       case 0x2:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD;
       case 0x3:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_ADD_FAILURES;
       case 0x4:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_MISS;
       case 0x5:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_HIT;
       case 0x6:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_ADD;
       case 0x7:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_INSERT;
       case 0x8:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_INDEX_BYTES_EVICT;
       case 0x9:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_MISS;
       case 0xA:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_HIT;
       case 0xB:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_ADD;
       case 0xC:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_INSERT;
       case 0xD:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_FILTER_BYTES_EVICT;
       case 0xE:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_MISS;
       case 0xF:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_HIT;
       case 0x10:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_ADD;
       case 0x11:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_DATA_BYTES_INSERT;
       case 0x12:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_READ;
       case 0x13:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_BYTES_WRITE;
       case 0x14:
-        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL;
+        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_USEFUL;
       case 0x15:
-        return MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_HIT;
       case 0x16:
-        return MIZAR_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::PERSISTENT_CACHE_MISS;
       case 0x17:
-        return MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_HIT;
       case 0x18:
-        return MIZAR_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::SIM_BLOCK_CACHE_MISS;
       case 0x19:
-        return MIZAR_NAMESPACE::Tickers::MEMTABLE_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_HIT;
       case 0x1A:
-        return MIZAR_NAMESPACE::Tickers::MEMTABLE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_MISS;
       case 0x1B:
-        return MIZAR_NAMESPACE::Tickers::GET_HIT_L0;
+        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L0;
       case 0x1C:
-        return MIZAR_NAMESPACE::Tickers::GET_HIT_L1;
+        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L1;
       case 0x1D:
-        return MIZAR_NAMESPACE::Tickers::GET_HIT_L2_AND_UP;
+        return ROCKSDB_NAMESPACE::Tickers::GET_HIT_L2_AND_UP;
       case 0x1E:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_NEWER_ENTRY;
       case 0x1F:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_OBSOLETE;
       case 0x20:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_RANGE_DEL;
       case 0x21:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_KEY_DROP_USER;
       case 0x22:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_RANGE_DEL_DROP_OBSOLETE;
       case 0x23:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_WRITTEN;
       case 0x24:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_READ;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_READ;
       case 0x25:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_KEYS_UPDATED;
       case 0x26:
-        return MIZAR_NAMESPACE::Tickers::BYTES_WRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BYTES_WRITTEN;
       case 0x27:
-        return MIZAR_NAMESPACE::Tickers::BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::BYTES_READ;
       case 0x28:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK;
       case 0x29:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT;
       case 0x2A:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV;
       case 0x2B:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_SEEK_FOUND;
       case 0x2C:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_NEXT_FOUND;
       case 0x2D:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DB_PREV_FOUND;
       case 0x2E:
-        return MIZAR_NAMESPACE::Tickers::ITER_BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::ITER_BYTES_READ;
       case 0x2F:
-        return MIZAR_NAMESPACE::Tickers::NO_FILE_CLOSES;
+        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_CLOSES;
       case 0x30:
-        return MIZAR_NAMESPACE::Tickers::NO_FILE_OPENS;
+        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_OPENS;
       case 0x31:
-        return MIZAR_NAMESPACE::Tickers::NO_FILE_ERRORS;
+        return ROCKSDB_NAMESPACE::Tickers::NO_FILE_ERRORS;
       case 0x32:
-        return MIZAR_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS;
+        return ROCKSDB_NAMESPACE::Tickers::STALL_L0_SLOWDOWN_MICROS;
       case 0x33:
-        return MIZAR_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS;
+        return ROCKSDB_NAMESPACE::Tickers::STALL_MEMTABLE_COMPACTION_MICROS;
       case 0x34:
-        return MIZAR_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS;
+        return ROCKSDB_NAMESPACE::Tickers::STALL_L0_NUM_FILES_MICROS;
       case 0x35:
-        return MIZAR_NAMESPACE::Tickers::STALL_MICROS;
+        return ROCKSDB_NAMESPACE::Tickers::STALL_MICROS;
       case 0x36:
-        return MIZAR_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS;
+        return ROCKSDB_NAMESPACE::Tickers::DB_MUTEX_WAIT_MICROS;
       case 0x37:
-        return MIZAR_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS;
+        return ROCKSDB_NAMESPACE::Tickers::RATE_LIMIT_DELAY_MILLIS;
       case 0x38:
-        return MIZAR_NAMESPACE::Tickers::NO_ITERATORS;
+        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATORS;
       case 0x39:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_CALLS;
       case 0x3A:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_READ;
       case 0x3B:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_BYTES_READ;
       case 0x3C:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_FILTERED_DELETES;
       case 0x3D:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MERGE_FAILURES;
       case 0x3E:
-        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_CHECKED;
       case 0x3F:
-        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL;
+        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_PREFIX_USEFUL;
       case 0x40:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_OF_RESEEKS_IN_ITERATION;
       case 0x41:
-        return MIZAR_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS;
+        return ROCKSDB_NAMESPACE::Tickers::GET_UPDATES_SINCE_CALLS;
       case 0x42:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_MISS;
       case 0x43:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_HIT;
       case 0x44:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD;
       case 0x45:
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_COMPRESSED_ADD_FAILURES;
       case 0x46:
-        return MIZAR_NAMESPACE::Tickers::WAL_FILE_SYNCED;
+        return ROCKSDB_NAMESPACE::Tickers::WAL_FILE_SYNCED;
       case 0x47:
-        return MIZAR_NAMESPACE::Tickers::WAL_FILE_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::WAL_FILE_BYTES;
       case 0x48:
-        return MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_SELF;
+        return ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_SELF;
       case 0x49:
-        return MIZAR_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER;
+        return ROCKSDB_NAMESPACE::Tickers::WRITE_DONE_BY_OTHER;
       case 0x4A:
-        return MIZAR_NAMESPACE::Tickers::WRITE_TIMEDOUT;
+        return ROCKSDB_NAMESPACE::Tickers::WRITE_TIMEDOUT;
       case 0x4B:
-        return MIZAR_NAMESPACE::Tickers::WRITE_WITH_WAL;
+        return ROCKSDB_NAMESPACE::Tickers::WRITE_WITH_WAL;
       case 0x4C:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES;
       case 0x4D:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES;
       case 0x4E:
-        return MIZAR_NAMESPACE::Tickers::FLUSH_WRITE_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::FLUSH_WRITE_BYTES;
       case 0x4F:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_DIRECT_LOAD_TABLE_PROPERTIES;
       case 0x50:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_ACQUIRES;
       case 0x51:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_RELEASES;
       case 0x52:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_SUPERVERSION_CLEANUPS;
       case 0x53:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_COMPRESSED;
       case 0x54:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_DECOMPRESSED;
       case 0x55:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_BLOCK_NOT_COMPRESSED;
       case 0x56:
-        return MIZAR_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME;
+        return ROCKSDB_NAMESPACE::Tickers::MERGE_OPERATION_TOTAL_TIME;
       case 0x57:
-        return MIZAR_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME;
+        return ROCKSDB_NAMESPACE::Tickers::FILTER_OPERATION_TOTAL_TIME;
       case 0x58:
-        return MIZAR_NAMESPACE::Tickers::ROW_CACHE_HIT;
+        return ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_HIT;
       case 0x59:
-        return MIZAR_NAMESPACE::Tickers::ROW_CACHE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::ROW_CACHE_MISS;
       case 0x5A:
-        return MIZAR_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::READ_AMP_ESTIMATE_USEFUL_BYTES;
       case 0x5B:
-        return MIZAR_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::READ_AMP_TOTAL_READ_BYTES;
       case 0x5C:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_RATE_LIMITER_DRAINS;
       case 0x5D:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_ITER_SKIP;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_ITER_SKIP;
       case 0x5E:
-        return MIZAR_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND;
+        return ROCKSDB_NAMESPACE::Tickers::NUMBER_MULTIGET_KEYS_FOUND;
       case -0x01:
         // -0x01 so we can skip over the already taken 0x5F (TICKER_ENUM_MAX).
-        return MIZAR_NAMESPACE::Tickers::NO_ITERATOR_CREATED;
+        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_CREATED;
       case 0x60:
-        return MIZAR_NAMESPACE::Tickers::NO_ITERATOR_DELETED;
+        return ROCKSDB_NAMESPACE::Tickers::NO_ITERATOR_DELETED;
       case 0x61:
-        return MIZAR_NAMESPACE::Tickers::
+        return ROCKSDB_NAMESPACE::Tickers::
             COMPACTION_OPTIMIZED_DEL_DROP_OBSOLETE;
       case 0x62:
-        return MIZAR_NAMESPACE::Tickers::COMPACTION_CANCELLED;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACTION_CANCELLED;
       case 0x63:
-        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_POSITIVE;
       case 0x64:
-        return MIZAR_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOOM_FILTER_FULL_TRUE_POSITIVE;
       case 0x65:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PUT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PUT;
       case 0x66:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_WRITE;
       case 0x67:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_GET;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_GET;
       case 0x68:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_MULTIGET;
       case 0x69:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_SEEK;
       case 0x6A:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_NEXT;
       case 0x6B:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_PREV;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_PREV;
       case 0x6C:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_WRITTEN;
       case 0x6D:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_NUM_KEYS_READ;
       case 0x6E:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_WRITTEN;
       case 0x6F:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BYTES_READ;
       case 0x70:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED;
       case 0x71:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_INLINED_TTL;
       case 0x72:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB;
       case 0x73:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_WRITE_BLOB_TTL;
       case 0x74:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_WRITTEN;
       case 0x75:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_BYTES_READ;
       case 0x76:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_FILE_SYNCED;
       case 0x77:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_COUNT;
       case 0x78:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EXPIRED_SIZE;
       case 0x79:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_COUNT;
       case 0x7A:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_BLOB_INDEX_EVICTED_SIZE;
       case 0x7B:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_FILES;
       case 0x7C:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_NEW_FILES;
       case 0x7D:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_FAILURES;
       case 0x7E:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_OVERWRITTEN;
       case 0x7F:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_EXPIRED;
       case -0x02:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_NUM_KEYS_RELOCATED;
       case -0x03:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_OVERWRITTEN;
       case -0x04:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_EXPIRED;
       case -0x05:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_GC_BYTES_RELOCATED;
       case -0x06:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_FILES_EVICTED;
       case -0x07:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_NUM_KEYS_EVICTED;
       case -0x08:
-        return MIZAR_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED;
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_FIFO_BYTES_EVICTED;
       case -0x09:
-        return MIZAR_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD;
+        return ROCKSDB_NAMESPACE::Tickers::TXN_PREPARE_MUTEX_OVERHEAD;
       case -0x0A:
-        return MIZAR_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD;
+        return ROCKSDB_NAMESPACE::Tickers::TXN_OLD_COMMIT_MAP_MUTEX_OVERHEAD;
       case -0x0B:
-        return MIZAR_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD;
+        return ROCKSDB_NAMESPACE::Tickers::TXN_DUPLICATE_KEY_OVERHEAD;
       case -0x0C:
-        return MIZAR_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD;
+        return ROCKSDB_NAMESPACE::Tickers::TXN_SNAPSHOT_MUTEX_OVERHEAD;
       case -0x0D:
-        return MIZAR_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN;
+        return ROCKSDB_NAMESPACE::Tickers::TXN_GET_TRY_AGAIN;
       case -0x0E:
-        return MIZAR_NAMESPACE::Tickers::FILES_MARKED_TRASH;
+        return ROCKSDB_NAMESPACE::Tickers::FILES_MARKED_TRASH;
       case -0x0F:
-        return MIZAR_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY;
+        return ROCKSDB_NAMESPACE::Tickers::FILES_DELETED_IMMEDIATELY;
       case -0x10:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_MARKED;
       case -0x11:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_PERIODIC;
       case -0x12:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_READ_BYTES_TTL;
       case -0x13:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_MARKED;
       case -0x14:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_PERIODIC;
       case -0x15:
-        return MIZAR_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL;
+        return ROCKSDB_NAMESPACE::Tickers::COMPACT_WRITE_BYTES_TTL;
       case -0x16:
-        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_ERROR_COUNT;
       case -0x17:
-        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_BG_IO_ERROR_COUNT;
       case -0x18:
-        return MIZAR_NAMESPACE::Tickers::
+        return ROCKSDB_NAMESPACE::Tickers::
             ERROR_HANDLER_BG_RETRYABLE_IO_ERROR_COUNT;
       case -0x19:
-        return MIZAR_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::ERROR_HANDLER_AUTORESUME_COUNT;
       case -0x1A:
-        return MIZAR_NAMESPACE::Tickers::
+        return ROCKSDB_NAMESPACE::Tickers::
             ERROR_HANDLER_AUTORESUME_RETRY_TOTAL_COUNT;
       case -0x1B:
-        return MIZAR_NAMESPACE::Tickers::
+        return ROCKSDB_NAMESPACE::Tickers::
             ERROR_HANDLER_AUTORESUME_SUCCESS_COUNT;
       case -0x1C:
-        return MIZAR_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH;
+        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_PAYLOAD_BYTES_AT_FLUSH;
       case -0x1D:
-        return MIZAR_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH;
+        return ROCKSDB_NAMESPACE::Tickers::MEMTABLE_GARBAGE_BYTES_AT_FLUSH;
       case -0x1E:
-        return MIZAR_NAMESPACE::Tickers::SECONDARY_CACHE_HITS;
+        return ROCKSDB_NAMESPACE::Tickers::SECONDARY_CACHE_HITS;
       case -0x1F:
-        return MIZAR_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::VERIFY_CHECKSUM_READ_BYTES;
       case -0x20:
-        return MIZAR_NAMESPACE::Tickers::BACKUP_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::BACKUP_READ_BYTES;
       case -0x21:
-        return MIZAR_NAMESPACE::Tickers::BACKUP_WRITE_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::BACKUP_WRITE_BYTES;
       case -0x22:
-        return MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_READ_BYTES;
       case -0x23:
-        return MIZAR_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::REMOTE_COMPACT_WRITE_BYTES;
       case -0x24:
-        return MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_BYTES;
       case -0x25:
-        return MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_BYTES;
       case -0x26:
-        return MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_BYTES;
+        return ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_BYTES;
       case -0x27:
-        return MIZAR_NAMESPACE::Tickers::HOT_FILE_READ_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::HOT_FILE_READ_COUNT;
       case -0x28:
-        return MIZAR_NAMESPACE::Tickers::WARM_FILE_READ_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::WARM_FILE_READ_COUNT;
       case -0x29:
-        return MIZAR_NAMESPACE::Tickers::COLD_FILE_READ_COUNT;
+        return ROCKSDB_NAMESPACE::Tickers::COLD_FILE_READ_COUNT;
+      case -0x2A:
+        return ROCKSDB_NAMESPACE::Tickers::LAST_LEVEL_READ_BYTES;
+      case -0x2B:
+        return ROCKSDB_NAMESPACE::Tickers::LAST_LEVEL_READ_COUNT;
+      case -0x2C:
+        return ROCKSDB_NAMESPACE::Tickers::NON_LAST_LEVEL_READ_BYTES;
+      case -0x2D:
+        return ROCKSDB_NAMESPACE::Tickers::NON_LAST_LEVEL_READ_COUNT;
+      case -0x2E:
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CHECKSUM_COMPUTE_COUNT;
+      case -0x2F:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_MISS;
+      case -0x30:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_HIT;
+      case -0x31:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_ADD;
+      case -0x32:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_ADD_FAILURES;
+      case -0x33:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_BYTES_READ;
+      case -0x34:
+        return ROCKSDB_NAMESPACE::Tickers::BLOB_DB_CACHE_BYTES_WRITE;
+      case -0x35:
+        return ROCKSDB_NAMESPACE::Tickers::READ_ASYNC_MICROS;
+      case -0x36:
+        return ROCKSDB_NAMESPACE::Tickers::ASYNC_READ_ERROR_COUNT;
       case 0x5F:
         // 0x5F was the max value in the initial copy of tickers to Java.
         // Since these values are exposed directly to Java clients, we keep
@@ -5415,11 +5551,11 @@ class TickerTypeJni {
         // value since it's meant to be the number of tickers, not an actual
         // ticker value. But we aren't yet in a position to fix it since the
         // number of tickers doesn't fit in the Java representation (jbyte).
-        return MIZAR_NAMESPACE::Tickers::TICKER_ENUM_MAX;
+        return ROCKSDB_NAMESPACE::Tickers::TICKER_ENUM_MAX;
 
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
+        return ROCKSDB_NAMESPACE::Tickers::BLOCK_CACHE_MISS;
     }
   }
 };
@@ -5428,113 +5564,126 @@ class TickerTypeJni {
 class HistogramTypeJni {
  public:
   // Returns the equivalent org.rocksdb.HistogramType for the provided
-  // C++ MIZAR_NAMESPACE::Histograms enum
+  // C++ ROCKSDB_NAMESPACE::Histograms enum
   static jbyte toJavaHistogramsType(
-      const MIZAR_NAMESPACE::Histograms& histograms) {
-    switch(histograms) {
-      case MIZAR_NAMESPACE::Histograms::DB_GET:
+      const ROCKSDB_NAMESPACE::Histograms& histograms) {
+    switch (histograms) {
+      case ROCKSDB_NAMESPACE::Histograms::DB_GET:
         return 0x0;
-      case MIZAR_NAMESPACE::Histograms::DB_WRITE:
+      case ROCKSDB_NAMESPACE::Histograms::DB_WRITE:
         return 0x1;
-      case MIZAR_NAMESPACE::Histograms::COMPACTION_TIME:
+      case ROCKSDB_NAMESPACE::Histograms::COMPACTION_TIME:
         return 0x2;
-      case MIZAR_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME:
+      case ROCKSDB_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME:
         return 0x3;
-      case MIZAR_NAMESPACE::Histograms::TABLE_SYNC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::TABLE_SYNC_MICROS:
         return 0x4;
-      case MIZAR_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS:
         return 0x5;
-      case MIZAR_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS:
         return 0x6;
-      case MIZAR_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS:
         return 0x7;
-      case MIZAR_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS:
         return 0x8;
-      case MIZAR_NAMESPACE::Histograms::DB_MULTIGET:
+      case ROCKSDB_NAMESPACE::Histograms::DB_MULTIGET:
         return 0x9;
-      case MIZAR_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS:
         return 0xA;
-      case MIZAR_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS:
         return 0xB;
-      case MIZAR_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS:
         return 0xC;
-      case MIZAR_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT:
+      case ROCKSDB_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT:
         return 0xD;
-      case MIZAR_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT:
+      case ROCKSDB_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT:
         return 0xE;
-      case MIZAR_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT:
+      case ROCKSDB_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT:
         return 0xF;
-      case MIZAR_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT:
+      case ROCKSDB_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT:
         return 0x10;
-      case MIZAR_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT:
+      case ROCKSDB_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT:
         return 0x11;
-      case MIZAR_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION:
+      case ROCKSDB_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION:
         return 0x12;
-      case MIZAR_NAMESPACE::Histograms::DB_SEEK:
+      case ROCKSDB_NAMESPACE::Histograms::DB_SEEK:
         return 0x13;
-      case MIZAR_NAMESPACE::Histograms::WRITE_STALL:
+      case ROCKSDB_NAMESPACE::Histograms::WRITE_STALL:
         return 0x14;
-      case MIZAR_NAMESPACE::Histograms::SST_READ_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::SST_READ_MICROS:
         return 0x15;
-      case MIZAR_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED:
+      case ROCKSDB_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED:
         return 0x16;
-      case MIZAR_NAMESPACE::Histograms::BYTES_PER_READ:
+      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_READ:
         return 0x17;
-      case MIZAR_NAMESPACE::Histograms::BYTES_PER_WRITE:
+      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_WRITE:
         return 0x18;
-      case MIZAR_NAMESPACE::Histograms::BYTES_PER_MULTIGET:
+      case ROCKSDB_NAMESPACE::Histograms::BYTES_PER_MULTIGET:
         return 0x19;
-      case MIZAR_NAMESPACE::Histograms::BYTES_COMPRESSED:
+      case ROCKSDB_NAMESPACE::Histograms::BYTES_COMPRESSED:
         return 0x1A;
-      case MIZAR_NAMESPACE::Histograms::BYTES_DECOMPRESSED:
+      case ROCKSDB_NAMESPACE::Histograms::BYTES_DECOMPRESSED:
         return 0x1B;
-      case MIZAR_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS:
+      case ROCKSDB_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS:
         return 0x1C;
-      case MIZAR_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS:
+      case ROCKSDB_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS:
         return 0x1D;
-      case MIZAR_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS:
+      case ROCKSDB_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS:
         return 0x1E;
-      // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor version compatibility.
-      case MIZAR_NAMESPACE::Histograms::FLUSH_TIME:
+      // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor
+      // version compatibility.
+      case ROCKSDB_NAMESPACE::Histograms::FLUSH_TIME:
         return 0x20;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE:
         return 0x21;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE:
         return 0x22;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS:
         return 0x23;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_GET_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GET_MICROS:
         return 0x24;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS:
         return 0x25;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS:
         return 0x26;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS:
         return 0x27;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS:
         return 0x28;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS:
         return 0x29;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS:
         return 0x2A;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS:
         return 0x2B;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_GC_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GC_MICROS:
         return 0x2C;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS:
         return 0x2D;
-      case MIZAR_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS:
+      case ROCKSDB_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS:
         return 0x2E;
-      case MIZAR_NAMESPACE::Histograms::
+      case ROCKSDB_NAMESPACE::Histograms::
           NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL:
         return 0x2F;
-      case MIZAR_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL:
+      case ROCKSDB_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL:
         return 0x30;
-      case MIZAR_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL:
+      case ROCKSDB_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL:
         return 0x31;
-      case MIZAR_NAMESPACE::Histograms::ERROR_HANDLER_AUTORESUME_RETRY_COUNT:
-        return 0x31;
-      case MIZAR_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX:
+      case ROCKSDB_NAMESPACE::Histograms::ERROR_HANDLER_AUTORESUME_RETRY_COUNT:
+        return 0x32;
+      case ROCKSDB_NAMESPACE::Histograms::ASYNC_READ_BYTES:
+        return 0x33;
+      case ROCKSDB_NAMESPACE::Histograms::POLL_WAIT_MICROS:
+        return 0x34;
+      case ROCKSDB_NAMESPACE::Histograms::PREFETCHED_BYTES_DISCARDED:
+        return 0x35;
+      case ROCKSDB_NAMESPACE::Histograms::MULTIGET_IO_BATCH_SIZE:
+        return 0x36;
+      case NUM_LEVEL_READ_PER_MULTIGET:
+        return 0x37;
+      case ASYNC_PREFETCH_ABORT_MICROS:
+        return 0x38;
+      case ROCKSDB_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX:
         // 0x1F for backwards compatibility on current minor version.
         return 0x1F;
 
@@ -5544,120 +5693,133 @@ class HistogramTypeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::Histograms enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::Histograms enum for the
   // provided Java org.rocksdb.HistogramsType
-  static MIZAR_NAMESPACE::Histograms toCppHistograms(jbyte jhistograms_type) {
-    switch(jhistograms_type) {
+  static ROCKSDB_NAMESPACE::Histograms toCppHistograms(jbyte jhistograms_type) {
+    switch (jhistograms_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::Histograms::DB_GET;
+        return ROCKSDB_NAMESPACE::Histograms::DB_GET;
       case 0x1:
-        return MIZAR_NAMESPACE::Histograms::DB_WRITE;
+        return ROCKSDB_NAMESPACE::Histograms::DB_WRITE;
       case 0x2:
-        return MIZAR_NAMESPACE::Histograms::COMPACTION_TIME;
+        return ROCKSDB_NAMESPACE::Histograms::COMPACTION_TIME;
       case 0x3:
-        return MIZAR_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME;
+        return ROCKSDB_NAMESPACE::Histograms::SUBCOMPACTION_SETUP_TIME;
       case 0x4:
-        return MIZAR_NAMESPACE::Histograms::TABLE_SYNC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::TABLE_SYNC_MICROS;
       case 0x5:
-        return MIZAR_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::COMPACTION_OUTFILE_SYNC_MICROS;
       case 0x6:
-        return MIZAR_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::WAL_FILE_SYNC_MICROS;
       case 0x7:
-        return MIZAR_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::MANIFEST_FILE_SYNC_MICROS;
       case 0x8:
-        return MIZAR_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::TABLE_OPEN_IO_MICROS;
       case 0x9:
-        return MIZAR_NAMESPACE::Histograms::DB_MULTIGET;
+        return ROCKSDB_NAMESPACE::Histograms::DB_MULTIGET;
       case 0xA:
-        return MIZAR_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_COMPACTION_MICROS;
       case 0xB:
-        return MIZAR_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::READ_BLOCK_GET_MICROS;
       case 0xC:
-        return MIZAR_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::WRITE_RAW_BLOCK_MICROS;
       case 0xD:
-        return MIZAR_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT;
+        return ROCKSDB_NAMESPACE::Histograms::STALL_L0_SLOWDOWN_COUNT;
       case 0xE:
-        return MIZAR_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT;
+        return ROCKSDB_NAMESPACE::Histograms::STALL_MEMTABLE_COMPACTION_COUNT;
       case 0xF:
-        return MIZAR_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT;
+        return ROCKSDB_NAMESPACE::Histograms::STALL_L0_NUM_FILES_COUNT;
       case 0x10:
-        return MIZAR_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT;
+        return ROCKSDB_NAMESPACE::Histograms::HARD_RATE_LIMIT_DELAY_COUNT;
       case 0x11:
-        return MIZAR_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT;
+        return ROCKSDB_NAMESPACE::Histograms::SOFT_RATE_LIMIT_DELAY_COUNT;
       case 0x12:
-        return MIZAR_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION;
+        return ROCKSDB_NAMESPACE::Histograms::NUM_FILES_IN_SINGLE_COMPACTION;
       case 0x13:
-        return MIZAR_NAMESPACE::Histograms::DB_SEEK;
+        return ROCKSDB_NAMESPACE::Histograms::DB_SEEK;
       case 0x14:
-        return MIZAR_NAMESPACE::Histograms::WRITE_STALL;
+        return ROCKSDB_NAMESPACE::Histograms::WRITE_STALL;
       case 0x15:
-        return MIZAR_NAMESPACE::Histograms::SST_READ_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::SST_READ_MICROS;
       case 0x16:
-        return MIZAR_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED;
+        return ROCKSDB_NAMESPACE::Histograms::NUM_SUBCOMPACTIONS_SCHEDULED;
       case 0x17:
-        return MIZAR_NAMESPACE::Histograms::BYTES_PER_READ;
+        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_READ;
       case 0x18:
-        return MIZAR_NAMESPACE::Histograms::BYTES_PER_WRITE;
+        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_WRITE;
       case 0x19:
-        return MIZAR_NAMESPACE::Histograms::BYTES_PER_MULTIGET;
+        return ROCKSDB_NAMESPACE::Histograms::BYTES_PER_MULTIGET;
       case 0x1A:
-        return MIZAR_NAMESPACE::Histograms::BYTES_COMPRESSED;
+        return ROCKSDB_NAMESPACE::Histograms::BYTES_COMPRESSED;
       case 0x1B:
-        return MIZAR_NAMESPACE::Histograms::BYTES_DECOMPRESSED;
+        return ROCKSDB_NAMESPACE::Histograms::BYTES_DECOMPRESSED;
       case 0x1C:
-        return MIZAR_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS;
+        return ROCKSDB_NAMESPACE::Histograms::COMPRESSION_TIMES_NANOS;
       case 0x1D:
-        return MIZAR_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS;
+        return ROCKSDB_NAMESPACE::Histograms::DECOMPRESSION_TIMES_NANOS;
       case 0x1E:
-        return MIZAR_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS;
-      // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor version compatibility.
+        return ROCKSDB_NAMESPACE::Histograms::READ_NUM_MERGE_OPERANDS;
+      // 0x20 to skip 0x1F so TICKER_ENUM_MAX remains unchanged for minor
+      // version compatibility.
       case 0x20:
-        return MIZAR_NAMESPACE::Histograms::FLUSH_TIME;
+        return ROCKSDB_NAMESPACE::Histograms::FLUSH_TIME;
       case 0x21:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_KEY_SIZE;
       case 0x22:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_VALUE_SIZE;
       case 0x23:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_WRITE_MICROS;
       case 0x24:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_GET_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GET_MICROS;
       case 0x25:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_MULTIGET_MICROS;
       case 0x26:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_SEEK_MICROS;
       case 0x27:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_NEXT_MICROS;
       case 0x28:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_PREV_MICROS;
       case 0x29:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_WRITE_MICROS;
       case 0x2A:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_READ_MICROS;
       case 0x2B:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_BLOB_FILE_SYNC_MICROS;
       case 0x2C:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_GC_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_GC_MICROS;
       case 0x2D:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_COMPRESSION_MICROS;
       case 0x2E:
-        return MIZAR_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS;
+        return ROCKSDB_NAMESPACE::Histograms::BLOB_DB_DECOMPRESSION_MICROS;
       case 0x2F:
-        return MIZAR_NAMESPACE::Histograms::
+        return ROCKSDB_NAMESPACE::Histograms::
             NUM_INDEX_AND_FILTER_BLOCKS_READ_PER_LEVEL;
       case 0x30:
-        return MIZAR_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL;
+        return ROCKSDB_NAMESPACE::Histograms::NUM_DATA_BLOCKS_READ_PER_LEVEL;
       case 0x31:
-        return MIZAR_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL;
+        return ROCKSDB_NAMESPACE::Histograms::NUM_SST_READ_PER_LEVEL;
       case 0x32:
-        return MIZAR_NAMESPACE::Histograms::
+        return ROCKSDB_NAMESPACE::Histograms::
             ERROR_HANDLER_AUTORESUME_RETRY_COUNT;
+      case 0x33:
+        return ROCKSDB_NAMESPACE::Histograms::ASYNC_READ_BYTES;
+      case 0x34:
+        return ROCKSDB_NAMESPACE::Histograms::POLL_WAIT_MICROS;
+      case 0x35:
+        return ROCKSDB_NAMESPACE::Histograms::PREFETCHED_BYTES_DISCARDED;
+      case 0x36:
+        return ROCKSDB_NAMESPACE::Histograms::MULTIGET_IO_BATCH_SIZE;
+      case 0x37:
+        return ROCKSDB_NAMESPACE::Histograms::NUM_LEVEL_READ_PER_MULTIGET;
+      case 0x38:
+        return ROCKSDB_NAMESPACE::Histograms::ASYNC_PREFETCH_ABORT_MICROS;
       case 0x1F:
         // 0x1F for backwards compatibility on current minor version.
-        return MIZAR_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX;
+        return ROCKSDB_NAMESPACE::Histograms::HISTOGRAM_ENUM_MAX;
 
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::Histograms::DB_GET;
+        return ROCKSDB_NAMESPACE::Histograms::DB_GET;
     }
   }
 };
@@ -5666,15 +5828,15 @@ class HistogramTypeJni {
 class StatsLevelJni {
  public:
   // Returns the equivalent org.rocksdb.StatsLevel for the provided
-  // C++ MIZAR_NAMESPACE::StatsLevel enum
+  // C++ ROCKSDB_NAMESPACE::StatsLevel enum
   static jbyte toJavaStatsLevel(
-      const MIZAR_NAMESPACE::StatsLevel& stats_level) {
-    switch(stats_level) {
-      case MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers:
+      const ROCKSDB_NAMESPACE::StatsLevel& stats_level) {
+    switch (stats_level) {
+      case ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers:
         return 0x0;
-      case MIZAR_NAMESPACE::StatsLevel::kExceptTimeForMutex:
+      case ROCKSDB_NAMESPACE::StatsLevel::kExceptTimeForMutex:
         return 0x1;
-      case MIZAR_NAMESPACE::StatsLevel::kAll:
+      case ROCKSDB_NAMESPACE::StatsLevel::kAll:
         return 0x2;
 
       default:
@@ -5683,20 +5845,20 @@ class StatsLevelJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::StatsLevel enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::StatsLevel enum for the
   // provided Java org.rocksdb.StatsLevel
-  static MIZAR_NAMESPACE::StatsLevel toCppStatsLevel(jbyte jstats_level) {
-    switch(jstats_level) {
+  static ROCKSDB_NAMESPACE::StatsLevel toCppStatsLevel(jbyte jstats_level) {
+    switch (jstats_level) {
       case 0x0:
-        return MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers;
+        return ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers;
       case 0x1:
-        return MIZAR_NAMESPACE::StatsLevel::kExceptTimeForMutex;
+        return ROCKSDB_NAMESPACE::StatsLevel::kExceptTimeForMutex;
       case 0x2:
-        return MIZAR_NAMESPACE::StatsLevel::kAll;
+        return ROCKSDB_NAMESPACE::StatsLevel::kAll;
 
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::StatsLevel::kExceptDetailedTimers;
+        return ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers;
     }
   }
 };
@@ -5705,15 +5867,15 @@ class StatsLevelJni {
 class RateLimiterModeJni {
  public:
   // Returns the equivalent org.rocksdb.RateLimiterMode for the provided
-  // C++ MIZAR_NAMESPACE::RateLimiter::Mode enum
+  // C++ ROCKSDB_NAMESPACE::RateLimiter::Mode enum
   static jbyte toJavaRateLimiterMode(
-      const MIZAR_NAMESPACE::RateLimiter::Mode& rate_limiter_mode) {
-    switch(rate_limiter_mode) {
-      case MIZAR_NAMESPACE::RateLimiter::Mode::kReadsOnly:
+      const ROCKSDB_NAMESPACE::RateLimiter::Mode& rate_limiter_mode) {
+    switch (rate_limiter_mode) {
+      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kReadsOnly:
         return 0x0;
-      case MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly:
+      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly:
         return 0x1;
-      case MIZAR_NAMESPACE::RateLimiter::Mode::kAllIo:
+      case ROCKSDB_NAMESPACE::RateLimiter::Mode::kAllIo:
         return 0x2;
 
       default:
@@ -5722,65 +5884,65 @@ class RateLimiterModeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::RateLimiter::Mode enum for
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::RateLimiter::Mode enum for
   // the provided Java org.rocksdb.RateLimiterMode
-  static MIZAR_NAMESPACE::RateLimiter::Mode toCppRateLimiterMode(
+  static ROCKSDB_NAMESPACE::RateLimiter::Mode toCppRateLimiterMode(
       jbyte jrate_limiter_mode) {
-    switch(jrate_limiter_mode) {
+    switch (jrate_limiter_mode) {
       case 0x0:
-        return MIZAR_NAMESPACE::RateLimiter::Mode::kReadsOnly;
+        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kReadsOnly;
       case 0x1:
-        return MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly;
+        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly;
       case 0x2:
-        return MIZAR_NAMESPACE::RateLimiter::Mode::kAllIo;
+        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kAllIo;
 
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::RateLimiter::Mode::kWritesOnly;
+        return ROCKSDB_NAMESPACE::RateLimiter::Mode::kWritesOnly;
     }
   }
 };
 
 // The portal class for org.rocksdb.MemoryUsageType
 class MemoryUsageTypeJni {
-public:
- // Returns the equivalent org.rocksdb.MemoryUsageType for the provided
- // C++ MIZAR_NAMESPACE::MemoryUtil::UsageType enum
- static jbyte toJavaMemoryUsageType(
-     const MIZAR_NAMESPACE::MemoryUtil::UsageType& usage_type) {
-   switch (usage_type) {
-     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal:
-       return 0x0;
-     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed:
-       return 0x1;
-     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal:
-       return 0x2;
-     case MIZAR_NAMESPACE::MemoryUtil::UsageType::kCacheTotal:
-       return 0x3;
-     default:
-       // undefined: use kNumUsageTypes
-       return 0x4;
-   }
- }
+ public:
+  // Returns the equivalent org.rocksdb.MemoryUsageType for the provided
+  // C++ ROCKSDB_NAMESPACE::MemoryUtil::UsageType enum
+  static jbyte toJavaMemoryUsageType(
+      const ROCKSDB_NAMESPACE::MemoryUtil::UsageType& usage_type) {
+    switch (usage_type) {
+      case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal:
+        return 0x0;
+      case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed:
+        return 0x1;
+      case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal:
+        return 0x2;
+      case ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kCacheTotal:
+        return 0x3;
+      default:
+        // undefined: use kNumUsageTypes
+        return 0x4;
+    }
+  }
 
- // Returns the equivalent C++ MIZAR_NAMESPACE::MemoryUtil::UsageType enum for
- // the provided Java org.rocksdb.MemoryUsageType
- static MIZAR_NAMESPACE::MemoryUtil::UsageType toCppMemoryUsageType(
-     jbyte usage_type) {
-   switch (usage_type) {
-     case 0x0:
-       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal;
-     case 0x1:
-       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed;
-     case 0x2:
-       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal;
-     case 0x3:
-       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kCacheTotal;
-     default:
-       // undefined/default: use kNumUsageTypes
-       return MIZAR_NAMESPACE::MemoryUtil::UsageType::kNumUsageTypes;
-   }
- }
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::MemoryUtil::UsageType enum
+  // for the provided Java org.rocksdb.MemoryUsageType
+  static ROCKSDB_NAMESPACE::MemoryUtil::UsageType toCppMemoryUsageType(
+      jbyte usage_type) {
+    switch (usage_type) {
+      case 0x0:
+        return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableTotal;
+      case 0x1:
+        return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kMemTableUnFlushed;
+      case 0x2:
+        return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kTableReadersTotal;
+      case 0x3:
+        return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kCacheTotal;
+      default:
+        // undefined/default: use kNumUsageTypes
+        return ROCKSDB_NAMESPACE::MemoryUtil::UsageType::kNumUsageTypes;
+    }
+  }
 };
 
 // The portal class for org.rocksdb.Transaction
@@ -5796,8 +5958,7 @@ class TransactionJni : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/Transaction");
+    return JavaClass::getJClass(env, "org/rocksdb/Transaction");
   }
 
   /**
@@ -5813,31 +5974,33 @@ class TransactionJni : public JavaClass {
    *     org.rocksdb.Transaction.WaitingTransactions object,
    *     or nullptr if an an exception occurs
    */
-  static jobject newWaitingTransactions(JNIEnv* env, jobject jtransaction,
-      const uint32_t column_family_id, const std::string &key,
-      const std::vector<TransactionID> &transaction_ids) {
+  static jobject newWaitingTransactions(
+      JNIEnv* env, jobject jtransaction, const uint32_t column_family_id,
+      const std::string& key,
+      const std::vector<TransactionID>& transaction_ids) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jmethodID mid = env->GetMethodID(
-      jclazz, "newWaitingTransactions", "(JLjava/lang/String;[J)Lorg/rocksdb/Transaction$WaitingTransactions;");
-    if(mid == nullptr) {
+        jclazz, "newWaitingTransactions",
+        "(JLjava/lang/String;[J)Lorg/rocksdb/Transaction$WaitingTransactions;");
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
     jstring jkey = env->NewStringUTF(key.c_str());
-    if(jkey == nullptr) {
+    if (jkey == nullptr) {
       // exception thrown: OutOfMemoryError
       return nullptr;
     }
 
     const size_t len = transaction_ids.size();
     jlongArray jtransaction_ids = env->NewLongArray(static_cast<jsize>(len));
-    if(jtransaction_ids == nullptr) {
+    if (jtransaction_ids == nullptr) {
       // exception thrown: OutOfMemoryError
       env->DeleteLocalRef(jkey);
       return nullptr;
@@ -5845,21 +6008,22 @@ class TransactionJni : public JavaClass {
 
     jboolean is_copy;
     jlong* body = env->GetLongArrayElements(jtransaction_ids, &is_copy);
-    if(body == nullptr) {
-        // exception thrown: OutOfMemoryError
-        env->DeleteLocalRef(jkey);
-        env->DeleteLocalRef(jtransaction_ids);
-        return nullptr;
+    if (body == nullptr) {
+      // exception thrown: OutOfMemoryError
+      env->DeleteLocalRef(jkey);
+      env->DeleteLocalRef(jtransaction_ids);
+      return nullptr;
     }
-    for(size_t i = 0; i < len; ++i) {
+    for (size_t i = 0; i < len; ++i) {
       body[i] = static_cast<jlong>(transaction_ids[i]);
     }
     env->ReleaseLongArrayElements(jtransaction_ids, body,
                                   is_copy == JNI_TRUE ? 0 : JNI_ABORT);
 
-    jobject jwaiting_transactions = env->CallObjectMethod(jtransaction,
-      mid, static_cast<jlong>(column_family_id), jkey, jtransaction_ids);
-    if(env->ExceptionCheck()) {
+    jobject jwaiting_transactions = env->CallObjectMethod(
+        jtransaction, mid, static_cast<jlong>(column_family_id), jkey,
+        jtransaction_ids);
+    if (env->ExceptionCheck()) {
       // exception thrown: InstantiationException or OutOfMemoryError
       env->DeleteLocalRef(jkey);
       env->DeleteLocalRef(jtransaction_ids);
@@ -5873,18 +6037,17 @@ class TransactionJni : public JavaClass {
 // The portal class for org.rocksdb.TransactionDB
 class TransactionDBJni : public JavaClass {
  public:
- /**
-  * Get the Java Class org.rocksdb.TransactionDB
-  *
-  * @param env A pointer to the Java environment
-  *
-  * @return The Java Class or nullptr if one of the
-  *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
-  *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
-  */
+  /**
+   * Get the Java Class org.rocksdb.TransactionDB
+   *
+   * @param env A pointer to the Java environment
+   *
+   * @return The Java Class or nullptr if one of the
+   *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
+   *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
+   */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-       "org/rocksdb/TransactionDB");
+    return JavaClass::getJClass(env, "org/rocksdb/TransactionDB");
   }
 
   /**
@@ -5902,33 +6065,34 @@ class TransactionDBJni : public JavaClass {
    */
   static jobject newDeadlockInfo(
       JNIEnv* env, jobject jtransaction_db,
-      const MIZAR_NAMESPACE::TransactionID transaction_id,
+      const ROCKSDB_NAMESPACE::TransactionID transaction_id,
       const uint32_t column_family_id, const std::string& waiting_key,
       const bool exclusive) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
     jmethodID mid = env->GetMethodID(
-        jclazz, "newDeadlockInfo", "(JJLjava/lang/String;Z)Lorg/rocksdb/TransactionDB$DeadlockInfo;");
-    if(mid == nullptr) {
+        jclazz, "newDeadlockInfo",
+        "(JJLjava/lang/String;Z)Lorg/rocksdb/TransactionDB$DeadlockInfo;");
+    if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
     jstring jwaiting_key = env->NewStringUTF(waiting_key.c_str());
-    if(jwaiting_key == nullptr) {
+    if (jwaiting_key == nullptr) {
       // exception thrown: OutOfMemoryError
       return nullptr;
     }
 
     // resolve the column family id to a ColumnFamilyHandle
-    jobject jdeadlock_info = env->CallObjectMethod(jtransaction_db,
-        mid, transaction_id, static_cast<jlong>(column_family_id),
-        jwaiting_key, exclusive);
-    if(env->ExceptionCheck()) {
+    jobject jdeadlock_info = env->CallObjectMethod(
+        jtransaction_db, mid, transaction_id,
+        static_cast<jlong>(column_family_id), jwaiting_key, exclusive);
+    if (env->ExceptionCheck()) {
       // exception thrown: InstantiationException or OutOfMemoryError
       env->DeleteLocalRef(jwaiting_key);
       return nullptr;
@@ -5942,35 +6106,35 @@ class TransactionDBJni : public JavaClass {
 class TxnDBWritePolicyJni {
  public:
   // Returns the equivalent org.rocksdb.TxnDBWritePolicy for the provided
-  // C++ MIZAR_NAMESPACE::TxnDBWritePolicy enum
+  // C++ ROCKSDB_NAMESPACE::TxnDBWritePolicy enum
   static jbyte toJavaTxnDBWritePolicy(
-      const MIZAR_NAMESPACE::TxnDBWritePolicy& txndb_write_policy) {
+      const ROCKSDB_NAMESPACE::TxnDBWritePolicy& txndb_write_policy) {
     switch (txndb_write_policy) {
-      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED:
+      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED:
         return 0x0;
-      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED:
+      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED:
         return 0x1;
-      case MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED:
+      case ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::TxnDBWritePolicy enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::TxnDBWritePolicy enum for the
   // provided Java org.rocksdb.TxnDBWritePolicy
-  static MIZAR_NAMESPACE::TxnDBWritePolicy toCppTxnDBWritePolicy(
+  static ROCKSDB_NAMESPACE::TxnDBWritePolicy toCppTxnDBWritePolicy(
       jbyte jtxndb_write_policy) {
     switch (jtxndb_write_policy) {
       case 0x0:
-        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
+        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
       case 0x1:
-        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED;
+        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_PREPARED;
       case 0x2:
-        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED;
+        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_UNPREPARED;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
+        return ROCKSDB_NAMESPACE::TxnDBWritePolicy::WRITE_COMMITTED;
     }
   }
 };
@@ -5988,32 +6152,31 @@ class KeyLockInfoJni : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/TransactionDB$KeyLockInfo");
+    return JavaClass::getJClass(env, "org/rocksdb/TransactionDB$KeyLockInfo");
   }
 
   /**
    * Create a new Java org.rocksdb.TransactionDB.KeyLockInfo object
-   * with the same properties as the provided C++ MIZAR_NAMESPACE::KeyLockInfo
+   * with the same properties as the provided C++ ROCKSDB_NAMESPACE::KeyLockInfo
    * object
    *
    * @param env A pointer to the Java environment
-   * @param key_lock_info The MIZAR_NAMESPACE::KeyLockInfo object
+   * @param key_lock_info The ROCKSDB_NAMESPACE::KeyLockInfo object
    *
    * @return A reference to a Java
    *     org.rocksdb.TransactionDB.KeyLockInfo object,
    *     or nullptr if an an exception occurs
    */
   static jobject construct(
-      JNIEnv* env, const MIZAR_NAMESPACE::KeyLockInfo& key_lock_info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::KeyLockInfo& key_lock_info) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(
-      jclazz, "<init>", "(Ljava/lang/String;[JZ)V");
+    jmethodID mid =
+        env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;[JZ)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
@@ -6025,7 +6188,8 @@ class KeyLockInfoJni : public JavaClass {
       return nullptr;
     }
 
-    const jsize jtransaction_ids_len = static_cast<jsize>(key_lock_info.ids.size());
+    const jsize jtransaction_ids_len =
+        static_cast<jsize>(key_lock_info.ids.size());
     jlongArray jtransactions_ids = env->NewLongArray(jtransaction_ids_len);
     if (jtransactions_ids == nullptr) {
       // exception thrown: OutOfMemoryError
@@ -6033,9 +6197,9 @@ class KeyLockInfoJni : public JavaClass {
       return nullptr;
     }
 
-    const jobject jkey_lock_info = env->NewObject(jclazz, mid,
-      jkey, jtransactions_ids, key_lock_info.exclusive);
-    if(jkey_lock_info == nullptr) {
+    const jobject jkey_lock_info = env->NewObject(
+        jclazz, mid, jkey, jtransactions_ids, key_lock_info.exclusive);
+    if (jkey_lock_info == nullptr) {
       // exception thrown: InstantiationException or OutOfMemoryError
       env->DeleteLocalRef(jtransactions_ids);
       env->DeleteLocalRef(jkey);
@@ -6058,8 +6222,8 @@ class DeadlockInfoJni : public JavaClass {
    *     ClassFormatError, ClassCircularityError, NoClassDefFoundError,
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
-   static jclass getJClass(JNIEnv* env) {
-     return JavaClass::getJClass(env,"org/rocksdb/TransactionDB$DeadlockInfo");
+  static jclass getJClass(JNIEnv* env) {
+    return JavaClass::getJClass(env, "org/rocksdb/TransactionDB$DeadlockInfo");
   }
 };
 
@@ -6076,8 +6240,7 @@ class DeadlockPathJni : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/TransactionDB$DeadlockPath");
+    return JavaClass::getJClass(env, "org/rocksdb/TransactionDB$DeadlockPath");
   }
 
   /**
@@ -6089,24 +6252,23 @@ class DeadlockPathJni : public JavaClass {
    *     org.rocksdb.TransactionDB.DeadlockPath object,
    *     or nullptr if an an exception occurs
    */
-  static jobject construct(JNIEnv* env,
-    const jobjectArray jdeadlock_infos, const bool limit_exceeded) {
+  static jobject construct(JNIEnv* env, const jobjectArray jdeadlock_infos,
+                           const bool limit_exceeded) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(
-      jclazz, "<init>", "([LDeadlockInfo;Z)V");
+    jmethodID mid = env->GetMethodID(jclazz, "<init>", "([LDeadlockInfo;Z)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    const jobject jdeadlock_path = env->NewObject(jclazz, mid,
-      jdeadlock_infos, limit_exceeded);
-    if(jdeadlock_path == nullptr) {
+    const jobject jdeadlock_path =
+        env->NewObject(jclazz, mid, jdeadlock_infos, limit_exceeded);
+    if (jdeadlock_path == nullptr) {
       // exception thrown: InstantiationException or OutOfMemoryError
       return nullptr;
     }
@@ -6117,7 +6279,7 @@ class DeadlockPathJni : public JavaClass {
 
 class AbstractTableFilterJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::TableFilterJniCallback*,
+          const ROCKSDB_NAMESPACE::TableFilterJniCallback*,
           AbstractTableFilterJni> {
  public:
   /**
@@ -6130,7 +6292,7 @@ class AbstractTableFilterJni
    */
   static jmethodID getFilterMethod(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
@@ -6159,7 +6321,7 @@ class TablePropertiesJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppTableProperties(
-      JNIEnv* env, const MIZAR_NAMESPACE::TableProperties& table_properties) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::TableProperties& table_properties) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -6176,14 +6338,14 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jcolumn_family_name = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jcolumn_family_name = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, table_properties.column_family_name);
     if (jcolumn_family_name == nullptr) {
       // exception occurred creating java string
       return nullptr;
     }
 
-    jstring jfilter_policy_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jfilter_policy_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.filter_policy_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6191,7 +6353,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jcomparator_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jcomparator_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.comparator_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6200,7 +6362,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jmerge_operator_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jmerge_operator_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.merge_operator_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6210,7 +6372,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jprefix_extractor_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jprefix_extractor_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.prefix_extractor_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6222,7 +6384,7 @@ class TablePropertiesJni : public JavaClass {
     }
 
     jstring jproperty_collectors_names =
-        MIZAR_NAMESPACE::JniUtil::toJavaString(
+        ROCKSDB_NAMESPACE::JniUtil::toJavaString(
             env, &table_properties.property_collectors_names, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6234,7 +6396,7 @@ class TablePropertiesJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jcompression_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jcompression_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &table_properties.compression_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -6249,7 +6411,7 @@ class TablePropertiesJni : public JavaClass {
 
     // Map<String, String>
     jobject juser_collected_properties =
-        MIZAR_NAMESPACE::HashMapJni::fromCppMap(
+        ROCKSDB_NAMESPACE::HashMapJni::fromCppMap(
             env, &table_properties.user_collected_properties);
     if (env->ExceptionCheck()) {
       // exception occurred creating java map
@@ -6264,7 +6426,7 @@ class TablePropertiesJni : public JavaClass {
     }
 
     // Map<String, String>
-    jobject jreadable_properties = MIZAR_NAMESPACE::HashMapJni::fromCppMap(
+    jobject jreadable_properties = ROCKSDB_NAMESPACE::HashMapJni::fromCppMap(
         env, &table_properties.readable_properties);
     if (env->ExceptionCheck()) {
       // exception occurred creating java map
@@ -6340,11 +6502,11 @@ class ColumnFamilyDescriptorJni : public JavaClass {
 
   /**
    * Create a new Java org.rocksdb.ColumnFamilyDescriptor object with the same
-   * properties as the provided C++ MIZAR_NAMESPACE::ColumnFamilyDescriptor
+   * properties as the provided C++ ROCKSDB_NAMESPACE::ColumnFamilyDescriptor
    * object
    *
    * @param env A pointer to the Java environment
-   * @param cfd A pointer to MIZAR_NAMESPACE::ColumnFamilyDescriptor object
+   * @param cfd A pointer to ROCKSDB_NAMESPACE::ColumnFamilyDescriptor object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyDescriptor object, or
    * nullptr if an an exception occurs
@@ -6422,18 +6584,18 @@ class ColumnFamilyDescriptorJni : public JavaClass {
 class IndexTypeJni {
  public:
   // Returns the equivalent org.rocksdb.IndexType for the provided
-  // C++ MIZAR_NAMESPACE::IndexType enum
+  // C++ ROCKSDB_NAMESPACE::IndexType enum
   static jbyte toJavaIndexType(
-      const MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType& index_type) {
+      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType& index_type) {
     switch (index_type) {
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::kBinarySearch:
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::kBinarySearch:
         return 0x0;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::kHashSearch:
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::kHashSearch:
         return 0x1;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
           kTwoLevelIndexSearch:
         return 0x2;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
           kBinarySearchWithFirstKey:
         return 0x3;
       default:
@@ -6441,26 +6603,26 @@ class IndexTypeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::IndexType enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::IndexType enum for the
   // provided Java org.rocksdb.IndexType
-  static MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType toCppIndexType(
+  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType toCppIndexType(
       jbyte jindex_type) {
     switch (jindex_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearch;
       case 0x1:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
             kHashSearch;
       case 0x2:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
             kTwoLevelIndexSearch;
       case 0x3:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearchWithFirstKey;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexType::
             kBinarySearch;
     }
   }
@@ -6470,15 +6632,15 @@ class IndexTypeJni {
 class DataBlockIndexTypeJni {
  public:
   // Returns the equivalent org.rocksdb.DataBlockIndexType for the provided
-  // C++ MIZAR_NAMESPACE::DataBlockIndexType enum
+  // C++ ROCKSDB_NAMESPACE::DataBlockIndexType enum
   static jbyte toJavaDataBlockIndexType(
-      const MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType&
+      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType&
           index_type) {
     switch (index_type) {
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
           kDataBlockBinarySearch:
         return 0x0;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
           kDataBlockBinaryAndHash:
         return 0x1;
       default:
@@ -6486,20 +6648,20 @@ class DataBlockIndexTypeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::DataBlockIndexType enum for
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::DataBlockIndexType enum for
   // the provided Java org.rocksdb.DataBlockIndexType
-  static MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType
+  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType
   toCppDataBlockIndexType(jbyte jindex_type) {
     switch (jindex_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinarySearch;
       case 0x1:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinaryAndHash;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::DataBlockIndexType::
             kDataBlockBinarySearch;
     }
   }
@@ -6509,39 +6671,43 @@ class DataBlockIndexTypeJni {
 class ChecksumTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ChecksumType for the provided
-  // C++ MIZAR_NAMESPACE::ChecksumType enum
+  // C++ ROCKSDB_NAMESPACE::ChecksumType enum
   static jbyte toJavaChecksumType(
-      const MIZAR_NAMESPACE::ChecksumType& checksum_type) {
+      const ROCKSDB_NAMESPACE::ChecksumType& checksum_type) {
     switch (checksum_type) {
-      case MIZAR_NAMESPACE::ChecksumType::kNoChecksum:
+      case ROCKSDB_NAMESPACE::ChecksumType::kNoChecksum:
         return 0x0;
-      case MIZAR_NAMESPACE::ChecksumType::kCRC32c:
+      case ROCKSDB_NAMESPACE::ChecksumType::kCRC32c:
         return 0x1;
-      case MIZAR_NAMESPACE::ChecksumType::kxxHash:
+      case ROCKSDB_NAMESPACE::ChecksumType::kxxHash:
         return 0x2;
-      case MIZAR_NAMESPACE::ChecksumType::kxxHash64:
+      case ROCKSDB_NAMESPACE::ChecksumType::kxxHash64:
         return 0x3;
+      case ROCKSDB_NAMESPACE::ChecksumType::kXXH3:
+        return 0x4;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ChecksumType enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ChecksumType enum for the
   // provided Java org.rocksdb.ChecksumType
-  static MIZAR_NAMESPACE::ChecksumType toCppChecksumType(
+  static ROCKSDB_NAMESPACE::ChecksumType toCppChecksumType(
       jbyte jchecksum_type) {
     switch (jchecksum_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::ChecksumType::kNoChecksum;
+        return ROCKSDB_NAMESPACE::ChecksumType::kNoChecksum;
       case 0x1:
-        return MIZAR_NAMESPACE::ChecksumType::kCRC32c;
+        return ROCKSDB_NAMESPACE::ChecksumType::kCRC32c;
       case 0x2:
-        return MIZAR_NAMESPACE::ChecksumType::kxxHash;
+        return ROCKSDB_NAMESPACE::ChecksumType::kxxHash;
       case 0x3:
-        return MIZAR_NAMESPACE::ChecksumType::kxxHash64;
+        return ROCKSDB_NAMESPACE::ChecksumType::kxxHash64;
+      case 0x4:
+        return ROCKSDB_NAMESPACE::ChecksumType::kXXH3;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ChecksumType::kCRC32c;
+        return ROCKSDB_NAMESPACE::ChecksumType::kCRC32c;
     }
   }
 };
@@ -6550,18 +6716,18 @@ class ChecksumTypeJni {
 class IndexShorteningModeJni {
  public:
   // Returns the equivalent org.rocksdb.IndexShorteningMode for the provided
-  // C++ MIZAR_NAMESPACE::IndexShorteningMode enum
+  // C++ ROCKSDB_NAMESPACE::IndexShorteningMode enum
   static jbyte toJavaIndexShorteningMode(
-      const MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode&
+      const ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode&
           index_shortening_mode) {
     switch (index_shortening_mode) {
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kNoShortening:
         return 0x0;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kShortenSeparators:
         return 0x1;
-      case MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+      case ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
           kShortenSeparatorsAndSuccessor:
         return 0x2;
       default:
@@ -6569,23 +6735,23 @@ class IndexShorteningModeJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::IndexShorteningMode enum for
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::IndexShorteningMode enum for
   // the provided Java org.rocksdb.IndexShorteningMode
-  static MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode
+  static ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode
   toCppIndexShorteningMode(jbyte jindex_shortening_mode) {
     switch (jindex_shortening_mode) {
       case 0x0:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kNoShortening;
       case 0x1:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparators;
       case 0x2:
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparatorsAndSuccessor;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
+        return ROCKSDB_NAMESPACE::BlockBasedTableOptions::IndexShorteningMode::
             kShortenSeparators;
     }
   }
@@ -6595,38 +6761,38 @@ class IndexShorteningModeJni {
 class PriorityJni {
  public:
   // Returns the equivalent org.rocksdb.Priority for the provided
-  // C++ MIZAR_NAMESPACE::Env::Priority enum
+  // C++ ROCKSDB_NAMESPACE::Env::Priority enum
   static jbyte toJavaPriority(
-      const MIZAR_NAMESPACE::Env::Priority& priority) {
+      const ROCKSDB_NAMESPACE::Env::Priority& priority) {
     switch (priority) {
-      case MIZAR_NAMESPACE::Env::Priority::BOTTOM:
+      case ROCKSDB_NAMESPACE::Env::Priority::BOTTOM:
         return 0x0;
-      case MIZAR_NAMESPACE::Env::Priority::LOW:
+      case ROCKSDB_NAMESPACE::Env::Priority::LOW:
         return 0x1;
-      case MIZAR_NAMESPACE::Env::Priority::HIGH:
+      case ROCKSDB_NAMESPACE::Env::Priority::HIGH:
         return 0x2;
-      case MIZAR_NAMESPACE::Env::Priority::TOTAL:
+      case ROCKSDB_NAMESPACE::Env::Priority::TOTAL:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::env::Priority enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::env::Priority enum for the
   // provided Java org.rocksdb.Priority
-  static MIZAR_NAMESPACE::Env::Priority toCppPriority(jbyte jpriority) {
+  static ROCKSDB_NAMESPACE::Env::Priority toCppPriority(jbyte jpriority) {
     switch (jpriority) {
       case 0x0:
-        return MIZAR_NAMESPACE::Env::Priority::BOTTOM;
+        return ROCKSDB_NAMESPACE::Env::Priority::BOTTOM;
       case 0x1:
-        return MIZAR_NAMESPACE::Env::Priority::LOW;
+        return ROCKSDB_NAMESPACE::Env::Priority::LOW;
       case 0x2:
-        return MIZAR_NAMESPACE::Env::Priority::HIGH;
+        return ROCKSDB_NAMESPACE::Env::Priority::HIGH;
       case 0x3:
-        return MIZAR_NAMESPACE::Env::Priority::TOTAL;
+        return ROCKSDB_NAMESPACE::Env::Priority::TOTAL;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::Env::Priority::LOW;
+        return ROCKSDB_NAMESPACE::Env::Priority::LOW;
     }
   }
 };
@@ -6635,39 +6801,39 @@ class PriorityJni {
 class ThreadTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ThreadType for the provided
-  // C++ MIZAR_NAMESPACE::ThreadStatus::ThreadType enum
+  // C++ ROCKSDB_NAMESPACE::ThreadStatus::ThreadType enum
   static jbyte toJavaThreadType(
-      const MIZAR_NAMESPACE::ThreadStatus::ThreadType& thread_type) {
+      const ROCKSDB_NAMESPACE::ThreadStatus::ThreadType& thread_type) {
     switch (thread_type) {
-      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY:
+      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY:
         return 0x0;
-      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY:
+      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY:
         return 0x1;
-      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::USER:
+      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::USER:
         return 0x2;
-      case MIZAR_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY:
+      case ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::ThreadType enum
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::ThreadType enum
   // for the provided Java org.rocksdb.ThreadType
-  static MIZAR_NAMESPACE::ThreadStatus::ThreadType toCppThreadType(
+  static ROCKSDB_NAMESPACE::ThreadStatus::ThreadType toCppThreadType(
       jbyte jthread_type) {
     switch (jthread_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY;
+        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::HIGH_PRIORITY;
       case 0x1:
-        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
+        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
       case 0x2:
         return ThreadStatus::ThreadType::USER;
       case 0x3:
-        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY;
+        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::BOTTOM_PRIORITY;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
+        return ROCKSDB_NAMESPACE::ThreadStatus::ThreadType::LOW_PRIORITY;
     }
   }
 };
@@ -6676,35 +6842,35 @@ class ThreadTypeJni {
 class OperationTypeJni {
  public:
   // Returns the equivalent org.rocksdb.OperationType for the provided
-  // C++ MIZAR_NAMESPACE::ThreadStatus::OperationType enum
+  // C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationType enum
   static jbyte toJavaOperationType(
-      const MIZAR_NAMESPACE::ThreadStatus::OperationType& operation_type) {
+      const ROCKSDB_NAMESPACE::ThreadStatus::OperationType& operation_type) {
     switch (operation_type) {
-      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN:
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN:
         return 0x0;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION:
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION:
         return 0x1;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH:
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::OperationType
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationType
   // enum for the provided Java org.rocksdb.OperationType
-  static MIZAR_NAMESPACE::ThreadStatus::OperationType toCppOperationType(
+  static ROCKSDB_NAMESPACE::ThreadStatus::OperationType toCppOperationType(
       jbyte joperation_type) {
     switch (joperation_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
       case 0x1:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_COMPACTION;
       case 0x2:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_FLUSH;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationType::OP_UNKNOWN;
     }
   }
 };
@@ -6713,39 +6879,39 @@ class OperationTypeJni {
 class OperationStageJni {
  public:
   // Returns the equivalent org.rocksdb.OperationStage for the provided
-  // C++ MIZAR_NAMESPACE::ThreadStatus::OperationStage enum
+  // C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationStage enum
   static jbyte toJavaOperationStage(
-      const MIZAR_NAMESPACE::ThreadStatus::OperationStage& operation_stage) {
+      const ROCKSDB_NAMESPACE::ThreadStatus::OperationStage& operation_stage) {
     switch (operation_stage) {
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN:
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN:
         return 0x0;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN:
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN:
         return 0x1;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_FLUSH_WRITE_L0:
         return 0x2;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_PREPARE:
         return 0x3;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_RUN:
         return 0x4;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_PROCESS_KV:
         return 0x5;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_INSTALL:
         return 0x6;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_COMPACTION_SYNC_FILE:
         return 0x7;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_PICK_MEMTABLES_TO_FLUSH:
         return 0x8;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_MEMTABLE_ROLLBACK:
         return 0x9;
-      case MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+      case ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
           STAGE_MEMTABLE_INSTALL_FLUSH_RESULTS:
         return 0xA;
       default:
@@ -6753,45 +6919,45 @@ class OperationStageJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::OperationStage
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::OperationStage
   // enum for the provided Java org.rocksdb.OperationStage
-  static MIZAR_NAMESPACE::ThreadStatus::OperationStage toCppOperationStage(
+  static ROCKSDB_NAMESPACE::ThreadStatus::OperationStage toCppOperationStage(
       jbyte joperation_stage) {
     switch (joperation_stage) {
       case 0x0:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
       case 0x1:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_FLUSH_RUN;
       case 0x2:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_FLUSH_WRITE_L0;
       case 0x3:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_PREPARE;
       case 0x4:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_RUN;
       case 0x5:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_PROCESS_KV;
       case 0x6:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_INSTALL;
       case 0x7:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_COMPACTION_SYNC_FILE;
       case 0x8:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_PICK_MEMTABLES_TO_FLUSH;
       case 0x9:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_MEMTABLE_ROLLBACK;
       case 0xA:
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::
             STAGE_MEMTABLE_INSTALL_FLUSH_RESULTS;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::OperationStage::STAGE_UNKNOWN;
     }
   }
 };
@@ -6800,31 +6966,31 @@ class OperationStageJni {
 class StateTypeJni {
  public:
   // Returns the equivalent org.rocksdb.StateType for the provided
-  // C++ MIZAR_NAMESPACE::ThreadStatus::StateType enum
+  // C++ ROCKSDB_NAMESPACE::ThreadStatus::StateType enum
   static jbyte toJavaStateType(
-      const MIZAR_NAMESPACE::ThreadStatus::StateType& state_type) {
+      const ROCKSDB_NAMESPACE::ThreadStatus::StateType& state_type) {
     switch (state_type) {
-      case MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN:
+      case ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN:
         return 0x0;
-      case MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT:
+      case ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT:
         return 0x1;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ThreadStatus::StateType enum
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ThreadStatus::StateType enum
   // for the provided Java org.rocksdb.StateType
-  static MIZAR_NAMESPACE::ThreadStatus::StateType toCppStateType(
+  static ROCKSDB_NAMESPACE::ThreadStatus::StateType toCppStateType(
       jbyte jstate_type) {
     switch (jstate_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
       case 0x1:
-        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT;
+        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_MUTEX_WAIT;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
+        return ROCKSDB_NAMESPACE::ThreadStatus::StateType::STATE_UNKNOWN;
     }
   }
 };
@@ -6842,29 +7008,29 @@ class ThreadStatusJni : public JavaClass {
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env,
-        "org/rocksdb/ThreadStatus");
+    return JavaClass::getJClass(env, "org/rocksdb/ThreadStatus");
   }
 
   /**
    * Create a new Java org.rocksdb.ThreadStatus object with the same
-   * properties as the provided C++ MIZAR_NAMESPACE::ThreadStatus object
+   * properties as the provided C++ ROCKSDB_NAMESPACE::ThreadStatus object
    *
    * @param env A pointer to the Java environment
-   * @param thread_status A pointer to MIZAR_NAMESPACE::ThreadStatus object
+   * @param thread_status A pointer to ROCKSDB_NAMESPACE::ThreadStatus object
    *
    * @return A reference to a Java org.rocksdb.ColumnFamilyOptions object, or
    * nullptr if an an exception occurs
    */
   static jobject construct(
-      JNIEnv* env, const MIZAR_NAMESPACE::ThreadStatus* thread_status) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::ThreadStatus* thread_status) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(JBLjava/lang/String;Ljava/lang/String;BJB[JB)V");
+    jmethodID mid = env->GetMethodID(
+        jclazz, "<init>", "(JBLjava/lang/String;Ljava/lang/String;BJB[JB)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
@@ -6873,23 +7039,22 @@ class ThreadStatusJni : public JavaClass {
     jstring jdb_name =
         JniUtil::toJavaString(env, &(thread_status->db_name), true);
     if (env->ExceptionCheck()) {
-        // an error occurred
-        return nullptr;
+      // an error occurred
+      return nullptr;
     }
 
     jstring jcf_name =
         JniUtil::toJavaString(env, &(thread_status->cf_name), true);
     if (env->ExceptionCheck()) {
-        // an error occurred
-        env->DeleteLocalRef(jdb_name);
-        return nullptr;
+      // an error occurred
+      env->DeleteLocalRef(jdb_name);
+      return nullptr;
     }
 
     // long[]
     const jsize len = static_cast<jsize>(
-        MIZAR_NAMESPACE::ThreadStatus::kNumOperationProperties);
-    jlongArray joperation_properties =
-        env->NewLongArray(len);
+        ROCKSDB_NAMESPACE::ThreadStatus::kNumOperationProperties);
+    jlongArray joperation_properties = env->NewLongArray(len);
     if (joperation_properties == nullptr) {
       // an exception occurred
       env->DeleteLocalRef(jdb_name);
@@ -6899,11 +7064,11 @@ class ThreadStatusJni : public JavaClass {
     jboolean is_copy;
     jlong* body = env->GetLongArrayElements(joperation_properties, &is_copy);
     if (body == nullptr) {
-        // exception thrown: OutOfMemoryError
-        env->DeleteLocalRef(jdb_name);
-        env->DeleteLocalRef(jcf_name);
-        env->DeleteLocalRef(joperation_properties);
-        return nullptr;
+      // exception thrown: OutOfMemoryError
+      env->DeleteLocalRef(jdb_name);
+      env->DeleteLocalRef(jcf_name);
+      env->DeleteLocalRef(joperation_properties);
+      return nullptr;
     }
     for (size_t i = 0; i < len; ++i) {
       body[i] = static_cast<jlong>(thread_status->op_properties[i]);
@@ -6911,10 +7076,9 @@ class ThreadStatusJni : public JavaClass {
     env->ReleaseLongArrayElements(joperation_properties, body,
                                   is_copy == JNI_TRUE ? 0 : JNI_ABORT);
 
-    jobject jcfd = env->NewObject(jclazz, mid,
-        static_cast<jlong>(thread_status->thread_id),
-        ThreadTypeJni::toJavaThreadType(thread_status->thread_type),
-        jdb_name,
+    jobject jcfd = env->NewObject(
+        jclazz, mid, static_cast<jlong>(thread_status->thread_id),
+        ThreadTypeJni::toJavaThreadType(thread_status->thread_type), jdb_name,
         jcf_name,
         OperationTypeJni::toJavaOperationType(thread_status->operation_type),
         static_cast<jlong>(thread_status->op_elapsed_micros),
@@ -6923,9 +7087,9 @@ class ThreadStatusJni : public JavaClass {
         StateTypeJni::toJavaStateType(thread_status->state_type));
     if (env->ExceptionCheck()) {
       // exception occurred
-        env->DeleteLocalRef(jdb_name);
-        env->DeleteLocalRef(jcf_name);
-        env->DeleteLocalRef(joperation_properties);
+      env->DeleteLocalRef(jdb_name);
+      env->DeleteLocalRef(jcf_name);
+      env->DeleteLocalRef(joperation_properties);
       return nullptr;
     }
 
@@ -6942,39 +7106,39 @@ class ThreadStatusJni : public JavaClass {
 class CompactionStyleJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionStyle for the provided
-  // C++ MIZAR_NAMESPACE::CompactionStyle enum
+  // C++ ROCKSDB_NAMESPACE::CompactionStyle enum
   static jbyte toJavaCompactionStyle(
-      const MIZAR_NAMESPACE::CompactionStyle& compaction_style) {
+      const ROCKSDB_NAMESPACE::CompactionStyle& compaction_style) {
     switch (compaction_style) {
-      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel:
+      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel:
         return 0x0;
-      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleUniversal:
+      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleUniversal:
         return 0x1;
-      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleFIFO:
+      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleFIFO:
         return 0x2;
-      case MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleNone:
+      case ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleNone:
         return 0x3;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionStyle enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionStyle enum for the
   // provided Java org.rocksdb.CompactionStyle
-  static MIZAR_NAMESPACE::CompactionStyle toCppCompactionStyle(
+  static ROCKSDB_NAMESPACE::CompactionStyle toCppCompactionStyle(
       jbyte jcompaction_style) {
     switch (jcompaction_style) {
       case 0x0:
-        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
+        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
       case 0x1:
-        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleUniversal;
+        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleUniversal;
       case 0x2:
-        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleFIFO;
+        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleFIFO;
       case 0x3:
-        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleNone;
+        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleNone;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
+        return ROCKSDB_NAMESPACE::CompactionStyle::kCompactionStyleLevel;
     }
   }
 };
@@ -6983,87 +7147,103 @@ class CompactionStyleJni {
 class CompactionReasonJni {
  public:
   // Returns the equivalent org.rocksdb.CompactionReason for the provided
-  // C++ MIZAR_NAMESPACE::CompactionReason enum
+  // C++ ROCKSDB_NAMESPACE::CompactionReason enum
   static jbyte toJavaCompactionReason(
-      const MIZAR_NAMESPACE::CompactionReason& compaction_reason) {
+      const ROCKSDB_NAMESPACE::CompactionReason& compaction_reason) {
     switch (compaction_reason) {
-      case MIZAR_NAMESPACE::CompactionReason::kUnknown:
+      case ROCKSDB_NAMESPACE::CompactionReason::kUnknown:
         return 0x0;
-      case MIZAR_NAMESPACE::CompactionReason::kLevelL0FilesNum:
+      case ROCKSDB_NAMESPACE::CompactionReason::kLevelL0FilesNum:
         return 0x1;
-      case MIZAR_NAMESPACE::CompactionReason::kLevelMaxLevelSize:
+      case ROCKSDB_NAMESPACE::CompactionReason::kLevelMaxLevelSize:
         return 0x2;
-      case MIZAR_NAMESPACE::CompactionReason::kUniversalSizeAmplification:
+      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeAmplification:
         return 0x3;
-      case MIZAR_NAMESPACE::CompactionReason::kUniversalSizeRatio:
+      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeRatio:
         return 0x4;
-      case MIZAR_NAMESPACE::CompactionReason::kUniversalSortedRunNum:
+      case ROCKSDB_NAMESPACE::CompactionReason::kUniversalSortedRunNum:
         return 0x5;
-      case MIZAR_NAMESPACE::CompactionReason::kFIFOMaxSize:
+      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOMaxSize:
         return 0x6;
-      case MIZAR_NAMESPACE::CompactionReason::kFIFOReduceNumFiles:
+      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOReduceNumFiles:
         return 0x7;
-      case MIZAR_NAMESPACE::CompactionReason::kFIFOTtl:
+      case ROCKSDB_NAMESPACE::CompactionReason::kFIFOTtl:
         return 0x8;
-      case MIZAR_NAMESPACE::CompactionReason::kManualCompaction:
+      case ROCKSDB_NAMESPACE::CompactionReason::kManualCompaction:
         return 0x9;
-      case MIZAR_NAMESPACE::CompactionReason::kFilesMarkedForCompaction:
+      case ROCKSDB_NAMESPACE::CompactionReason::kFilesMarkedForCompaction:
         return 0x10;
-      case MIZAR_NAMESPACE::CompactionReason::kBottommostFiles:
+      case ROCKSDB_NAMESPACE::CompactionReason::kBottommostFiles:
         return 0x0A;
-      case MIZAR_NAMESPACE::CompactionReason::kTtl:
+      case ROCKSDB_NAMESPACE::CompactionReason::kTtl:
         return 0x0B;
-      case MIZAR_NAMESPACE::CompactionReason::kFlush:
+      case ROCKSDB_NAMESPACE::CompactionReason::kFlush:
         return 0x0C;
-      case MIZAR_NAMESPACE::CompactionReason::kExternalSstIngestion:
+      case ROCKSDB_NAMESPACE::CompactionReason::kExternalSstIngestion:
         return 0x0D;
+      case ROCKSDB_NAMESPACE::CompactionReason::kPeriodicCompaction:
+        return 0x0E;
+      case ROCKSDB_NAMESPACE::CompactionReason::kChangeTemperature:
+        return 0x0F;
+      case ROCKSDB_NAMESPACE::CompactionReason::kForcedBlobGC:
+        return 0x11;
+      case ROCKSDB_NAMESPACE::CompactionReason::kRoundRobinTtl:
+        return 0x12;
+      case ROCKSDB_NAMESPACE::CompactionReason::kRefitLevel:
+        return 0x13;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::CompactionReason enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::CompactionReason enum for the
   // provided Java org.rocksdb.CompactionReason
-  static MIZAR_NAMESPACE::CompactionReason toCppCompactionReason(
+  static ROCKSDB_NAMESPACE::CompactionReason toCppCompactionReason(
       jbyte jcompaction_reason) {
     switch (jcompaction_reason) {
       case 0x0:
-        return MIZAR_NAMESPACE::CompactionReason::kUnknown;
+        return ROCKSDB_NAMESPACE::CompactionReason::kUnknown;
       case 0x1:
-        return MIZAR_NAMESPACE::CompactionReason::kLevelL0FilesNum;
+        return ROCKSDB_NAMESPACE::CompactionReason::kLevelL0FilesNum;
       case 0x2:
-        return MIZAR_NAMESPACE::CompactionReason::kLevelMaxLevelSize;
+        return ROCKSDB_NAMESPACE::CompactionReason::kLevelMaxLevelSize;
       case 0x3:
-        return MIZAR_NAMESPACE::CompactionReason::kUniversalSizeAmplification;
+        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeAmplification;
       case 0x4:
-        return MIZAR_NAMESPACE::CompactionReason::kUniversalSizeRatio;
+        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSizeRatio;
       case 0x5:
-        return MIZAR_NAMESPACE::CompactionReason::kUniversalSortedRunNum;
+        return ROCKSDB_NAMESPACE::CompactionReason::kUniversalSortedRunNum;
       case 0x6:
-        return MIZAR_NAMESPACE::CompactionReason::kFIFOMaxSize;
+        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOMaxSize;
       case 0x7:
-        return MIZAR_NAMESPACE::CompactionReason::kFIFOReduceNumFiles;
+        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOReduceNumFiles;
       case 0x8:
-        return MIZAR_NAMESPACE::CompactionReason::kFIFOTtl;
+        return ROCKSDB_NAMESPACE::CompactionReason::kFIFOTtl;
       case 0x9:
-        return MIZAR_NAMESPACE::CompactionReason::kManualCompaction;
+        return ROCKSDB_NAMESPACE::CompactionReason::kManualCompaction;
       case 0x10:
-        return MIZAR_NAMESPACE::CompactionReason::kFilesMarkedForCompaction;
+        return ROCKSDB_NAMESPACE::CompactionReason::kFilesMarkedForCompaction;
       case 0x0A:
-        return MIZAR_NAMESPACE::CompactionReason::kBottommostFiles;
+        return ROCKSDB_NAMESPACE::CompactionReason::kBottommostFiles;
       case 0x0B:
-        return MIZAR_NAMESPACE::CompactionReason::kTtl;
+        return ROCKSDB_NAMESPACE::CompactionReason::kTtl;
       case 0x0C:
-        return MIZAR_NAMESPACE::CompactionReason::kFlush;
+        return ROCKSDB_NAMESPACE::CompactionReason::kFlush;
       case 0x0D:
-        return MIZAR_NAMESPACE::CompactionReason::kExternalSstIngestion;
+        return ROCKSDB_NAMESPACE::CompactionReason::kExternalSstIngestion;
       case 0x0E:
-        return MIZAR_NAMESPACE::CompactionReason::kPeriodicCompaction;
+        return ROCKSDB_NAMESPACE::CompactionReason::kPeriodicCompaction;
       case 0x0F:
-        return MIZAR_NAMESPACE::CompactionReason::kChangeTemperature;
+        return ROCKSDB_NAMESPACE::CompactionReason::kChangeTemperature;
+      case 0x11:
+        return ROCKSDB_NAMESPACE::CompactionReason::kForcedBlobGC;
+      case 0x12:
+        return ROCKSDB_NAMESPACE::CompactionReason::kRoundRobinTtl;
+      case 0x13:
+        return ROCKSDB_NAMESPACE::CompactionReason::kRefitLevel;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::CompactionReason::kUnknown;
+        return ROCKSDB_NAMESPACE::CompactionReason::kUnknown;
     }
   }
 };
@@ -7072,30 +7252,30 @@ class CompactionReasonJni {
 class WalFileTypeJni {
  public:
   // Returns the equivalent org.rocksdb.WalFileType for the provided
-  // C++ MIZAR_NAMESPACE::WalFileType enum
+  // C++ ROCKSDB_NAMESPACE::WalFileType enum
   static jbyte toJavaWalFileType(
-      const MIZAR_NAMESPACE::WalFileType& wal_file_type) {
+      const ROCKSDB_NAMESPACE::WalFileType& wal_file_type) {
     switch (wal_file_type) {
-      case MIZAR_NAMESPACE::WalFileType::kArchivedLogFile:
+      case ROCKSDB_NAMESPACE::WalFileType::kArchivedLogFile:
         return 0x0;
-      case MIZAR_NAMESPACE::WalFileType::kAliveLogFile:
+      case ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile:
         return 0x1;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::WalFileType enum for the
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::WalFileType enum for the
   // provided Java org.rocksdb.WalFileType
-  static MIZAR_NAMESPACE::WalFileType toCppWalFileType(jbyte jwal_file_type) {
+  static ROCKSDB_NAMESPACE::WalFileType toCppWalFileType(jbyte jwal_file_type) {
     switch (jwal_file_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::WalFileType::kArchivedLogFile;
+        return ROCKSDB_NAMESPACE::WalFileType::kArchivedLogFile;
       case 0x1:
-        return MIZAR_NAMESPACE::WalFileType::kAliveLogFile;
+        return ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::WalFileType::kAliveLogFile;
+        return ROCKSDB_NAMESPACE::WalFileType::kAliveLogFile;
     }
   }
 };
@@ -7112,14 +7292,15 @@ class LogFileJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLogFile(JNIEnv* env,
-                                MIZAR_NAMESPACE::LogFile* log_file) {
+                                ROCKSDB_NAMESPACE::LogFile* log_file) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;JBJJ)V");
+    jmethodID mid =
+        env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;JBJJ)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
@@ -7127,7 +7308,7 @@ class LogFileJni : public JavaClass {
 
     std::string path_name = log_file->PathName();
     jstring jpath_name =
-        MIZAR_NAMESPACE::JniUtil::toJavaString(env, &path_name, true);
+        ROCKSDB_NAMESPACE::JniUtil::toJavaString(env, &path_name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
       return nullptr;
@@ -7135,7 +7316,7 @@ class LogFileJni : public JavaClass {
 
     jobject jlog_file = env->NewObject(
         jclazz, mid, jpath_name, static_cast<jlong>(log_file->LogNumber()),
-        MIZAR_NAMESPACE::WalFileTypeJni::toJavaWalFileType(log_file->Type()),
+        ROCKSDB_NAMESPACE::WalFileTypeJni::toJavaWalFileType(log_file->Type()),
         static_cast<jlong>(log_file->StartSequence()),
         static_cast<jlong>(log_file->SizeFileBytes()));
 
@@ -7167,27 +7348,29 @@ class LiveFileMetaDataJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLiveFileMetaData(
-      JNIEnv* env, MIZAR_NAMESPACE::LiveFileMetaData* live_file_meta_data) {
+      JNIEnv* env, ROCKSDB_NAMESPACE::LiveFileMetaData* live_file_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "([BILjava/lang/String;Ljava/lang/String;JJJ[B[BJZJJ)V");
+    jmethodID mid = env->GetMethodID(
+        jclazz, "<init>",
+        "([BILjava/lang/String;Ljava/lang/String;JJJ[B[BJZJJ)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    jbyteArray jcolumn_family_name = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jcolumn_family_name = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->column_family_name);
     if (jcolumn_family_name == nullptr) {
       // exception occurred creating java byte array
       return nullptr;
     }
 
-    jstring jfile_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jfile_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &live_file_meta_data->name, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -7195,7 +7378,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jstring jpath = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jpath = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &live_file_meta_data->db_path, true);
     if (env->ExceptionCheck()) {
       // exception occurred creating java string
@@ -7204,7 +7387,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jsmallest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jsmallest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->smallestkey);
     if (jsmallest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7214,7 +7397,7 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jlargest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jlargest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, live_file_meta_data->largestkey);
     if (jlargest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7225,21 +7408,17 @@ class LiveFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jobject jlive_file_meta_data = env->NewObject(jclazz, mid,
-        jcolumn_family_name,
-        static_cast<jint>(live_file_meta_data->level),
-        jfile_name,
-        jpath,
+    jobject jlive_file_meta_data = env->NewObject(
+        jclazz, mid, jcolumn_family_name,
+        static_cast<jint>(live_file_meta_data->level), jfile_name, jpath,
         static_cast<jlong>(live_file_meta_data->size),
         static_cast<jlong>(live_file_meta_data->smallest_seqno),
-        static_cast<jlong>(live_file_meta_data->largest_seqno),
-        jsmallest_key,
+        static_cast<jlong>(live_file_meta_data->largest_seqno), jsmallest_key,
         jlargest_key,
         static_cast<jlong>(live_file_meta_data->num_reads_sampled),
         static_cast<jboolean>(live_file_meta_data->being_compacted),
         static_cast<jlong>(live_file_meta_data->num_entries),
-        static_cast<jlong>(live_file_meta_data->num_deletions)
-    );
+        static_cast<jlong>(live_file_meta_data->num_deletions));
 
     if (env->ExceptionCheck()) {
       env->DeleteLocalRef(jcolumn_family_name);
@@ -7278,27 +7457,28 @@ class SstFileMetaDataJni : public JavaClass {
    */
   static jobject fromCppSstFileMetaData(
       JNIEnv* env,
-      const MIZAR_NAMESPACE::SstFileMetaData* sst_file_meta_data) {
+      const ROCKSDB_NAMESPACE::SstFileMetaData* sst_file_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(Ljava/lang/String;Ljava/lang/String;JJJ[B[BJZJJ)V");
+    jmethodID mid = env->GetMethodID(
+        jclazz, "<init>", "(Ljava/lang/String;Ljava/lang/String;JJJ[B[BJZJJ)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    jstring jfile_name = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jfile_name = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &sst_file_meta_data->name, true);
     if (jfile_name == nullptr) {
       // exception occurred creating java byte array
       return nullptr;
     }
 
-    jstring jpath = MIZAR_NAMESPACE::JniUtil::toJavaString(
+    jstring jpath = ROCKSDB_NAMESPACE::JniUtil::toJavaString(
         env, &sst_file_meta_data->db_path, true);
     if (jpath == nullptr) {
       // exception occurred creating java byte array
@@ -7306,7 +7486,7 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jsmallest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jsmallest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, sst_file_meta_data->smallestkey);
     if (jsmallest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7315,7 +7495,7 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jbyteArray jlargest_key = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jlargest_key = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, sst_file_meta_data->largestkey);
     if (jlargest_key == nullptr) {
       // exception occurred creating java byte array
@@ -7325,19 +7505,15 @@ class SstFileMetaDataJni : public JavaClass {
       return nullptr;
     }
 
-    jobject jsst_file_meta_data = env->NewObject(jclazz, mid,
-        jfile_name,
-        jpath,
+    jobject jsst_file_meta_data = env->NewObject(
+        jclazz, mid, jfile_name, jpath,
         static_cast<jlong>(sst_file_meta_data->size),
         static_cast<jint>(sst_file_meta_data->smallest_seqno),
-        static_cast<jlong>(sst_file_meta_data->largest_seqno),
-        jsmallest_key,
-        jlargest_key,
-        static_cast<jlong>(sst_file_meta_data->num_reads_sampled),
+        static_cast<jlong>(sst_file_meta_data->largest_seqno), jsmallest_key,
+        jlargest_key, static_cast<jlong>(sst_file_meta_data->num_reads_sampled),
         static_cast<jboolean>(sst_file_meta_data->being_compacted),
         static_cast<jlong>(sst_file_meta_data->num_entries),
-        static_cast<jlong>(sst_file_meta_data->num_deletions)
-    );
+        static_cast<jlong>(sst_file_meta_data->num_deletions));
 
     if (env->ExceptionCheck()) {
       env->DeleteLocalRef(jfile_name);
@@ -7348,10 +7524,10 @@ class SstFileMetaDataJni : public JavaClass {
     }
 
     // cleanup
-      env->DeleteLocalRef(jfile_name);
-      env->DeleteLocalRef(jpath);
-      env->DeleteLocalRef(jsmallest_key);
-      env->DeleteLocalRef(jlargest_key);
+    env->DeleteLocalRef(jfile_name);
+    env->DeleteLocalRef(jpath);
+    env->DeleteLocalRef(jsmallest_key);
+    env->DeleteLocalRef(jlargest_key);
 
     return jsst_file_meta_data;
   }
@@ -7373,22 +7549,23 @@ class LevelMetaDataJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppLevelMetaData(
-      JNIEnv* env, const MIZAR_NAMESPACE::LevelMetaData* level_meta_data) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::LevelMetaData* level_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(IJ[Lorg/rocksdb/SstFileMetaData;)V");
+    jmethodID mid = env->GetMethodID(jclazz, "<init>",
+                                     "(IJ[Lorg/rocksdb/SstFileMetaData;)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    const jsize jlen =
-        static_cast<jsize>(level_meta_data->files.size());
-    jobjectArray jfiles = env->NewObjectArray(jlen, SstFileMetaDataJni::getJClass(env), nullptr);
+    const jsize jlen = static_cast<jsize>(level_meta_data->files.size());
+    jobjectArray jfiles =
+        env->NewObjectArray(jlen, SstFileMetaDataJni::getJClass(env), nullptr);
     if (jfiles == nullptr) {
       // exception thrown: OutOfMemoryError
       return nullptr;
@@ -7396,7 +7573,7 @@ class LevelMetaDataJni : public JavaClass {
 
     jsize i = 0;
     for (auto it = level_meta_data->files.begin();
-        it != level_meta_data->files.end(); ++it) {
+         it != level_meta_data->files.end(); ++it) {
       jobject jfile = SstFileMetaDataJni::fromCppSstFileMetaData(env, &(*it));
       if (jfile == nullptr) {
         // exception occurred
@@ -7406,11 +7583,9 @@ class LevelMetaDataJni : public JavaClass {
       env->SetObjectArrayElement(jfiles, i++, jfile);
     }
 
-    jobject jlevel_meta_data = env->NewObject(jclazz, mid,
-        static_cast<jint>(level_meta_data->level),
-        static_cast<jlong>(level_meta_data->size),
-        jfiles
-    );
+    jobject jlevel_meta_data =
+        env->NewObject(jclazz, mid, static_cast<jint>(level_meta_data->level),
+                       static_cast<jlong>(level_meta_data->size), jfiles);
 
     if (env->ExceptionCheck()) {
       env->DeleteLocalRef(jfiles);
@@ -7441,20 +7616,21 @@ class ColumnFamilyMetaDataJni : public JavaClass {
    */
   static jobject fromCppColumnFamilyMetaData(
       JNIEnv* env,
-      const MIZAR_NAMESPACE::ColumnFamilyMetaData* column_famly_meta_data) {
+      const ROCKSDB_NAMESPACE::ColumnFamilyMetaData* column_famly_meta_data) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    jmethodID mid = env->GetMethodID(jclazz, "<init>", "(JJ[B[Lorg/rocksdb/LevelMetaData;)V");
+    jmethodID mid = env->GetMethodID(jclazz, "<init>",
+                                     "(JJ[B[Lorg/rocksdb/LevelMetaData;)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
     }
 
-    jbyteArray jname = MIZAR_NAMESPACE::JniUtil::copyBytes(
+    jbyteArray jname = ROCKSDB_NAMESPACE::JniUtil::copyBytes(
         env, column_famly_meta_data->name);
     if (jname == nullptr) {
       // exception occurred creating java byte array
@@ -7463,8 +7639,9 @@ class ColumnFamilyMetaDataJni : public JavaClass {
 
     const jsize jlen =
         static_cast<jsize>(column_famly_meta_data->levels.size());
-    jobjectArray jlevels = env->NewObjectArray(jlen, LevelMetaDataJni::getJClass(env), nullptr);
-    if(jlevels == nullptr) {
+    jobjectArray jlevels =
+        env->NewObjectArray(jlen, LevelMetaDataJni::getJClass(env), nullptr);
+    if (jlevels == nullptr) {
       // exception thrown: OutOfMemoryError
       env->DeleteLocalRef(jname);
       return nullptr;
@@ -7472,7 +7649,7 @@ class ColumnFamilyMetaDataJni : public JavaClass {
 
     jsize i = 0;
     for (auto it = column_famly_meta_data->levels.begin();
-        it != column_famly_meta_data->levels.end(); ++it) {
+         it != column_famly_meta_data->levels.end(); ++it) {
       jobject jlevel = LevelMetaDataJni::fromCppLevelMetaData(env, &(*it));
       if (jlevel == nullptr) {
         // exception occurred
@@ -7483,12 +7660,9 @@ class ColumnFamilyMetaDataJni : public JavaClass {
       env->SetObjectArrayElement(jlevels, i++, jlevel);
     }
 
-    jobject jcolumn_family_meta_data = env->NewObject(jclazz, mid,
-        static_cast<jlong>(column_famly_meta_data->size),
-        static_cast<jlong>(column_famly_meta_data->file_count),
-        jname,
-        jlevels
-    );
+    jobject jcolumn_family_meta_data = env->NewObject(
+        jclazz, mid, static_cast<jlong>(column_famly_meta_data->size),
+        static_cast<jlong>(column_famly_meta_data->file_count), jname, jlevels);
 
     if (env->ExceptionCheck()) {
       env->DeleteLocalRef(jname);
@@ -7511,7 +7685,7 @@ class ColumnFamilyMetaDataJni : public JavaClass {
 // The portal class for org.rocksdb.AbstractTraceWriter
 class AbstractTraceWriterJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::TraceWriterJniCallback*,
+          const ROCKSDB_NAMESPACE::TraceWriterJniCallback*,
           AbstractTraceWriterJni> {
  public:
   /**
@@ -7525,7 +7699,7 @@ class AbstractTraceWriterJni
    */
   static jclass getJClass(JNIEnv* env) {
     return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/AbstractTraceWriter");
+                                         "org/rocksdb/AbstractTraceWriter");
   }
 
   /**
@@ -7538,13 +7712,12 @@ class AbstractTraceWriterJni
    */
   static jmethodID getWriteProxyMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "writeProxy", "(J)S");
+    static jmethodID mid = env->GetMethodID(jclazz, "writeProxy", "(J)S");
     assert(mid != nullptr);
     return mid;
   }
@@ -7559,13 +7732,12 @@ class AbstractTraceWriterJni
    */
   static jmethodID getCloseWriterProxyMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "closeWriterProxy", "()S");
+    static jmethodID mid = env->GetMethodID(jclazz, "closeWriterProxy", "()S");
     assert(mid != nullptr);
     return mid;
   }
@@ -7580,13 +7752,12 @@ class AbstractTraceWriterJni
    */
   static jmethodID getGetFileSizeMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "getFileSize", "()J");
+    static jmethodID mid = env->GetMethodID(jclazz, "getFileSize", "()J");
     assert(mid != nullptr);
     return mid;
   }
@@ -7594,7 +7765,7 @@ class AbstractTraceWriterJni
 
 // The portal class for org.rocksdb.AbstractWalFilter
 class AbstractWalFilterJni
-    : public RocksDBNativeClass<const MIZAR_NAMESPACE::WalFilterJniCallback*,
+    : public RocksDBNativeClass<const ROCKSDB_NAMESPACE::WalFilterJniCallback*,
                                 AbstractWalFilterJni> {
  public:
   /**
@@ -7607,8 +7778,7 @@ class AbstractWalFilterJni
    *     OutOfMemoryError or ExceptionInInitializerError exceptions is thrown
    */
   static jclass getJClass(JNIEnv* env) {
-    return RocksDBNativeClass::getJClass(env,
-        "org/rocksdb/AbstractWalFilter");
+    return RocksDBNativeClass::getJClass(env, "org/rocksdb/AbstractWalFilter");
   }
 
   /**
@@ -7621,14 +7791,14 @@ class AbstractWalFilterJni
    */
   static jmethodID getColumnFamilyLogNumberMapMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "columnFamilyLogNumberMap",
-        "(Ljava/util/Map;Ljava/util/Map;)V");
+    static jmethodID mid =
+        env->GetMethodID(jclazz, "columnFamilyLogNumberMap",
+                         "(Ljava/util/Map;Ljava/util/Map;)V");
     assert(mid != nullptr);
     return mid;
   }
@@ -7643,13 +7813,13 @@ class AbstractWalFilterJni
    */
   static jmethodID getLogRecordFoundProxyMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "logRecordFoundProxy", "(JLjava/lang/String;JJ)S");
+    static jmethodID mid = env->GetMethodID(jclazz, "logRecordFoundProxy",
+                                            "(JLjava/lang/String;JJ)S");
     assert(mid != nullptr);
     return mid;
   }
@@ -7664,13 +7834,13 @@ class AbstractWalFilterJni
    */
   static jmethodID getNameMethodId(JNIEnv* env) {
     jclass jclazz = getJClass(env);
-    if(jclazz == nullptr) {
+    if (jclazz == nullptr) {
       // exception occurred accessing class
       return nullptr;
     }
 
-    static jmethodID mid = env->GetMethodID(
-        jclazz, "name", "()Ljava/lang/String;");
+    static jmethodID mid =
+        env->GetMethodID(jclazz, "name", "()Ljava/lang/String;");
     assert(mid != nullptr);
     return mid;
   }
@@ -7680,20 +7850,20 @@ class AbstractWalFilterJni
 class WalProcessingOptionJni {
  public:
   // Returns the equivalent org.rocksdb.WalProcessingOption for the provided
-  // C++ MIZAR_NAMESPACE::WalFilter::WalProcessingOption enum
+  // C++ ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption enum
   static jbyte toJavaWalProcessingOption(
-      const MIZAR_NAMESPACE::WalFilter::WalProcessingOption&
+      const ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption&
           wal_processing_option) {
     switch (wal_processing_option) {
-      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
           kContinueProcessing:
         return 0x0;
-      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
           kIgnoreCurrentRecord:
         return 0x1;
-      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay:
+      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay:
         return 0x2;
-      case MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kCorruptedRecord:
+      case ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kCorruptedRecord:
         return 0x3;
       default:
         return 0x7F;  // undefined
@@ -7701,25 +7871,25 @@ class WalProcessingOptionJni {
   }
 
   // Returns the equivalent C++
-  // MIZAR_NAMESPACE::WalFilter::WalProcessingOption enum for the provided
+  // ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption enum for the provided
   // Java org.rocksdb.WalProcessingOption
-  static MIZAR_NAMESPACE::WalFilter::WalProcessingOption
+  static ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption
   toCppWalProcessingOption(jbyte jwal_processing_option) {
     switch (jwal_processing_option) {
       case 0x0:
-        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
             kContinueProcessing;
       case 0x1:
-        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
             kIgnoreCurrentRecord;
       case 0x2:
-        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay;
+        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::kStopReplay;
       case 0x3:
-        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
             kCorruptedRecord;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::WalFilter::WalProcessingOption::
+        return ROCKSDB_NAMESPACE::WalFilter::WalProcessingOption::
             kCorruptedRecord;
     }
   }
@@ -7729,36 +7899,36 @@ class WalProcessingOptionJni {
 class ReusedSynchronisationTypeJni {
  public:
   // Returns the equivalent org.rocksdb.ReusedSynchronisationType for the
-  // provided C++ MIZAR_NAMESPACE::ReusedSynchronisationType enum
+  // provided C++ ROCKSDB_NAMESPACE::ReusedSynchronisationType enum
   static jbyte toJavaReusedSynchronisationType(
-      const MIZAR_NAMESPACE::ReusedSynchronisationType&
+      const ROCKSDB_NAMESPACE::ReusedSynchronisationType&
           reused_synchronisation_type) {
-    switch(reused_synchronisation_type) {
-      case MIZAR_NAMESPACE::ReusedSynchronisationType::MUTEX:
+    switch (reused_synchronisation_type) {
+      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::MUTEX:
         return 0x0;
-      case MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX:
+      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX:
         return 0x1;
-      case MIZAR_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL:
+      case ROCKSDB_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL:
         return 0x2;
       default:
         return 0x7F;  // undefined
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ReusedSynchronisationType
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ReusedSynchronisationType
   // enum for the provided Java org.rocksdb.ReusedSynchronisationType
-  static MIZAR_NAMESPACE::ReusedSynchronisationType
+  static ROCKSDB_NAMESPACE::ReusedSynchronisationType
   toCppReusedSynchronisationType(jbyte reused_synchronisation_type) {
-    switch(reused_synchronisation_type) {
+    switch (reused_synchronisation_type) {
       case 0x0:
-        return MIZAR_NAMESPACE::ReusedSynchronisationType::MUTEX;
+        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::MUTEX;
       case 0x1:
-        return MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
+        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
       case 0x2:
-        return MIZAR_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL;
+        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::THREAD_LOCAL;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
+        return ROCKSDB_NAMESPACE::ReusedSynchronisationType::ADAPTIVE_MUTEX;
     }
   }
 };
@@ -7766,16 +7936,16 @@ class ReusedSynchronisationTypeJni {
 class SanityLevelJni {
  public:
   // Returns the equivalent org.rocksdb.SanityLevel for the provided
-  // C++ MIZAR_NAMESPACE::ConfigOptions::SanityLevel enum
+  // C++ ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel enum
   static jbyte toJavaSanityLevel(
-      const MIZAR_NAMESPACE::ConfigOptions::SanityLevel &sanity_level) {
+      const ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel& sanity_level) {
     switch (sanity_level) {
-      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::kSanityLevelNone:
+      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::kSanityLevelNone:
         return 0x0;
-      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::
+      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::
           kSanityLevelLooselyCompatible:
         return 0x1;
-      case MIZAR_NAMESPACE::ConfigOptions::SanityLevel::
+      case ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel::
           kSanityLevelExactMatch:
         return -0x01;
       default:
@@ -7783,18 +7953,52 @@ class SanityLevelJni {
     }
   }
 
-  // Returns the equivalent C++ MIZAR_NAMESPACE::ConfigOptions::SanityLevel enum for
-  // the provided Java org.rocksdb.SanityLevel
-  static MIZAR_NAMESPACE::ConfigOptions::SanityLevel toCppSanityLevel(
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel
+  // enum for the provided Java org.rocksdb.SanityLevel
+  static ROCKSDB_NAMESPACE::ConfigOptions::SanityLevel toCppSanityLevel(
       jbyte sanity_level) {
     switch (sanity_level) {
       case 0x0:
-        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelNone;
+        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelNone;
       case 0x1:
-        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelLooselyCompatible;
+        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelLooselyCompatible;
       default:
         // undefined/default
-        return MIZAR_NAMESPACE::ConfigOptions::kSanityLevelExactMatch;
+        return ROCKSDB_NAMESPACE::ConfigOptions::kSanityLevelExactMatch;
+    }
+  }
+};
+
+// The portal class for org.rocksdb.PrepopulateBlobCache
+class PrepopulateBlobCacheJni {
+ public:
+  // Returns the equivalent org.rocksdb.PrepopulateBlobCache for the provided
+  // C++ ROCKSDB_NAMESPACE::PrepopulateBlobCache enum
+  static jbyte toJavaPrepopulateBlobCache(
+      ROCKSDB_NAMESPACE::PrepopulateBlobCache prepopulate_blob_cache) {
+    switch (prepopulate_blob_cache) {
+      case ROCKSDB_NAMESPACE::PrepopulateBlobCache::kDisable:
+        return 0x0;
+      case ROCKSDB_NAMESPACE::PrepopulateBlobCache::kFlushOnly:
+        return 0x1;
+      default:
+        return 0x7f;  // undefined
+    }
+  }
+
+  // Returns the equivalent C++ ROCKSDB_NAMESPACE::PrepopulateBlobCache enum for
+  // the provided Java org.rocksdb.PrepopulateBlobCache
+  static ROCKSDB_NAMESPACE::PrepopulateBlobCache toCppPrepopulateBlobCache(
+      jbyte jprepopulate_blob_cache) {
+    switch (jprepopulate_blob_cache) {
+      case 0x0:
+        return ROCKSDB_NAMESPACE::PrepopulateBlobCache::kDisable;
+      case 0x1:
+        return ROCKSDB_NAMESPACE::PrepopulateBlobCache::kFlushOnly;
+      case 0x7F:
+      default:
+        // undefined/default
+        return ROCKSDB_NAMESPACE::PrepopulateBlobCache::kDisable;
     }
   }
 };
@@ -7803,7 +8007,7 @@ class SanityLevelJni {
 class EnabledEventCallbackJni {
  public:
   // Returns the set of equivalent C++
-  // MIZAR_NAMESPACE::EnabledEventCallbackJni::EnabledEventCallback enums for
+  // ROCKSDB_NAMESPACE::EnabledEventCallbackJni::EnabledEventCallback enums for
   // the provided Java jenabled_event_callback_values
   static std::set<EnabledEventCallback> toCppEnabledEventCallbacks(
       jlong jenabled_event_callback_values) {
@@ -7821,7 +8025,7 @@ class EnabledEventCallbackJni {
 // The portal class for org.rocksdb.AbstractEventListener
 class AbstractEventListenerJni
     : public RocksDBNativeClass<
-          const MIZAR_NAMESPACE::EventListenerJniCallback*,
+          const ROCKSDB_NAMESPACE::EventListenerJniCallback*,
           AbstractEventListenerJni> {
  public:
   /**
@@ -8209,7 +8413,7 @@ class FlushJobInfoJni : public JavaClass {
    * nullptr if an an exception occurs
    */
   static jobject fromCppFlushJobInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::FlushJobInfo* flush_job_info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::FlushJobInfo* flush_job_info) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -8268,7 +8472,7 @@ class TableFileDeletionInfoJni : public JavaClass {
    */
   static jobject fromCppTableFileDeletionInfo(
       JNIEnv* env,
-      const MIZAR_NAMESPACE::TableFileDeletionInfo* file_del_info) {
+      const ROCKSDB_NAMESPACE::TableFileDeletionInfo* file_del_info) {
     jclass jclazz = getJClass(env);
     if (jclazz == nullptr) {
       // exception occurred accessing class
@@ -8305,13 +8509,13 @@ class CompactionJobInfoJni : public JavaClass {
  public:
   static jobject fromCppCompactionJobInfo(
       JNIEnv* env,
-      const MIZAR_NAMESPACE::CompactionJobInfo* compaction_job_info) {
+      const ROCKSDB_NAMESPACE::CompactionJobInfo* compaction_job_info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
     assert(ctor != nullptr);
     return env->NewObject(jclazz, ctor,
-                          reinterpret_cast<jlong>(compaction_job_info));
+                          GET_CPLUSPLUS_POINTER(compaction_job_info));
   }
 
   static jclass getJClass(JNIEnv* env) {
@@ -8326,7 +8530,7 @@ class CompactionJobInfoJni : public JavaClass {
 class TableFileCreationInfoJni : public JavaClass {
  public:
   static jobject fromCppTableFileCreationInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::TableFileCreationInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::TableFileCreationInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8381,7 +8585,7 @@ class TableFileCreationInfoJni : public JavaClass {
 class TableFileCreationBriefInfoJni : public JavaClass {
  public:
   static jobject fromCppTableFileCreationBriefInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::TableFileCreationBriefInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::TableFileCreationBriefInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8420,7 +8624,7 @@ class TableFileCreationBriefInfoJni : public JavaClass {
 class MemTableInfoJni : public JavaClass {
  public:
   static jobject fromCppMemTableInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::MemTableInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::MemTableInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8448,7 +8652,7 @@ class MemTableInfoJni : public JavaClass {
 class ExternalFileIngestionInfoJni : public JavaClass {
  public:
   static jobject fromCppExternalFileIngestionInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::ExternalFileIngestionInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::ExternalFileIngestionInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8497,7 +8701,7 @@ class ExternalFileIngestionInfoJni : public JavaClass {
 class WriteStallInfoJni : public JavaClass {
  public:
   static jobject fromCppWriteStallInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::WriteStallInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::WriteStallInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8523,7 +8727,7 @@ class WriteStallInfoJni : public JavaClass {
 class FileOperationInfoJni : public JavaClass {
  public:
   static jobject fromCppFileOperationInfo(
-      JNIEnv* env, const MIZAR_NAMESPACE::FileOperationInfo* info) {
+      JNIEnv* env, const ROCKSDB_NAMESPACE::FileOperationInfo* info) {
     jclass jclazz = getJClass(env);
     assert(jclazz != nullptr);
     static jmethodID ctor = getConstructorMethodId(env, jclazz);
@@ -8553,5 +8757,5 @@ class FileOperationInfoJni : public JavaClass {
                             "(Ljava/lang/String;JJJJLorg/rocksdb/Status;)V");
   }
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif  // JAVA_ROCKSJNI_PORTAL_H_

@@ -10,9 +10,9 @@
 #include <string>
 
 #include "db/blob/blob_constants.h"
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class JSONWriter;
 class Slice;
@@ -54,4 +54,4 @@ std::ostream& operator<<(std::ostream& os,
 JSONWriter& operator<<(JSONWriter& jw,
                        const BlobFileGarbage& blob_file_garbage);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

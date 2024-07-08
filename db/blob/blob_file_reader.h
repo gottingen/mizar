@@ -8,12 +8,13 @@
 #include <cinttypes>
 #include <memory>
 
+#include "db/blob/blob_read_request.h"
 #include "file/random_access_file_reader.h"
-#include "mizar/compression_type.h"
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/compression_type.h"
+#include "rocksdb/rocksdb_namespace.h"
 #include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Status;
 struct ImmutableOptions;
@@ -22,7 +23,7 @@ class HistogramImpl;
 struct ReadOptions;
 class Slice;
 class FilePrefetchBuffer;
-class PinnableSlice;
+class BlobContents;
 class Statistics;
 
 class BlobFileReader {
@@ -43,16 +44,17 @@ class BlobFileReader {
   Status GetBlob(const ReadOptions& read_options, const Slice& user_key,
                  uint64_t offset, uint64_t value_size,
                  CompressionType compression_type,
-                 FilePrefetchBuffer* prefetch_buffer, PinnableSlice* value,
+                 FilePrefetchBuffer* prefetch_buffer,
+                 MemoryAllocator* allocator,
+                 std::unique_ptr<BlobContents>* result,
                  uint64_t* bytes_read) const;
 
   // offsets must be sorted in ascending order by caller.
   void MultiGetBlob(
-      const ReadOptions& read_options,
-      const autovector<std::reference_wrapper<const Slice>>& user_keys,
-      const autovector<uint64_t>& offsets,
-      const autovector<uint64_t>& value_sizes, autovector<Status*>& statuses,
-      autovector<PinnableSlice*>& values, uint64_t* bytes_read) const;
+      const ReadOptions& read_options, MemoryAllocator* allocator,
+      autovector<std::pair<BlobReadRequest*, std::unique_ptr<BlobContents>>>&
+          blob_reqs,
+      uint64_t* bytes_read) const;
 
   CompressionType GetCompressionType() const { return compression_type_; }
 
@@ -83,18 +85,18 @@ class BlobFileReader {
   static Status ReadFromFile(const RandomAccessFileReader* file_reader,
                              uint64_t read_offset, size_t read_size,
                              Statistics* statistics, Slice* slice, Buffer* buf,
-                             AlignedBuf* aligned_buf);
+                             AlignedBuf* aligned_buf,
+                             Env::IOPriority rate_limiter_priority);
 
   static Status VerifyBlob(const Slice& record_slice, const Slice& user_key,
                            uint64_t value_size);
 
   static Status UncompressBlobIfNeeded(const Slice& value_slice,
                                        CompressionType compression_type,
+                                       MemoryAllocator* allocator,
                                        SystemClock* clock,
                                        Statistics* statistics,
-                                       PinnableSlice* value);
-
-  static void SaveValue(const Slice& src, PinnableSlice* dst);
+                                       std::unique_ptr<BlobContents>* result);
 
   std::unique_ptr<RandomAccessFileReader> file_reader_;
   uint64_t file_size_;
@@ -103,4 +105,4 @@ class BlobFileReader {
   Statistics* statistics_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

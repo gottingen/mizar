@@ -15,13 +15,13 @@
 
 #include "env/composite_env_wrapper.h"
 #include "file/writable_file_writer.h"
-#include "mizar/compaction_filter.h"
-#include "mizar/env.h"
-#include "mizar/iterator.h"
-#include "mizar/merge_operator.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/table.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/table.h"
 #include "table/internal_iterator.h"
 #include "util/mutexlock.h"
 
@@ -33,7 +33,7 @@ void RegisterCustomObjects(int argc, char** argv);
 void RegisterCustomObjects(int argc, char** argv);
 #endif  // !ROCKSDB_UNITTESTS_WITH_CUSTOM_OBJECTS_FROM_STATIC_LIBS
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class FileSystem;
 class MemTableRepFactory;
 class ObjectLibrary;
@@ -113,6 +113,9 @@ class SimpleSuffixReverseComparator : public Comparator {
 // endian machines.
 extern const Comparator* Uint64Comparator();
 
+// A wrapper api for getting the ComparatorWithU64Ts<BytewiseComparator>
+extern const Comparator* BytewiseComparatorWithU64TsWrapper();
+
 class StringSink : public FSWritableFile {
  public:
   std::string contents_;
@@ -141,9 +144,8 @@ class StringSink : public FSWritableFile {
     if (reader_contents_ != nullptr) {
       assert(reader_contents_->size() <= last_flush_);
       size_t offset = last_flush_ - reader_contents_->size();
-      *reader_contents_ = Slice(
-          contents_.data() + offset,
-          contents_.size() - offset);
+      *reader_contents_ =
+          Slice(contents_.data() + offset, contents_.size() - offset);
       last_flush_ = contents_.size();
     }
 
@@ -162,8 +164,8 @@ class StringSink : public FSWritableFile {
   void Drop(size_t bytes) {
     if (reader_contents_ != nullptr) {
       contents_.resize(contents_.size() - bytes);
-      *reader_contents_ = Slice(
-          reader_contents_->data(), reader_contents_->size() - bytes);
+      *reader_contents_ =
+          Slice(reader_contents_->data(), reader_contents_->size() - bytes);
       last_flush_ = contents_.size();
     }
   }
@@ -279,7 +281,7 @@ class StringSource : public FSRandomAccessFile {
         mmap_(mmap),
         total_reads_(0) {}
 
-  virtual ~StringSource() { }
+  virtual ~StringSource() {}
 
   uint64_t Size() const { return contents_.size(); }
 
@@ -321,7 +323,7 @@ class StringSource : public FSRandomAccessFile {
     char* rid = id;
     rid = EncodeVarint64(rid, uniq_id_);
     rid = EncodeVarint64(rid, 0);
-    return static_cast<size_t>(rid-id);
+    return static_cast<size_t>(rid - id);
   }
 
   int total_reads() const { return total_reads_; }
@@ -360,6 +362,16 @@ class SleepingBackgroundTask {
         should_sleep_(true),
         done_with_sleep_(false),
         sleeping_(false) {}
+
+  ~SleepingBackgroundTask() {
+    MutexLock l(&mutex_);
+    should_sleep_ = false;
+    while (sleeping_) {
+      assert(!should_sleep_);
+      bg_cv_.SignalAll();
+      bg_cv_.Wait();
+    }
+  }
 
   bool IsSleeping() {
     MutexLock l(&mutex_);
@@ -433,8 +445,8 @@ class FilterNumber : public CompactionFilter {
 
   std::string last_merge_operand_key() { return last_merge_operand_key_; }
 
-  bool Filter(int /*level*/, const MIZAR_NAMESPACE::Slice& /*key*/,
-              const MIZAR_NAMESPACE::Slice& value, std::string* /*new_value*/,
+  bool Filter(int /*level*/, const ROCKSDB_NAMESPACE::Slice& /*key*/,
+              const ROCKSDB_NAMESPACE::Slice& value, std::string* /*new_value*/,
               bool* /*value_changed*/) const override {
     if (value.size() == sizeof(uint64_t)) {
       return num_ == DecodeFixed64(value.data());
@@ -443,8 +455,8 @@ class FilterNumber : public CompactionFilter {
   }
 
   bool FilterMergeOperand(
-      int /*level*/, const MIZAR_NAMESPACE::Slice& key,
-      const MIZAR_NAMESPACE::Slice& value) const override {
+      int /*level*/, const ROCKSDB_NAMESPACE::Slice& key,
+      const ROCKSDB_NAMESPACE::Slice& value) const override {
     last_merge_operand_key_ = key.ToString();
     if (value.size() == sizeof(uint64_t)) {
       return num_ == DecodeFixed64(value.data());
@@ -711,7 +723,9 @@ class ChanglingMergeOperator : public MergeOperator {
     return false;
   }
   static const char* kClassName() { return "ChanglingMergeOperator"; }
-  virtual bool IsInstanceOf(const std::string& id) const override {
+  const char* NickName() const override { return kNickName(); }
+  static const char* kNickName() { return "Changling"; }
+  bool IsInstanceOf(const std::string& id) const override {
     if (id == kClassName()) {
       return true;
     } else {
@@ -744,7 +758,10 @@ class ChanglingCompactionFilter : public CompactionFilter {
   }
 
   static const char* kClassName() { return "ChanglingCompactionFilter"; }
-  virtual bool IsInstanceOf(const std::string& id) const override {
+  const char* NickName() const override { return kNickName(); }
+  static const char* kNickName() { return "Changling"; }
+
+  bool IsInstanceOf(const std::string& id) const override {
     if (id == kClassName()) {
       return true;
     } else {
@@ -778,7 +795,10 @@ class ChanglingCompactionFilterFactory : public CompactionFilterFactory {
   // Returns a name that identifies this compaction filter factory.
   const char* Name() const override { return name_.c_str(); }
   static const char* kClassName() { return "ChanglingCompactionFilterFactory"; }
-  virtual bool IsInstanceOf(const std::string& id) const override {
+  const char* NickName() const override { return kNickName(); }
+  static const char* kNickName() { return "Changling"; }
+
+  bool IsInstanceOf(const std::string& id) const override {
     if (id == kClassName()) {
       return true;
     } else {
@@ -793,8 +813,6 @@ class ChanglingCompactionFilterFactory : public CompactionFilterFactory {
 // The factory for the hacky skip list mem table that triggers flush after
 // number of entries exceeds a threshold.
 extern MemTableRepFactory* NewSpecialSkipListFactory(int num_entries_per_flush);
-
-extern const Comparator* ComparatorWithU64Ts();
 
 CompressionType RandomCompressionType(Random* rnd);
 
@@ -818,11 +836,6 @@ bool IsPrefetchSupported(const std::shared_ptr<FileSystem>& fs,
 // Return the number of lines where a given pattern was found in a file.
 size_t GetLinesCount(const std::string& fname, const std::string& pattern);
 
-// TEST_TMPDIR may be set to /dev/shm in Makefile,
-// but /dev/shm does not support direct IO.
-// Tries to set TEST_TMPDIR to a directory supporting direct IO.
-void ResetTmpDirForDirectIO();
-
 Status CorruptFile(Env* env, const std::string& fname, int offset,
                    int bytes_to_corrupt, bool verify_checksum = true);
 Status TruncateFile(Env* env, const std::string& fname, uint64_t length);
@@ -838,12 +851,12 @@ void DeleteDir(Env* env, const std::string& dirname);
 Status CreateEnvFromSystem(const ConfigOptions& options, Env** result,
                            std::shared_ptr<Env>* guard);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 // Registers the testutil classes with the ObjectLibrary
 int RegisterTestObjects(ObjectLibrary& library, const std::string& /*arg*/);
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 // Register the testutil classes with the default ObjectRegistry/Library
 void RegisterTestLibrary(const std::string& arg = "");
 }  // namespace test
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

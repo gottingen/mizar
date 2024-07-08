@@ -9,9 +9,10 @@
 
 #include <atomic>
 #include <memory>
-#include "mizar/rate_limiter.h"
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/rate_limiter.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 class SystemClock;
 class WriteControllerToken;
@@ -52,7 +53,7 @@ class WriteController {
   bool IsStopped() const;
   bool NeedsDelay() const { return total_delayed_.load() > 0; }
   bool NeedSpeedupCompaction() const {
-    return IsStopped() || NeedsDelay() || total_compaction_pressure_ > 0;
+    return IsStopped() || NeedsDelay() || total_compaction_pressure_.load() > 0;
   }
   // return how many microseconds the caller needs to sleep after the call
   // num_bytes: how many number of bytes to put into the DB.
@@ -144,4 +145,4 @@ class CompactionPressureToken : public WriteControllerToken {
   virtual ~CompactionPressureToken();
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

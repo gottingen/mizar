@@ -11,16 +11,16 @@
 
 #include "db/builder.h"
 #include "db/table_properties_collector.h"
-#include "mizar/comparator.h"
-#include "mizar/memory_allocator.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/memory_allocator.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
 #include "table/block_based/block_builder.h"
 #include "table/block_based/block_type.h"
 #include "table/format.h"
 #include "util/kv_map.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class BlockBuilder;
 class BlockHandle;
@@ -92,7 +92,7 @@ bool NotifyCollectTableCollectorsOnAdd(
 
 void NotifyCollectTableCollectorsOnBlockAdd(
     const std::vector<std::unique_ptr<IntTblPropCollector>>& collectors,
-    uint64_t block_raw_bytes, uint64_t block_compressed_bytes_fast,
+    uint64_t block_uncomp_bytes, uint64_t block_compressed_bytes_fast,
     uint64_t block_compressed_bytes_slow);
 
 // NotifyCollectTableCollectorsOnFinish() triggers the `Finish` event for all
@@ -145,6 +145,15 @@ Status FindMetaBlockInFile(RandomAccessFileReader* file, uint64_t file_size,
                            FilePrefetchBuffer* prefetch_buffer = nullptr,
                            Footer* footer_out = nullptr);
 
+// Read meta block contents
+Status ReadMetaIndexBlockInFile(RandomAccessFileReader* file,
+                                uint64_t file_size, uint64_t table_magic_number,
+                                const ImmutableOptions& ioptions,
+                                BlockContents* block_contents,
+                                MemoryAllocator* memory_allocator = nullptr,
+                                FilePrefetchBuffer* prefetch_buffer = nullptr,
+                                Footer* footer_out = nullptr);
+
 // Read the specified meta block with name meta_block_name
 // from `file` and initialize `contents` with contents of this block.
 // Return Status::OK in case of success.
@@ -156,4 +165,4 @@ Status ReadMetaBlock(RandomAccessFileReader* file,
                      BlockContents* contents,
                      MemoryAllocator* memory_allocator = nullptr);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

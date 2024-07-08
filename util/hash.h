@@ -22,10 +22,10 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 #include "util/fastrange.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Stable/persistent 64-bit hash. Higher quality and generally faster than
 // Hash(), especially for inputs > 24 bytes.
@@ -134,4 +134,4 @@ struct SliceHasher {
   uint32_t operator()(const Slice& s) const { return GetSliceHash(s); }
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

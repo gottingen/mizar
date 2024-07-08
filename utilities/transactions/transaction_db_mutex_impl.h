@@ -4,11 +4,11 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/utilities/transaction_db_mutex.h"
+#include "rocksdb/utilities/transaction_db_mutex.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class TransactionDBMutex;
 class TransactionDBCondVar;
@@ -21,6 +21,6 @@ class TransactionDBMutexFactoryImpl : public TransactionDBMutexFactory {
   std::shared_ptr<TransactionDBCondVar> AllocateCondVar() override;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

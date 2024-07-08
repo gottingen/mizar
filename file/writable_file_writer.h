@@ -14,15 +14,15 @@
 #include "db/version_edit.h"
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "mizar/file_checksum.h"
-#include "mizar/file_system.h"
-#include "mizar/io_status.h"
-#include "mizar/listener.h"
-#include "mizar/rate_limiter.h"
+#include "rocksdb/file_checksum.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/io_status.h"
+#include "rocksdb/listener.h"
+#include "rocksdb/rate_limiter.h"
 #include "test_util/sync_point.h"
 #include "util/aligned_buffer.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class Statistics;
 class SystemClock;
 
@@ -35,14 +35,14 @@ class SystemClock;
 // - Update IO stats.
 class WritableFileWriter {
  private:
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   void NotifyOnFileWriteFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status) {
     FileOperationInfo info(FileOperationType::kWrite, file_name_, start_ts,
-                           finish_ts, io_status);
+                           finish_ts, io_status, temperature_);
     info.offset = offset;
     info.length = length;
 
@@ -56,7 +56,7 @@ class WritableFileWriter {
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status) {
     FileOperationInfo info(FileOperationType::kFlush, file_name_, start_ts,
-                           finish_ts, io_status);
+                           finish_ts, io_status, temperature_);
 
     for (auto& listener : listeners_) {
       listener->OnFileFlushFinish(info);
@@ -68,7 +68,8 @@ class WritableFileWriter {
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status,
       FileOperationType type = FileOperationType::kSync) {
-    FileOperationInfo info(type, file_name_, start_ts, finish_ts, io_status);
+    FileOperationInfo info(type, file_name_, start_ts, finish_ts, io_status,
+                           temperature_);
 
     for (auto& listener : listeners_) {
       listener->OnFileSyncFinish(info);
@@ -81,7 +82,7 @@ class WritableFileWriter {
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status) {
     FileOperationInfo info(FileOperationType::kRangeSync, file_name_, start_ts,
-                           finish_ts, io_status);
+                           finish_ts, io_status, temperature_);
     info.offset = offset;
     info.length = length;
 
@@ -95,7 +96,7 @@ class WritableFileWriter {
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status) {
     FileOperationInfo info(FileOperationType::kTruncate, file_name_, start_ts,
-                           finish_ts, io_status);
+                           finish_ts, io_status, temperature_);
 
     for (auto& listener : listeners_) {
       listener->OnFileTruncateFinish(info);
@@ -107,7 +108,7 @@ class WritableFileWriter {
       const FileOperationInfo::FinishTimePoint& finish_ts,
       const IOStatus& io_status) {
     FileOperationInfo info(FileOperationType::kClose, file_name_, start_ts,
-                           finish_ts, io_status);
+                           finish_ts, io_status, temperature_);
 
     for (auto& listener : listeners_) {
       listener->OnFileCloseFinish(info);
@@ -127,7 +128,7 @@ class WritableFileWriter {
     }
     io_error_info.io_status.PermitUncheckedError();
   }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
   void UpdateFileChecksum(const Slice& data);
@@ -141,14 +142,23 @@ class WritableFileWriter {
   size_t max_buffer_size_;
   // Actually written data size can be used for truncate
   // not counting padding data
-  uint64_t filesize_;
-#ifndef MIZAR_LITE
+  std::atomic<uint64_t> filesize_;
+  std::atomic<uint64_t> flushed_size_;
+#ifndef ROCKSDB_LITE
   // This is necessary when we use unbuffered access
   // and writes must happen on aligned offsets
   // so we need to go back and write that page again
   uint64_t next_write_offset_;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   bool pending_sync_;
+  std::atomic<bool> seen_error_;
+#ifndef NDEBUG
+  // SyncWithoutFlush() is the function that is allowed to be called
+  // concurrently with other function. One of the concurrent call
+  // could set seen_error_, and the other one would hit assertion
+  // in debug mode.
+  std::atomic<bool> sync_without_flush_called_ = false;
+#endif  // NDEBUG
   uint64_t last_sync_size_;
   uint64_t bytes_per_sync_;
   RateLimiter* rate_limiter_;
@@ -159,6 +169,9 @@ class WritableFileWriter {
   bool perform_data_verification_;
   uint32_t buffered_data_crc32c_checksum_;
   bool buffered_data_with_checksum_;
+#ifndef ROCKSDB_LITE
+  Temperature temperature_;
+#endif  // ROCKSDB_LITE
 
  public:
   WritableFileWriter(
@@ -176,10 +189,12 @@ class WritableFileWriter {
         buf_(),
         max_buffer_size_(options.writable_file_max_buffer_size),
         filesize_(0),
-#ifndef MIZAR_LITE
+        flushed_size_(0),
+#ifndef ROCKSDB_LITE
         next_write_offset_(0),
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
         pending_sync_(false),
+        seen_error_(false),
         last_sync_size_(0),
         bytes_per_sync_(options.bytes_per_sync),
         rate_limiter_(options.rate_limiter),
@@ -190,18 +205,22 @@ class WritableFileWriter {
         perform_data_verification_(perform_data_verification),
         buffered_data_crc32c_checksum_(0),
         buffered_data_with_checksum_(buffered_data_with_checksum) {
+#ifndef ROCKSDB_LITE
+    temperature_ = options.temperature;
+#endif  // ROCKSDB_LITE
+    assert(!use_direct_io() || max_buffer_size_ > 0);
     TEST_SYNC_POINT_CALLBACK("WritableFileWriter::WritableFileWriter:0",
                              reinterpret_cast<void*>(max_buffer_size_));
     buf_.Alignment(writable_file_->GetRequiredBufferAlignment());
     buf_.AllocateNewBuffer(std::min((size_t)65536, max_buffer_size_));
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     std::for_each(listeners.begin(), listeners.end(),
                   [this](const std::shared_ptr<EventListener>& e) {
                     if (e->ShouldBeNotifiedOnFileIO()) {
                       listeners_.emplace_back(e);
                     }
                   });
-#else  // !MIZAR_LITE
+#else  // !ROCKSDB_LITE
     (void)listeners;
 #endif
     if (file_checksum_gen_factory != nullptr) {
@@ -230,11 +249,13 @@ class WritableFileWriter {
 
   // When this Append API is called, if the crc32c_checksum is not provided, we
   // will calculate the checksum internally.
-  IOStatus Append(const Slice& data, uint32_t crc32c_checksum = 0);
+  IOStatus Append(const Slice& data, uint32_t crc32c_checksum = 0,
+                  Env::IOPriority op_rate_limiter_priority = Env::IO_TOTAL);
 
-  IOStatus Pad(const size_t pad_bytes);
+  IOStatus Pad(const size_t pad_bytes,
+               Env::IOPriority op_rate_limiter_priority = Env::IO_TOTAL);
 
-  IOStatus Flush();
+  IOStatus Flush(Env::IOPriority op_rate_limiter_priority = Env::IO_TOTAL);
 
   IOStatus Close();
 
@@ -245,7 +266,17 @@ class WritableFileWriter {
   // returns NotSupported status.
   IOStatus SyncWithoutFlush(bool use_fsync);
 
-  uint64_t GetFileSize() const { return filesize_; }
+  uint64_t GetFileSize() const {
+    return filesize_.load(std::memory_order_acquire);
+  }
+
+  // Returns the size of data flushed to the underlying `FSWritableFile`.
+  // Expected to match `writable_file()->GetFileSize()`.
+  // The return value can serve as a lower-bound for the amount of data synced
+  // by a future call to `SyncWithoutFlush()`.
+  uint64_t GetFlushedSize() const {
+    return flushed_size_.load(std::memory_order_acquire);
+  }
 
   IOStatus InvalidateCache(size_t offset, size_t length) {
     return writable_file_->InvalidateCache(offset, length);
@@ -255,7 +286,7 @@ class WritableFileWriter {
 
   bool use_direct_io() { return writable_file_->use_direct_io(); }
 
-  bool TEST_BufferIsEmpty() { return buf_.CurrentSize() == 0; }
+  bool BufferIsEmpty() { return buf_.CurrentSize() == 0; }
 
   void TEST_SetFileChecksumGenerator(
       FileChecksumGenerator* checksum_generator) {
@@ -266,17 +297,40 @@ class WritableFileWriter {
 
   const char* GetFileChecksumFuncName() const;
 
+  bool seen_error() const {
+    return seen_error_.load(std::memory_order_relaxed);
+  }
+  // For options of relaxed consistency, users might hope to continue
+  // operating on the file after an error happens.
+  void reset_seen_error() {
+    seen_error_.store(false, std::memory_order_relaxed);
+  }
+  void set_seen_error() { seen_error_.store(true, std::memory_order_relaxed); }
+
+  IOStatus AssertFalseAndGetStatusForPrevError() {
+    // This should only happen if SyncWithoutFlush() was called.
+    assert(sync_without_flush_called_);
+    return IOStatus::IOError("Writer has previous error.");
+  }
+
  private:
+  // Decide the Rate Limiter priority.
+  static Env::IOPriority DecideRateLimiterPriority(
+      Env::IOPriority writable_file_io_priority,
+      Env::IOPriority op_rate_limiter_priority);
+
   // Used when os buffering is OFF and we are writing
   // DMA such as in Direct I/O mode
-#ifndef MIZAR_LITE
-  IOStatus WriteDirect();
-  IOStatus WriteDirectWithChecksum();
-#endif  // !MIZAR_LITE
-  // Normal write
-  IOStatus WriteBuffered(const char* data, size_t size);
-  IOStatus WriteBufferedWithChecksum(const char* data, size_t size);
+#ifndef ROCKSDB_LITE
+  IOStatus WriteDirect(Env::IOPriority op_rate_limiter_priority);
+  IOStatus WriteDirectWithChecksum(Env::IOPriority op_rate_limiter_priority);
+#endif  // !ROCKSDB_LITE
+  // Normal write.
+  IOStatus WriteBuffered(const char* data, size_t size,
+                         Env::IOPriority op_rate_limiter_priority);
+  IOStatus WriteBufferedWithChecksum(const char* data, size_t size,
+                                     Env::IOPriority op_rate_limiter_priority);
   IOStatus RangeSync(uint64_t offset, uint64_t nbytes);
   IOStatus SyncInternal(bool use_fsync);
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

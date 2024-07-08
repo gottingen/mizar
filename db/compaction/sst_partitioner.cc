@@ -4,22 +4,22 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "mizar/sst_partitioner.h"
+#include "rocksdb/sst_partitioner.h"
 
 #include <algorithm>
 
-#include "mizar/utilities/customizable_util.h"
-#include "mizar/utilities/object_registry.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/utilities/customizable_util.h"
+#include "rocksdb/utilities/object_registry.h"
+#include "rocksdb/utilities/options_type.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 static std::unordered_map<std::string, OptionTypeInfo>
     sst_fixed_prefix_type_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"length",
          {0, OptionType::kSizeT, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 SstPartitionerFixedPrefixFactory::SstPartitionerFixedPrefixFactory(size_t len)
@@ -58,7 +58,7 @@ std::shared_ptr<SstPartitionerFactory> NewSstPartitionerFixedPrefixFactory(
   return std::make_shared<SstPartitionerFixedPrefixFactory>(prefix_len);
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 namespace {
 static int RegisterSstPartitionerFactories(ObjectLibrary& library,
                                            const std::string& /*arg*/) {
@@ -73,18 +73,18 @@ static int RegisterSstPartitionerFactories(ObjectLibrary& library,
   return 1;
 }
 }  // namespace
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 Status SstPartitionerFactory::CreateFromString(
     const ConfigOptions& options, const std::string& value,
     std::shared_ptr<SstPartitionerFactory>* result) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterSstPartitionerFactories(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   return LoadSharedObject<SstPartitionerFactory>(options, value, nullptr,
                                                  result);
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

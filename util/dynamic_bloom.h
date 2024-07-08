@@ -6,16 +6,16 @@
 #pragma once
 
 #include <array>
+#include <atomic>
+#include <memory>
 #include <string>
+
 #include "port/port.h"
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 #include "table/multiget_context.h"
 #include "util/hash.h"
 
-#include <atomic>
-#include <memory>
-
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Slice;
 class Allocator;
@@ -211,4 +211,4 @@ inline void DynamicBloom::AddHash(uint32_t h32, const OrFunc& or_func) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -10,9 +10,10 @@
 #include "file/read_write_util.h"
 
 #include <sstream>
+
 #include "test_util/sync_point.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 IOStatus NewWritableFile(FileSystem* fs, const std::string& fname,
                          std::unique_ptr<FSWritableFile>* result,
@@ -29,4 +30,4 @@ bool IsFileSectorAligned(const size_t off, size_t sector_size) {
   return off % sector_size == 0;
 }
 #endif  // NDEBUG
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

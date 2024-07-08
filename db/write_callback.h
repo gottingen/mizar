@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "mizar/status.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DB;
 
@@ -24,4 +24,4 @@ class WriteCallback {
   virtual bool AllowWriteBatching() = 0;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 #include <limits>
@@ -21,13 +21,13 @@
 #include "db/db_test_util.h"
 #include "memory/arena.h"
 #include "port/port.h"
-#include "mizar/cache.h"
+#include "rocksdb/cache.h"
 #include "table/block_based/block_builder.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "utilities/persistent_cache/volatile_tier_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 //
 // Unit tests for testing PersistentCacheTier
@@ -281,6 +281,6 @@ class PersistentCacheDBTest : public DBTestBase {
                const size_t max_keys, const size_t max_usecase);
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

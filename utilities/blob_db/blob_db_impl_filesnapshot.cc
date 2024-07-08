@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "file/filename.h"
 #include "logging/logging.h"
@@ -13,7 +13,7 @@
 
 // BlobDBImpl methods to get snapshot of files, e.g. for replication.
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace blob_db {
 
 Status BlobDBImpl::DisableFileDeletions() {
@@ -93,7 +93,7 @@ void BlobDBImpl::GetLiveFilesMetaData(std::vector<LiveFileMetaData>* metadata) {
   for (auto bfile_pair : blob_files_) {
     auto blob_file = bfile_pair.second;
     LiveFileMetaData filemetadata;
-    filemetadata.size = static_cast<size_t>(blob_file->GetFileSize());
+    filemetadata.size = blob_file->GetFileSize();
     const uint64_t file_number = blob_file->BlobFileNumber();
     // Path should be relative to db_name, but begin with slash.
     filemetadata.name = BlobFileName("", bdb_options_.blob_dir, file_number);
@@ -109,5 +109,5 @@ void BlobDBImpl::GetLiveFilesMetaData(std::vector<LiveFileMetaData>* metadata) {
 }
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

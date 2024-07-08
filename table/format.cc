@@ -18,9 +18,9 @@
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/statistics.h"
 #include "options/options_helper.h"
-#include "mizar/env.h"
-#include "mizar/options.h"
-#include "mizar/table.h"
+#include "rocksdb/env.h"
+#include "rocksdb/options.h"
+#include "rocksdb/table.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/persistent_cache_helper.h"
@@ -33,16 +33,16 @@
 #include "util/string_util.h"
 #include "util/xxhash.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 extern const uint64_t kLegacyBlockBasedTableMagicNumber;
 extern const uint64_t kBlockBasedTableMagicNumber;
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 extern const uint64_t kLegacyPlainTableMagicNumber;
 extern const uint64_t kPlainTableMagicNumber;
 #else
-// MIZAR_LITE doesn't have plain table
+// ROCKSDB_LITE doesn't have plain table
 const uint64_t kLegacyPlainTableMagicNumber = 0;
 const uint64_t kPlainTableMagicNumber = 0;
 #endif
@@ -264,7 +264,8 @@ void FooterBuilder::Build(uint64_t magic_number, uint32_t format_version,
   }
 }
 
-Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
+Status Footer::DecodeFrom(Slice input, uint64_t input_offset,
+                          uint64_t enforce_table_magic_number) {
   (void)input_offset;  // Future use
 
   // Only decode to unused Footer
@@ -279,6 +280,11 @@ Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
   bool legacy = IsLegacyFooterFormat(magic);
   if (legacy) {
     magic = UpconvertLegacyFooterFormat(magic);
+  }
+  if (enforce_table_magic_number != 0 && enforce_table_magic_number != magic) {
+    return Status::Corruption("Bad table magic number: expected " +
+                              std::to_string(enforce_table_magic_number) +
+                              ", found " + std::to_string(magic));
   }
   table_magic_number_ = magic;
   block_trailer_size_ = BlockTrailerSizeForMagicNumber(magic);
@@ -295,7 +301,7 @@ Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
     format_version_ = DecodeFixed32(part3_ptr);
     if (!IsSupportedFormatVersion(format_version_)) {
       return Status::Corruption("Corrupt or unsupported format_version: " +
-                                MIZAR_NAMESPACE::ToString(format_version_));
+                                std::to_string(format_version_));
     }
     // All known format versions >= 1 occupy exactly this many bytes.
     if (input.size() < kNewVersionsEncodedLength) {
@@ -308,9 +314,8 @@ Status Footer::DecodeFrom(Slice input, uint64_t input_offset) {
     char chksum = input.data()[0];
     checksum_type_ = lossless_cast<ChecksumType>(chksum);
     if (!IsSupportedChecksumType(checksum_type())) {
-      return Status::Corruption(
-          "Corrupt or unsupported checksum type: " +
-          MIZAR_NAMESPACE::ToString(lossless_cast<uint8_t>(chksum)));
+      return Status::Corruption("Corrupt or unsupported checksum type: " +
+                                std::to_string(lossless_cast<uint8_t>(chksum)));
     }
     // Consume checksum type field
     input.remove_prefix(1);
@@ -333,25 +338,26 @@ std::string Footer::ToString() const {
   if (legacy) {
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
-    result.append("table_magic_number: " +
-                  MIZAR_NAMESPACE::ToString(table_magic_number_) + "\n  ");
+    result.append("table_magic_number: " + std::to_string(table_magic_number_) +
+                  "\n  ");
   } else {
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
-    result.append("table_magic_number: " +
-                  MIZAR_NAMESPACE::ToString(table_magic_number_) + "\n  ");
-    result.append("format version: " +
-                  MIZAR_NAMESPACE::ToString(format_version_) + "\n  ");
+    result.append("table_magic_number: " + std::to_string(table_magic_number_) +
+                  "\n  ");
+    result.append("format version: " + std::to_string(format_version_) +
+                  "\n  ");
   }
   return result;
 }
 
 Status ReadFooterFromFile(const IOOptions& opts, RandomAccessFileReader* file,
-                          FilePrefetchBuffer* prefetch_buffer,
+                          FileSystem& fs, FilePrefetchBuffer* prefetch_buffer,
                           uint64_t file_size, Footer* footer,
                           uint64_t enforce_table_magic_number) {
   if (file_size < Footer::kMinEncodedLength) {
-    return Status::Corruption("file is too short (" + ToString(file_size) +
+    return Status::Corruption("file is too short (" +
+                              std::to_string(file_size) +
                               " bytes) to be an "
                               "sstable: " +
                               file->file_name());
@@ -369,17 +375,20 @@ Status ReadFooterFromFile(const IOOptions& opts, RandomAccessFileReader* file,
   // the required data is not in the prefetch buffer. Once deadline is enabled
   // for iterator, TryReadFromCache might do a readahead. Revisit to see if we
   // need to pass a timeout at that point
+  // TODO: rate limit footer reads.
   if (prefetch_buffer == nullptr ||
-      !prefetch_buffer->TryReadFromCache(IOOptions(), file, read_offset,
-                                         Footer::kMaxEncodedLength,
-                                         &footer_input, nullptr)) {
+      !prefetch_buffer->TryReadFromCache(
+          opts, file, read_offset, Footer::kMaxEncodedLength, &footer_input,
+          nullptr, opts.rate_limiter_priority)) {
     if (file->use_direct_io()) {
       s = file->Read(opts, read_offset, Footer::kMaxEncodedLength,
-                     &footer_input, nullptr, &internal_buf);
+                     &footer_input, nullptr, &internal_buf,
+                     opts.rate_limiter_priority);
     } else {
       footer_buf.reserve(Footer::kMaxEncodedLength);
       s = file->Read(opts, read_offset, Footer::kMaxEncodedLength,
-                     &footer_input, &footer_buf[0], nullptr);
+                     &footer_input, &footer_buf[0], nullptr,
+                     opts.rate_limiter_priority);
     }
     if (!s.ok()) return s;
   }
@@ -387,22 +396,26 @@ Status ReadFooterFromFile(const IOOptions& opts, RandomAccessFileReader* file,
   // Check that we actually read the whole footer from the file. It may be
   // that size isn't correct.
   if (footer_input.size() < Footer::kMinEncodedLength) {
-    return Status::Corruption("file is too short (" + ToString(file_size) +
-                              " bytes) to be an "
-                              "sstable" +
-                              file->file_name());
+    uint64_t size_on_disk = 0;
+    if (fs.GetFileSize(file->file_name(), IOOptions(), &size_on_disk, nullptr)
+            .ok()) {
+      // Similar to CheckConsistency message, but not completely sure the
+      // expected size always came from manifest.
+      return Status::Corruption("Sst file size mismatch: " + file->file_name() +
+                                ". Expected " + std::to_string(file_size) +
+                                ", actual size " +
+                                std::to_string(size_on_disk) + "\n");
+    } else {
+      return Status::Corruption(
+          "Missing SST footer data in file " + file->file_name() +
+          " File too short? Expected size: " + std::to_string(file_size));
+    }
   }
 
-  s = footer->DecodeFrom(footer_input, read_offset);
+  s = footer->DecodeFrom(footer_input, read_offset, enforce_table_magic_number);
   if (!s.ok()) {
+    s = Status::CopyAppendMessage(s, " in ", file->file_name());
     return s;
-  }
-  if (enforce_table_magic_number != 0 &&
-      enforce_table_magic_number != footer->table_magic_number()) {
-    return Status::Corruption(
-        "Bad table magic number: expected " +
-        ToString(enforce_table_magic_number) + ", found " +
-        ToString(footer->table_magic_number()) + " in " + file->file_name());
   }
   return Status::OK();
 }
@@ -489,10 +502,11 @@ uint32_t ComputeBuiltinChecksumWithLastByte(ChecksumType type, const char* data,
   }
 }
 
-Status UncompressBlockContentsForCompressionType(
-    const UncompressionInfo& uncompression_info, const char* data, size_t n,
-    BlockContents* contents, uint32_t format_version,
-    const ImmutableOptions& ioptions, MemoryAllocator* allocator) {
+Status UncompressBlockData(const UncompressionInfo& uncompression_info,
+                           const char* data, size_t size,
+                           BlockContents* out_contents, uint32_t format_version,
+                           const ImmutableOptions& ioptions,
+                           MemoryAllocator* allocator) {
   Status ret = Status::OK();
 
   assert(uncompression_info.type() != kNoCompression &&
@@ -502,7 +516,7 @@ Status UncompressBlockContentsForCompressionType(
                       ShouldReportDetailedTime(ioptions.env, ioptions.stats));
   size_t uncompressed_size = 0;
   CacheAllocationPtr ubuf =
-      UncompressData(uncompression_info, data, n, &uncompressed_size,
+      UncompressData(uncompression_info, data, size, &uncompressed_size,
                      GetCompressFormatForVersion(format_version), allocator);
   if (!ubuf) {
     if (!CompressionTypeSupported(uncompression_info.type())) {
@@ -516,44 +530,36 @@ Status UncompressBlockContentsForCompressionType(
     }
   }
 
-  *contents = BlockContents(std::move(ubuf), uncompressed_size);
+  *out_contents = BlockContents(std::move(ubuf), uncompressed_size);
 
   if (ShouldReportDetailedTime(ioptions.env, ioptions.stats)) {
     RecordTimeToHistogram(ioptions.stats, DECOMPRESSION_TIMES_NANOS,
                           timer.ElapsedNanos());
   }
   RecordTimeToHistogram(ioptions.stats, BYTES_DECOMPRESSED,
-                        contents->data.size());
+                        out_contents->data.size());
   RecordTick(ioptions.stats, NUMBER_BLOCK_DECOMPRESSED);
 
+  TEST_SYNC_POINT_CALLBACK("UncompressBlockData:TamperWithReturnValue",
+                           static_cast<void*>(&ret));
   TEST_SYNC_POINT_CALLBACK(
-      "UncompressBlockContentsForCompressionType:TamperWithReturnValue",
-      static_cast<void*>(&ret));
-  TEST_SYNC_POINT_CALLBACK(
-      "UncompressBlockContentsForCompressionType:"
+      "UncompressBlockData:"
       "TamperWithDecompressionOutput",
-      static_cast<void*>(contents));
+      static_cast<void*>(out_contents));
 
   return ret;
 }
 
-//
-// The 'data' points to the raw block contents that was read in from file.
-// This method allocates a new heap buffer and the raw block
-// contents are uncompresed into this buffer. This
-// buffer is returned via 'result' and it is upto the caller to
-// free this buffer.
-// format_version is the block format as defined in include/rocksdb/table.h
-Status UncompressBlockContents(const UncompressionInfo& uncompression_info,
-                               const char* data, size_t n,
-                               BlockContents* contents, uint32_t format_version,
-                               const ImmutableOptions& ioptions,
-                               MemoryAllocator* allocator) {
-  assert(data[n] != kNoCompression);
-  assert(data[n] == static_cast<char>(uncompression_info.type()));
-  return UncompressBlockContentsForCompressionType(uncompression_info, data, n,
-                                                   contents, format_version,
-                                                   ioptions, allocator);
+Status UncompressSerializedBlock(const UncompressionInfo& uncompression_info,
+                                 const char* data, size_t size,
+                                 BlockContents* out_contents,
+                                 uint32_t format_version,
+                                 const ImmutableOptions& ioptions,
+                                 MemoryAllocator* allocator) {
+  assert(data[size] != kNoCompression);
+  assert(data[size] == static_cast<char>(uncompression_info.type()));
+  return UncompressBlockData(uncompression_info, data, size, out_contents,
+                             format_version, ioptions, allocator);
 }
 
 // Replace the contents of db_host_id with the actual hostname, if db_host_id
@@ -570,4 +576,4 @@ Status ReifyDbHostIdProperty(Env* env, std::string* db_host_id) {
 
   return Status::OK();
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

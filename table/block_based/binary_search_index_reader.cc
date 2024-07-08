@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #include "table/block_based/binary_search_index_reader.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 Status BinarySearchIndexReader::Create(
     const BlockBasedTable* table, const ReadOptions& ro,
     FilePrefetchBuffer* prefetch_buffer, bool use_cache, bool prefetch,
@@ -47,7 +47,8 @@ InternalIteratorBase<IndexValue>* BinarySearchIndexReader::NewIterator(
   const bool no_io = (read_options.read_tier == kBlockCacheTier);
   CachableEntry<Block> index_block;
   const Status s =
-      GetOrReadIndexBlock(no_io, get_context, lookup_context, &index_block);
+      GetOrReadIndexBlock(no_io, read_options.rate_limiter_priority,
+                          get_context, lookup_context, &index_block);
   if (!s.ok()) {
     if (iter != nullptr) {
       iter->Invalidate(s);
@@ -70,4 +71,4 @@ InternalIteratorBase<IndexValue>* BinarySearchIndexReader::NewIterator(
 
   return it;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

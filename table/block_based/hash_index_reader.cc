@@ -11,7 +11,7 @@
 #include "table/block_fetcher.h"
 #include "table/meta_blocks.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 Status HashIndexReader::Create(const BlockBasedTable* table,
                                const ReadOptions& ro,
                                FilePrefetchBuffer* prefetch_buffer,
@@ -95,8 +95,8 @@ Status HashIndexReader::Create(const BlockBasedTable* table,
   }
 
   BlockPrefixIndex* prefix_index = nullptr;
-  assert(rep->internal_prefix_transform.get() != nullptr);
-  s = BlockPrefixIndex::Create(rep->internal_prefix_transform.get(),
+  assert(rep->table_prefix_extractor);
+  s = BlockPrefixIndex::Create(rep->table_prefix_extractor.get(),
                                prefixes_contents.data,
                                prefixes_meta_contents.data, &prefix_index);
   // TODO: log error
@@ -117,7 +117,8 @@ InternalIteratorBase<IndexValue>* HashIndexReader::NewIterator(
   const bool no_io = (read_options.read_tier == kBlockCacheTier);
   CachableEntry<Block> index_block;
   const Status s =
-      GetOrReadIndexBlock(no_io, get_context, lookup_context, &index_block);
+      GetOrReadIndexBlock(no_io, read_options.rate_limiter_priority,
+                          get_context, lookup_context, &index_block);
   if (!s.ok()) {
     if (iter != nullptr) {
       iter->Invalidate(s);
@@ -144,4 +145,4 @@ InternalIteratorBase<IndexValue>* HashIndexReader::NewIterator(
 
   return it;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

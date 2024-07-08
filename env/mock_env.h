@@ -15,11 +15,11 @@
 
 #include "env/composite_env_wrapper.h"
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/status.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/env.h"
+#include "rocksdb/status.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class MemFile;
 class MockFileSystem : public FileSystem {
  public:
@@ -135,9 +135,10 @@ class MockEnv : public CompositeEnvWrapper {
   const char* Name() const override { return kClassName(); }
 
   Status CorruptBuffer(const std::string& fname);
+
  private:
   MockEnv(Env* env, const std::shared_ptr<FileSystem>& fs,
           const std::shared_ptr<SystemClock>& clock);
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -8,12 +8,14 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "db/file_indexer.h"
+
 #include <algorithm>
 #include <functional>
-#include "db/version_edit.h"
-#include "mizar/comparator.h"
 
-namespace MIZAR_NAMESPACE {
+#include "db/version_edit.h"
+#include "rocksdb/comparator.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 FileIndexer::FileIndexer(const Comparator* ucmp)
     : num_levels_(0), ucmp_(ucmp), level_rb_(nullptr) {}
@@ -213,4 +215,4 @@ void FileIndexer::CalculateRB(
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

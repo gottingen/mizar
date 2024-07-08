@@ -65,11 +65,11 @@ int main() {
 
 #include "file/filename.h"
 #include "port/port.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/system_clock.h"
 #include "util/gflags_compat.h"
 
 using GFLAGS_NAMESPACE::ParseCommandLineFlags;
@@ -105,7 +105,7 @@ DEFINE_bool(low_open_files_mode, false,
             "If true, we set max_open_files to 20, so that every file access "
             "needs to reopen it");
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 static const int kPrefixSize = 3;
 
@@ -208,13 +208,16 @@ class WriteStress {
       SystemClock::Default()->SleepForMicroseconds(
           static_cast<int>(FLAGS_prefix_mutate_period_sec * 1000 * 1000LL));
       if (dist(rng) < FLAGS_first_char_mutate_probability) {
-        key_prefix_[0].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
+        key_prefix_[0].store(static_cast<char>(char_dist(rng)),
+                             std::memory_order_relaxed);
       }
       if (dist(rng) < FLAGS_second_char_mutate_probability) {
-        key_prefix_[1].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
+        key_prefix_[1].store(static_cast<char>(char_dist(rng)),
+                             std::memory_order_relaxed);
       }
       if (dist(rng) < FLAGS_third_char_mutate_probability) {
-        key_prefix_[2].store(static_cast<char>(char_dist(rng)), std::memory_order_relaxed);
+        key_prefix_[2].store(static_cast<char>(char_dist(rng)),
+                             std::memory_order_relaxed);
       }
     }
   }
@@ -240,9 +243,9 @@ class WriteStress {
     }
     threads_.clear();
 
-// Skip checking for leaked files in MIZAR_LITE since we don't have access to
+// Skip checking for leaked files in ROCKSDB_LITE since we don't have access to
 // function GetLiveFilesMetaData
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     // let's see if we leaked some files
     db_->PauseBackgroundWork();
     std::vector<LiveFileMetaData> metadata;
@@ -278,7 +281,7 @@ class WriteStress {
       }
     }
     db_->ContinueBackgroundWork();
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
     return 0;
   }
@@ -293,13 +296,13 @@ class WriteStress {
   std::unique_ptr<DB> db_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
   SetUsageMessage(std::string("\nUSAGE:\n") + std::string(argv[0]) +
                   " [OPTIONS]...");
   ParseCommandLineFlags(&argc, &argv, true);
-  MIZAR_NAMESPACE::WriteStress write_stress;
+  ROCKSDB_NAMESPACE::WriteStress write_stress;
   return write_stress.Run();
 }
 

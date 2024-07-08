@@ -5,23 +5,26 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++
-// for MIZAR_NAMESPACE::MergeOperator.
+// for ROCKSDB_NAMESPACE::MergeOperator.
+
+#include "rocksdb/merge_operator.h"
 
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <memory>
 #include <string>
 
 #include "include/org_rocksdb_StringAppendOperator.h"
 #include "include/org_rocksdb_UInt64AddOperator.h"
-#include "mizar/db.h"
-#include "mizar/memtablerep.h"
-#include "mizar/merge_operator.h"
-#include "mizar/options.h"
-#include "mizar/slice_transform.h"
-#include "mizar/statistics.h"
-#include "mizar/table.h"
+#include "rocksdb/db.h"
+#include "rocksdb/memtablerep.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/statistics.h"
+#include "rocksdb/table.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 #include "utilities/merge_operators.h"
 
@@ -33,24 +36,24 @@
 jlong Java_org_rocksdb_StringAppendOperator_newSharedStringAppendOperator__C(
     JNIEnv* /*env*/, jclass /*jclazz*/, jchar jdelim) {
   auto* sptr_string_append_op =
-      new std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>(
-          MIZAR_NAMESPACE::MergeOperators::CreateStringAppendOperator(
+      new std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>(
+          ROCKSDB_NAMESPACE::MergeOperators::CreateStringAppendOperator(
               (char)jdelim));
-  return reinterpret_cast<jlong>(sptr_string_append_op);
+  return GET_CPLUSPLUS_POINTER(sptr_string_append_op);
 }
 
 jlong Java_org_rocksdb_StringAppendOperator_newSharedStringAppendOperator__Ljava_lang_String_2(
     JNIEnv* env, jclass /*jclass*/, jstring jdelim) {
   jboolean has_exception = JNI_FALSE;
   auto delim =
-      MIZAR_NAMESPACE::JniUtil::copyStdString(env, jdelim, &has_exception);
+      ROCKSDB_NAMESPACE::JniUtil::copyStdString(env, jdelim, &has_exception);
   if (has_exception == JNI_TRUE) {
     return 0;
   }
   auto* sptr_string_append_op =
-      new std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>(
-          MIZAR_NAMESPACE::MergeOperators::CreateStringAppendOperator(delim));
-  return reinterpret_cast<jlong>(sptr_string_append_op);
+      new std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>(
+          ROCKSDB_NAMESPACE::MergeOperators::CreateStringAppendOperator(delim));
+  return GET_CPLUSPLUS_POINTER(sptr_string_append_op);
 }
 
 /*
@@ -62,7 +65,7 @@ void Java_org_rocksdb_StringAppendOperator_disposeInternal(JNIEnv* /*env*/,
                                                            jobject /*jobj*/,
                                                            jlong jhandle) {
   auto* sptr_string_append_op =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>*>(
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>(
           jhandle);
   delete sptr_string_append_op;  // delete std::shared_ptr
 }
@@ -75,9 +78,9 @@ void Java_org_rocksdb_StringAppendOperator_disposeInternal(JNIEnv* /*env*/,
 jlong Java_org_rocksdb_UInt64AddOperator_newSharedUInt64AddOperator(
     JNIEnv* /*env*/, jclass /*jclazz*/) {
   auto* sptr_uint64_add_op =
-      new std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>(
-          MIZAR_NAMESPACE::MergeOperators::CreateUInt64AddOperator());
-  return reinterpret_cast<jlong>(sptr_uint64_add_op);
+      new std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>(
+          ROCKSDB_NAMESPACE::MergeOperators::CreateUInt64AddOperator());
+  return GET_CPLUSPLUS_POINTER(sptr_uint64_add_op);
 }
 
 /*
@@ -89,7 +92,7 @@ void Java_org_rocksdb_UInt64AddOperator_disposeInternal(JNIEnv* /*env*/,
                                                         jobject /*jobj*/,
                                                         jlong jhandle) {
   auto* sptr_uint64_add_op =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::MergeOperator>*>(
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>(
           jhandle);
   delete sptr_uint64_add_op;  // delete std::shared_ptr
 }

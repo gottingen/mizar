@@ -11,12 +11,12 @@
 
 #include "env/mock_env.h"
 #include "file/file_util.h"
-#include "mizar/convenience.h"
-#include "mizar/env.h"
-#include "mizar/env_encryption.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/env.h"
+#include "rocksdb/env_encryption.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace {
 using CreateEnvFunc = Env*();
 
@@ -32,7 +32,7 @@ static Env* GetMockEnv() {
   static std::unique_ptr<Env> mock_env(MockEnv::Create(Env::Default()));
   return mock_env.get();
 }
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 static Env* NewTestEncryptedEnv(Env* base, const std::string& provider_id) {
   ConfigOptions config_opts;
   config_opts.invoke_prepare_options = false;
@@ -81,7 +81,7 @@ static Env* GetTestFS() {
   EXPECT_NE(fs_env, nullptr);
   return fs_env;
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 }  // namespace
 class EnvBasicTestWithParam
@@ -111,7 +111,7 @@ INSTANTIATE_TEST_CASE_P(EnvDefault, EnvMoreTestWithParam,
 INSTANTIATE_TEST_CASE_P(MockEnv, EnvBasicTestWithParam,
                         ::testing::Values(&GetMockEnv));
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 // next statements run env test against default encryption code.
 INSTANTIATE_TEST_CASE_P(EncryptedEnv, EnvBasicTestWithParam,
                         ::testing::Values(&GetCtrEncryptedEnv));
@@ -148,7 +148,7 @@ INSTANTIATE_TEST_CASE_P(CustomEnv, EnvBasicTestWithParam,
 
 INSTANTIATE_TEST_CASE_P(CustomEnv, EnvMoreTestWithParam,
                         ::testing::ValuesIn(GetCustomEnvs()));
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST_P(EnvBasicTestWithParam, Basics) {
   uint64_t file_size;
@@ -305,7 +305,7 @@ TEST_P(EnvBasicTestWithParam, LargeWrite) {
     read += result.size();
   }
   ASSERT_TRUE(write_data == read_data);
-  delete [] scratch;
+  delete[] scratch;
 }
 
 TEST_P(EnvMoreTestWithParam, GetModTime) {
@@ -393,8 +393,9 @@ TEST_P(EnvMoreTestWithParam, GetChildrenIgnoresDotAndDotDot) {
   ASSERT_EQ(result.at(0), "test_file");
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

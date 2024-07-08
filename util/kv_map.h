@@ -7,11 +7,11 @@
 #include <map>
 #include <string>
 
-#include "mizar/comparator.h"
-#include "mizar/slice.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/slice.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace stl_wrappers {
 
 struct LessOfComparator {
@@ -29,5 +29,5 @@ struct LessOfComparator {
 };
 
 using KVMap = std::map<std::string, std::string, LessOfComparator>;
-}
-}  // namespace MIZAR_NAMESPACE
+}  // namespace stl_wrappers
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "mizar/options.h"
-#include "mizar/status.h"
+#include "rocksdb/options.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Version;
 class Slice;
@@ -34,4 +34,4 @@ class BlobFetcher {
   const Version* version_;
   ReadOptions read_options_;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

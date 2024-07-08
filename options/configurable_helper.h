@@ -10,10 +10,10 @@
 #include <string>
 #include <vector>
 
-#include "mizar/configurable.h"
-#include "mizar/convenience.h"
+#include "rocksdb/configurable.h"
+#include "rocksdb/convenience.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // Helper class defining static methods for supporting the Configurable
 // class.  The purpose of this class is to keep the Configurable class
 // as tight as possible and provide methods for doing the actual work
@@ -46,7 +46,7 @@ class ConfigurableHelper {
       const std::unordered_map<std::string, std::string>& options,
       std::unordered_map<std::string, std::string>* unused);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   // Internal method to configure a set of options for this object.
   // Classes may override this value to change its behavior.
   // @param config_options Controls how the options are being configured
@@ -181,7 +181,7 @@ class ConfigurableHelper {
       const ConfigOptions& config_options, Configurable& configurable,
       const OptionTypeInfo& opt_info, const std::string& opt_name,
       const std::string& name, const std::string& value, void* opt_ptr);
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -37,8 +37,8 @@ RocksDB code:
 
 ```c++
 #include <string>  
-#include "mizar/db.h"  
-#include "mizar/utilities/leveldb_options.h"  
+#include "rocksdb/db.h"  
+#include "rocksdb/utilities/leveldb_options.h"  
 
 using namespace rocksdb;  
 
@@ -63,8 +63,8 @@ The difference is:
 
 ```diff
 -#include "leveldb/db.h"
-+#include "mizar/db.h"
-+#include "mizar/utilities/leveldb_options.h"
++#include "rocksdb/db.h"
++#include "rocksdb/utilities/leveldb_options.h"
 
 -using namespace leveldb;
 +using namespace rocksdb;
@@ -87,8 +87,8 @@ RocksDB code from scratch:
 
 ```c++
 #include <string>
-#include "mizar/db.h"
-#include "mizar/table.h"
+#include "rocksdb/db.h"
+#include "rocksdb/table.h"
 
 using namespace rocksdb;
 

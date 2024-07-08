@@ -14,9 +14,9 @@
 
 #include "db/version_edit.h"
 #include "port/port.h"
-#include "mizar/comparator.h"
-#include "mizar/io_status.h"
-#include "mizar/table.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/io_status.h"
+#include "rocksdb/table.h"
 #include "table/internal_iterator.h"
 #include "table/table_builder.h"
 #include "table/table_reader.h"
@@ -25,7 +25,7 @@
 #include "util/kv_map.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace mock {
 using KVPair = std::pair<std::string, std::string>;
 using KVVector = std::vector<KVPair>;
@@ -72,10 +72,12 @@ class MockTableFactory : public TableFactory {
   }
 
   void SetCorruptionMode(MockCorruptionMode mode) { corrupt_mode_ = mode; }
+
+  void SetKeyValueSize(size_t size) { key_value_size_ = size; }
   // This function will assert that only a single file exists and that the
   // contents are equal to file_contents
   void AssertSingleFile(const KVVector& file_contents);
-  void AssertLatestFile(const KVVector& file_contents);
+  void AssertLatestFiles(const std::vector<KVVector>& files_contents);
 
  private:
   Status GetAndWriteNextID(WritableFileWriter* file, uint32_t* id) const;
@@ -84,7 +86,9 @@ class MockTableFactory : public TableFactory {
   mutable MockTableFileSystem file_system_;
   mutable std::atomic<uint32_t> next_id_;
   MockCorruptionMode corrupt_mode_;
+
+  size_t key_value_size_ = 1;
 };
 
 }  // namespace mock
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

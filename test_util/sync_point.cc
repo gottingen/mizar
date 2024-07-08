@@ -12,7 +12,7 @@
 std::vector<std::string> rocksdb_kill_exclude_prefixes;
 
 #ifndef NDEBUG
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 SyncPoint* SyncPoint::GetInstance() {
   static SyncPoint sync_point;
@@ -21,22 +21,20 @@ SyncPoint* SyncPoint::GetInstance() {
 
 SyncPoint::SyncPoint() : impl_(new Data) {}
 
-SyncPoint:: ~SyncPoint() {
-  delete impl_;
-}
+SyncPoint::~SyncPoint() { delete impl_; }
 
 void SyncPoint::LoadDependency(const std::vector<SyncPointPair>& dependencies) {
   impl_->LoadDependency(dependencies);
 }
 
 void SyncPoint::LoadDependencyAndMarkers(
-  const std::vector<SyncPointPair>& dependencies,
-  const std::vector<SyncPointPair>& markers) {
+    const std::vector<SyncPointPair>& dependencies,
+    const std::vector<SyncPointPair>& markers) {
   impl_->LoadDependencyAndMarkers(dependencies, markers);
 }
 
 void SyncPoint::SetCallBack(const std::string& point,
-  const std::function<void(void*)>& callback) {
+                            const std::function<void(void*)>& callback) {
   impl_->SetCallBack(point, callback);
 }
 
@@ -44,49 +42,41 @@ void SyncPoint::ClearCallBack(const std::string& point) {
   impl_->ClearCallBack(point);
 }
 
-void SyncPoint::ClearAllCallBacks() {
-  impl_->ClearAllCallBacks();
-}
+void SyncPoint::ClearAllCallBacks() { impl_->ClearAllCallBacks(); }
 
-void SyncPoint::EnableProcessing() {
-  impl_->EnableProcessing();
-}
+void SyncPoint::EnableProcessing() { impl_->EnableProcessing(); }
 
-void SyncPoint::DisableProcessing() {
-  impl_->DisableProcessing();
-}
+void SyncPoint::DisableProcessing() { impl_->DisableProcessing(); }
 
-void SyncPoint::ClearTrace() {
-  impl_->ClearTrace();
-}
+void SyncPoint::ClearTrace() { impl_->ClearTrace(); }
 
 void SyncPoint::Process(const Slice& point, void* cb_arg) {
   impl_->Process(point, cb_arg);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif  // NDEBUG
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 void SetupSyncPointsToMockDirectIO() {
 #if !defined(NDEBUG) && !defined(OS_MACOSX) && !defined(OS_WIN) && \
     !defined(OS_SOLARIS) && !defined(OS_AIX) && !defined(OS_OPENBSD)
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewWritableFile:O_DIRECT", [&](void* arg) {
         int* val = static_cast<int*>(arg);
         *val &= ~O_DIRECT;
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewRandomAccessFile:O_DIRECT", [&](void* arg) {
         int* val = static_cast<int*>(arg);
         *val &= ~O_DIRECT;
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "NewSequentialFile:O_DIRECT", [&](void* arg) {
         int* val = static_cast<int*>(arg);
         *val &= ~O_DIRECT;
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 #endif
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

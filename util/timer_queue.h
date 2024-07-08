@@ -23,6 +23,7 @@
 #pragma once
 
 #include <assert.h>
+
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -225,6 +226,6 @@ class TimerQueue {
    public:
     std::vector<WorkItem>& getContainer() { return this->c; }
   } m_items;
-  MIZAR_NAMESPACE::port::Thread m_th;
+  ROCKSDB_NAMESPACE::port::Thread m_th;
   bool closed_ = false;
 };

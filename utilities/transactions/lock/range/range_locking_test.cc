@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef OS_WIN
 
 #include <algorithm>
@@ -13,18 +13,18 @@
 
 #include "db/db_impl/db_impl.h"
 #include "port/port.h"
-#include "mizar/db.h"
-#include "mizar/options.h"
-#include "mizar/perf_context.h"
-#include "mizar/utilities/transaction.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
+#include "rocksdb/perf_context.h"
+#include "rocksdb/utilities/transaction.h"
+#include "rocksdb/utilities/transaction_db.h"
 #include "utilities/transactions/lock/point/point_lock_manager_test.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_test.h"
 
 using std::string;
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class RangeLockingTest : public ::testing::Test {
  public:
@@ -39,7 +39,7 @@ class RangeLockingTest : public ::testing::Test {
     options.create_if_missing = true;
     dbname = test::PerThreadDBPath("range_locking_testdb");
 
-    DestroyDB(dbname, options);
+    EXPECT_OK(DestroyDB(dbname, options));
 
     range_lock_mgr.reset(NewRangeLockManager(nullptr));
     txn_db_options.lock_mgr_handle = range_lock_mgr;
@@ -55,7 +55,7 @@ class RangeLockingTest : public ::testing::Test {
     // seems to be a bug in btrfs that the makes readdir return recently
     // unlink-ed files. By using the default fs we simply ignore errors resulted
     // from attempting to delete such files in DestroyDB.
-    DestroyDB(dbname, options);
+    EXPECT_OK(DestroyDB(dbname, options));
   }
 
   PessimisticTransaction* NewTxn(
@@ -117,18 +117,18 @@ TEST_F(RangeLockingTest, MyRocksLikeUpdate) {
 
   bool try_range_lock_called = false;
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "RangeTreeLockManager::TryRangeLock:enter",
       [&](void* /*arg*/) { try_range_lock_called = true; });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // For performance reasons, the following must NOT call lock_mgr->TryLock():
   // We verify that by checking the value of try_range_lock_called.
   ASSERT_OK(txn0->Put(cf, Slice("b"), Slice("value"),
                       /*assume_tracked=*/true));
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
   ASSERT_FALSE(try_range_lock_called);
 
   txn0->Rollback();
@@ -142,20 +142,18 @@ TEST_F(RangeLockingTest, UpgradeLockAndGetConflict) {
   auto cf = db->DefaultColumnFamily();
   Status s;
   std::string value;
-  txn_options.lock_timeout= 10;
+  txn_options.lock_timeout = 10;
 
   Transaction* txn0 = db->BeginTransaction(write_options, txn_options);
   Transaction* txn1 = db->BeginTransaction(write_options, txn_options);
 
   // Get the shared lock in txn0
-  s = txn0->GetForUpdate(ReadOptions(), cf,
-                                Slice("a"), &value,
-                                false /*exclusive*/);
+  s = txn0->GetForUpdate(ReadOptions(), cf, Slice("a"), &value,
+                         false /*exclusive*/);
   ASSERT_TRUE(s.IsNotFound());
 
   // Get the shared lock on the same key in txn1
-  s = txn1->GetForUpdate(ReadOptions(), cf,
-                         Slice("a"), &value,
+  s = txn1->GetForUpdate(ReadOptions(), cf, Slice("a"), &value,
                          false /*exclusive*/);
   ASSERT_TRUE(s.IsNotFound());
 
@@ -169,7 +167,6 @@ TEST_F(RangeLockingTest, UpgradeLockAndGetConflict) {
   delete txn0;
   delete txn1;
 }
-
 
 TEST_F(RangeLockingTest, SnapshotValidation) {
   Status s;
@@ -369,6 +366,46 @@ TEST_F(RangeLockingTest, LockWaitCount) {
   delete txn1;
 }
 
+TEST_F(RangeLockingTest, LockWaiteeAccess) {
+  TransactionOptions txn_options;
+  auto cf = db->DefaultColumnFamily();
+  txn_options.lock_timeout = 60;
+  Transaction* txn0 = db->BeginTransaction(WriteOptions(), txn_options);
+  Transaction* txn1 = db->BeginTransaction(WriteOptions(), txn_options);
+
+  // Get a range lock
+  ASSERT_OK(txn0->GetRangeLock(cf, Endpoint("a"), Endpoint("c")));
+
+  std::atomic<bool> reached(false);
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+      "RangeTreeLockManager::TryRangeLock:EnterWaitingTxn", [&](void* /*arg*/) {
+        reached.store(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+      });
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+
+  port::Thread t([&]() {
+    // Attempt to get a conflicting lock
+    auto s = txn1->GetRangeLock(cf, Endpoint("b"), Endpoint("z"));
+    ASSERT_TRUE(s.ok());
+    txn1->Rollback();
+  });
+
+  while (!reached.load()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+
+  // Release locks and free the transaction
+  txn0->Rollback();
+  delete txn0;
+
+  t.join();
+
+  delete txn1;
+}
+
 void PointLockManagerTestExternalSetup(PointLockManagerTest* self) {
   self->env_ = Env::Default();
   self->db_dir_ = test::PerThreadDBPath("point_lock_manager_test");
@@ -392,10 +429,10 @@ void PointLockManagerTestExternalSetup(PointLockManagerTest* self) {
 INSTANTIATE_TEST_CASE_P(RangeLockManager, AnyLockManagerTest,
                         ::testing::Values(PointLockManagerTestExternalSetup));
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -419,4 +456,4 @@ int main(int /*argc*/, char** /*argv*/) {
   return 0;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

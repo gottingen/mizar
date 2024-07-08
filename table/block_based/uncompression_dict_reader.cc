@@ -11,7 +11,7 @@
 #include "table/block_based/block_based_table_reader.h"
 #include "util/compression.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 Status UncompressionDictReader::Create(
     const BlockBasedTable* table, const ReadOptions& ro,
@@ -60,9 +60,10 @@ Status UncompressionDictReader::ReadUncompressionDictionary(
 
   const Status s = table->RetrieveBlock(
       prefetch_buffer, read_options, rep->compression_dict_handle,
-      UncompressionDict::GetEmptyDict(), uncompression_dict,
-      BlockType::kCompressionDictionary, get_context, lookup_context,
-      /* for_compaction */ false, use_cache, /* wait_for_cache */ true);
+      UncompressionDict::GetEmptyDict(), uncompression_dict, get_context,
+      lookup_context,
+      /* for_compaction */ false, use_cache, /* wait_for_cache */ true,
+      /* async_read */ false);
 
   if (!s.ok()) {
     ROCKS_LOG_WARN(
@@ -76,8 +77,8 @@ Status UncompressionDictReader::ReadUncompressionDictionary(
 }
 
 Status UncompressionDictReader::GetOrReadUncompressionDictionary(
-    FilePrefetchBuffer* prefetch_buffer, bool no_io, GetContext* get_context,
-    BlockCacheLookupContext* lookup_context,
+    FilePrefetchBuffer* prefetch_buffer, bool no_io, bool verify_checksums,
+    GetContext* get_context, BlockCacheLookupContext* lookup_context,
     CachableEntry<UncompressionDict>* uncompression_dict) const {
   assert(uncompression_dict);
 
@@ -90,6 +91,7 @@ Status UncompressionDictReader::GetOrReadUncompressionDictionary(
   if (no_io) {
     read_options.read_tier = kBlockCacheTier;
   }
+  read_options.verify_checksums = verify_checksums;
 
   return ReadUncompressionDictionary(table_, prefetch_buffer, read_options,
                                      cache_dictionary_blocks(), get_context,
@@ -103,11 +105,11 @@ size_t UncompressionDictReader::ApproximateMemoryUsage() const {
                      ? uncompression_dict_.GetValue()->ApproximateMemoryUsage()
                      : 0;
 
-#ifdef MIZAR_MALLOC_USABLE_SIZE
+#ifdef ROCKSDB_MALLOC_USABLE_SIZE
   usage += malloc_usable_size(const_cast<UncompressionDictReader*>(this));
 #else
   usage += sizeof(*this);
-#endif  // MIZAR_MALLOC_USABLE_SIZE
+#endif  // ROCKSDB_MALLOC_USABLE_SIZE
 
   return usage;
 }
@@ -119,4 +121,4 @@ bool UncompressionDictReader::cache_dictionary_blocks() const {
   return table_->get_rep()->table_options.cache_index_and_filter_blocks;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

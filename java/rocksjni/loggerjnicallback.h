@@ -4,27 +4,29 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::Logger
+// ROCKSDB_NAMESPACE::Logger
 
 #ifndef JAVA_ROCKSJNI_LOGGERJNICALLBACK_H_
 #define JAVA_ROCKSJNI_LOGGERJNICALLBACK_H_
 
 #include <jni.h>
+
 #include <memory>
 #include <string>
-#include "rocksjni/jnicallback.h"
-#include "port/port.h"
-#include "mizar/env.h"
 
-namespace MIZAR_NAMESPACE {
+#include "port/port.h"
+#include "rocksdb/env.h"
+#include "rocksjni/jnicallback.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 class LoggerJniCallback : public JniCallback, public Logger {
  public:
   LoggerJniCallback(JNIEnv* env, jobject jLogger);
   ~LoggerJniCallback();
 
-  using Logger::SetInfoLogLevel;
   using Logger::GetInfoLogLevel;
+  using Logger::SetInfoLogLevel;
   // Write an entry to the log file with the specified format.
   virtual void Logv(const char* format, va_list ap);
   // Write an entry to the log file with the specified log level
@@ -43,7 +45,7 @@ class LoggerJniCallback : public JniCallback, public Logger {
   jobject m_jfatal_level;
   jobject m_jheader_level;
   std::unique_ptr<char[]> format_str(const char* format, va_list ap) const;
-  };
-  }  // namespace MIZAR_NAMESPACE
+};
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif  // JAVA_ROCKSJNI_LOGGERJNICALLBACK_H_

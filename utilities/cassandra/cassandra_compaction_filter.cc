@@ -7,17 +7,17 @@
 
 #include <string>
 
-#include "mizar/slice.h"
-#include "mizar/utilities/object_registry.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/utilities/object_registry.h"
+#include "rocksdb/utilities/options_type.h"
 #include "utilities/cassandra/format.h"
 #include "utilities/cassandra/merge_operator.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace cassandra {
 static std::unordered_map<std::string, OptionTypeInfo>
     cassandra_filter_type_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"purge_ttl_on_expiration",
          {offsetof(struct CassandraOptions, purge_ttl_on_expiration),
           OptionType::kBoolean, OptionVerificationType::kNormal,
@@ -26,7 +26,7 @@ static std::unordered_map<std::string, OptionTypeInfo>
          {offsetof(struct CassandraOptions, gc_grace_period_in_seconds),
           OptionType::kUInt32T, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 CassandraCompactionFilter::CassandraCompactionFilter(
@@ -40,8 +40,8 @@ CompactionFilter::Decision CassandraCompactionFilter::FilterV2(
     const Slice& existing_value, std::string* new_value,
     std::string* /*skip_until*/) const {
   bool value_changed = false;
-  RowValue row_value = RowValue::Deserialize(
-    existing_value.data(), existing_value.size());
+  RowValue row_value =
+      RowValue::Deserialize(existing_value.data(), existing_value.size());
   RowValue compacted =
       options_.purge_ttl_on_expiration
           ? row_value.RemoveExpiredColumns(&value_changed)
@@ -51,7 +51,7 @@ CompactionFilter::Decision CassandraCompactionFilter::FilterV2(
     compacted = compacted.RemoveTombstones(options_.gc_grace_period_in_seconds);
   }
 
-  if(compacted.Empty()) {
+  if (compacted.Empty()) {
     return Decision::kRemove;
   }
 
@@ -77,7 +77,7 @@ CassandraCompactionFilterFactory::CreateCompactionFilter(
   return result;
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 int RegisterCassandraObjects(ObjectLibrary& library,
                              const std::string& /*arg*/) {
   library.AddFactory<MergeOperator>(
@@ -105,6 +105,6 @@ int RegisterCassandraObjects(ObjectLibrary& library,
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }  // namespace cassandra
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

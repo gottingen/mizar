@@ -3,18 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <unordered_set>
 
 #include "db/blob/blob_index.h"
 #include "monitoring/statistics.h"
-#include "mizar/compaction_filter.h"
+#include "rocksdb/compaction_filter.h"
 #include "utilities/blob_db/blob_db_gc_stats.h"
 #include "utilities/blob_db/blob_db_impl.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class SystemClock;
 namespace blob_db {
 
@@ -200,5 +200,5 @@ class BlobIndexCompactionFilterFactoryGC
 };
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

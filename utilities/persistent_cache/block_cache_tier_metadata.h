@@ -4,20 +4,19 @@
 //  (found in the LICENSE.Apache file in the root directory).
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 #include <string>
 #include <unordered_map>
 
-#include "mizar/slice.h"
-
+#include "rocksdb/slice.h"
 #include "utilities/persistent_cache/block_cache_tier_file.h"
 #include "utilities/persistent_cache/hash_table.h"
 #include "utilities/persistent_cache/hash_table_evictable.h"
 #include "utilities/persistent_cache/lrulist.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 //
 // Block Cache Tier Metadata
@@ -120,6 +119,6 @@ class BlockCacheTierMetadata {
   BlockIndexType block_index_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

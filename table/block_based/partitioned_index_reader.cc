@@ -8,11 +8,12 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #include "table/block_based/partitioned_index_reader.h"
 
+#include "block_cache.h"
 #include "file/random_access_file_reader.h"
 #include "table/block_based/block_based_table_reader.h"
 #include "table/block_based/partitioned_index_iterator.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 Status PartitionIndexReader::Create(
     const BlockBasedTable* table, const ReadOptions& ro,
     FilePrefetchBuffer* prefetch_buffer, bool use_cache, bool prefetch,
@@ -49,7 +50,8 @@ InternalIteratorBase<IndexValue>* PartitionIndexReader::NewIterator(
   const bool no_io = (read_options.read_tier == kBlockCacheTier);
   CachableEntry<Block> index_block;
   const Status s =
-      GetOrReadIndexBlock(no_io, get_context, lookup_context, &index_block);
+      GetOrReadIndexBlock(no_io, read_options.rate_limiter_priority,
+                          get_context, lookup_context, &index_block);
   if (!s.ok()) {
     if (iter != nullptr) {
       iter->Invalidate(s);
@@ -81,6 +83,9 @@ InternalIteratorBase<IndexValue>* PartitionIndexReader::NewIterator(
     ro.deadline = read_options.deadline;
     ro.io_timeout = read_options.io_timeout;
     ro.adaptive_readahead = read_options.adaptive_readahead;
+    ro.async_io = read_options.async_io;
+    ro.rate_limiter_priority = read_options.rate_limiter_priority;
+
     // We don't return pinned data from index blocks, so no need
     // to set `block_contents_pinned`.
     std::unique_ptr<InternalIteratorBase<IndexValue>> index_iter(
@@ -117,8 +122,9 @@ Status PartitionIndexReader::CacheDependencies(const ReadOptions& ro,
 
   CachableEntry<Block> index_block;
   {
-    Status s = GetOrReadIndexBlock(false /* no_io */, nullptr /* get_context */,
-                                   &lookup_context, &index_block);
+    Status s = GetOrReadIndexBlock(false /* no_io */, ro.rate_limiter_priority,
+                                   nullptr /* get_context */, &lookup_context,
+                                   &index_block);
     if (!s.ok()) {
       return s;
     }
@@ -151,14 +157,16 @@ Status PartitionIndexReader::CacheDependencies(const ReadOptions& ro,
       handle.offset() + BlockBasedTable::BlockSizeWithTrailer(handle);
   uint64_t prefetch_len = last_off - prefetch_off;
   std::unique_ptr<FilePrefetchBuffer> prefetch_buffer;
-  rep->CreateFilePrefetchBuffer(0, 0, &prefetch_buffer,
-                                false /*Implicit auto readahead*/);
+  rep->CreateFilePrefetchBuffer(
+      0, 0, &prefetch_buffer, false /*Implicit auto readahead*/,
+      0 /*num_reads_*/, 0 /*num_file_reads_for_auto_readahead*/);
   IOOptions opts;
   {
     Status s = rep->file->PrepareIOOptions(ro, opts);
     if (s.ok()) {
       s = prefetch_buffer->Prefetch(opts, rep->file.get(), prefetch_off,
-                                    static_cast<size_t>(prefetch_len));
+                                    static_cast<size_t>(prefetch_len),
+                                    ro.rate_limiter_priority);
     }
     if (!s.ok()) {
       return s;
@@ -166,7 +174,7 @@ Status PartitionIndexReader::CacheDependencies(const ReadOptions& ro,
   }
 
   // For saving "all or nothing" to partition_map_
-  std::unordered_map<uint64_t, CachableEntry<Block>> map_in_progress;
+  UnorderedMap<uint64_t, CachableEntry<Block>> map_in_progress;
 
   // After prefetch, read the partitions one by one
   biter.SeekToFirst();
@@ -179,8 +187,9 @@ Status PartitionIndexReader::CacheDependencies(const ReadOptions& ro,
     // filter blocks
     Status s = table()->MaybeReadBlockAndLoadToCache(
         prefetch_buffer.get(), ro, handle, UncompressionDict::GetEmptyDict(),
-        /*wait=*/true, &block, BlockType::kIndex, /*get_context=*/nullptr,
-        &lookup_context, /*contents=*/nullptr);
+        /*wait=*/true, /*for_compaction=*/false, &block.As<Block_kIndex>(),
+        /*get_context=*/nullptr, &lookup_context, /*contents=*/nullptr,
+        /*async_read=*/false);
 
     if (!s.ok()) {
       return s;
@@ -204,4 +213,4 @@ Status PartitionIndexReader::CacheDependencies(const ReadOptions& ro,
   return s;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,9 +5,9 @@
 
 #include "db/db_iter.h"
 #include "db/dbformat.h"
-#include "mizar/comparator.h"
-#include "mizar/options.h"
-#include "mizar/slice.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
 #include "test_util/testharness.h"
 #include "util/random.h"
 #include "util/string_util.h"
@@ -29,7 +29,7 @@ bool FLAGS_verbose = false;
 
 #endif
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBIteratorStressTest : public testing::Test {
  public:
@@ -392,7 +392,7 @@ struct ReferenceIterator {
   }
 };
 
-}  // namespace
+}  // anonymous namespace
 
 // Use an internal iterator that sometimes returns errors and sometimes
 // adds/removes entries on the fly. Do random operations on a DBIter and
@@ -414,7 +414,7 @@ TEST_F(DBIteratorStressTest, StressTest) {
       a /= 10;
       ++len;
     }
-    std::string s = ToString(rnd.Next() % static_cast<uint64_t>(max_key));
+    std::string s = std::to_string(rnd.Next() % static_cast<uint64_t>(max_key));
     s.insert(0, len - (int)s.size(), '0');
     return s;
   };
@@ -444,12 +444,13 @@ TEST_F(DBIteratorStressTest, StressTest) {
           for (double mutation_probability : {0.01, 0.5}) {
             for (double target_hidden_fraction : {0.1, 0.5}) {
               std::string trace_str =
-                  "entries: " + ToString(num_entries) +
-                  ", key_space: " + ToString(key_space) +
-                  ", error_probability: " + ToString(error_probability) +
-                  ", mutation_probability: " + ToString(mutation_probability) +
+                  "entries: " + std::to_string(num_entries) +
+                  ", key_space: " + std::to_string(key_space) +
+                  ", error_probability: " + std::to_string(error_probability) +
+                  ", mutation_probability: " +
+                  std::to_string(mutation_probability) +
                   ", target_hidden_fraction: " +
-                  ToString(target_hidden_fraction);
+                  std::to_string(target_hidden_fraction);
               SCOPED_TRACE(trace_str);
               if (trace) {
                 std::cout << trace_str << std::endl;
@@ -470,7 +471,7 @@ TEST_F(DBIteratorStressTest, StressTest) {
                       types[rnd.Next() % (sizeof(types) / sizeof(types[0]))];
                 }
                 e.sequence = i;
-                e.value = "v" + ToString(i);
+                e.value = "v" + std::to_string(i);
                 ParsedInternalKey internal_key(e.key, e.sequence, e.type);
                 AppendInternalKey(&e.ikey, internal_key);
 
@@ -481,12 +482,11 @@ TEST_F(DBIteratorStressTest, StressTest) {
                 std::cout << "entries:";
                 for (size_t i = 0; i < data.entries.size(); ++i) {
                   Entry& e = data.entries[i];
-                  std::cout
-                      << "\n  idx " << i << ": \"" << e.key << "\": \""
-                      << e.value << "\" seq: " << e.sequence << " type: "
-                      << (e.type == kTypeValue
-                              ? "val"
-                              : e.type == kTypeDeletion ? "del" : "merge");
+                  std::cout << "\n  idx " << i << ": \"" << e.key << "\": \""
+                            << e.value << "\" seq: " << e.sequence << " type: "
+                            << (e.type == kTypeValue      ? "val"
+                                : e.type == kTypeDeletion ? "del"
+                                                          : "merge");
                 }
                 std::cout << std::endl;
               }
@@ -648,9 +648,10 @@ TEST_F(DBIteratorStressTest, StressTest) {
             << "\n  mutated on the fly: " << num_recently_removed << std::endl;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   ParseCommandLineFlags(&argc, &argv, true);
   return RUN_ALL_TESTS();

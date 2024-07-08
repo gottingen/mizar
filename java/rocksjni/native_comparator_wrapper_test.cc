@@ -4,14 +4,15 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #include <jni.h>
+
 #include <string>
 
-#include "mizar/comparator.h"
-#include "mizar/slice.h"
-
 #include "include/org_rocksdb_NativeComparatorWrapperTest_NativeStringComparatorWrapper.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/slice.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class NativeComparatorWrapperTestStringComparator : public Comparator {
   const char* Name() const {
@@ -29,7 +30,7 @@ class NativeComparatorWrapperTestStringComparator : public Comparator {
 
   void FindShortSuccessor(std::string* /*key*/) const { return; }
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 /*
  * Class: org_rocksdb_NativeComparatorWrapperTest_NativeStringComparatorWrapper
@@ -39,6 +40,6 @@ class NativeComparatorWrapperTestStringComparator : public Comparator {
 jlong Java_org_rocksdb_NativeComparatorWrapperTest_00024NativeStringComparatorWrapper_newStringComparator(
     JNIEnv* /*env*/, jobject /*jobj*/) {
   auto* comparator =
-      new MIZAR_NAMESPACE::NativeComparatorWrapperTestStringComparator();
-  return reinterpret_cast<jlong>(comparator);
+      new ROCKSDB_NAMESPACE::NativeComparatorWrapperTestStringComparator();
+  return GET_CPLUSPLUS_POINTER(comparator);
 }

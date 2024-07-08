@@ -9,7 +9,7 @@
 
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 //
 // Simple synchronized queue implementation with the option of
@@ -64,4 +64,4 @@ class BoundedQueue {
   const size_t max_size_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

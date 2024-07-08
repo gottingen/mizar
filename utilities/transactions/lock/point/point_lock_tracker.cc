@@ -3,11 +3,11 @@
 // COPYING file in the root directory) and Apache 2.0 License
 // (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/lock/point/point_lock_tracker.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 
@@ -44,25 +44,12 @@ class TrackedKeysIterator : public LockTracker::KeyIterator {
 
 void PointLockTracker::Track(const PointLockRequest& r) {
   auto& keys = tracked_keys_[r.column_family_id];
-#ifdef __cpp_lib_unordered_map_try_emplace
-  // use c++17's try_emplace if available, to avoid rehashing the key
-  // in case it is not already in the map
   auto result = keys.try_emplace(r.key, r.seq);
   auto it = result.first;
   if (!result.second && r.seq < it->second.seq) {
     // Now tracking this key with an earlier sequence number
     it->second.seq = r.seq;
   }
-#else
-  auto it = keys.find(r.key);
-  if (it == keys.end()) {
-    auto result = keys.emplace(r.key, TrackedKeyInfo(r.seq));
-    it = result.first;
-  } else if (r.seq < it->second.seq) {
-    // Now tracking this key with an earlier sequence number
-    it->second.seq = r.seq;
-  }
-#endif
   // else we do not update the seq. The smaller the tracked seq, the stronger it
   // the guarantee since it implies from the seq onward there has not been a
   // concurrent update to the key. So we update the seq if it implies stronger
@@ -265,6 +252,6 @@ LockTracker::KeyIterator* PointLockTracker::GetKeyIterator(
 
 void PointLockTracker::Clear() { tracked_keys_.clear(); }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

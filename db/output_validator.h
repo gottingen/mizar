@@ -5,10 +5,10 @@
 //
 #pragma once
 #include "db/dbformat.h"
-#include "mizar/slice.h"
-#include "mizar/status.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // A class that validates key/value that is inserted to an SST file.
 // Pass every key/value of the file using OutputValidator::Add()
 // and the class validates key order and optionally calculate a hash
@@ -45,4 +45,4 @@ class OutputValidator {
   bool enable_order_check_;
   bool enable_hash_;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

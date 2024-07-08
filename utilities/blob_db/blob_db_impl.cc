@@ -3,9 +3,10 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/blob_db/blob_db_impl.h"
+
 #include <algorithm>
 #include <cinttypes>
 #include <iomanip>
@@ -23,11 +24,11 @@
 #include "logging/logging.h"
 #include "monitoring/instrumented_mutex.h"
 #include "monitoring/statistics.h"
-#include "mizar/convenience.h"
-#include "mizar/env.h"
-#include "mizar/iterator.h"
-#include "mizar/utilities/stackable_db.h"
-#include "mizar/utilities/transaction.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
+#include "rocksdb/utilities/stackable_db.h"
+#include "rocksdb/utilities/transaction.h"
 #include "table/block_based/block.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_builder.h"
@@ -47,7 +48,7 @@ namespace {
 int kBlockBasedTableVersionFormat = 2;
 }  // end namespace
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace blob_db {
 
 bool BlobFileComparator::operator()(
@@ -1023,9 +1024,8 @@ Status BlobDBImpl::Put(const WriteOptions& options, const Slice& key,
   return PutUntil(options, key, value, kNoExpiration);
 }
 
-Status BlobDBImpl::PutWithTTL(const WriteOptions& options,
-                              const Slice& key, const Slice& value,
-                              uint64_t ttl) {
+Status BlobDBImpl::PutWithTTL(const WriteOptions& options, const Slice& key,
+                              const Slice& value, uint64_t ttl) {
   uint64_t now = EpochNow();
   uint64_t expiration = kNoExpiration - now > ttl ? now + ttl : kNoExpiration;
   return PutUntil(options, key, value, expiration);
@@ -1165,7 +1165,7 @@ Status BlobDBImpl::DecompressSlice(const Slice& compressed_value,
     UncompressionContext context(compression_type);
     UncompressionInfo info(context, UncompressionDict::GetEmptyDict(),
                            compression_type);
-    Status s = UncompressBlockContentsForCompressionType(
+    Status s = UncompressBlockData(
         info, compressed_value.data(), compressed_value.size(), &contents,
         kBlockBasedTableVersionFormat, *(cfh->cfd()->ioptions()));
     if (!s.ok()) {
@@ -1385,9 +1385,9 @@ Status BlobDBImpl::AppendBlob(const std::shared_ptr<BlobFile>& bfile,
   return s;
 }
 
-std::vector<Status> BlobDBImpl::MultiGet(
-    const ReadOptions& read_options,
-    const std::vector<Slice>& keys, std::vector<std::string>* values) {
+std::vector<Status> BlobDBImpl::MultiGet(const ReadOptions& read_options,
+                                         const std::vector<Slice>& keys,
+                                         std::vector<std::string>* values) {
   StopWatch multiget_sw(clock_, statistics_, BLOB_DB_MULTIGET_MICROS);
   RecordTick(statistics_, BLOB_DB_NUM_MULTIGET);
   // Get a snapshot to avoid blob file get deleted between we
@@ -1541,15 +1541,16 @@ Status BlobDBImpl::GetRawBlobFromFile(const Slice& key, uint64_t file_number,
 
   {
     StopWatch read_sw(clock_, statistics_, BLOB_DB_BLOB_FILE_READ_MICROS);
+    // TODO: rate limit old blob DB file reads.
     if (reader->use_direct_io()) {
       s = reader->Read(IOOptions(), record_offset,
                        static_cast<size_t>(record_size), &blob_record, nullptr,
-                       &aligned_buf);
+                       &aligned_buf, Env::IO_TOTAL /* rate_limiter_priority */);
     } else {
       buf.reserve(static_cast<size_t>(record_size));
       s = reader->Read(IOOptions(), record_offset,
                        static_cast<size_t>(record_size), &blob_record, &buf[0],
-                       nullptr);
+                       nullptr, Env::IO_TOTAL /* rate_limiter_priority */);
     }
     RecordTick(statistics_, BLOB_DB_BLOB_FILE_BYTES_READ, blob_record.size());
   }
@@ -2172,5 +2173,5 @@ void BlobDBImpl::TEST_ProcessCompactionJobInfo(const CompactionJobInfo& info) {
 #endif  //  !NDEBUG
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

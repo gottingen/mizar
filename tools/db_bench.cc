@@ -14,8 +14,8 @@ int main() {
   return 1;
 }
 #else
-#include "mizar/db_bench_tool.h"
+#include "rocksdb/db_bench_tool.h"
 int main(int argc, char** argv) {
-  return MIZAR_NAMESPACE::db_bench_tool(argc, argv);
+  return ROCKSDB_NAMESPACE::db_bench_tool(argc, argv);
 }
 #endif  // GFLAGS

@@ -4,12 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::CompactionFilter.
+// ROCKSDB_NAMESPACE::CompactionFilter.
+
+#include "rocksdb/compaction_filter.h"
 
 #include <jni.h>
 
 #include "include/org_rocksdb_AbstractCompactionFilter.h"
-#include "mizar/compaction_filter.h"
 
 // <editor-fold desc="org.rocksdb.AbstractCompactionFilter">
 
@@ -21,7 +22,7 @@
 void Java_org_rocksdb_AbstractCompactionFilter_disposeInternal(JNIEnv* /*env*/,
                                                                jobject /*jobj*/,
                                                                jlong handle) {
-  auto* cf = reinterpret_cast<MIZAR_NAMESPACE::CompactionFilter*>(handle);
+  auto* cf = reinterpret_cast<ROCKSDB_NAMESPACE::CompactionFilter*>(handle);
   assert(cf != nullptr);
   delete cf;
 }

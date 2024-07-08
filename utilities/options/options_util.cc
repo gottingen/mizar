@@ -3,17 +3,17 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/utilities/options_util.h"
+#include "rocksdb/utilities/options_util.h"
 
 #include "file/filename.h"
 #include "options/options_parser.h"
-#include "mizar/convenience.h"
-#include "mizar/options.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/options.h"
 #include "table/block_based/block_based_table_factory.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 Status LoadOptionsFromFile(const std::string& file_name, Env* env,
                            DBOptions* db_options,
                            std::vector<ColumnFamilyDescriptor>* cf_descs,
@@ -57,8 +57,8 @@ Status LoadOptionsFromFile(const ConfigOptions& config_options,
   return Status::OK();
 }
 
-Status GetLatestOptionsFileName(const std::string& dbpath,
-                                Env* env, std::string* options_file_name) {
+Status GetLatestOptionsFileName(const std::string& dbpath, Env* env,
+                                std::string* options_file_name) {
   Status s;
   std::string latest_file_name;
   uint64_t latest_time_stamp = 0;
@@ -155,5 +155,5 @@ Status CheckOptionsCompatibility(
       dbpath + "/" + options_file_name, fs.get());
 }
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

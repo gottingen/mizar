@@ -8,15 +8,16 @@
 #include <memory>
 
 #include "port/likely.h"
-#include "mizar/env.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/env.h"
+#include "rocksdb/system_clock.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
 
-__thread ThreadStatusData* ThreadStatusUpdater::thread_status_data_ = nullptr;
+thread_local ThreadStatusData* ThreadStatusUpdater::thread_status_data_ =
+    nullptr;
 
 void ThreadStatusUpdater::RegisterThread(ThreadStatus::ThreadType ttype,
                                          uint64_t thread_id) {
@@ -314,4 +315,4 @@ void ThreadStatusUpdater::IncreaseThreadOperationProperty(int /*i*/,
                                                           uint64_t /*delta*/) {}
 
 #endif  // ROCKSDB_USING_THREAD_STATUS
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

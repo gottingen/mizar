@@ -2,7 +2,7 @@
 //  This source code is licensed under both the GPLv2 (found in the
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/persistent_cache/block_cache_tier_file.h"
 
@@ -16,10 +16,10 @@
 #include "env/composite_env_wrapper.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 #include "util/crc32c.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 //
 // File creation factories
@@ -68,8 +68,7 @@ Status BlockCacheFile::Delete(uint64_t* size) {
 // <-- 4 --><-- 4  --><-- 4   --><-- 4     --><-- key size  --><-- v-size -->
 //
 struct CacheRecordHeader {
-  CacheRecordHeader()
-    : magic_(0), crc_(0), key_size_(0), val_size_(0) {}
+  CacheRecordHeader() : magic_(0), crc_(0), key_size_(0), val_size_(0) {}
   CacheRecordHeader(const uint32_t magic, const uint32_t key_size,
                     const uint32_t val_size)
       : magic_(magic), crc_(0), key_size_(key_size), val_size_(val_size) {}
@@ -238,7 +237,7 @@ bool RandomAccessCacheFile::Read(const LBA& lba, Slice* key, Slice* val,
 
   Slice result;
   Status s = freader_->Read(IOOptions(), lba.off_, lba.size_, &result, scratch,
-                            nullptr);
+                            nullptr, Env::IO_TOTAL /* rate_limiter_priority */);
   if (!s.ok()) {
     Error(log_, "Error reading from file %s. %s", Path().c_str(),
           s.ToString().c_str());
@@ -606,6 +605,6 @@ void ThreadedWriter::DispatchIO(const IO& io) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

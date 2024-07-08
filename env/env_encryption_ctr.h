@@ -5,11 +5,11 @@
 
 #pragma once
 
-#if !defined(MIZAR_LITE)
+#if !defined(ROCKSDB_LITE)
 
-#include "mizar/env_encryption.h"
+#include "rocksdb/env_encryption.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // CTRCipherStream implements BlockAccessCipherStream using an
 // Counter operations mode.
 // See https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
@@ -66,7 +66,7 @@ class CTREncryptionProvider : public EncryptionProvider {
 
   static const char* kClassName() { return "CTR"; }
   const char* Name() const override { return kClassName(); }
-
+  bool IsInstanceOf(const std::string& name) const override;
   // GetPrefixLength returns the length of the prefix that is added to every
   // file
   // and used for storing encryption options.
@@ -87,8 +87,8 @@ class CTREncryptionProvider : public EncryptionProvider {
 
   Status AddCipher(const std::string& descriptor, const char* /*cipher*/,
                    size_t /*len*/, bool /*for_write*/) override;
- protected:
 
+ protected:
   // PopulateSecretPrefixPart initializes the data into a new prefix block
   // that will be encrypted. This function will store the data in plain text.
   // It will be encrypted later (before written to disk).
@@ -111,6 +111,6 @@ Status NewEncryptedFileSystemImpl(
     const std::shared_ptr<EncryptionProvider>& provider,
     std::unique_ptr<FileSystem>* fs);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // !defined(MIZAR_LITE)
+#endif  // !defined(ROCKSDB_LITE)

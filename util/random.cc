@@ -8,19 +8,16 @@
 
 #include <stdint.h>
 #include <string.h>
+
 #include <thread>
 #include <utility>
 
 #include "port/likely.h"
 #include "util/thread_local.h"
 
-#ifdef MIZAR_SUPPORT_THREAD_LOCAL
-#define STORAGE_DECL static __thread
-#else
-#define STORAGE_DECL static
-#endif
+#define STORAGE_DECL static thread_local
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 Random* Random::GetTLSInstance() {
   STORAGE_DECL Random* tls_instance;
@@ -62,4 +59,4 @@ std::string Random::RandomBinaryString(int len) {
   return ret;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

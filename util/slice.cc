@@ -7,37 +7,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 
 #include <stdio.h>
 
 #include <algorithm>
 
-#include "mizar/convenience.h"
-#include "mizar/slice_transform.h"
-#include "mizar/utilities/object_registry.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/utilities/object_registry.h"
+#include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
-static std::unordered_map<std::string, OptionTypeInfo>
-    slice_transform_length_info = {
-#ifndef MIZAR_LITE
-        {"length",
-         {0, OptionType::kSizeT, OptionVerificationType::kNormal,
-          OptionTypeFlags::kDontSerialize | OptionTypeFlags::kCompareNever}},
-#endif  // MIZAR_LITE
-};
 
 class FixedPrefixTransform : public SliceTransform {
  private:
   size_t prefix_len_;
+  std::string id_;
 
  public:
   explicit FixedPrefixTransform(size_t prefix_len) : prefix_len_(prefix_len) {
-    RegisterOptions(Name(), &prefix_len_, &slice_transform_length_info);
+    id_ = std::string(kClassName()) + "." + std::to_string(prefix_len_);
   }
 
   static const char* kClassName() { return "rocksdb.FixedPrefix"; }
@@ -45,9 +38,20 @@ class FixedPrefixTransform : public SliceTransform {
   const char* Name() const override { return kClassName(); }
   const char* NickName() const override { return kNickName(); }
 
-  std::string GetId() const override {
-    return std::string(Name()) + "." + MIZAR_NAMESPACE::ToString(prefix_len_);
+  bool IsInstanceOf(const std::string& name) const override {
+    if (name == id_) {
+      return true;
+    } else if (StartsWith(name, kNickName())) {
+      std::string alt_id =
+          std::string(kNickName()) + ":" + std::to_string(prefix_len_);
+      if (name == alt_id) {
+        return true;
+      }
+    }
+    return SliceTransform::IsInstanceOf(name);
   }
+
+  std::string GetId() const override { return id_; }
 
   Slice Transform(const Slice& src) const override {
     assert(InDomain(src));
@@ -75,18 +79,30 @@ class FixedPrefixTransform : public SliceTransform {
 class CappedPrefixTransform : public SliceTransform {
  private:
   size_t cap_len_;
+  std::string id_;
 
  public:
   explicit CappedPrefixTransform(size_t cap_len) : cap_len_(cap_len) {
-    RegisterOptions(Name(), &cap_len_, &slice_transform_length_info);
+    id_ = std::string(kClassName()) + "." + std::to_string(cap_len_);
   }
 
   static const char* kClassName() { return "rocksdb.CappedPrefix"; }
   static const char* kNickName() { return "capped"; }
   const char* Name() const override { return kClassName(); }
   const char* NickName() const override { return kNickName(); }
-  std::string GetId() const override {
-    return std::string(Name()) + "." + MIZAR_NAMESPACE::ToString(cap_len_);
+  std::string GetId() const override { return id_; }
+
+  bool IsInstanceOf(const std::string& name) const override {
+    if (name == id_) {
+      return true;
+    } else if (StartsWith(name, kNickName())) {
+      std::string alt_id =
+          std::string(kNickName()) + ":" + std::to_string(cap_len_);
+      if (name == alt_id) {
+        return true;
+      }
+    }
+    return SliceTransform::IsInstanceOf(name);
   }
 
   Slice Transform(const Slice& src) const override {
@@ -112,7 +128,7 @@ class CappedPrefixTransform : public SliceTransform {
 
 class NoopTransform : public SliceTransform {
  public:
-  explicit NoopTransform() { }
+  explicit NoopTransform() {}
 
   static const char* kClassName() { return "rocksdb.Noop"; }
   const char* Name() const override { return kClassName(); }
@@ -140,12 +156,11 @@ const SliceTransform* NewCappedPrefixTransform(size_t cap_len) {
 
 const SliceTransform* NewNoopTransform() { return new NoopTransform; }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 static int RegisterBuiltinSliceTransform(ObjectLibrary& library,
                                          const std::string& /*arg*/) {
   // For the builtin transforms, the format is typically
-  // [Name] or [Name].[0-9]+
-  // [NickName]:[0-9]+
+  // [Name].[0-9]+ or [NickName]:[0-9]+
   library.AddFactory<const SliceTransform>(
       NoopTransform::kClassName(),
       [](const std::string& /*uri*/,
@@ -165,17 +180,13 @@ static int RegisterBuiltinSliceTransform(ObjectLibrary& library,
         return guard->get();
       });
   library.AddFactory<const SliceTransform>(
-      ObjectLibrary::PatternEntry(FixedPrefixTransform::kClassName(), true)
+      ObjectLibrary::PatternEntry(FixedPrefixTransform::kClassName(), false)
           .AddNumber("."),
       [](const std::string& uri, std::unique_ptr<const SliceTransform>* guard,
          std::string* /*errmsg*/) {
-        if (uri == FixedPrefixTransform::kClassName()) {
-          guard->reset(NewFixedPrefixTransform(0));
-        } else {
-          auto len = ParseSizeT(
-              uri.substr(strlen(FixedPrefixTransform::kClassName()) + 1));
-          guard->reset(NewFixedPrefixTransform(len));
-        }
+        auto len = ParseSizeT(
+            uri.substr(strlen(FixedPrefixTransform::kClassName()) + 1));
+        guard->reset(NewFixedPrefixTransform(len));
         return guard->get();
       });
   library.AddFactory<const SliceTransform>(
@@ -189,33 +200,29 @@ static int RegisterBuiltinSliceTransform(ObjectLibrary& library,
         return guard->get();
       });
   library.AddFactory<const SliceTransform>(
-      ObjectLibrary::PatternEntry(CappedPrefixTransform::kClassName(), true)
+      ObjectLibrary::PatternEntry(CappedPrefixTransform::kClassName(), false)
           .AddNumber("."),
       [](const std::string& uri, std::unique_ptr<const SliceTransform>* guard,
          std::string* /*errmsg*/) {
-        if (uri == CappedPrefixTransform::kClassName()) {
-          guard->reset(NewCappedPrefixTransform(0));
-        } else {
-          auto len = ParseSizeT(
-              uri.substr(strlen(CappedPrefixTransform::kClassName()) + 1));
-          guard->reset(NewCappedPrefixTransform(len));
-        }
+        auto len = ParseSizeT(
+            uri.substr(strlen(CappedPrefixTransform::kClassName()) + 1));
+        guard->reset(NewCappedPrefixTransform(len));
         return guard->get();
       });
   size_t num_types;
   return static_cast<int>(library.GetFactoryCount(&num_types));
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 Status SliceTransform::CreateFromString(
     const ConfigOptions& config_options, const std::string& value,
     std::shared_ptr<const SliceTransform>* result) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinSliceTransform(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   std::string id;
   std::unordered_map<std::string, std::string> opt_map;
   Status status = Customizable::GetOptionsMap(config_options, result->get(),
@@ -225,7 +232,7 @@ Status SliceTransform::CreateFromString(
   } else if (id.empty() && opt_map.empty()) {
     result->reset();
   } else {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     status = config_options.registry->NewSharedObject(id, result);
 #else
     auto Matches = [](const std::string& input, size_t size,
@@ -257,7 +264,7 @@ Status SliceTransform::CreateFromString(
     } else {
       status = Status::NotSupported("Cannot load object in LITE mode ", id);
     }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
     if (config_options.ignore_unsupported_options && status.IsNotSupported()) {
       return Status::OK();
     } else if (status.ok()) {
@@ -270,18 +277,20 @@ Status SliceTransform::CreateFromString(
 }
 
 std::string SliceTransform::AsString() const {
-#ifndef MIZAR_LITE
-  ConfigOptions config_options;
-  config_options.delimiter = ";";
-  return ToString(config_options);
-#else
+#ifndef ROCKSDB_LITE
+  if (HasRegisteredOptions()) {
+    ConfigOptions opts;
+    opts.delimiter = ";";
+    return ToString(opts);
+  }
+#endif  // ROCKSDB_LITE
   return GetId();
-#endif  // MIZAR_LITE
 }
 
 // 2 small internal utility functions, for efficient hex conversions
 // and no need for snprintf, toupper etc...
-// Originally from wdt/util/EncryptionUtils.cpp - for ToString(true)/DecodeHex:
+// Originally from wdt/util/EncryptionUtils.cpp - for
+// std::to_string(true)/DecodeHex:
 char toHex(unsigned char v) {
   if (v <= 9) {
     return '0' + v;
@@ -393,4 +402,4 @@ PinnableSlice& PinnableSlice::operator=(PinnableSlice&& other) {
   return *this;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

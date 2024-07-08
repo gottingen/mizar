@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <atomic>
 #include <condition_variable>
@@ -22,19 +22,19 @@
 #include "db/blob/blob_log_format.h"
 #include "db/blob/blob_log_writer.h"
 #include "db/db_iter.h"
-#include "mizar/compaction_filter.h"
-#include "mizar/db.h"
-#include "mizar/file_system.h"
-#include "mizar/listener.h"
-#include "mizar/options.h"
-#include "mizar/statistics.h"
-#include "mizar/wal_filter.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/db.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/listener.h"
+#include "rocksdb/options.h"
+#include "rocksdb/statistics.h"
+#include "rocksdb/wal_filter.h"
 #include "util/mutexlock.h"
 #include "util/timer_queue.h"
 #include "utilities/blob_db/blob_db.h"
 #include "utilities/blob_db/blob_file.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBImpl;
 class ColumnFamilyHandle;
@@ -124,10 +124,10 @@ class BlobDBImpl : public BlobDB {
 
   using BlobDB::MultiGet;
   virtual std::vector<Status> MultiGet(
-      const ReadOptions& read_options,
-      const std::vector<Slice>& keys,
+      const ReadOptions& read_options, const std::vector<Slice>& keys,
       std::vector<std::string>* values) override;
 
+  using BlobDB::Write;
   virtual Status Write(const WriteOptions& opts, WriteBatch* updates) override;
 
   virtual Status Close() override;
@@ -499,5 +499,5 @@ class BlobDBImpl : public BlobDB {
 };
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

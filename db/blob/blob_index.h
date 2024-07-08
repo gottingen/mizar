@@ -7,12 +7,12 @@
 #include <sstream>
 #include <string>
 
-#include "mizar/compression_type.h"
+#include "rocksdb/compression_type.h"
 #include "util/coding.h"
 #include "util/compression.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // BlobIndex is a pointer to the blob and metadata of the blob. The index is
 // stored in base DB as ValueType::kTypeBlobIndex.
@@ -92,13 +92,13 @@ class BlobIndex {
   }
 
   Status DecodeFrom(Slice slice) {
-    static const std::string kErrorMessage = "Error while decoding blob index";
+    const char* kErrorMessage = "Error while decoding blob index";
     assert(slice.size() > 0);
     type_ = static_cast<Type>(*slice.data());
     if (type_ >= Type::kUnknown) {
-      return Status::Corruption(
-          kErrorMessage,
-          "Unknown blob index type: " + ToString(static_cast<char>(type_)));
+      return Status::Corruption(kErrorMessage,
+                                "Unknown blob index type: " +
+                                    std::to_string(static_cast<char>(type_)));
     }
     slice = Slice(slice.data() + 1, slice.size() - 1);
     if (HasTTL()) {
@@ -184,4 +184,4 @@ class BlobIndex {
   CompressionType compression_ = kNoCompression;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

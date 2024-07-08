@@ -7,13 +7,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
+#include "util/random.h"
+
 #include <cstring>
 #include <vector>
 
 #include "test_util/testharness.h"
-#include "util/random.h"
 
-using MIZAR_NAMESPACE::Random;
+using ROCKSDB_NAMESPACE::Random;
 
 TEST(RandomTest, Uniform) {
   const int average = 20;
@@ -99,6 +100,7 @@ TEST(RandomTest, PercentTrue) {
 }
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();

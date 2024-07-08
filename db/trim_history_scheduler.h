@@ -6,11 +6,13 @@
 #pragma once
 
 #include <stdint.h>
+
 #include <atomic>
 #include <mutex>
+
 #include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class ColumnFamilyData;
 
@@ -41,4 +43,4 @@ class TrimHistoryScheduler {
   std::mutex checking_mutex_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

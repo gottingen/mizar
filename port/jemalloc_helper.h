@@ -18,9 +18,10 @@
 #include <mm_malloc.h>
 #endif
 
-#ifdef MIZAR_JEMALLOC
+#ifdef ROCKSDB_JEMALLOC
 #ifdef __FreeBSD__
 #include <malloc_np.h>
+#define JEMALLOC_USABLE_SIZE_CONST const
 #else
 #define JEMALLOC_MANGLE
 #include <jemalloc/jemalloc.h>
@@ -32,7 +33,7 @@
 
 #if defined(OS_WIN) && defined(_MSC_VER)
 
-// MSVC does not have weak symbol support. As long as MIZAR_JEMALLOC is
+// MSVC does not have weak symbol support. As long as ROCKSDB_JEMALLOC is
 // defined, Jemalloc memory allocator is used.
 static inline bool HasJemalloc() { return true; }
 
@@ -103,4 +104,4 @@ static inline bool HasJemalloc() {
 
 #endif
 
-#endif  // MIZAR_JEMALLOC
+#endif  // ROCKSDB_JEMALLOC

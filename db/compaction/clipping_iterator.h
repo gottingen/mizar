@@ -7,9 +7,10 @@
 
 #include <cassert>
 
+#include "rocksdb/comparator.h"
 #include "table/internal_iterator.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // An internal iterator that wraps another one and ensures that any keys
 // returned are strictly within a range [start, end). If the underlying
@@ -19,7 +20,7 @@ namespace MIZAR_NAMESPACE {
 class ClippingIterator : public InternalIterator {
  public:
   ClippingIterator(InternalIterator* iter, const Slice* start, const Slice* end,
-                   const Comparator* cmp)
+                   const CompareInterface* cmp)
       : iter_(iter), start_(start), end_(end), cmp_(cmp), valid_(false) {
     assert(iter_);
     assert(cmp_);
@@ -268,8 +269,8 @@ class ClippingIterator : public InternalIterator {
   InternalIterator* iter_;
   const Slice* start_;
   const Slice* end_;
-  const Comparator* cmp_;
+  const CompareInterface* cmp_;
   bool valid_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

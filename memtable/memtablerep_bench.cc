@@ -27,13 +27,13 @@ int main() {
 #include "memory/arena.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/comparator.h"
-#include "mizar/convenience.h"
-#include "mizar/memtablerep.h"
-#include "mizar/options.h"
-#include "mizar/slice_transform.h"
-#include "mizar/system_clock.h"
-#include "mizar/write_buffer_manager.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/memtablerep.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/system_clock.h"
+#include "rocksdb/write_buffer_manager.h"
 #include "test_util/testutil.h"
 #include "util/gflags_compat.h"
 #include "util/mutexlock.h"
@@ -122,7 +122,7 @@ DEFINE_int64(seed, 0,
              "Seed base for random number generators. "
              "When 0 it is deterministic.");
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 struct CallbackVerifyArgs {
@@ -467,8 +467,8 @@ class FillBenchmark : public Benchmark {
     num_write_ops_per_thread_ = FLAGS_num_operations;
   }
 
-  void RunThreads(std::vector<port::Thread>* /*threads*/, uint64_t* bytes_written,
-                  uint64_t* bytes_read, bool /*write*/,
+  void RunThreads(std::vector<port::Thread>* /*threads*/,
+                  uint64_t* bytes_written, uint64_t* bytes_read, bool /*write*/,
                   uint64_t* read_hits) override {
     FillBenchmarkThread(table_, key_gen_, bytes_written, bytes_read, sequence_,
                         num_write_ops_per_thread_, read_hits)();
@@ -553,7 +553,7 @@ class ReadWriteBenchmark : public Benchmark {
   }
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 void PrintWarnings() {
 #if defined(__GNUC__) && !defined(__OPTIMIZE__)
@@ -567,43 +567,43 @@ void PrintWarnings() {
 }
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   SetUsageMessage(std::string("\nUSAGE:\n") + std::string(argv[0]) +
                   " [OPTIONS]...");
   ParseCommandLineFlags(&argc, &argv, true);
 
   PrintWarnings();
 
-  MIZAR_NAMESPACE::Options options;
+  ROCKSDB_NAMESPACE::Options options;
 
-  std::unique_ptr<MIZAR_NAMESPACE::MemTableRepFactory> factory;
+  std::unique_ptr<ROCKSDB_NAMESPACE::MemTableRepFactory> factory;
   if (FLAGS_memtablerep == "skiplist") {
-    factory.reset(new MIZAR_NAMESPACE::SkipListFactory);
-#ifndef MIZAR_LITE
+    factory.reset(new ROCKSDB_NAMESPACE::SkipListFactory);
+#ifndef ROCKSDB_LITE
   } else if (FLAGS_memtablerep == "vector") {
-    factory.reset(new MIZAR_NAMESPACE::VectorRepFactory);
+    factory.reset(new ROCKSDB_NAMESPACE::VectorRepFactory);
   } else if (FLAGS_memtablerep == "hashskiplist" ||
              FLAGS_memtablerep == "prefix_hash") {
-    factory.reset(MIZAR_NAMESPACE::NewHashSkipListRepFactory(
+    factory.reset(ROCKSDB_NAMESPACE::NewHashSkipListRepFactory(
         FLAGS_bucket_count, FLAGS_hashskiplist_height,
         FLAGS_hashskiplist_branching_factor));
     options.prefix_extractor.reset(
-        MIZAR_NAMESPACE::NewFixedPrefixTransform(FLAGS_prefix_length));
+        ROCKSDB_NAMESPACE::NewFixedPrefixTransform(FLAGS_prefix_length));
   } else if (FLAGS_memtablerep == "hashlinklist" ||
              FLAGS_memtablerep == "hash_linkedlist") {
-    factory.reset(MIZAR_NAMESPACE::NewHashLinkListRepFactory(
+    factory.reset(ROCKSDB_NAMESPACE::NewHashLinkListRepFactory(
         FLAGS_bucket_count, FLAGS_huge_page_tlb_size,
         FLAGS_bucket_entries_logging_threshold,
         FLAGS_if_log_bucket_dist_when_flash, FLAGS_threshold_use_skiplist));
     options.prefix_extractor.reset(
-        MIZAR_NAMESPACE::NewFixedPrefixTransform(FLAGS_prefix_length));
-#endif  // MIZAR_LITE
+        ROCKSDB_NAMESPACE::NewFixedPrefixTransform(FLAGS_prefix_length));
+#endif  // ROCKSDB_LITE
   } else {
-    MIZAR_NAMESPACE::ConfigOptions config_options;
+    ROCKSDB_NAMESPACE::ConfigOptions config_options;
     config_options.ignore_unsupported_options = false;
 
-    MIZAR_NAMESPACE::Status s =
-        MIZAR_NAMESPACE::MemTableRepFactory::CreateFromString(
+    ROCKSDB_NAMESPACE::Status s =
+        ROCKSDB_NAMESPACE::MemTableRepFactory::CreateFromString(
             config_options, FLAGS_memtablerep, &factory);
     if (!s.ok()) {
       fprintf(stdout, "Unknown memtablerep: %s\n", s.ToString().c_str());
@@ -611,11 +611,11 @@ int main(int argc, char** argv) {
     }
   }
 
-  MIZAR_NAMESPACE::InternalKeyComparator internal_key_comp(
-      MIZAR_NAMESPACE::BytewiseComparator());
-  MIZAR_NAMESPACE::MemTable::KeyComparator key_comp(internal_key_comp);
-  MIZAR_NAMESPACE::Arena arena;
-  MIZAR_NAMESPACE::WriteBufferManager wb(FLAGS_write_buffer_size);
+  ROCKSDB_NAMESPACE::InternalKeyComparator internal_key_comp(
+      ROCKSDB_NAMESPACE::BytewiseComparator());
+  ROCKSDB_NAMESPACE::MemTable::KeyComparator key_comp(internal_key_comp);
+  ROCKSDB_NAMESPACE::Arena arena;
+  ROCKSDB_NAMESPACE::WriteBufferManager wb(FLAGS_write_buffer_size);
   uint64_t sequence;
   auto createMemtableRep = [&] {
     sequence = 0;
@@ -623,56 +623,56 @@ int main(int argc, char** argv) {
                                       options.prefix_extractor.get(),
                                       options.info_log.get());
   };
-  std::unique_ptr<MIZAR_NAMESPACE::MemTableRep> memtablerep;
-  MIZAR_NAMESPACE::Random64 rng(FLAGS_seed);
+  std::unique_ptr<ROCKSDB_NAMESPACE::MemTableRep> memtablerep;
+  ROCKSDB_NAMESPACE::Random64 rng(FLAGS_seed);
   const char* benchmarks = FLAGS_benchmarks.c_str();
   while (benchmarks != nullptr) {
-    std::unique_ptr<MIZAR_NAMESPACE::KeyGenerator> key_gen;
+    std::unique_ptr<ROCKSDB_NAMESPACE::KeyGenerator> key_gen;
     const char* sep = strchr(benchmarks, ',');
-    MIZAR_NAMESPACE::Slice name;
+    ROCKSDB_NAMESPACE::Slice name;
     if (sep == nullptr) {
       name = benchmarks;
       benchmarks = nullptr;
     } else {
-      name = MIZAR_NAMESPACE::Slice(benchmarks, sep - benchmarks);
+      name = ROCKSDB_NAMESPACE::Slice(benchmarks, sep - benchmarks);
       benchmarks = sep + 1;
     }
-    std::unique_ptr<MIZAR_NAMESPACE::Benchmark> benchmark;
-    if (name == MIZAR_NAMESPACE::Slice("fillseq")) {
+    std::unique_ptr<ROCKSDB_NAMESPACE::Benchmark> benchmark;
+    if (name == ROCKSDB_NAMESPACE::Slice("fillseq")) {
       memtablerep.reset(createMemtableRep());
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::SEQUENTIAL, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::FillBenchmark(
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::SEQUENTIAL, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::FillBenchmark(
           memtablerep.get(), key_gen.get(), &sequence));
-    } else if (name == MIZAR_NAMESPACE::Slice("fillrandom")) {
+    } else if (name == ROCKSDB_NAMESPACE::Slice("fillrandom")) {
       memtablerep.reset(createMemtableRep());
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::UNIQUE_RANDOM, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::FillBenchmark(
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::UNIQUE_RANDOM, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::FillBenchmark(
           memtablerep.get(), key_gen.get(), &sequence));
-    } else if (name == MIZAR_NAMESPACE::Slice("readrandom")) {
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::RANDOM, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::ReadBenchmark(
+    } else if (name == ROCKSDB_NAMESPACE::Slice("readrandom")) {
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::RANDOM, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::ReadBenchmark(
           memtablerep.get(), key_gen.get(), &sequence));
-    } else if (name == MIZAR_NAMESPACE::Slice("readseq")) {
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::SEQUENTIAL, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::SeqReadBenchmark(memtablerep.get(),
+    } else if (name == ROCKSDB_NAMESPACE::Slice("readseq")) {
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::SEQUENTIAL, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::SeqReadBenchmark(memtablerep.get(),
                                                               &sequence));
-    } else if (name == MIZAR_NAMESPACE::Slice("readwrite")) {
+    } else if (name == ROCKSDB_NAMESPACE::Slice("readwrite")) {
       memtablerep.reset(createMemtableRep());
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::RANDOM, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::ReadWriteBenchmark<
-                      MIZAR_NAMESPACE::ConcurrentReadBenchmarkThread>(
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::RANDOM, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::ReadWriteBenchmark<
+                      ROCKSDB_NAMESPACE::ConcurrentReadBenchmarkThread>(
           memtablerep.get(), key_gen.get(), &sequence));
-    } else if (name == MIZAR_NAMESPACE::Slice("seqreadwrite")) {
+    } else if (name == ROCKSDB_NAMESPACE::Slice("seqreadwrite")) {
       memtablerep.reset(createMemtableRep());
-      key_gen.reset(new MIZAR_NAMESPACE::KeyGenerator(
-          &rng, MIZAR_NAMESPACE::RANDOM, FLAGS_num_operations));
-      benchmark.reset(new MIZAR_NAMESPACE::ReadWriteBenchmark<
-                      MIZAR_NAMESPACE::SeqConcurrentReadBenchmarkThread>(
+      key_gen.reset(new ROCKSDB_NAMESPACE::KeyGenerator(
+          &rng, ROCKSDB_NAMESPACE::RANDOM, FLAGS_num_operations));
+      benchmark.reset(new ROCKSDB_NAMESPACE::ReadWriteBenchmark<
+                      ROCKSDB_NAMESPACE::SeqConcurrentReadBenchmarkThread>(
           memtablerep.get(), key_gen.get(), &sequence));
     } else {
       std::cout << "WARNING: skipping unknown benchmark '" << name.ToString()

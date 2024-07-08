@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
@@ -12,9 +12,9 @@
 #include <functional>
 #include <mutex>
 
-#include "mizar/utilities/transaction_db_mutex.h"
+#include "rocksdb/utilities/transaction_db_mutex.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class TransactionDBMutexImpl : public TransactionDBMutex {
  public:
@@ -130,6 +130,6 @@ Status TransactionDBCondVarImpl::WaitFor(
   return s;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

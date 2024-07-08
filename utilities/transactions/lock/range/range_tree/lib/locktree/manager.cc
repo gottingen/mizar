@@ -1,6 +1,6 @@
 /* -*- mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*- */
 // vim: ft=cpp:expandtab:ts=8:sw=4:softtabstop=4:
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef OS_WIN
 #ident "$Id$"
 /*======
@@ -524,4 +524,4 @@ void locktree_manager::kill_waiter(void *extra) {
 
 } /* namespace toku */
 #endif  // OS_WIN
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

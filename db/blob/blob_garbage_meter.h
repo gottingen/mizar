@@ -10,10 +10,10 @@
 #include <unordered_map>
 
 #include "db/blob/blob_constants.h"
-#include "mizar/rocksdb_namespace.h"
-#include "mizar/status.h"
+#include "rocksdb/rocksdb_namespace.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Slice;
 
@@ -99,4 +99,4 @@ class BlobGarbageMeter {
   std::unordered_map<uint64_t, BlobInOutFlow> flows_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

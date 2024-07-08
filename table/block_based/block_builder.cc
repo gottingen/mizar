@@ -34,13 +34,15 @@
 #include "table/block_based/block_builder.h"
 
 #include <assert.h>
+
 #include <algorithm>
+
 #include "db/dbformat.h"
-#include "mizar/comparator.h"
+#include "rocksdb/comparator.h"
 #include "table/block_based/data_block_footer.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 BlockBuilder::BlockBuilder(
     int block_restart_interval, bool use_delta_encoding,
@@ -229,4 +231,4 @@ inline void BlockBuilder::AddWithLastKeyImpl(const Slice& key,
   estimate_ += buffer_.size() - buffer_size;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

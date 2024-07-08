@@ -9,8 +9,9 @@
 #include "db/event_helpers.h"
 #include "file/sst_file_manager_impl.h"
 #include "logging/logging.h"
+#include "port/lang.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Maps to help decide the severity of an error based on the
 // BackgroundErrorReason, Code, SubCode and whether db_options.paranoid_checks
@@ -227,14 +228,14 @@ std::map<std::tuple<BackgroundErrorReason, bool>, Status::Severity>
 };
 
 void ErrorHandler::CancelErrorRecovery() {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   db_mutex_->AssertHeld();
 
   // We'll release the lock before calling sfm, so make sure no new
   // recovery gets scheduled at that point
   auto_recovery_ = false;
-  SstFileManagerImpl* sfm = reinterpret_cast<SstFileManagerImpl*>(
-      db_options_.sst_file_manager.get());
+  SstFileManagerImpl* sfm =
+      reinterpret_cast<SstFileManagerImpl*>(db_options_.sst_file_manager.get());
   if (sfm) {
     // This may or may not cancel a pending recovery
     db_mutex_->Unlock();
@@ -250,6 +251,8 @@ void ErrorHandler::CancelErrorRecovery() {
   EndAutoRecovery();
 #endif
 }
+
+STATIC_AVOID_DESTRUCTION(const Status, kOkStatus){Status::OK()};
 
 // This is the main function for looking at an error during a background
 // operation and deciding the severity, and error recovery strategy. The high
@@ -269,11 +272,11 @@ void ErrorHandler::CancelErrorRecovery() {
 // This can also get called as part of a recovery operation. In that case, we
 // also track the error separately in recovery_error_ so we can tell in the
 // end whether recovery succeeded or not
-const Status& ErrorHandler::SetBGError(const Status& bg_err,
-                                       BackgroundErrorReason reason) {
+const Status& ErrorHandler::HandleKnownErrors(const Status& bg_err,
+                                              BackgroundErrorReason reason) {
   db_mutex_->AssertHeld();
   if (bg_err.ok()) {
-    return bg_err;
+    return kOkStatus;
   }
 
   if (bg_error_stats_ != nullptr) {
@@ -289,8 +292,8 @@ const Status& ErrorHandler::SetBGError(const Status& bg_err,
   bool found = false;
 
   {
-    auto entry = ErrorSeverityMap.find(std::make_tuple(reason, bg_err.code(),
-          bg_err.subcode(), paranoid));
+    auto entry = ErrorSeverityMap.find(
+        std::make_tuple(reason, bg_err.code(), bg_err.subcode(), paranoid));
     if (entry != ErrorSeverityMap.end()) {
       sev = entry->second;
       found = true;
@@ -298,8 +301,8 @@ const Status& ErrorHandler::SetBGError(const Status& bg_err,
   }
 
   if (!found) {
-    auto entry = DefaultErrorSeverityMap.find(std::make_tuple(reason,
-          bg_err.code(), paranoid));
+    auto entry = DefaultErrorSeverityMap.find(
+        std::make_tuple(reason, bg_err.code(), paranoid));
     if (entry != DefaultErrorSeverityMap.end()) {
       sev = entry->second;
       found = true;
@@ -355,6 +358,9 @@ const Status& ErrorHandler::SetBGError(const Status& bg_err,
       RecoverFromNoSpace();
     }
   }
+  if (bg_error_.severity() >= Status::Severity::kHardError) {
+    is_db_stopped_.store(true, std::memory_order_release);
+  }
   return bg_error_;
 }
 
@@ -379,11 +385,14 @@ const Status& ErrorHandler::SetBGError(const Status& bg_err,
 //    c) all other errors are mapped to hard error.
 // 3) for other cases, SetBGError(const Status& bg_err, BackgroundErrorReason
 //    reason) will be called to handle other error cases.
-const Status& ErrorHandler::SetBGError(const IOStatus& bg_io_err,
+const Status& ErrorHandler::SetBGError(const Status& bg_status,
                                        BackgroundErrorReason reason) {
   db_mutex_->AssertHeld();
+  Status tmp_status = bg_status;
+  IOStatus bg_io_err = status_to_io_status(std::move(tmp_status));
+
   if (bg_io_err.ok()) {
-    return bg_io_err;
+    return kOkStatus;
   }
   ROCKS_LOG_WARN(db_options_.info_log, "Background IO error %s",
                  bg_io_err.ToString().c_str());
@@ -480,13 +489,17 @@ const Status& ErrorHandler::SetBGError(const IOStatus& bg_io_err,
     if (bg_error_stats_ != nullptr) {
       RecordTick(bg_error_stats_.get(), ERROR_HANDLER_BG_IO_ERROR_COUNT);
     }
-    return SetBGError(new_bg_io_err, reason);
+    // HandleKnownErrors() will use recovery_error_, so ignore
+    // recovery_io_error_.
+    // TODO: Do some refactoring and use only one recovery_error_
+    recovery_io_error_.PermitUncheckedError();
+    return HandleKnownErrors(new_bg_io_err, reason);
   }
 }
 
 Status ErrorHandler::OverrideNoSpaceError(const Status& bg_error,
                                           bool* auto_recovery) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (bg_error.severity() >= Status::Severity::kFatalError) {
     return bg_error;
   }
@@ -522,7 +535,7 @@ Status ErrorHandler::OverrideNoSpaceError(const Status& bg_error,
 }
 
 void ErrorHandler::RecoverFromNoSpace() {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   SstFileManagerImpl* sfm =
       reinterpret_cast<SstFileManagerImpl*>(db_options_.sst_file_manager.get());
 
@@ -534,7 +547,7 @@ void ErrorHandler::RecoverFromNoSpace() {
 }
 
 Status ErrorHandler::ClearBGError() {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   db_mutex_->AssertHeld();
 
   // Signal that recovery succeeded
@@ -559,7 +572,7 @@ Status ErrorHandler::ClearBGError() {
 }
 
 Status ErrorHandler::RecoverFromBGError(bool is_manual) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   InstrumentedMutexLock l(db_mutex_);
   bool no_bg_work_original_flag = soft_error_no_bg_work_;
   if (is_manual) {
@@ -620,12 +633,12 @@ Status ErrorHandler::RecoverFromBGError(bool is_manual) {
 
 const Status& ErrorHandler::StartRecoverFromRetryableBGIOError(
     const IOStatus& io_error) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   db_mutex_->AssertHeld();
   if (bg_error_.ok()) {
     return bg_error_;
   } else if (io_error.ok()) {
-    return io_error;
+    return kOkStatus;
   } else if (db_options_.max_bgerror_resume_count <= 0 || recovery_in_prog_) {
     // Auto resume BG error is not enabled, directly return bg_error_.
     return bg_error_;
@@ -663,7 +676,7 @@ const Status& ErrorHandler::StartRecoverFromRetryableBGIOError(
 // Automatic recover from Retryable BG IO error. Must be called after db
 // mutex is released.
 void ErrorHandler::RecoverFromRetryableBGIOError() {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   TEST_SYNC_POINT("RecoverFromRetryableBGIOError:BeforeStart");
   InstrumentedMutexLock l(db_mutex_);
   if (end_recovery_) {
@@ -726,6 +739,7 @@ void ErrorHandler::RecoverFromRetryableBGIOError() {
         // the bg_error and notify user.
         TEST_SYNC_POINT("RecoverFromRetryableBGIOError:RecoverSuccess");
         Status old_bg_error = bg_error_;
+        is_db_stopped_.store(false, std::memory_order_release);
         bg_error_ = Status::OK();
         bg_error_.PermitUncheckedError();
         EventHelpers::NotifyOnErrorRecoveryEnd(
@@ -782,6 +796,9 @@ void ErrorHandler::CheckAndSetRecoveryAndBGError(const Status& bg_err) {
   if (bg_err.severity() > bg_error_.severity()) {
     bg_error_ = bg_err;
   }
+  if (bg_error_.severity() >= Status::Severity::kHardError) {
+    is_db_stopped_.store(true, std::memory_order_release);
+  }
   return;
 }
 
@@ -799,4 +816,4 @@ void ErrorHandler::EndAutoRecovery() {
   return;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

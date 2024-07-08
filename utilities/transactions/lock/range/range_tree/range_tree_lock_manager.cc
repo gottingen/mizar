@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef OS_WIN
 
 #include "utilities/transactions/lock/range/range_tree/range_tree_lock_manager.h"
@@ -13,8 +13,8 @@
 #include <mutex>
 
 #include "monitoring/perf_context_imp.h"
-#include "mizar/slice.h"
-#include "mizar/utilities/transaction_db_mutex.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/utilities/transaction_db_mutex.h"
 #include "test_util/sync_point.h"
 #include "util/cast_util.h"
 #include "util/hash.h"
@@ -23,7 +23,7 @@
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 RangeLockManagerHandle* NewRangeLockManager(
     std::shared_ptr<TransactionDBMutexFactory> mutex_factory) {
@@ -111,8 +111,7 @@ Status RangeTreeLockManager::TryLock(PessimisticTransaction* txn,
     deserialize_endpoint(start_dbt, &start);
     deserialize_endpoint(end_dbt, &end);
 
-    di_path.push_back({((PessimisticTransaction*)txnid)->GetID(),
-                       column_family_id, is_exclusive, std::move(start),
+    di_path.push_back({txnid, column_family_id, is_exclusive, std::move(start),
                        std::move(end)});
   };
 
@@ -150,13 +149,16 @@ Status RangeTreeLockManager::TryLock(PessimisticTransaction* txn,
 // Wait callback that locktree library will call to inform us about
 // the lock waits that are in progress.
 void wait_callback_for_locktree(void*, toku::lock_wait_infos* infos) {
+  TEST_SYNC_POINT("RangeTreeLockManager::TryRangeLock:EnterWaitingTxn");
   for (auto wait_info : *infos) {
+    // As long as we hold the lock on the locktree's pending request queue
+    // this should be safe.
     auto txn = (PessimisticTransaction*)wait_info.waiter;
     auto cf_id = (ColumnFamilyId)wait_info.ltree->get_dict_id().dictid;
 
     autovector<TransactionID> waitee_ids;
     for (auto waitee : wait_info.waitees) {
-      waitee_ids.push_back(((PessimisticTransaction*)waitee)->GetID());
+      waitee_ids.push_back(waitee);
     }
     txn->SetWaitingTxn(waitee_ids, cf_id, (std::string*)wait_info.m_extra);
   }
@@ -475,12 +477,10 @@ static void push_into_lock_status_data(void* param, const DBT* left,
   deserialize_endpoint(right, &info.end);
 
   if (txnid_arg != TXNID_SHARED) {
-    TXNID txnid = ((PessimisticTransaction*)txnid_arg)->GetID();
-    info.ids.push_back(txnid);
+    info.ids.push_back(txnid_arg);
   } else {
     for (auto it : *owners) {
-      TXNID real_id = ((PessimisticTransaction*)it)->GetID();
-      info.ids.push_back(real_id);
+      info.ids.push_back(it);
     }
   }
   ctx->data->insert({ctx->cfh_id, info});
@@ -498,6 +498,6 @@ LockManager::RangeLockStatus RangeTreeLockManager::GetRangeLockStatus() {
   return data;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif  // OS_WIN
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

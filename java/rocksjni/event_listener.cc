@@ -4,13 +4,14 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::EventListener.
+// ROCKSDB_NAMESPACE::EventListener.
 
 #include <jni.h>
 
 #include <memory>
 
 #include "include/org_rocksdb_AbstractEventListener.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/event_listener_jnicallback.h"
 #include "rocksjni/portal.h"
 
@@ -22,13 +23,13 @@
 jlong Java_org_rocksdb_AbstractEventListener_createNewEventListener(
     JNIEnv* env, jobject jobj, jlong jenabled_event_callback_values) {
   auto enabled_event_callbacks =
-      MIZAR_NAMESPACE::EnabledEventCallbackJni::toCppEnabledEventCallbacks(
+      ROCKSDB_NAMESPACE::EnabledEventCallbackJni::toCppEnabledEventCallbacks(
           jenabled_event_callback_values);
   auto* sptr_event_listener =
-      new std::shared_ptr<MIZAR_NAMESPACE::EventListener>(
-          new MIZAR_NAMESPACE::EventListenerJniCallback(
+      new std::shared_ptr<ROCKSDB_NAMESPACE::EventListener>(
+          new ROCKSDB_NAMESPACE::EventListenerJniCallback(
               env, jobj, enabled_event_callbacks));
-  return reinterpret_cast<jlong>(sptr_event_listener);
+  return GET_CPLUSPLUS_POINTER(sptr_event_listener);
 }
 
 /*
@@ -38,6 +39,6 @@ jlong Java_org_rocksdb_AbstractEventListener_createNewEventListener(
  */
 void Java_org_rocksdb_AbstractEventListener_disposeInternal(JNIEnv*, jobject,
                                                             jlong jhandle) {
-  delete reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::EventListener>*>(
+  delete reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::EventListener>*>(
       jhandle);
 }

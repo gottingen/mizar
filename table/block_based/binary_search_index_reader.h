@@ -9,7 +9,7 @@
 #pragma once
 #include "table/block_based/index_reader_common.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // Index that allows binary search lookup for the first key of each block.
 // This class can be viewed as a thin wrapper for `Block` class which already
 // supports binary search.
@@ -32,11 +32,11 @@ class BinarySearchIndexReader : public BlockBasedTable::IndexReaderCommon {
 
   size_t ApproximateMemoryUsage() const override {
     size_t usage = ApproximateIndexBlockMemoryUsage();
-#ifdef MIZAR_MALLOC_USABLE_SIZE
+#ifdef ROCKSDB_MALLOC_USABLE_SIZE
     usage += malloc_usable_size(const_cast<BinarySearchIndexReader*>(this));
 #else
     usage += sizeof(*this);
-#endif  // MIZAR_MALLOC_USABLE_SIZE
+#endif  // ROCKSDB_MALLOC_USABLE_SIZE
     return usage;
   }
 
@@ -45,4 +45,4 @@ class BinarySearchIndexReader : public BlockBasedTable::IndexReaderCommon {
                           CachableEntry<Block>&& index_block)
       : IndexReaderCommon(t, std::move(index_block)) {}
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

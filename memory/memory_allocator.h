@@ -6,9 +6,11 @@
 
 #pragma once
 
-#include "mizar/memory_allocator.h"
+#include <algorithm>
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/memory_allocator.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 struct CustomDeleter {
   CustomDeleter(MemoryAllocator* a = nullptr) : allocator(a) {}
@@ -35,4 +37,11 @@ inline CacheAllocationPtr AllocateBlock(size_t size,
   return CacheAllocationPtr(new char[size]);
 }
 
-}  // namespace MIZAR_NAMESPACE
+inline CacheAllocationPtr AllocateAndCopyBlock(const Slice& data,
+                                               MemoryAllocator* allocator) {
+  CacheAllocationPtr cap = AllocateBlock(data.size(), allocator);
+  std::copy_n(data.data(), data.size(), cap.get());
+  return cap;
+}
+
+}  // namespace ROCKSDB_NAMESPACE

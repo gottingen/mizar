@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <algorithm>
 #include <atomic>
@@ -16,12 +16,12 @@
 #include "db/dbformat.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/db.h"
-#include "mizar/options.h"
-#include "mizar/types.h"
-#include "mizar/utilities/debug.h"
-#include "mizar/utilities/transaction.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
+#include "rocksdb/types.h"
+#include "rocksdb/utilities/debug.h"
+#include "rocksdb/utilities/transaction.h"
+#include "rocksdb/utilities/transaction_db.h"
 #include "table/mock_table.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
@@ -39,7 +39,7 @@
 
 using std::string;
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 using CommitEntry = WritePreparedTxnDB::CommitEntry;
 using CommitEntry64b = WritePreparedTxnDB::CommitEntry64b;
@@ -156,14 +156,14 @@ TEST(PreparedHeap, EmptyAtTheEnd) {
 // successfully emptied at the end.
 TEST(PreparedHeap, Concurrent) {
   const size_t t_cnt = 10;
-  MIZAR_NAMESPACE::port::Thread t[t_cnt + 1];
+  ROCKSDB_NAMESPACE::port::Thread t[t_cnt + 1];
   WritePreparedTxnDB::PreparedHeap heap;
   port::RWMutex prepared_mutex;
   std::atomic<size_t> last;
 
   for (size_t n = 0; n < 100; n++) {
     last = 0;
-    t[0] = MIZAR_NAMESPACE::port::Thread([&]() {
+    t[0] = ROCKSDB_NAMESPACE::port::Thread([&]() {
       Random rnd(1103);
       for (size_t seq = 1; seq <= t_cnt; seq++) {
         // This is not recommended usage but we should be resilient against it.
@@ -178,7 +178,7 @@ TEST(PreparedHeap, Concurrent) {
     });
     for (size_t i = 1; i <= t_cnt; i++) {
       t[i] =
-          MIZAR_NAMESPACE::port::Thread([&heap, &prepared_mutex, &last, i]() {
+          ROCKSDB_NAMESPACE::port::Thread([&heap, &prepared_mutex, &last, i]() {
             auto seq = i;
             do {
               std::this_thread::yield();
@@ -421,7 +421,7 @@ class WritePreparedTransactionTestBase : public TransactionTestBase {
     wp_db->UpdateSnapshots(old_snapshots, ++version);
 
     // Starting from the first thread, cut each thread at two points
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {"WritePreparedTxnDB::CheckAgainstSnapshots:p:" + std::to_string(a1),
          "WritePreparedTxnDB::UpdateSnapshots:s:start"},
         {"WritePreparedTxnDB::UpdateSnapshots:p:" + std::to_string(b1),
@@ -433,22 +433,22 @@ class WritePreparedTransactionTestBase : public TransactionTestBase {
         {"WritePreparedTxnDB::CheckAgainstSnapshots:p:end",
          "WritePreparedTxnDB::UpdateSnapshots:s:" + std::to_string(b2)},
     });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     {
       ASSERT_TRUE(wp_db->old_commit_map_empty_);
-      MIZAR_NAMESPACE::port::Thread t1(
+      ROCKSDB_NAMESPACE::port::Thread t1(
           [&]() { wp_db->UpdateSnapshots(new_snapshots, version); });
       wp_db->CheckAgainstSnapshots(entry);
       t1.join();
       ASSERT_FALSE(wp_db->old_commit_map_empty_);
     }
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
     wp_db->old_commit_map_empty_ = true;
     wp_db->UpdateSnapshots(empty_snapshots, ++version);
     wp_db->UpdateSnapshots(old_snapshots, ++version);
     // Starting from the second thread, cut each thread at two points
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {"WritePreparedTxnDB::UpdateSnapshots:p:" + std::to_string(a1),
          "WritePreparedTxnDB::CheckAgainstSnapshots:s:start"},
         {"WritePreparedTxnDB::CheckAgainstSnapshots:p:" + std::to_string(b1),
@@ -460,16 +460,16 @@ class WritePreparedTransactionTestBase : public TransactionTestBase {
         {"WritePreparedTxnDB::UpdateSnapshots:p:end",
          "WritePreparedTxnDB::CheckAgainstSnapshots:s:" + std::to_string(b2)},
     });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     {
       ASSERT_TRUE(wp_db->old_commit_map_empty_);
-      MIZAR_NAMESPACE::port::Thread t1(
+      ROCKSDB_NAMESPACE::port::Thread t1(
           [&]() { wp_db->UpdateSnapshots(new_snapshots, version); });
       wp_db->CheckAgainstSnapshots(entry);
       t1.join();
       ASSERT_FALSE(wp_db->old_commit_map_empty_);
     }
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
 
   // Verify value of keys.
@@ -826,10 +826,10 @@ TEST_P(WritePreparedTransactionTest, CheckKeySkipOldMemtable) {
       // For the second attempt, hold flush from beginning. The memtable
       // will be switched to immutable after calling TEST_SwitchMemtable()
       // while CheckKey() is called.
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
           {{"WritePreparedTransactionTest.CheckKeySkipOldMemtable",
             "FlushJob::Start"}});
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     }
 
     // force a memtable flush. The memtable should still be kept
@@ -914,7 +914,7 @@ TEST_P(WritePreparedTransactionTest, CheckKeySkipOldMemtable) {
     ASSERT_OK(txn4->Commit());
 
     TEST_SYNC_POINT("WritePreparedTransactionTest.CheckKeySkipOldMemtable");
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
     SetPerfLevel(PerfLevel::kDisable);
 
@@ -1166,8 +1166,6 @@ TEST_P(WritePreparedTransactionTest, CheckAgainstSnapshots) {
   }
 }
 
-// This test is too slow for travis
-#ifndef TRAVIS
 #if !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
 // Test that CheckAgainstSnapshots will not miss a live snapshot if it is run in
 // parallel with UpdateSnapshots.
@@ -1249,7 +1247,6 @@ TEST_P(SnapshotConcurrentAccessTest, SnapshotConcurrentAccess) {
   printf("\n");
 }
 #endif  // !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
-#endif  // TRAVIS
 
 // This test clarifies the contract of AdvanceMaxEvictedSeq method
 TEST_P(WritePreparedTransactionTest, AdvanceMaxEvictedSeqBasic) {
@@ -1367,7 +1364,7 @@ TEST_P(WritePreparedTransactionTest, MaxCatchupWithNewSnapshot) {
 
   const int writes = 50;
   const int batch_cnt = 4;
-  MIZAR_NAMESPACE::port::Thread t1([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t1([&]() {
     for (int i = 0; i < writes; i++) {
       WriteBatch batch;
       // For duplicate keys cause 4 commit entries, each evicting an entry that
@@ -1380,7 +1377,7 @@ TEST_P(WritePreparedTransactionTest, MaxCatchupWithNewSnapshot) {
     }
   });
 
-  MIZAR_NAMESPACE::port::Thread t2([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t2([&]() {
     while (wp_db->max_evicted_seq_ == 0) {  // wait for insert thread
       std::this_thread::yield();
     }
@@ -1416,7 +1413,7 @@ TEST_P(WritePreparedTransactionTest, MaxCatchupWithUnbackedSnapshot) {
   WritePreparedTxnDB* wp_db = dynamic_cast<WritePreparedTxnDB*>(db);
 
   const int writes = 50;
-  MIZAR_NAMESPACE::port::Thread t1([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t1([&]() {
     for (int i = 0; i < writes; i++) {
       WriteBatch batch;
       ASSERT_OK(batch.Put("key", "foo"));
@@ -1424,7 +1421,7 @@ TEST_P(WritePreparedTransactionTest, MaxCatchupWithUnbackedSnapshot) {
     }
   });
 
-  MIZAR_NAMESPACE::port::Thread t2([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t2([&]() {
     while (wp_db->max_evicted_seq_ == 0) {  // wait for insert thread
       std::this_thread::yield();
     }
@@ -1596,9 +1593,9 @@ TEST_P(WritePreparedTransactionTest, SmallestUnCommittedSeq) {
   const int cnt = 100;
   for (int i = 0; i < cnt; i++) {
     Transaction* txn = db->BeginTransaction(write_options, txn_options);
-    ASSERT_OK(txn->SetName("xid" + ToString(i)));
-    auto key = "key1" + ToString(i);
-    auto value = "value1" + ToString(i);
+    ASSERT_OK(txn->SetName("xid" + std::to_string(i)));
+    auto key = "key1" + std::to_string(i);
+    auto value = "value1" + std::to_string(i);
     ASSERT_OK(txn->Put(Slice(key), Slice(value)));
     ASSERT_OK(txn->Prepare());
     txns.push_back(txn);
@@ -1606,7 +1603,7 @@ TEST_P(WritePreparedTransactionTest, SmallestUnCommittedSeq) {
 
   port::Mutex mutex;
   Random rnd(1103);
-  MIZAR_NAMESPACE::port::Thread commit_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread commit_thread([&]() {
     for (int i = 0; i < cnt; i++) {
       uint32_t index = rnd.Uniform(cnt - i);
       Transaction* txn;
@@ -1622,7 +1619,7 @@ TEST_P(WritePreparedTransactionTest, SmallestUnCommittedSeq) {
       committed_txns.push_back(txn);
     }
   });
-  MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
     while (1) {
       MutexLock l(&mutex);
       if (txns.empty()) {
@@ -1687,22 +1684,23 @@ TEST_P(SeqAdvanceConcurrentTest, SeqAdvanceConcurrent) {
     expected_commits = 0;
     std::vector<port::Thread> threads;
 
-    linked = 0;
+    linked.store(0, std::memory_order_release);
     std::atomic<bool> batch_formed(false);
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WriteThread::EnterAsBatchGroupLeader:End",
         [&](void* /*arg*/) { batch_formed = true; });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "WriteThread::JoinBatchGroup:Wait", [&](void* /*arg*/) {
-          linked++;
-          if (linked == 1) {
+          size_t orig_linked = linked.fetch_add(1, std::memory_order_acq_rel);
+          if (orig_linked == 0) {
             // Wait until the others are linked too.
-            while (linked < first_group_size) {
+            while (linked.load(std::memory_order_acquire) < first_group_size) {
             }
-          } else if (linked == 1 + first_group_size) {
+          } else if (orig_linked == first_group_size) {
             // Make the 2nd batch of the rest of writes plus any followup
             // commits from the first batch
-            while (linked < txn_cnt + commit_writes) {
+            while (linked.load(std::memory_order_acquire) <
+                   txn_cnt + commit_writes) {
             }
           }
           // Then we will have one or more batches consisting of follow-up
@@ -1710,38 +1708,39 @@ TEST_P(SeqAdvanceConcurrentTest, SeqAdvanceConcurrent) {
           // but it should be tolerable.
         });
 
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     for (size_t bi = 0; bi < txn_cnt; bi++) {
       // get the bi-th digit in number system based on type_cnt
       size_t d = (n % base[bi + 1]) / base[bi];
       switch (d) {
         case 0:
-          threads.emplace_back(txn_t0, bi);
+          threads.emplace_back(&TransactionTestBase::TestTxn0, this, bi);
           break;
         case 1:
-          threads.emplace_back(txn_t1, bi);
+          threads.emplace_back(&TransactionTestBase::TestTxn1, this, bi);
           break;
         case 2:
-          threads.emplace_back(txn_t2, bi);
+          threads.emplace_back(&TransactionTestBase::TestTxn2, this, bi);
           break;
         case 3:
-          threads.emplace_back(txn_t3, bi);
+          threads.emplace_back(&TransactionTestBase::TestTxn3, this, bi);
           break;
         case 4:
-          threads.emplace_back(txn_t3, bi);
+          threads.emplace_back(&TransactionTestBase::TestTxn3, this, bi);
           break;
         default:
           FAIL();
       }
       // wait to be linked
-      while (linked.load() <= bi) {
+      while (linked.load(std::memory_order_acquire) <= bi) {
       }
       // after a queue of size first_group_size
       if (bi + 1 == first_group_size) {
         while (!batch_formed) {
         }
         // to make it more deterministic, wait until the commits are linked
-        while (linked.load() <= bi + expected_commits) {
+        while (linked.load(std::memory_order_acquire) <=
+               bi + expected_commits) {
         }
       }
     }
@@ -1761,8 +1760,8 @@ TEST_P(SeqAdvanceConcurrentTest, SeqAdvanceConcurrent) {
     seq = db_impl->TEST_GetLastVisibleSequence();
     ASSERT_EQ(exp_seq, seq);
 
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
     // Check if recovery preserves the last sequence number
     ASSERT_OK(db_impl->FlushWAL(true));
@@ -1795,7 +1794,7 @@ TEST_P(WritePreparedTransactionTest, BasicRecovery) {
   ASSERT_OK(ReOpen());
   WritePreparedTxnDB* wp_db = dynamic_cast<WritePreparedTxnDB*>(db);
 
-  txn_t0(0);
+  TestTxn0(0);
 
   TransactionOptions txn_options;
   WriteOptions write_options;
@@ -1810,7 +1809,7 @@ TEST_P(WritePreparedTransactionTest, BasicRecovery) {
   ASSERT_OK(s);
   auto prep_seq_0 = txn0->GetId();
 
-  txn_t1(0);
+  TestTxn1(0);
 
   index++;
   Transaction* txn1 = db->BeginTransaction(write_options, txn_options);
@@ -1823,7 +1822,7 @@ TEST_P(WritePreparedTransactionTest, BasicRecovery) {
   ASSERT_OK(s);
   auto prep_seq_1 = txn1->GetId();
 
-  txn_t2(0);
+  TestTxn2(0);
 
   ReadOptions ropt;
   PinnableSlice pinnable_val;
@@ -1859,7 +1858,7 @@ TEST_P(WritePreparedTransactionTest, BasicRecovery) {
   ASSERT_TRUE(s.IsNotFound());
   pinnable_val.Reset();
 
-  txn_t3(0);
+  TestTxn3(0);
 
   // Test that a recovered txns will be properly marked committed for the next
   // recovery
@@ -2123,7 +2122,7 @@ TEST_P(WritePreparedTransactionTest, IsInSnapshot) {
           seq++;
           cur_txn = seq;
           wp_db->AddPrepared(cur_txn);
-        } else {                                     // else commit it
+        } else {  // else commit it
           seq++;
           wp_db->AddCommitted(cur_txn, seq);
           wp_db->RemovePrepared(cur_txn);
@@ -2229,7 +2228,7 @@ TEST_P(WritePreparedTransactionTest, Rollback) {
       for (bool crash : {false, true}) {
         ASSERT_OK(ReOpen());
         WritePreparedTxnDB* wp_db = dynamic_cast<WritePreparedTxnDB*>(db);
-        std::string key_str = "key" + ToString(ikey);
+        std::string key_str = "key" + std::to_string(ikey);
         switch (ivalue) {
           case 0:
             break;
@@ -2335,7 +2334,7 @@ TEST_P(WritePreparedTransactionTest, DisableGCDuringRecovery) {
   std::vector<KeyVersion> versions;
   uint64_t seq = 0;
   for (uint64_t i = 1; i <= 1024; i++) {
-    std::string v = "bar" + ToString(i);
+    std::string v = "bar" + std::to_string(i);
     ASSERT_OK(db->Put(WriteOptions(), "foo", v));
     VerifyKeys({{"foo", v}});
     seq++;  // one for the key/value
@@ -3202,6 +3201,8 @@ TEST_P(WritePreparedTransactionTest, ReleaseEarliestSnapshotAfterSeqZeroing2) {
 TEST_P(WritePreparedTransactionTest, SingleDeleteAfterRollback) {
   constexpr size_t kSnapshotCacheBits = 7;  // same as default
   constexpr size_t kCommitCacheBits = 0;    // minimum commit cache
+  txn_db_options.rollback_deletion_type_callback =
+      [](TransactionDB*, ColumnFamilyHandle*, const Slice&) { return true; };
   UpdateTransactionDBOptions(kSnapshotCacheBits, kCommitCacheBits);
   options.disable_auto_compactions = true;
   ASSERT_OK(ReOpen());
@@ -3290,7 +3291,7 @@ TEST_P(WritePreparedTransactionTest,
   ASSERT_OK(ReOpen());
 
   for (size_t i = 0; i < kNumTransactions; i++) {
-    std::string key = "key" + ToString(i);
+    std::string key = "key" + std::to_string(i);
     std::string value = "value0";
     ASSERT_OK(db->Put(WriteOptions(), key, value));
     current_data[key] = value;
@@ -3300,16 +3301,16 @@ TEST_P(WritePreparedTransactionTest,
   for (size_t iter = 0; iter < kNumIterations; iter++) {
     auto r = rnd.Next() % (kNumTransactions + 1);
     if (r < kNumTransactions) {
-      std::string key = "key" + ToString(r);
+      std::string key = "key" + std::to_string(r);
       if (transactions[r] == nullptr) {
-        std::string value = "value" + ToString(versions[r] + 1);
+        std::string value = "value" + std::to_string(versions[r] + 1);
         auto* txn = db->BeginTransaction(WriteOptions());
-        ASSERT_OK(txn->SetName("txn" + ToString(r)));
+        ASSERT_OK(txn->SetName("txn" + std::to_string(r)));
         ASSERT_OK(txn->Put(key, value));
         ASSERT_OK(txn->Prepare());
         transactions[r] = txn;
       } else {
-        std::string value = "value" + ToString(++versions[r]);
+        std::string value = "value" + std::to_string(++versions[r]);
         ASSERT_OK(transactions[r]->Commit());
         delete transactions[r];
         transactions[r] = nullptr;
@@ -3446,9 +3447,8 @@ TEST_P(WritePreparedTransactionTest, Iterate) {
     auto* txn = db->BeginTransaction(WriteOptions());
 
     for (int i = 0; i < 2; i++) {
-      Iterator* iter = (i == 0)
-          ? db->NewIterator(ReadOptions())
-          : txn->GetIterator(ReadOptions());
+      Iterator* iter = (i == 0) ? db->NewIterator(ReadOptions())
+                                : txn->GetIterator(ReadOptions());
       // Seek
       iter->Seek("foo");
       verify_state(iter, "foo", expected_val);
@@ -3535,14 +3535,14 @@ TEST_P(WritePreparedTransactionTest, NonAtomicCommitOfDelayedPrepared) {
       if (split_read) {
         if (split_before_mutex) {
           // split before acquiring prepare_mutex_
-          MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+          ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
               {{"WritePreparedTxnDB::IsInSnapshot:prepared_mutex_:pause",
                 "AtomicCommitOfDelayedPrepared:Commit:before"},
                {"AtomicCommitOfDelayedPrepared:Commit:after",
                 "WritePreparedTxnDB::IsInSnapshot:prepared_mutex_:resume"}});
         } else {
           // split right after reading from the commit cache
-          MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+          ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
               {{"WritePreparedTxnDB::IsInSnapshot:GetCommitEntry:pause",
                 "AtomicCommitOfDelayedPrepared:Commit:before"},
                {"AtomicCommitOfDelayedPrepared:Commit:after",
@@ -3550,7 +3550,7 @@ TEST_P(WritePreparedTransactionTest, NonAtomicCommitOfDelayedPrepared) {
         }
       } else {  // split commit
         // split right before removing from delayed_prepared_
-        MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+        ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
             {{"WritePreparedTxnDB::RemovePrepared:pause",
               "AtomicCommitOfDelayedPrepared:Read:before"},
              {"AtomicCommitOfDelayedPrepared:Read:after",
@@ -3558,7 +3558,7 @@ TEST_P(WritePreparedTransactionTest, NonAtomicCommitOfDelayedPrepared) {
       }
       SyncPoint::GetInstance()->EnableProcessing();
 
-      MIZAR_NAMESPACE::port::Thread commit_thread([&]() {
+      ROCKSDB_NAMESPACE::port::Thread commit_thread([&]() {
         TEST_SYNC_POINT("AtomicCommitOfDelayedPrepared:Commit:before");
         ASSERT_OK(txn->Commit());
         if (split_before_mutex) {
@@ -3577,7 +3577,7 @@ TEST_P(WritePreparedTransactionTest, NonAtomicCommitOfDelayedPrepared) {
         delete txn;
       });
 
-      MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+      ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
         TEST_SYNC_POINT("AtomicCommitOfDelayedPrepared:Read:before");
         ReadOptions roptions;
         roptions.snapshot = snap;
@@ -3592,8 +3592,8 @@ TEST_P(WritePreparedTransactionTest, NonAtomicCommitOfDelayedPrepared) {
 
       read_thread.join();
       commit_thread.join();
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
     }  // for split_before_mutex
   }    // for split_read
 }
@@ -3628,14 +3628,14 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfDelayedPrepared) {
   ASSERT_LT(txn->GetId(), snap->GetSequenceNumber());
 
   // split right after reading delayed_prepared_empty_
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"WritePreparedTxnDB::IsInSnapshot:delayed_prepared_empty_:pause",
         "AtomicUpdateOfDelayedPrepared:before"},
        {"AtomicUpdateOfDelayedPrepared:after",
         "WritePreparedTxnDB::IsInSnapshot:delayed_prepared_empty_:resume"}});
   SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread commit_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread commit_thread([&]() {
     TEST_SYNC_POINT("AtomicUpdateOfDelayedPrepared:before");
     // Commit a bunch of entries to advance max evicted seq and make the
     // prepared a delayed prepared
@@ -3650,7 +3650,7 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfDelayedPrepared) {
     TEST_SYNC_POINT("AtomicUpdateOfDelayedPrepared:after");
   });
 
-  MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
     ReadOptions roptions;
     roptions.snapshot = snap;
     PinnableSlice value;
@@ -3665,8 +3665,8 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfDelayedPrepared) {
   commit_thread.join();
   ASSERT_OK(txn->Commit());
   delete txn;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 // Eviction from commit cache and update of max evicted seq are two non-atomic
@@ -3706,14 +3706,14 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfMaxEvictedSeq) {
   ASSERT_LE(txn->GetId(), snap->GetSequenceNumber());
 
   // split right after reading max_evicted_seq_
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"WritePreparedTxnDB::IsInSnapshot:max_evicted_seq_:pause",
         "NonAtomicUpdateOfMaxEvictedSeq:before"},
        {"NonAtomicUpdateOfMaxEvictedSeq:after",
         "WritePreparedTxnDB::IsInSnapshot:max_evicted_seq_:resume"}});
   SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread commit_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread commit_thread([&]() {
     TEST_SYNC_POINT("NonAtomicUpdateOfMaxEvictedSeq:before");
     // Commit a bunch of entries to advance max evicted seq beyond txn->GetId()
     size_t tries = 0;
@@ -3727,7 +3727,7 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfMaxEvictedSeq) {
     TEST_SYNC_POINT("NonAtomicUpdateOfMaxEvictedSeq:after");
   });
 
-  MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
     ReadOptions roptions;
     roptions.snapshot = snap;
     PinnableSlice value;
@@ -3743,8 +3743,8 @@ TEST_P(WritePreparedTransactionTest, NonAtomicUpdateOfMaxEvictedSeq) {
   delete txn;
   ASSERT_OK(txn1->Commit());
   delete txn1;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 // Test when we add a prepared seq when the max_evicted_seq_ already goes beyond
@@ -3783,7 +3783,7 @@ TEST_P(WritePreparedTransactionTest, AddPreparedBeforeMax) {
   // t1) Insert prepared entry, t2) commit other entries to advance max
   // evicted sec and finish checking the existing prepared entries, t1)
   // AddPrepared, t2) update max_evicted_seq_
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"AddPreparedCallback::AddPrepared::begin:pause",
        "AddPreparedBeforeMax::read_thread:start"},
       {"AdvanceMaxEvictedSeq::update_max:pause",
@@ -3793,13 +3793,13 @@ TEST_P(WritePreparedTransactionTest, AddPreparedBeforeMax) {
   });
   SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread write_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread write_thread([&]() {
     txn_mutex_.Lock();
     ASSERT_OK(txn->Prepare());
     txn_mutex_.Unlock();
   });
 
-  MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+  ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
     TEST_SYNC_POINT("AddPreparedBeforeMax::read_thread:start");
     // Publish seq number with a commit
     ASSERT_OK(txn1->Commit());
@@ -3828,8 +3828,8 @@ TEST_P(WritePreparedTransactionTest, AddPreparedBeforeMax) {
   delete txn2;
   ASSERT_OK(txn->Commit());
   delete txn;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 // When an old prepared entry gets committed, there is a gap between the time
@@ -3843,7 +3843,7 @@ TEST_P(WritePreparedTransactionTest, CommitOfDelayedPrepared) {
       ASSERT_OK(ReOpen());
       std::atomic<const Snapshot*> snap = {nullptr};
       std::atomic<SequenceNumber> exp_prepare = {0};
-      MIZAR_NAMESPACE::port::Thread callback_thread;
+      ROCKSDB_NAMESPACE::port::Thread callback_thread;
       // Value is synchronized via snap
       PinnableSlice value;
       // Take a snapshot after publish and before RemovePrepared:Start
@@ -3861,32 +3861,32 @@ TEST_P(WritePreparedTransactionTest, CommitOfDelayedPrepared) {
           // We need to spawn a thread to avoid deadlock since getting a
           // snpashot might end up calling AdvanceSeqByOne which needs joining
           // the write queue.
-          callback_thread = MIZAR_NAMESPACE::port::Thread(snap_callback);
+          callback_thread = ROCKSDB_NAMESPACE::port::Thread(snap_callback);
           TEST_SYNC_POINT("callback:end");
         }
       };
       // Wait for the first snapshot be taken in GetSnapshotInternal. Although
       // it might be updated before GetSnapshotInternal finishes but this should
       // cover most of the cases.
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
           {"WritePreparedTxnDB::GetSnapshotInternal:first", "callback:end"},
       });
       SyncPoint::GetInstance()->SetCallBack("RemovePrepared:Start", callback);
       SyncPoint::GetInstance()->EnableProcessing();
       // Thread to cause frequent evictions
-      MIZAR_NAMESPACE::port::Thread eviction_thread([&]() {
+      ROCKSDB_NAMESPACE::port::Thread eviction_thread([&]() {
         // Too many txns might cause commit_seq - prepare_seq in another thread
         // to go beyond DELTA_UPPERBOUND
         for (int i = 0; i < 25 * (1 << commit_cache_bits); i++) {
           ASSERT_OK(db->Put(WriteOptions(), Slice("key1"), Slice("value1")));
         }
       });
-      MIZAR_NAMESPACE::port::Thread write_thread([&]() {
+      ROCKSDB_NAMESPACE::port::Thread write_thread([&]() {
         for (int i = 0; i < 25 * (1 << commit_cache_bits); i++) {
           Transaction* txn =
               db->BeginTransaction(WriteOptions(), TransactionOptions());
           ASSERT_OK(txn->SetName("xid"));
-          std::string val_str = "value" + ToString(i);
+          std::string val_str = "value" + std::to_string(i);
           for (size_t b = 0; b < sub_batch_cnt; b++) {
             ASSERT_OK(txn->Put(Slice("key2"), val_str));
           }
@@ -3920,8 +3920,8 @@ TEST_P(WritePreparedTransactionTest, CommitOfDelayedPrepared) {
       });
       write_thread.join();
       eviction_thread.join();
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
     }
   }
 }
@@ -3929,7 +3929,7 @@ TEST_P(WritePreparedTransactionTest, CommitOfDelayedPrepared) {
 // Test that updating the commit map will not affect the existing snapshots
 TEST_P(WritePreparedTransactionTest, AtomicCommit) {
   for (bool skip_prepare : {true, false}) {
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {"WritePreparedTxnDB::AddCommitted:start",
          "AtomicCommit::GetSnapshot:start"},
         {"AtomicCommit::Get:end",
@@ -3938,8 +3938,8 @@ TEST_P(WritePreparedTransactionTest, AtomicCommit) {
         {"AtomicCommit::Get2:end",
          "WritePreparedTxnDB::AddCommitted:end:pause:"},
     });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-    MIZAR_NAMESPACE::port::Thread write_thread([&]() {
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::port::Thread write_thread([&]() {
       if (skip_prepare) {
         ASSERT_OK(db->Put(WriteOptions(), Slice("key"), Slice("value")));
       } else {
@@ -3952,7 +3952,7 @@ TEST_P(WritePreparedTransactionTest, AtomicCommit) {
         delete txn;
       }
     });
-    MIZAR_NAMESPACE::port::Thread read_thread([&]() {
+    ROCKSDB_NAMESPACE::port::Thread read_thread([&]() {
       ReadOptions roptions;
       TEST_SYNC_POINT("AtomicCommit::GetSnapshot:start");
       roptions.snapshot = db->GetSnapshot();
@@ -3966,8 +3966,64 @@ TEST_P(WritePreparedTransactionTest, AtomicCommit) {
     });
     read_thread.join();
     write_thread.join();
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   }
+}
+
+TEST_P(WritePreparedTransactionTest, BasicRollbackDeletionTypeCb) {
+  options.level0_file_num_compaction_trigger = 2;
+  // Always use SingleDelete to rollback Put.
+  txn_db_options.rollback_deletion_type_callback =
+      [](TransactionDB*, ColumnFamilyHandle*, const Slice&) { return true; };
+
+  const auto write_to_db = [&]() {
+    assert(db);
+    std::unique_ptr<Transaction> txn0(
+        db->BeginTransaction(WriteOptions(), TransactionOptions()));
+    ASSERT_OK(txn0->SetName("txn0"));
+    ASSERT_OK(txn0->Put("a", "v0"));
+    ASSERT_OK(txn0->Prepare());
+
+    // Generate sst1: [PUT('a')]
+    ASSERT_OK(db->Flush(FlushOptions()));
+
+    {
+      CompactRangeOptions cro;
+      cro.change_level = true;
+      cro.target_level = options.num_levels - 1;
+      cro.bottommost_level_compaction = BottommostLevelCompaction::kForce;
+      ASSERT_OK(db->CompactRange(cro, /*begin=*/nullptr, /*end=*/nullptr));
+    }
+
+    ASSERT_OK(txn0->Rollback());
+    txn0.reset();
+
+    ASSERT_OK(db->Put(WriteOptions(), "a", "v1"));
+
+    ASSERT_OK(db->SingleDelete(WriteOptions(), "a"));
+    // Generate another SST with a SD to cover the oldest PUT('a')
+    ASSERT_OK(db->Flush(FlushOptions()));
+
+    auto* dbimpl = static_cast_with_check<DBImpl>(db->GetRootDB());
+    assert(dbimpl);
+    ASSERT_OK(dbimpl->TEST_WaitForCompact());
+
+    {
+      CompactRangeOptions cro;
+      cro.bottommost_level_compaction = BottommostLevelCompaction::kForce;
+      ASSERT_OK(db->CompactRange(cro, /*begin=*/nullptr, /*end=*/nullptr));
+    }
+
+    {
+      std::string value;
+      const Status s = db->Get(ReadOptions(), "a", &value);
+      ASSERT_TRUE(s.IsNotFound());
+    }
+  };
+
+  // Destroy and reopen
+  ASSERT_OK(ReOpen());
+  write_to_db();
 }
 
 // Test that we can change write policy from WriteCommitted to WritePrepared
@@ -3998,10 +4054,10 @@ TEST_P(WritePreparedTransactionTest, WC_WP_WALForwardIncompatibility) {
   CrossCompatibilityTest(WRITE_PREPARED, WRITE_COMMITTED, !empty_wal);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   if (getenv("CIRCLECI")) {
     // Looking for backtrace on "Resource temporarily unavailable" exceptions
@@ -4015,8 +4071,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as Transactions are not supported in MIZAR_LITE\n");
+          "SKIPPED as Transactions are not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

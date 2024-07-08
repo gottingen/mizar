@@ -7,7 +7,7 @@
 #include "test_util/testutil.h"
 #include "utilities/merge_operators.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class UtilMergeOperatorTest : public testing::Test {
  public:
@@ -91,9 +91,10 @@ TEST_F(UtilMergeOperatorTest, MaxMergeOperator) {
   EXPECT_EQ("a", PartialMerge("a", ""));
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -10,9 +10,9 @@
 #include <queue>
 #include <utility>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 template <class T>
 class channel {
@@ -66,4 +66,4 @@ class channel {
   std::queue<T> buffer_;
   bool eof_;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

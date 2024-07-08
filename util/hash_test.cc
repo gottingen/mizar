@@ -20,23 +20,23 @@
 #include "util/math.h"
 #include "util/math128.h"
 
-using MIZAR_NAMESPACE::BijectiveHash2x64;
-using MIZAR_NAMESPACE::BijectiveUnhash2x64;
-using MIZAR_NAMESPACE::DecodeFixed64;
-using MIZAR_NAMESPACE::EncodeFixed32;
-using MIZAR_NAMESPACE::EndianSwapValue;
-using MIZAR_NAMESPACE::GetSliceHash64;
-using MIZAR_NAMESPACE::Hash;
-using MIZAR_NAMESPACE::Hash128;
-using MIZAR_NAMESPACE::Hash2x64;
-using MIZAR_NAMESPACE::Hash64;
-using MIZAR_NAMESPACE::Lower32of64;
-using MIZAR_NAMESPACE::Lower64of128;
-using MIZAR_NAMESPACE::ReverseBits;
-using MIZAR_NAMESPACE::Slice;
-using MIZAR_NAMESPACE::Unsigned128;
-using MIZAR_NAMESPACE::Upper32of64;
-using MIZAR_NAMESPACE::Upper64of128;
+using ROCKSDB_NAMESPACE::BijectiveHash2x64;
+using ROCKSDB_NAMESPACE::BijectiveUnhash2x64;
+using ROCKSDB_NAMESPACE::DecodeFixed64;
+using ROCKSDB_NAMESPACE::EncodeFixed32;
+using ROCKSDB_NAMESPACE::EndianSwapValue;
+using ROCKSDB_NAMESPACE::GetSliceHash64;
+using ROCKSDB_NAMESPACE::Hash;
+using ROCKSDB_NAMESPACE::Hash128;
+using ROCKSDB_NAMESPACE::Hash2x64;
+using ROCKSDB_NAMESPACE::Hash64;
+using ROCKSDB_NAMESPACE::Lower32of64;
+using ROCKSDB_NAMESPACE::Lower64of128;
+using ROCKSDB_NAMESPACE::ReverseBits;
+using ROCKSDB_NAMESPACE::Slice;
+using ROCKSDB_NAMESPACE::Unsigned128;
+using ROCKSDB_NAMESPACE::Upper32of64;
+using ROCKSDB_NAMESPACE::Upper64of128;
 
 // The hash algorithm is part of the file format, for example for the Bloom
 // filters. Test that the hash values are stable for a set of random strings of
@@ -439,7 +439,7 @@ TEST(HashTest, Hash128ValueSchema) {
 }
 
 TEST(FastRange32Test, Values) {
-  using MIZAR_NAMESPACE::FastRange32;
+  using ROCKSDB_NAMESPACE::FastRange32;
   // Zero range
   EXPECT_EQ(FastRange32(0, 0), 0U);
   EXPECT_EQ(FastRange32(123, 0), 0U);
@@ -477,7 +477,7 @@ TEST(FastRange32Test, Values) {
 }
 
 TEST(FastRange64Test, Values) {
-  using MIZAR_NAMESPACE::FastRange64;
+  using ROCKSDB_NAMESPACE::FastRange64;
   // Zero range
   EXPECT_EQ(FastRange64(0, 0), 0U);
   EXPECT_EQ(FastRange64(123, 0), 0U);
@@ -534,7 +534,7 @@ TEST(FastRange64Test, Values) {
 }
 
 TEST(FastRangeGenericTest, Values) {
-  using MIZAR_NAMESPACE::FastRangeGeneric;
+  using ROCKSDB_NAMESPACE::FastRangeGeneric;
   // Generic (including big and small)
   // Note that FastRangeGeneric is also tested indirectly above via
   // FastRange32 and FastRange64.
@@ -547,34 +547,38 @@ TEST(FastRangeGenericTest, Values) {
             uint16_t{6234});
   // Not recommended for typical use because for example this could fail on
   // some platforms and pass on others:
-  //EXPECT_EQ(FastRangeGeneric(static_cast<unsigned long>(0x80000000),
+  // EXPECT_EQ(FastRangeGeneric(static_cast<unsigned long>(0x80000000),
   //                           uint16_t{12468}),
   //          uint16_t{6234});
 }
 
 // for inspection of disassembly
 uint32_t FastRange32(uint32_t hash, uint32_t range) {
-  return MIZAR_NAMESPACE::FastRange32(hash, range);
+  return ROCKSDB_NAMESPACE::FastRange32(hash, range);
 }
 
 // for inspection of disassembly
 size_t FastRange64(uint64_t hash, size_t range) {
-  return MIZAR_NAMESPACE::FastRange64(hash, range);
+  return ROCKSDB_NAMESPACE::FastRange64(hash, range);
 }
 
 // Tests for math.h / math128.h (not worth a separate test binary)
-using MIZAR_NAMESPACE::BitParity;
-using MIZAR_NAMESPACE::BitsSetToOne;
-using MIZAR_NAMESPACE::CountTrailingZeroBits;
-using MIZAR_NAMESPACE::DecodeFixed128;
-using MIZAR_NAMESPACE::DecodeFixedGeneric;
-using MIZAR_NAMESPACE::EncodeFixed128;
-using MIZAR_NAMESPACE::EncodeFixedGeneric;
-using MIZAR_NAMESPACE::FloorLog2;
-using MIZAR_NAMESPACE::Lower64of128;
-using MIZAR_NAMESPACE::Multiply64to128;
-using MIZAR_NAMESPACE::Unsigned128;
-using MIZAR_NAMESPACE::Upper64of128;
+using ROCKSDB_NAMESPACE::BitParity;
+using ROCKSDB_NAMESPACE::BitsSetToOne;
+using ROCKSDB_NAMESPACE::ConstexprFloorLog2;
+using ROCKSDB_NAMESPACE::CountTrailingZeroBits;
+using ROCKSDB_NAMESPACE::DecodeFixed128;
+using ROCKSDB_NAMESPACE::DecodeFixedGeneric;
+using ROCKSDB_NAMESPACE::DownwardInvolution;
+using ROCKSDB_NAMESPACE::EncodeFixed128;
+using ROCKSDB_NAMESPACE::EncodeFixedGeneric;
+using ROCKSDB_NAMESPACE::FloorLog2;
+using ROCKSDB_NAMESPACE::Lower64of128;
+using ROCKSDB_NAMESPACE::Multiply64to128;
+using ROCKSDB_NAMESPACE::Unsigned128;
+using ROCKSDB_NAMESPACE::Upper64of128;
+
+int blah(int x) { return DownwardInvolution(x); }
 
 template <typename T>
 static void test_BitOps() {
@@ -597,10 +601,13 @@ static void test_BitOps() {
     // FloorLog2
     if (v > 0) {
       EXPECT_EQ(FloorLog2(v), i);
+      EXPECT_EQ(ConstexprFloorLog2(v), i);
     }
     if (vm1 > 0) {
       EXPECT_EQ(FloorLog2(vm1), i - 1);
+      EXPECT_EQ(ConstexprFloorLog2(vm1), i - 1);
       EXPECT_EQ(FloorLog2(everyOtherBit & vm1), (i - 1) & ~1);
+      EXPECT_EQ(ConstexprFloorLog2(everyOtherBit & vm1), (i - 1) & ~1);
     }
 
     // CountTrailingZeroBits
@@ -636,8 +643,77 @@ static void test_BitOps() {
       EXPECT_EQ(ReverseBits(vm1), static_cast<T>(rv * ~T{1}));
     }
 #endif
+
+    // DownwardInvolution
+    {
+      T misc = static_cast<T>(/*random*/ 0xc682cd153d0e3279U +
+                              i * /*random*/ 0x9b3972f3bea0baa3U);
+      if constexpr (sizeof(T) > 8) {
+        misc = (misc << 64) | (/*random*/ 0x52af031a38ced62dU +
+                               i * /*random*/ 0x936f803d9752ddc3U);
+      }
+      T misc_masked = misc & vm1;
+      EXPECT_LE(misc_masked, vm1);
+      T di_misc_masked = DownwardInvolution(misc_masked);
+      EXPECT_LE(di_misc_masked, vm1);
+      if (misc_masked > 0) {
+        // Highest-order 1 in same position
+        EXPECT_EQ(FloorLog2(misc_masked), FloorLog2(di_misc_masked));
+      }
+      // Validate involution property on short value
+      EXPECT_EQ(DownwardInvolution(di_misc_masked), misc_masked);
+
+      // Validate involution property on large value
+      T di_misc = DownwardInvolution(misc);
+      EXPECT_EQ(DownwardInvolution(di_misc), misc);
+      // Highest-order 1 in same position
+      if (misc > 0) {
+        EXPECT_EQ(FloorLog2(misc), FloorLog2(di_misc));
+      }
+
+      // Validate distributes over xor.
+      // static_casts to avoid numerical promotion effects.
+      EXPECT_EQ(DownwardInvolution(static_cast<T>(misc_masked ^ vm1)),
+                static_cast<T>(di_misc_masked ^ DownwardInvolution(vm1)));
+      T misc2 = static_cast<T>(misc >> 1);
+      EXPECT_EQ(DownwardInvolution(static_cast<T>(misc ^ misc2)),
+                static_cast<T>(di_misc ^ DownwardInvolution(misc2)));
+
+      // Choose some small number of bits to pull off to test combined
+      // uniqueness guarantee
+      int in_bits = i % 7;
+      unsigned in_mask = (unsigned{1} << in_bits) - 1U;
+      // IMPLICIT: int out_bits = 8 - in_bits;
+      std::vector<bool> seen(256, false);
+      for (int j = 0; j < 255; ++j) {
+        T t_in = misc ^ static_cast<T>(j);
+        unsigned in = static_cast<unsigned>(t_in);
+        unsigned out = static_cast<unsigned>(DownwardInvolution(t_in));
+        unsigned val = ((out << in_bits) | (in & in_mask)) & 255U;
+        EXPECT_FALSE(seen[val]);
+        seen[val] = true;
+      }
+
+      if (i + 8 < int{8 * sizeof(T)}) {
+        // Also test manipulating bits in the middle of input is
+        // bijective in bottom of output
+        seen = std::vector<bool>(256, false);
+        for (int j = 0; j < 255; ++j) {
+          T in = misc ^ (static_cast<T>(j) << i);
+          unsigned val = static_cast<unsigned>(DownwardInvolution(in)) & 255U;
+          EXPECT_FALSE(seen[val]);
+          seen[val] = true;
+        }
+      }
+    }
+
     vm1 = (vm1 << 1) | 1;
   }
+
+  EXPECT_EQ(ConstexprFloorLog2(T{1}), 0);
+  EXPECT_EQ(ConstexprFloorLog2(T{2}), 1);
+  EXPECT_EQ(ConstexprFloorLog2(T{3}), 1);
+  EXPECT_EQ(ConstexprFloorLog2(T{42}), 5);
 }
 
 TEST(MathTest, BitOps) {
@@ -767,9 +843,10 @@ TEST(MathTest, CodingGeneric) {
   EXPECT_EQ(std::string("_12"), std::string(out));
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   fprintf(stderr, "NPHash64 id: %x\n",
-          static_cast<int>(MIZAR_NAMESPACE::GetSliceNPHash64("RocksDB")));
+          static_cast<int>(ROCKSDB_NAMESPACE::GetSliceNPHash64("RocksDB")));
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();

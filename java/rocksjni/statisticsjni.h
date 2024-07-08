@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the callback "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::Statistics
+// ROCKSDB_NAMESPACE::Statistics
 
 #ifndef JAVA_ROCKSJNI_STATISTICSJNI_H_
 #define JAVA_ROCKSJNI_STATISTICSJNI_H_
@@ -12,10 +12,11 @@
 #include <memory>
 #include <set>
 #include <string>
-#include "mizar/statistics.h"
-#include "monitoring/statistics.h"
 
-namespace MIZAR_NAMESPACE {
+#include "monitoring/statistics.h"
+#include "rocksdb/statistics.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 class StatisticsJni : public StatisticsImpl {
  public:
@@ -26,8 +27,8 @@ class StatisticsJni : public StatisticsImpl {
 
  private:
   const std::set<uint32_t> m_ignore_histograms;
- };
+};
 
- }  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif  // JAVA_ROCKSJNI_STATISTICSJNI_H_

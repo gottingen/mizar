@@ -4,15 +4,15 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#include "mizar/statistics.h"
+#include "rocksdb/statistics.h"
 
 #include "port/stack_trace.h"
-#include "mizar/convenience.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/utilities/options_type.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class StatisticsTest : public testing::Test {};
 
@@ -42,12 +42,12 @@ TEST_F(StatisticsTest, SanityHistograms) {
 
 TEST_F(StatisticsTest, NoNameStats) {
   static std::unordered_map<std::string, OptionTypeInfo> no_name_opt_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
       {"inner",
        OptionTypeInfo::AsCustomSharedPtr<Statistics>(
            0, OptionVerificationType::kByName,
            OptionTypeFlags::kAllowNull | OptionTypeFlags::kCompareNever)},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   };
 
   class DefaultNameStatistics : public Statistics {
@@ -73,7 +73,7 @@ TEST_F(StatisticsTest, NoNameStats) {
   options.ignore_unsupported_options = false;
   auto stats = std::make_shared<DefaultNameStatistics>();
   ASSERT_STREQ(stats->Name(), "");
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   ASSERT_EQ("", stats->ToString(
                     options));  // A stats with no name with have no options...
   ASSERT_OK(stats->ConfigureFromString(options, "inner="));
@@ -81,12 +81,12 @@ TEST_F(StatisticsTest, NoNameStats) {
                     options));  // A stats with no name with have no options...
   ASSERT_NE(stats->inner, nullptr);
   ASSERT_NE("", stats->inner->ToString(options));  // ... even if it does...
-#endif                                             // MIZAR_LITE
+#endif                                             // ROCKSDB_LITE
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -8,9 +8,9 @@
 #include <atomic>
 #include <limits>
 
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // NOTE: SpecialEnv offers most of this functionality, along with hooks
 // for safe DB behavior under a mock time environment, so should be used
@@ -60,8 +60,9 @@ class MockSystemClock : public SystemClockWrapper {
 
   void MockSleepForSeconds(int seconds) {
     assert(seconds >= 0);
-    int micros = seconds * kMicrosInSecond;
-    SleepForMicroseconds(micros);
+    uint64_t micros = static_cast<uint64_t>(seconds) * kMicrosInSecond;
+    assert(current_time_us_ + micros >= current_time_us_);
+    current_time_us_.fetch_add(micros);
   }
 
   // TODO: this is a workaround for the different behavior on different platform
@@ -74,4 +75,4 @@ class MockSystemClock : public SystemClockWrapper {
   static constexpr uint64_t kMicrosInSecond = 1000U * 1000U;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

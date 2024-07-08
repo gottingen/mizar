@@ -5,11 +5,11 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/file_system.h"
+#include "rocksdb/file_system.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // A FileSystem wrapper that only allows read-only operation.
 //
@@ -102,6 +102,6 @@ class ReadOnlyFileSystem : public FileSystemWrapper {
   }
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

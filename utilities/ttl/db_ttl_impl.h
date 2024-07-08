@@ -5,18 +5,17 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #include <deque>
 #include <string>
 #include <vector>
 
 #include "db/db_impl/db_impl.h"
-#include "mizar/compaction_filter.h"
-#include "mizar/db.h"
-#include "mizar/merge_operator.h"
-#include "mizar/system_clock.h"
-#include "mizar/utilities/db_ttl.h"
-#include "mizar/utilities/utility_db.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/db.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/system_clock.h"
+#include "rocksdb/utilities/db_ttl.h"
 #include "utilities/compaction_filters/layered_compaction_filter_base.h"
 
 #ifdef _WIN32
@@ -24,7 +23,7 @@
 #undef GetCurrentTime
 #endif
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 struct ConfigOptions;
 class ObjectLibrary;
 class ObjectRegistry;
@@ -104,7 +103,7 @@ class DBWithTTLImpl : public DBWithTTL {
 
   void SetTtl(int32_t ttl) override { SetTtl(DefaultColumnFamily(), ttl); }
 
-  void SetTtl(ColumnFamilyHandle *h, int32_t ttl) override;
+  void SetTtl(ColumnFamilyHandle* h, int32_t ttl) override;
 
  private:
   // remember whether the Close completes or not
@@ -112,7 +111,6 @@ class DBWithTTLImpl : public DBWithTTL {
 };
 
 class TtlIterator : public Iterator {
-
  public:
   explicit TtlIterator(Iterator* iter) : iter_(iter) { assert(iter_); }
 
@@ -190,9 +188,7 @@ class TtlCompactionFilterFactory : public CompactionFilterFactory {
 
   std::unique_ptr<CompactionFilter> CreateCompactionFilter(
       const CompactionFilter::Context& context) override;
-  void SetTtl(int32_t ttl) {
-    ttl_ = ttl;
-  }
+  void SetTtl(int32_t ttl) { ttl_ = ttl; }
 
   const char* Name() const override { return kClassName(); }
   static const char* kClassName() { return "TtlCompactionFilterFactory"; }
@@ -210,7 +206,6 @@ class TtlCompactionFilterFactory : public CompactionFilterFactory {
 };
 
 class TtlMergeOperator : public MergeOperator {
-
  public:
   explicit TtlMergeOperator(const std::shared_ptr<MergeOperator>& merge_op,
                             SystemClock* clock);
@@ -246,5 +241,5 @@ extern "C" {
 int RegisterTtlObjects(ObjectLibrary& library, const std::string& /*arg*/);
 }  // extern "C"
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

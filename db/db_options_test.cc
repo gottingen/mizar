@@ -15,21 +15,21 @@
 #include "db/db_test_util.h"
 #include "options/options_helper.h"
 #include "port/stack_trace.h"
-#include "mizar/cache.h"
-#include "mizar/convenience.h"
-#include "mizar/rate_limiter.h"
-#include "mizar/stats_history.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/rate_limiter.h"
+#include "rocksdb/stats_history.h"
 #include "test_util/sync_point.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBOptionsTest : public DBTestBase {
  public:
   DBOptionsTest() : DBTestBase("db_options_test", /*env_do_fsync=*/true) {}
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   std::unordered_map<std::string, std::string> GetMutableDBOptionsMap(
       const DBOptions& options) {
     std::string options_str;
@@ -76,7 +76,7 @@ class DBOptionsTest : public DBTestBase {
     auto sanitized_options = SanitizeOptions(dbname_, db_options);
     return GetMutableDBOptionsMap(sanitized_options);
   }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 TEST_F(DBOptionsTest, ImmutableTrackAndVerifyWalsInManifest) {
@@ -95,8 +95,24 @@ TEST_F(DBOptionsTest, ImmutableTrackAndVerifyWalsInManifest) {
   ASSERT_FALSE(s.ok());
 }
 
+TEST_F(DBOptionsTest, ImmutableVerifySstUniqueIdInManifest) {
+  Options options;
+  options.env = env_;
+  options.verify_sst_unique_id_in_manifest = true;
+
+  ImmutableDBOptions db_options(options);
+  ASSERT_TRUE(db_options.verify_sst_unique_id_in_manifest);
+
+  Reopen(options);
+  ASSERT_TRUE(dbfull()->GetDBOptions().verify_sst_unique_id_in_manifest);
+
+  Status s =
+      dbfull()->SetDBOptions({{"verify_sst_unique_id_in_manifest", "false"}});
+  ASSERT_FALSE(s.ok());
+}
+
 // RocksDB lite don't support dynamic options.
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 TEST_F(DBOptionsTest, AvoidUpdatingOptions) {
   Options options;
@@ -204,6 +220,7 @@ TEST_F(DBOptionsTest, SetMutableTableOptions) {
 
   ColumnFamilyHandle* cfh = dbfull()->DefaultColumnFamily();
   Options c_opts = dbfull()->GetOptions(cfh);
+
   const auto* c_bbto =
       c_opts.table_factory->GetOptions<BlockBasedTableOptions>();
   ASSERT_NE(c_bbto, nullptr);
@@ -326,7 +343,7 @@ TEST_F(DBOptionsTest, SetBytesPerSync) {
   int i = 0;
   const std::string kValue(kValueSize, 'v');
   ASSERT_EQ(options.bytes_per_sync, dbfull()->GetDBOptions().bytes_per_sync);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WritableFileWriter::RangeSync:0", [&](void* /*arg*/) { counter++; });
 
   WriteOptions write_opts;
@@ -334,9 +351,9 @@ TEST_F(DBOptionsTest, SetBytesPerSync) {
   for (i = 0; i < 40; i++) {
     ASSERT_OK(Put(Key(i), kValue, write_opts));
   }
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr));
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   low_bytes_per_sync = counter;
   ASSERT_GT(low_bytes_per_sync, 35);
   ASSERT_LT(low_bytes_per_sync, 45);
@@ -350,7 +367,7 @@ TEST_F(DBOptionsTest, SetBytesPerSync) {
   for (i = 0; i < 40; i++) {
     ASSERT_OK(Put(Key(i), kValue, write_opts));
   }
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(dbfull()->CompactRange(CompactRangeOptions(), nullptr, nullptr));
   ASSERT_GT(counter, 5);
   ASSERT_LT(counter, 15);
@@ -373,10 +390,10 @@ TEST_F(DBOptionsTest, SetWalBytesPerSync) {
   ASSERT_EQ(512, dbfull()->GetDBOptions().wal_bytes_per_sync);
   std::atomic_int counter{0};
   int low_bytes_per_sync = 0;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WritableFileWriter::RangeSync:0",
       [&](void* /*arg*/) { counter.fetch_add(1); });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   const std::string kValue(kValueSize, 'v');
   int i = 0;
   for (; i < 10; i++) {
@@ -385,7 +402,7 @@ TEST_F(DBOptionsTest, SetWalBytesPerSync) {
   // Do not flush. If we flush here, SwitchWAL will reuse old WAL file since its
   // empty and will not get the new wal_bytes_per_sync value.
   low_bytes_per_sync = counter;
-  //5242880 = 1024 * 1024 * 5
+  // 5242880 = 1024 * 1024 * 5
   ASSERT_OK(dbfull()->SetDBOptions({{"wal_bytes_per_sync", "5242880"}}));
   ASSERT_EQ(5242880, dbfull()->GetDBOptions().wal_bytes_per_sync);
   counter = 0;
@@ -412,7 +429,7 @@ TEST_F(DBOptionsTest, WritableFileMaxBufferSize) {
 
   std::atomic<int> match_cnt(0);
   std::atomic<int> unmatch_cnt(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "WritableFileWriter::WritableFileWriter:0", [&](void* arg) {
         int value = static_cast<int>(reinterpret_cast<uintptr_t>(arg));
         if (value == buffer_size) {
@@ -421,11 +438,11 @@ TEST_F(DBOptionsTest, WritableFileMaxBufferSize) {
           unmatch_cnt++;
         }
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   int i = 0;
   for (; i < 3; i++) {
-    ASSERT_OK(Put("foo", ToString(i)));
-    ASSERT_OK(Put("bar", ToString(i)));
+    ASSERT_OK(Put("foo", std::to_string(i)));
+    ASSERT_OK(Put("bar", std::to_string(i)));
     ASSERT_OK(Flush());
   }
   ASSERT_OK(dbfull()->TEST_WaitForCompact());
@@ -436,14 +453,14 @@ TEST_F(DBOptionsTest, WritableFileMaxBufferSize) {
       dbfull()->SetDBOptions({{"writable_file_max_buffer_size", "524288"}}));
   buffer_size = 512 * 1024;
   match_cnt = 0;
-  unmatch_cnt = 0;  // SetDBOptions() will create a WriteableFileWriter
+  unmatch_cnt = 0;  // SetDBOptions() will create a WritableFileWriter
 
   ASSERT_EQ(buffer_size,
             dbfull()->GetDBOptions().writable_file_max_buffer_size);
   i = 0;
   for (; i < 3; i++) {
-    ASSERT_OK(Put("foo", ToString(i)));
-    ASSERT_OK(Put("bar", ToString(i)));
+    ASSERT_OK(Put("foo", std::to_string(i)));
+    ASSERT_OK(Put("bar", std::to_string(i)));
     ASSERT_OK(Flush());
   }
   ASSERT_OK(dbfull()->TEST_WaitForCompact());
@@ -573,8 +590,8 @@ TEST_F(DBOptionsTest, SetOptionsMayTriggerCompaction) {
   Reopen(options);
   for (int i = 0; i < 3; i++) {
     // Need to insert two keys to avoid trivial move.
-    ASSERT_OK(Put("foo", ToString(i)));
-    ASSERT_OK(Put("bar", ToString(i)));
+    ASSERT_OK(Put("foo", std::to_string(i)));
+    ASSERT_OK(Put("bar", std::to_string(i)));
     ASSERT_OK(Flush());
   }
   ASSERT_EQ("3", FilesPerLevel());
@@ -587,7 +604,7 @@ TEST_F(DBOptionsTest, SetOptionsMayTriggerCompaction) {
 TEST_F(DBOptionsTest, SetBackgroundCompactionThreads) {
   Options options;
   options.create_if_missing = true;
-  options.max_background_compactions = 1;   // default value
+  options.max_background_compactions = 1;  // default value
   options.env = env_;
   Reopen(options);
   ASSERT_EQ(1, dbfull()->TEST_BGCompactionsAllowed());
@@ -609,7 +626,6 @@ TEST_F(DBOptionsTest, SetBackgroundFlushThreads) {
   ASSERT_EQ(3, env_->GetBackgroundThreads(Env::Priority::HIGH));
   ASSERT_EQ(3, dbfull()->TEST_BGFlushesAllowed());
 }
-
 
 TEST_F(DBOptionsTest, SetBackgroundJobs) {
   Options options;
@@ -674,7 +690,8 @@ TEST_F(DBOptionsTest, SetDelayedWriteRateOption) {
   options.delayed_write_rate = 2 * 1024U * 1024U;
   options.env = env_;
   Reopen(options);
-  ASSERT_EQ(2 * 1024U * 1024U, dbfull()->TEST_write_controler().max_delayed_write_rate());
+  ASSERT_EQ(2 * 1024U * 1024U,
+            dbfull()->TEST_write_controler().max_delayed_write_rate());
 
   ASSERT_OK(dbfull()->SetDBOptions({{"delayed_write_rate", "20000"}}));
   ASSERT_EQ(20000, dbfull()->TEST_write_controler().max_delayed_write_rate());
@@ -717,8 +734,8 @@ TEST_F(DBOptionsTest, SetStatsDumpPeriodSec) {
 
   for (int i = 0; i < 20; i++) {
     unsigned int num = rand() % 5000 + 1;
-    ASSERT_OK(
-        dbfull()->SetDBOptions({{"stats_dump_period_sec", ToString(num)}}));
+    ASSERT_OK(dbfull()->SetDBOptions(
+        {{"stats_dump_period_sec", std::to_string(num)}}));
     ASSERT_EQ(num, dbfull()->GetDBOptions().stats_dump_period_sec);
   }
   Close();
@@ -909,7 +926,7 @@ TEST_F(DBOptionsTest, SetFIFOCompactionOptions) {
   for (int i = 0; i < 10; i++) {
     // Generate and flush a file about 10KB.
     for (int j = 0; j < 10; j++) {
-      ASSERT_OK(Put(ToString(i * 20 + j), rnd.RandomString(980)));
+      ASSERT_OK(Put(std::to_string(i * 20 + j), rnd.RandomString(980)));
     }
     ASSERT_OK(Flush());
   }
@@ -940,7 +957,7 @@ TEST_F(DBOptionsTest, SetFIFOCompactionOptions) {
   for (int i = 0; i < 10; i++) {
     // Generate and flush a file about 10KB.
     for (int j = 0; j < 10; j++) {
-      ASSERT_OK(Put(ToString(i * 20 + j), rnd.RandomString(980)));
+      ASSERT_OK(Put(std::to_string(i * 20 + j), rnd.RandomString(980)));
     }
     ASSERT_OK(Flush());
   }
@@ -972,7 +989,7 @@ TEST_F(DBOptionsTest, SetFIFOCompactionOptions) {
   for (int i = 0; i < 10; i++) {
     // Generate and flush a file about 10KB.
     for (int j = 0; j < 10; j++) {
-      ASSERT_OK(Put(ToString(i * 20 + j), rnd.RandomString(980)));
+      ASSERT_OK(Put(std::to_string(i * 20 + j), rnd.RandomString(980)));
     }
     ASSERT_OK(Flush());
   }
@@ -1003,7 +1020,6 @@ TEST_F(DBOptionsTest, CompactionReadaheadSizeChange) {
   options.env = &env;
 
   options.compaction_readahead_size = 0;
-  options.new_table_reader_for_compaction_inputs = true;
   options.level0_file_num_compaction_trigger = 2;
   const std::string kValue(1024, 'v');
   Reopen(options);
@@ -1037,7 +1053,7 @@ TEST_F(DBOptionsTest, FIFOTtlBackwardCompatible) {
   for (int i = 0; i < 10; i++) {
     // Generate and flush a file about 10KB.
     for (int j = 0; j < 10; j++) {
-      ASSERT_OK(Put(ToString(i * 20 + j), rnd.RandomString(980)));
+      ASSERT_OK(Put(std::to_string(i * 20 + j), rnd.RandomString(980)));
     }
     ASSERT_OK(Flush());
   }
@@ -1132,7 +1148,7 @@ TEST_F(DBOptionsTest, ChangeCompression) {
   SyncPoint::GetInstance()->DisableProcessing();
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST_F(DBOptionsTest, BottommostCompressionOptsWithFallbackType) {
   // Verify the bottommost compression options still take effect even when the
@@ -1186,18 +1202,18 @@ TEST_F(DBOptionsTest, BottommostCompressionOptsWithFallbackType) {
   cro.bottommost_level_compaction = BottommostLevelCompaction::kForceOptimized;
   ASSERT_OK(dbfull()->CompactRange(cro, nullptr, nullptr));
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   ASSERT_TRUE(compacted);
   ASSERT_EQ(CompressionType::kLZ4Compression, compression_used);
   ASSERT_EQ(kBottommostCompressionLevel, compression_opt_used.level);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

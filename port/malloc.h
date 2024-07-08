@@ -8,10 +8,10 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 
-#ifdef MIZAR_MALLOC_USABLE_SIZE
+#ifdef ROCKSDB_MALLOC_USABLE_SIZE
 #ifdef OS_FREEBSD
 #include <malloc_np.h>
 #else
 #include <malloc.h>
 #endif  // OS_FREEBSD
-#endif  // MIZAR_MALLOC_USABLE_SIZE
+#endif  // ROCKSDB_MALLOC_USABLE_SIZE

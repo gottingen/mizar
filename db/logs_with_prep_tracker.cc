@@ -7,7 +7,7 @@
 
 #include "port/likely.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 void LogsWithPrepTracker::MarkLogAsHavingPrepSectionFlushed(uint64_t log) {
   assert(log != 0);
   std::lock_guard<std::mutex> lock(prepared_section_completed_mutex_);
@@ -64,4 +64,4 @@ uint64_t LogsWithPrepTracker::FindMinLogContainingOutstandingPrep() {
   // no such log found
   return 0;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

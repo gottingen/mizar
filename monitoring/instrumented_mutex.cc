@@ -7,10 +7,10 @@
 
 #include "monitoring/perf_context_imp.h"
 #include "monitoring/thread_status_util.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 #include "test_util/sync_point.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace {
 #ifndef NPERF_CONTEXT
 Statistics* stats_for_report(SystemClock* clock, Statistics* stats) {
@@ -34,6 +34,23 @@ void InstrumentedMutex::Lock() {
 void InstrumentedMutex::LockInternal() {
 #ifndef NDEBUG
   ThreadStatusUtil::TEST_StateDelay(ThreadStatus::STATE_MUTEX_WAIT);
+#endif
+#ifdef COERCE_CONTEXT_SWITCH
+  if (stats_code_ == DB_MUTEX_WAIT_MICROS) {
+    thread_local Random rnd(301);
+    if (rnd.OneIn(2)) {
+      if (bg_cv_) {
+        bg_cv_->SignalAll();
+      }
+      sched_yield();
+    } else {
+      uint32_t sleep_us = rnd.Uniform(11) * 1000;
+      if (bg_cv_) {
+        bg_cv_->SignalAll();
+      }
+      SystemClock::Default()->SleepForMicroseconds(sleep_us);
+    }
+  }
 #endif
   mutex_.Lock();
 }
@@ -70,4 +87,4 @@ bool InstrumentedCondVar::TimedWaitInternal(uint64_t abs_time_us) {
   return cond_.TimedWait(abs_time_us);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -10,8 +10,8 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/db.h"
-#include "mizar/file_system.h"
+#include "rocksdb/db.h"
+#include "rocksdb/file_system.h"
 #include "table/block_based/binary_search_index_reader.h"
 #include "table/block_based/block_based_table_builder.h"
 #include "table/block_based/block_based_table_factory.h"
@@ -20,7 +20,7 @@
 #include "test_util/testharness.h"
 #include "utilities/memory_allocators.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace {
 struct MemcpyStats {
   int num_stack_buf_memcpy;
@@ -282,9 +282,9 @@ class BlockFetcherTest : public testing::Test {
     uint64_t file_size = 0;
     ASSERT_OK(env_->GetFileSize(file->file_name(), &file_size));
     IOOptions opts;
-    ASSERT_OK(ReadFooterFromFile(opts, file, nullptr /* prefetch_buffer */,
-                                 file_size, footer,
-                                 kBlockBasedTableMagicNumber));
+    ASSERT_OK(ReadFooterFromFile(opts, file, *fs_,
+                                 nullptr /* prefetch_buffer */, file_size,
+                                 footer, kBlockBasedTableMagicNumber));
   }
 
   // NOTE: compression_type returns the compression type of the fetched block
@@ -363,7 +363,7 @@ class BlockFetcherTest : public testing::Test {
 };
 
 // Skip the following tests in lite mode since direct I/O is unsupported.
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 // Fetch index block under both direct IO and non-direct IO.
 // Expects:
@@ -509,13 +509,13 @@ TEST_F(BlockFetcherTest, FetchAndUncompressCompressedDataBlock) {
                      expected_stats_by_mode);
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 }  // namespace
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

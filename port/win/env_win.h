@@ -24,16 +24,16 @@
 
 #include "env/composite_env_wrapper.h"
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/system_clock.h"
 #include "util/threadpool_imp.h"
 
 #undef GetCurrentTime
 #undef DeleteFile
 #undef LoadLibrary
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace port {
 
 // Currently not designed for inheritance but rather a replacement
@@ -56,6 +56,10 @@ class WinEnvThreads {
   void WaitForJoin();
 
   unsigned int GetThreadPoolQueueLen(Env::Priority pri) const;
+
+  int ReserveThreads(int threads_to_be_reserved, Env::Priority pri);
+
+  int ReleaseThreads(int threads_to_be_released, Env::Priority pri);
 
   static uint64_t gettid();
 
@@ -80,8 +84,8 @@ class WinClock : public SystemClock {
   virtual ~WinClock() {}
 
   static const char* kClassName() { return "WindowsClock"; }
-  const char* Name() const override { return kClassName(); }
-  const char* NickName() const override { return kDefaultName(); }
+  const char* Name() const override { return kDefaultName(); }
+  const char* NickName() const override { return kClassName(); }
 
   uint64_t NowMicros() override;
 
@@ -279,6 +283,10 @@ class WinEnv : public CompositeEnv {
 
   unsigned int GetThreadPoolQueueLen(Env::Priority pri) const override;
 
+  int ReserveThreads(int threads_to_be_reserved, Env::Priority pri) override;
+
+  int ReleaseThreads(int threads_to_be_released, Env::Priority pri) override;
+
   uint64_t GetThreadID() const override;
 
   // Allow increasing the number of worker threads.
@@ -293,4 +301,4 @@ class WinEnv : public CompositeEnv {
 };
 
 }  // namespace port
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

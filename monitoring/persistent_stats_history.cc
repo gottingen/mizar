@@ -11,10 +11,11 @@
 #include <cstring>
 #include <string>
 #include <utility>
+
 #include "db/db_impl/db_impl.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // 10 digit seconds timestamp => [Sep 9, 2001 ~ Nov 20, 2286]
 const int kNowSecondsStringLength = 10;
 const std::string kFormatVersionKeyString =
@@ -98,13 +99,13 @@ std::pair<uint64_t, std::string> parseKey(const Slice& key,
   std::string::size_type pos = key_str.find("#");
   // TODO(Zhongyi): add counters to track parse failures?
   if (pos == std::string::npos) {
-    result.first = port::kMaxUint64;
+    result.first = std::numeric_limits<uint64_t>::max();
     result.second.clear();
   } else {
     uint64_t parsed_time = ParseUint64(key_str.substr(0, pos));
     // skip entries with timestamp smaller than start_time
     if (parsed_time < start_time) {
-      result.first = port::kMaxUint64;
+      result.first = std::numeric_limits<uint64_t>::max();
       result.second = "";
     } else {
       result.first = parsed_time;
@@ -166,4 +167,4 @@ void PersistentStatsHistoryIterator::AdvanceIteratorByTime(uint64_t start_time,
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

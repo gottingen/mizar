@@ -4,15 +4,15 @@
 // (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/types.h"
-#include "mizar/utilities/transaction.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/types.h"
+#include "rocksdb/utilities/transaction.h"
+#include "rocksdb/utilities/transaction_db.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 #include "utilities/transactions/pessimistic_transaction.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class PessimisticTransactionDB;
 
@@ -77,6 +77,6 @@ class LockManager {
 std::shared_ptr<LockManager> NewLockManager(PessimisticTransactionDB* db,
                                             const TransactionDBOptions& opt);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

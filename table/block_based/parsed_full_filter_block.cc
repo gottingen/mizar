@@ -5,9 +5,10 @@
 //
 
 #include "table/block_based/parsed_full_filter_block.h"
-#include "mizar/filter_policy.h"
 
-namespace MIZAR_NAMESPACE {
+#include "table/block_based/filter_policy_internal.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 ParsedFullFilterBlock::ParsedFullFilterBlock(const FilterPolicy* filter_policy,
                                              BlockContents&& contents)
@@ -19,4 +20,4 @@ ParsedFullFilterBlock::ParsedFullFilterBlock(const FilterPolicy* filter_policy,
 
 ParsedFullFilterBlock::~ParsedFullFilterBlock() = default;
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

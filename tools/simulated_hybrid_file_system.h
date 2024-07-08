@@ -5,13 +5,13 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <utility>
 
-#include "mizar/file_system.h"
+#include "rocksdb/file_system.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // A FileSystem simulates hybrid file system by ingesting latency and limit
 // IOPs.
@@ -121,6 +121,6 @@ class SimulatedWritableFile : public FSWritableFileWrapper {
 
   void SimulateIOWait(int64_t num_requests) const;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

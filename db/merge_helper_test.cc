@@ -10,14 +10,14 @@
 #include <vector>
 
 #include "db/dbformat.h"
-#include "mizar/comparator.h"
+#include "rocksdb/comparator.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/coding.h"
 #include "util/vector_iterator.h"
 #include "utilities/merge_operators.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class MergeHelperTest : public testing::Test {
  public:
@@ -35,7 +35,8 @@ class MergeHelperTest : public testing::Test {
     return merge_helper_->MergeUntil(
         iter_.get(), nullptr /* range_del_agg */, stop_before, at_bottom,
         false /* allow_data_in_errors */, nullptr /* blob_fetcher */,
-        nullptr /* prefetch_buffers */, nullptr /* c_iter_stats */);
+        nullptr /* full_history_ts_low */, nullptr /* prefetch_buffers */,
+        nullptr /* c_iter_stats */);
   }
 
   void AddKeyVal(const std::string& user_key, const SequenceNumber& seq,
@@ -288,9 +289,10 @@ TEST_F(MergeHelperTest, DontFilterMergeOperandsBeforeSnapshotTest) {
   ASSERT_FALSE(merge_output_iter.Valid());
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

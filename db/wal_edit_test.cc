@@ -12,7 +12,7 @@
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 TEST(WalSet, AddDeleteReset) {
   WalSet wals;
@@ -54,12 +54,11 @@ TEST(WalSet, SmallerSyncedSize) {
   constexpr uint64_t kBytes = 100;
   WalSet wals;
   ASSERT_OK(wals.AddWal(WalAddition(kNumber, WalMetadata(kBytes))));
+  const auto wals1 = wals.GetWals();
   Status s = wals.AddWal(WalAddition(kNumber, WalMetadata(0)));
-  ASSERT_TRUE(s.IsCorruption());
-  ASSERT_TRUE(
-      s.ToString().find(
-          "WAL 100 must not have smaller synced size than previous one") !=
-      std::string::npos);
+  const auto wals2 = wals.GetWals();
+  ASSERT_OK(s);
+  ASSERT_EQ(wals1, wals2);
 }
 
 TEST(WalSet, CreateTwice) {
@@ -205,10 +204,10 @@ TEST_F(WalSetTest, CheckWalsWithShrinkedSize) {
       << s.ToString();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

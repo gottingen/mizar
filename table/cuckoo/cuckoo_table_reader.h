@@ -8,24 +8,24 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#ifndef MIZAR_LITE
-#include <string>
+#ifndef ROCKSDB_LITE
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "file/random_access_file_reader.h"
-#include "mizar/env.h"
-#include "mizar/options.h"
+#include "rocksdb/env.h"
+#include "rocksdb/options.h"
 #include "table/table_reader.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Arena;
 class TableReader;
 struct ImmutableOptions;
 
-class CuckooTableReader: public TableReader {
+class CuckooTableReader : public TableReader {
  public:
   CuckooTableReader(const ImmutableOptions& ioptions,
                     std::unique_ptr<RandomAccessFileReader>&& file,
@@ -93,8 +93,8 @@ class CuckooTableReader: public TableReader {
   uint64_t table_size_;
   const Comparator* ucomp_;
   uint64_t (*get_slice_hash_)(const Slice& s, uint32_t index,
-      uint64_t max_num_buckets);
+                              uint64_t max_num_buckets);
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

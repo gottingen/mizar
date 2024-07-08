@@ -5,25 +5,25 @@
 
 #include "db/event_helpers.h"
 
-#include "mizar/convenience.h"
-#include "mizar/listener.h"
-#include "mizar/utilities/customizable_util.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/listener.h"
+#include "rocksdb/utilities/customizable_util.h"
 
-namespace MIZAR_NAMESPACE {
-#ifndef MIZAR_LITE
+namespace ROCKSDB_NAMESPACE {
+#ifndef ROCKSDB_LITE
 Status EventListener::CreateFromString(const ConfigOptions& config_options,
                                        const std::string& id,
                                        std::shared_ptr<EventListener>* result) {
   return LoadSharedObject<EventListener>(config_options, id, nullptr, result);
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 namespace {
 template <class T>
 inline T SafeDivide(T a, T b) {
   return b == 0 ? 0 : a / b;
 }
-}  // namespace
+}  // anonymous namespace
 
 void EventHelpers::AppendCurrentTime(JSONWriter* jwriter) {
   *jwriter << "time_micros"
@@ -32,7 +32,7 @@ void EventHelpers::AppendCurrentTime(JSONWriter* jwriter) {
                   .count();
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 void EventHelpers::NotifyTableFileCreationStarted(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const std::string& db_name, const std::string& cf_name,
@@ -50,13 +50,13 @@ void EventHelpers::NotifyTableFileCreationStarted(
     listener->OnTableFileCreationStarted(info);
   }
 }
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
 void EventHelpers::NotifyOnBackgroundError(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     BackgroundErrorReason reason, Status* bg_error, InstrumentedMutex* db_mutex,
     bool* auto_recovery) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (listeners.empty()) {
     return;
   }
@@ -77,7 +77,7 @@ void EventHelpers::NotifyOnBackgroundError(
   (void)bg_error;
   (void)db_mutex;
   (void)auto_recovery;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
 void EventHelpers::LogAndNotifyTableFileCreationFinished(
@@ -95,8 +95,10 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
     jwriter << "cf_name" << cf_name << "job" << job_id << "event"
             << "table_file_creation"
             << "file_number" << fd.GetNumber() << "file_size"
-            << fd.GetFileSize() << "file_checksum" << file_checksum
-            << "file_checksum_func_name" << file_checksum_func_name;
+            << fd.GetFileSize() << "file_checksum"
+            << Slice(file_checksum).ToString(true) << "file_checksum_func_name"
+            << file_checksum_func_name << "smallest_seqno" << fd.smallest_seqno
+            << "largest_seqno" << fd.largest_seqno;
 
     // table_properties
     {
@@ -147,7 +149,19 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
               << table_properties.fast_compression_estimated_data_size
               << "db_id" << table_properties.db_id << "db_session_id"
               << table_properties.db_session_id << "orig_file_number"
-              << table_properties.orig_file_number;
+              << table_properties.orig_file_number << "seqno_to_time_mapping";
+
+      if (table_properties.seqno_to_time_mapping.empty()) {
+        jwriter << "N/A";
+      } else {
+        SeqnoToTimeMapping tmp;
+        Status status = tmp.Add(table_properties.seqno_to_time_mapping);
+        if (status.ok()) {
+          jwriter << tmp.ToHumanString();
+        } else {
+          jwriter << "Invalid";
+        }
+      }
 
       // user collected properties
       for (const auto& prop : table_properties.readable_properties) {
@@ -165,7 +179,7 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
     event_logger->Log(jwriter);
   }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (listeners.empty()) {
     return;
   }
@@ -190,7 +204,7 @@ void EventHelpers::LogAndNotifyTableFileCreationFinished(
   (void)cf_name;
   (void)file_path;
   (void)reason;
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 }
 
 void EventHelpers::LogAndNotifyTableFileDeletion(
@@ -212,7 +226,7 @@ void EventHelpers::LogAndNotifyTableFileDeletion(
 
   event_logger->Log(jwriter);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (listeners.empty()) {
     return;
   }
@@ -229,14 +243,14 @@ void EventHelpers::LogAndNotifyTableFileDeletion(
   (void)file_path;
   (void)dbname;
   (void)listeners;
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 }
 
 void EventHelpers::NotifyOnErrorRecoveryEnd(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const Status& old_bg_error, const Status& new_bg_error,
     InstrumentedMutex* db_mutex) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (!listeners.empty()) {
     db_mutex->AssertHeld();
     // release lock while notifying events
@@ -257,10 +271,10 @@ void EventHelpers::NotifyOnErrorRecoveryEnd(
   (void)old_bg_error;
   (void)new_bg_error;
   (void)db_mutex;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 void EventHelpers::NotifyBlobFileCreationStarted(
     const std::vector<std::shared_ptr<EventListener>>& listeners,
     const std::string& db_name, const std::string& cf_name,
@@ -275,7 +289,7 @@ void EventHelpers::NotifyBlobFileCreationStarted(
     listener->OnBlobFileCreationStarted(info);
   }
 }
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
 void EventHelpers::LogAndNotifyBlobFileCreationFinished(
     EventLogger* event_logger,
@@ -300,7 +314,7 @@ void EventHelpers::LogAndNotifyBlobFileCreationFinished(
     event_logger->Log(jwriter);
   }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (listeners.empty()) {
     return;
   }
@@ -338,7 +352,7 @@ void EventHelpers::LogAndNotifyBlobFileDeletion(
     jwriter.EndObject();
     event_logger->Log(jwriter);
   }
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (listeners.empty()) {
     return;
   }
@@ -351,7 +365,7 @@ void EventHelpers::LogAndNotifyBlobFileDeletion(
   (void)listeners;
   (void)dbname;
   (void)file_path;
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

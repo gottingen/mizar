@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <functional>
 
@@ -13,14 +13,14 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/sst_file_reader.h"
-#include "mizar/sst_file_writer.h"
+#include "rocksdb/sst_file_reader.h"
+#include "rocksdb/sst_file_writer.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "util/thread_guard.h"
 #include "utilities/fault_injection_env.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // A test environment that can be configured to fail the Link operation.
 class ExternalSSTTestEnv : public EnvWrapper {
@@ -118,7 +118,7 @@ class ExternalSSTFileTest
           });
       data.resize(uniq_iter - data.begin());
     }
-    std::string file_path = sst_files_dir_ + ToString(file_id);
+    std::string file_path = sst_files_dir_ + std::to_string(file_id);
     SstFileWriter sst_file_writer(EnvOptions(), options, cfh);
     Status s = sst_file_writer.Open(file_path);
     if (!s.ok()) {
@@ -172,7 +172,7 @@ class ExternalSSTFileTest
           });
       data.resize(uniq_iter - data.begin());
     }
-    std::string file_path = sst_files_dir_ + ToString(file_id);
+    std::string file_path = sst_files_dir_ + std::to_string(file_id);
     SstFileWriter sst_file_writer(EnvOptions(), options, cfh);
 
     Status s = sst_file_writer.Open(file_path);
@@ -270,7 +270,7 @@ class ExternalSSTFileTest
       ColumnFamilyHandle* cfh = nullptr) {
     std::vector<std::pair<std::string, std::string>> file_data;
     for (auto& k : keys) {
-      file_data.emplace_back(Key(k), Key(k) + ToString(file_id));
+      file_data.emplace_back(Key(k), Key(k) + std::to_string(file_id));
     }
     return GenerateAndAddExternalFile(options, file_data, file_id,
                                       allow_global_seqno, write_global_seqno,
@@ -301,7 +301,8 @@ TEST_F(ExternalSSTFileTest, Basic) {
 
     SstFileWriter sst_file_writer(EnvOptions(), options);
 
-    // Current file size should be 0 after sst_file_writer init and before open a file.
+    // Current file size should be 0 after sst_file_writer init and before open
+    // a file.
     ASSERT_EQ(sst_file_writer.FileSize(), 0);
 
     // file1.sst (0 => 99)
@@ -866,7 +867,7 @@ TEST_F(ExternalSSTFileTest, PurgeObsoleteFilesBug) {
   options.disable_auto_compactions = true;
   DestroyAndReopen(options);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ExternalSstFileIngestionJob::Prepare:FileAdded", [&](void* /* arg */) {
         ASSERT_OK(Put("aaa", "bbb"));
         ASSERT_OK(Flush());
@@ -874,7 +875,7 @@ TEST_F(ExternalSSTFileTest, PurgeObsoleteFilesBug) {
         ASSERT_OK(Flush());
         ASSERT_OK(db_->CompactRange(CompactRangeOptions(), nullptr, nullptr));
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   ASSERT_OK(DeprecatedAddFile({sst_file_path}));
 
@@ -884,7 +885,7 @@ TEST_F(ExternalSSTFileTest, PurgeObsoleteFilesBug) {
     ASSERT_EQ(Get(k), v);
   }
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(ExternalSSTFileTest, SkipSnapshot) {
@@ -966,13 +967,13 @@ TEST_F(ExternalSSTFileTest, MultiThreaded) {
   // Generate file names
   std::vector<std::string> file_names;
   for (int i = 0; i < num_files; i++) {
-    std::string file_name = "file_" + ToString(i) + ".sst";
+    std::string file_name = "file_" + std::to_string(i) + ".sst";
     file_names.push_back(sst_files_dir_ + file_name);
   }
 
   do {
     Options options = CurrentOptions();
-
+    options.disable_auto_compactions = true;
     std::atomic<int> thread_num(0);
     std::function<void()> write_file_func = [&]() {
       int file_idx = thread_num.fetch_add(1);
@@ -1072,25 +1073,25 @@ TEST_F(ExternalSSTFileTest, OverlappingRanges) {
   env_->skip_fsync_ = true;
   Random rnd(301);
   SequenceNumber assigned_seqno = 0;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ExternalSstFileIngestionJob::Run", [&assigned_seqno](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         assigned_seqno = *(static_cast<SequenceNumber*>(arg));
       });
   bool need_flush = false;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::IngestExternalFile:NeedFlush", [&need_flush](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         need_flush = *(static_cast<bool*>(arg));
       });
   bool overlap_with_db = false;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ExternalSstFileIngestionJob::AssignLevelAndSeqnoForIngestedFile",
       [&overlap_with_db](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         overlap_with_db = *(static_cast<bool*>(arg));
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   do {
     Options options = CurrentOptions();
     env_->skip_fsync_ = true;
@@ -1116,7 +1117,7 @@ TEST_F(ExternalSSTFileTest, OverlappingRanges) {
       int range_end = key_ranges[i].second;
 
       Status s;
-      std::string range_val = "range_" + ToString(i);
+      std::string range_val = "range_" + std::to_string(i);
 
       // For 20% of ranges we use DB::Put, for 80% we use DB::AddFile
       if (i && i % 5 == 0) {
@@ -1222,14 +1223,14 @@ TEST_P(ExternalSSTFileTest, PickedLevel) {
                                        false, false, &true_data));
   EXPECT_EQ(FilesPerLevel(), "0,0,1,1");
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"ExternalSSTFileTest::PickedLevel:0", "BackgroundCallCompaction:0"},
       {"DBImpl::BackgroundCompaction:Start",
        "ExternalSSTFileTest::PickedLevel:1"},
       {"ExternalSSTFileTest::PickedLevel:2",
        "DBImpl::BackgroundCompaction:NonTrivial:AfterRun"},
   });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Flush 4 files containing the same keys
   for (int i = 0; i < 4; i++) {
@@ -1248,8 +1249,9 @@ TEST_P(ExternalSSTFileTest, PickedLevel) {
 
   // This file overlaps with file 0 (L3), file 1 (L2) and the
   // output of compaction going to L1
-  ASSERT_OK(GenerateAndAddExternalFile(options, {4, 7}, -1, false, false, true,
-                                       false, false, &true_data));
+  ASSERT_OK(GenerateAndAddExternalFile(options, {4, 7}, -1,
+                                       true /* allow_global_seqno */, false,
+                                       true, false, false, &true_data));
   EXPECT_EQ(FilesPerLevel(), "5,0,1,1");
 
   // This file does not overlap with any file or with the running compaction
@@ -1266,107 +1268,7 @@ TEST_P(ExternalSSTFileTest, PickedLevel) {
   size_t kcnt = 0;
   VerifyDBFromMap(true_data, &kcnt, false);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-}
-
-TEST_F(ExternalSSTFileTest, PickedLevelBug) {
-  env_->skip_fsync_ = true;
-  Options options = CurrentOptions();
-  options.disable_auto_compactions = false;
-  options.level0_file_num_compaction_trigger = 3;
-  options.num_levels = 2;
-  DestroyAndReopen(options);
-
-  std::vector<int> file_keys;
-
-  // file #1 in L0
-  file_keys = {0, 5, 7};
-  for (int k : file_keys) {
-    ASSERT_OK(Put(Key(k), Key(k)));
-  }
-  ASSERT_OK(Flush());
-
-  // file #2 in L0
-  file_keys = {4, 6, 8, 9};
-  for (int k : file_keys) {
-    ASSERT_OK(Put(Key(k), Key(k)));
-  }
-  ASSERT_OK(Flush());
-
-  // We have 2 overlapping files in L0
-  EXPECT_EQ(FilesPerLevel(), "2");
-
-  ASSERT_OK(dbfull()->TEST_WaitForCompact());
-
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
-      {{"DBImpl::IngestExternalFile:AfterIncIngestFileCounter",
-        "ExternalSSTFileTest::PickedLevelBug:0"},
-       {"ExternalSSTFileTest::PickedLevelBug:1", "DBImpl::AddFile:MutexUnlock"},
-       {"ExternalSSTFileTest::PickedLevelBug:2",
-        "DBImpl::RunManualCompaction:0"},
-       {"ExternalSSTFileTest::PickedLevelBug:3",
-        "DBImpl::RunManualCompaction:1"}});
-
-  std::atomic<bool> bg_compact_started(false);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
-      "DBImpl::BackgroundCompaction:Start",
-      [&](void* /*arg*/) { bg_compact_started.store(true); });
-
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-
-  Status bg_compact_status;
-  Status bg_addfile_status;
-
-  {
-    // While writing the MANIFEST start a thread that will ask for compaction
-    ThreadGuard bg_compact(port::Thread([&]() {
-      bg_compact_status =
-          db_->CompactRange(CompactRangeOptions(), nullptr, nullptr);
-    }));
-    TEST_SYNC_POINT("ExternalSSTFileTest::PickedLevelBug:2");
-
-    // Start a thread that will ingest a new file
-    ThreadGuard bg_addfile(port::Thread([&]() {
-      file_keys = {1, 2, 3};
-      bg_addfile_status = GenerateAndAddExternalFile(options, file_keys, 1);
-    }));
-
-    // Wait for AddFile to start picking levels and writing MANIFEST
-    TEST_SYNC_POINT("ExternalSSTFileTest::PickedLevelBug:0");
-
-    TEST_SYNC_POINT("ExternalSSTFileTest::PickedLevelBug:3");
-
-    // We need to verify that no compactions can run while AddFile is
-    // ingesting the files into the levels it find suitable. So we will
-    // wait for 2 seconds to give a chance for compactions to run during
-    // this period, and then make sure that no compactions where able to run
-    env_->SleepForMicroseconds(1000000 * 2);
-    bool bg_compact_started_tmp = bg_compact_started.load();
-
-    // Hold AddFile from finishing writing the MANIFEST
-    TEST_SYNC_POINT("ExternalSSTFileTest::PickedLevelBug:1");
-
-    // check the status at the end, so even if the ASSERT fails the threads
-    // could be joined and return.
-    ASSERT_FALSE(bg_compact_started_tmp);
-  }
-
-  ASSERT_OK(bg_addfile_status);
-  ASSERT_OK(bg_compact_status);
-
-  ASSERT_OK(dbfull()->TEST_WaitForCompact());
-
-  int total_keys = 0;
-  Iterator* iter = db_->NewIterator(ReadOptions());
-  for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
-    ASSERT_OK(iter->status());
-    total_keys++;
-  }
-  ASSERT_EQ(total_keys, 10);
-
-  delete iter;
-
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(ExternalSSTFileTest, IngestNonExistingFile) {
@@ -1419,7 +1321,8 @@ TEST_F(ExternalSSTFileTest, CompactDuringAddFileRandom) {
   int range_id = 0;
   std::vector<int> file_keys;
   std::function<void()> bg_addfile = [&]() {
-    ASSERT_OK(GenerateAndAddExternalFile(options, file_keys, range_id));
+    ASSERT_OK(GenerateAndAddExternalFile(options, file_keys, range_id,
+                                         true /* allow_global_seqno */));
   };
 
   const int num_of_ranges = 1000;
@@ -1456,7 +1359,7 @@ TEST_F(ExternalSSTFileTest, CompactDuringAddFileRandom) {
     ASSERT_EQ(Get(Key(range_start)), Key(range_start)) << rid;
     ASSERT_EQ(Get(Key(range_end)), Key(range_end)) << rid;
     for (int k = range_start + 1; k < range_end; k++) {
-      std::string v = Key(k) + ToString(rid);
+      std::string v = Key(k) + std::to_string(rid);
       ASSERT_EQ(Get(Key(k)), v) << rid;
     }
   }
@@ -1473,7 +1376,7 @@ TEST_F(ExternalSSTFileTest, PickedLevelDynamic) {
   DestroyAndReopen(options);
   std::map<std::string, std::string> true_data;
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"ExternalSSTFileTest::PickedLevelDynamic:0",
        "BackgroundCallCompaction:0"},
       {"DBImpl::BackgroundCompaction:Start",
@@ -1481,7 +1384,7 @@ TEST_F(ExternalSSTFileTest, PickedLevelDynamic) {
       {"ExternalSSTFileTest::PickedLevelDynamic:2",
        "DBImpl::BackgroundCompaction:NonTrivial:AfterRun"},
   });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Flush 4 files containing the same keys
   for (int i = 0; i < 4; i++) {
@@ -1502,8 +1405,9 @@ TEST_F(ExternalSSTFileTest, PickedLevelDynamic) {
 
   // This file overlaps with the output of the compaction (going to L3)
   // so the file will be added to L0 since L3 is the base level
-  ASSERT_OK(GenerateAndAddExternalFile(options, {31, 32, 33, 34}, -1, false,
-                                       false, true, false, false, &true_data));
+  ASSERT_OK(GenerateAndAddExternalFile(options, {31, 32, 33, 34}, -1,
+                                       true /* allow_global_seqno */, false,
+                                       true, false, false, &true_data));
   EXPECT_EQ(FilesPerLevel(), "5");
 
   // This file does not overlap with the current running compactiong
@@ -1565,7 +1469,7 @@ TEST_F(ExternalSSTFileTest, PickedLevelDynamic) {
 
   VerifyDBFromMap(true_data, &kcnt, false);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(ExternalSSTFileTest, AddExternalSstFileWithCustomCompartor) {
@@ -1639,19 +1543,20 @@ TEST_F(ExternalSSTFileTest, AddFileTrivialMoveBug) {
   ASSERT_OK(GenerateAndAddExternalFile(options, {20, 24}, 5));  // L3
   ASSERT_OK(GenerateAndAddExternalFile(options, {22, 23}, 6));  // L2
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "CompactionJob::Run():Start", [&](void* /*arg*/) {
-        // fit in L3 but will overlap with compaction so will be added
-        // to L2 but a compaction will trivially move it to L3
-        // and break LSM consistency
+        // Fit in L3 but will overlap with the compaction output so will be
+        // added to L2. Prior to the fix, a compaction will then trivially move
+        // this file to L3 and break LSM consistency
         static std::atomic<bool> called = {false};
         if (!called) {
           called = true;
           ASSERT_OK(dbfull()->SetOptions({{"max_bytes_for_level_base", "1"}}));
-          ASSERT_OK(GenerateAndAddExternalFile(options, {15, 16}, 7));
+          ASSERT_OK(GenerateAndAddExternalFile(options, {15, 16}, 7,
+                                               true /* allow_global_seqno */));
         }
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   CompactRangeOptions cro;
   cro.exclusive_manual_compaction = false;
@@ -1659,7 +1564,7 @@ TEST_F(ExternalSSTFileTest, AddFileTrivialMoveBug) {
 
   ASSERT_OK(dbfull()->TEST_WaitForCompact());
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(ExternalSSTFileTest, CompactAddedFiles) {
@@ -1943,16 +1848,16 @@ TEST_F(ExternalSSTFileTest, CompactionDeadlock) {
   // atomic conter of currently running bg threads
   std::atomic<int> running_threads(0);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"DBImpl::DelayWrite:Wait", "ExternalSSTFileTest::DeadLock:0"},
       {"ExternalSSTFileTest::DeadLock:1", "DBImpl::AddFile:Start"},
       {"DBImpl::AddFile:MutexLock", "ExternalSSTFileTest::DeadLock:2"},
       {"ExternalSSTFileTest::DeadLock:3", "BackgroundCallCompaction:0"},
   });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Start ingesting and extrnal file in the background
-  MIZAR_NAMESPACE::port::Thread bg_ingest_file([&]() {
+  ROCKSDB_NAMESPACE::port::Thread bg_ingest_file([&]() {
     running_threads += 1;
     ASSERT_OK(GenerateAndAddExternalFile(options, {5, 6}));
     running_threads -= 1;
@@ -1972,7 +1877,7 @@ TEST_F(ExternalSSTFileTest, CompactionDeadlock) {
 
   // This thread will try to insert into the memtable but since we have 4 L0
   // files this thread will be blocked and hold the writer thread
-  MIZAR_NAMESPACE::port::Thread bg_block_put([&]() {
+  ROCKSDB_NAMESPACE::port::Thread bg_block_put([&]() {
     running_threads += 1;
     ASSERT_OK(Put(Key(10), "memtable"));
     running_threads -= 1;
@@ -2111,10 +2016,10 @@ TEST_P(ExternSSTFileLinkFailFallbackTest, LinkFailFallBackExternalSst) {
   ASSERT_OK(env_->GetFileSize(file_path, &file_size));
 
   bool copyfile = false;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "ExternalSstFileIngestionJob::Prepare:CopyFile",
       [&](void* /* arg */) { copyfile = true; });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   const Status s = db_->IngestExternalFile({file_path}, ifo);
 
@@ -2152,7 +2057,7 @@ TEST_P(ExternSSTFileLinkFailFallbackTest, LinkFailFallBackExternalSst) {
       ASSERT_EQ(0, bytes_copied);
     }
   }
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 class TestIngestExternalFileListener : public EventListener {
@@ -2318,9 +2223,8 @@ TEST_F(ExternalSSTFileTest, SkipBloomFilter) {
   table_options.cache_index_and_filter_blocks = true;
   options.table_factory.reset(NewBlockBasedTableFactory(table_options));
 
-
   // Create external SST file and include bloom filters
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   {
     std::string file_path = sst_files_dir_ + "sst_with_bloom.sst";
@@ -2338,7 +2242,7 @@ TEST_F(ExternalSSTFileTest, SkipBloomFilter) {
   }
 
   // Create external SST file but skip bloom filters
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   {
     std::string file_path = sst_files_dir_ + "sst_with_no_bloom.sst";
@@ -2371,10 +2275,10 @@ TEST_F(ExternalSSTFileTest, IngestFileWrittenWithCompressionDictionary) {
   DestroyAndReopen(options);
 
   std::atomic<int> num_compression_dicts(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "BlockBasedTableBuilder::WriteCompressionDictBlock:RawDict",
       [&](void* /* arg */) { ++num_compression_dicts; });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   Random rnd(301);
   std::vector<std::pair<std::string, std::string>> random_data;
@@ -2405,7 +2309,7 @@ TEST_P(ExternalSSTBlockChecksumTest, DISABLED_HugeBlockChecksum) {
     SstFileWriter sst_file_writer(EnvOptions(), options);
 
     // 2^32 - 1, will lead to data block with more than 2^32 bytes
-    size_t huge_size = port::kMaxUint32;
+    size_t huge_size = std::numeric_limits<uint32_t>::max();
 
     std::string f = sst_files_dir_ + "f.sst";
     ASSERT_OK(sst_file_writer.Open(f));
@@ -2853,7 +2757,7 @@ TEST_P(ExternalSSTFileTest, DeltaEncodingWhileGlobalSeqnoPresent) {
   auto snap = dbfull()->GetSnapshot();
 
   std::string fname = sst_files_dir_ + "test_file";
-  MIZAR_NAMESPACE::SstFileWriter writer(EnvOptions(), options);
+  ROCKSDB_NAMESPACE::SstFileWriter writer(EnvOptions(), options);
   ASSERT_OK(writer.Open(fname));
   std::string key1 = "ab";
   std::string key2 = "ab";
@@ -2903,7 +2807,7 @@ TEST_P(ExternalSSTFileTest,
   ASSERT_OK(Put(key0, value));
 
   std::string fname = sst_files_dir_ + "test_file";
-  MIZAR_NAMESPACE::SstFileWriter writer(EnvOptions(), options);
+  ROCKSDB_NAMESPACE::SstFileWriter writer(EnvOptions(), options);
   ASSERT_OK(writer.Open(fname));
 
   // key0 is a dummy to ensure the turnaround point (key1) comes from Prev
@@ -2946,10 +2850,10 @@ INSTANTIATE_TEST_CASE_P(ExternSSTFileLinkFailFallbackTest,
                                         std::make_tuple(true, true),
                                         std::make_tuple(false, false)));
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -2960,8 +2864,8 @@ int main(int argc, char** argv) {
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
           "SKIPPED as External SST File Writer and Ingestion are not supported "
-          "in MIZAR_LITE\n");
+          "in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

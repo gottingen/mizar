@@ -11,12 +11,12 @@
 
 #pragma once
 
-#ifdef MIZAR_PLATFORM_POSIX
+#ifdef ROCKSDB_PLATFORM_POSIX
 #include <dirent.h>
 #include <sys/types.h>
 #elif defined(OS_WIN)
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace port {
 
 struct dirent {
@@ -33,12 +33,12 @@ int closedir(DIR* dirp);
 
 }  // namespace port
 
-using port::dirent;
+using port::closedir;
 using port::DIR;
+using port::dirent;
 using port::opendir;
 using port::readdir;
-using port::closedir;
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif  // OS_WIN

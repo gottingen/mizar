@@ -3,20 +3,20 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "db/db_impl/db_impl.h"
-#include "mizar/cache.h"
-#include "mizar/table.h"
-#include "mizar/utilities/memory_util.h"
-#include "mizar/utilities/stackable_db.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/table.h"
+#include "rocksdb/utilities/memory_util.h"
+#include "rocksdb/utilities/stackable_db.h"
 #include "table/block_based/block_based_table_factory.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class MemoryTest : public testing::Test {
  public:
@@ -24,7 +24,7 @@ class MemoryTest : public testing::Test {
     assert(Env::Default()->CreateDirIfMissing(kDbDir).ok());
   }
 
-  std::string GetDBName(int id) { return kDbDir + "db_" + ToString(id); }
+  std::string GetDBName(int id) { return kDbDir + "db_" + std::to_string(id); }
 
   void UpdateUsagesHistory(const std::vector<DB*>& dbs) {
     std::map<MemoryUtil::UsageType, uint64_t> usage_by_type;
@@ -257,10 +257,11 @@ TEST_F(MemoryTest, MemTableAndTableReadersTotal) {
     delete dbs[i];
   }
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
 #if !(defined NDEBUG) || !defined(OS_WIN)
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 #else
@@ -275,4 +276,4 @@ int main(int /*argc*/, char** /*argv*/) {
   printf("Skipped in RocksDBLite as utilities are not supported.\n");
   return 0;
 }
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

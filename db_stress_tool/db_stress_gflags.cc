@@ -39,8 +39,8 @@ DEFINE_string(key_len_percent_dist, "",
               "24 bytes. If not specified, it will be evenly distributed");
 
 DEFINE_int32(key_window_scale_factor, 10,
-              "This value will be multiplied by 100 to come up with a window "
-              "size for varying the key length");
+             "This value will be multiplied by 100 to come up with a window "
+             "size for varying the key length");
 
 DEFINE_int32(column_families, 10, "Number of column families");
 
@@ -85,6 +85,13 @@ DEFINE_bool(test_batches_snapshots, false,
 DEFINE_bool(atomic_flush, false,
             "If set, enables atomic flush in the options.\n");
 
+DEFINE_int32(
+    manual_wal_flush_one_in, 0,
+    "If non-zero, then `FlushWAL(bool sync)`, where `bool sync` is randomly "
+    "decided, will be explictly called in db stress once for every N ops "
+    "on average. Setting `manual_wal_flush_one_in` to be greater than 0 "
+    "implies `Options::manual_wal_flush = true` is set.");
+
 DEFINE_bool(test_cf_consistency, false,
             "If set, runs the stress test dedicated to verifying writes to "
             "multiple column families are consistent. Setting this implies "
@@ -122,21 +129,21 @@ DEFINE_bool(progress_reports, true,
             "If true, db_stress will report number of finished operations");
 
 DEFINE_uint64(db_write_buffer_size,
-              MIZAR_NAMESPACE::Options().db_write_buffer_size,
+              ROCKSDB_NAMESPACE::Options().db_write_buffer_size,
               "Number of bytes to buffer in all memtables before compacting");
 
 DEFINE_int32(
     write_buffer_size,
-    static_cast<int32_t>(MIZAR_NAMESPACE::Options().write_buffer_size),
+    static_cast<int32_t>(ROCKSDB_NAMESPACE::Options().write_buffer_size),
     "Number of bytes to buffer in memtable before compacting");
 
 DEFINE_int32(max_write_buffer_number,
-             MIZAR_NAMESPACE::Options().max_write_buffer_number,
+             ROCKSDB_NAMESPACE::Options().max_write_buffer_number,
              "The number of in-memory memtables. "
              "Each memtable is of size FLAGS_write_buffer_size.");
 
 DEFINE_int32(min_write_buffer_number_to_merge,
-             MIZAR_NAMESPACE::Options().min_write_buffer_number_to_merge,
+             ROCKSDB_NAMESPACE::Options().min_write_buffer_number_to_merge,
              "The minimum number of write buffers that will be merged together "
              "before writing to storage. This is cheap because it is an "
              "in-memory merge. If this feature is not enabled, then all these "
@@ -147,7 +154,7 @@ DEFINE_int32(min_write_buffer_number_to_merge,
              " each of these individual write buffers.");
 
 DEFINE_int32(max_write_buffer_number_to_maintain,
-             MIZAR_NAMESPACE::Options().max_write_buffer_number_to_maintain,
+             ROCKSDB_NAMESPACE::Options().max_write_buffer_number_to_maintain,
              "The total maximum number of write buffers to maintain in memory "
              "including copies of buffers that have already been flushed. "
              "Unlike max_write_buffer_number, this parameter does not affect "
@@ -161,7 +168,7 @@ DEFINE_int32(max_write_buffer_number_to_maintain,
              "'max_write_buffer_number' will be used.");
 
 DEFINE_int64(max_write_buffer_size_to_maintain,
-             MIZAR_NAMESPACE::Options().max_write_buffer_size_to_maintain,
+             ROCKSDB_NAMESPACE::Options().max_write_buffer_size_to_maintain,
              "The total maximum size of write buffers to maintain in memory "
              "including copies of buffers that have already been flushed. "
              "Unlike max_write_buffer_number, this parameter does not affect "
@@ -175,58 +182,72 @@ DEFINE_int64(max_write_buffer_size_to_maintain,
              "'max_write_buffer_number' will be used.");
 
 DEFINE_double(memtable_prefix_bloom_size_ratio,
-              MIZAR_NAMESPACE::Options().memtable_prefix_bloom_size_ratio,
+              ROCKSDB_NAMESPACE::Options().memtable_prefix_bloom_size_ratio,
               "creates prefix blooms for memtables, each with size "
               "`write_buffer_size * memtable_prefix_bloom_size_ratio`.");
 
 DEFINE_bool(memtable_whole_key_filtering,
-            MIZAR_NAMESPACE::Options().memtable_whole_key_filtering,
+            ROCKSDB_NAMESPACE::Options().memtable_whole_key_filtering,
             "Enable whole key filtering in memtables.");
 
-DEFINE_int32(open_files, MIZAR_NAMESPACE::Options().max_open_files,
+DEFINE_int32(open_files, ROCKSDB_NAMESPACE::Options().max_open_files,
              "Maximum number of files to keep open at the same time "
              "(use default if == 0)");
 
-DEFINE_int64(compressed_cache_size, -1,
+DEFINE_int64(compressed_cache_size, 0,
              "Number of bytes to use as a cache of compressed data."
-             " Negative means use default settings.");
+             " 0 means use default settings.");
 
-DEFINE_int32(compaction_style, MIZAR_NAMESPACE::Options().compaction_style,
+DEFINE_int32(
+    compressed_cache_numshardbits, -1,
+    "Number of shards for the compressed block cache is 2 ** "
+    "compressed_cache_numshardbits. Negative value means default settings. "
+    "This is applied only if compressed_cache_size is greater than 0.");
+
+DEFINE_int32(compaction_style, ROCKSDB_NAMESPACE::Options().compaction_style,
              "");
 
-DEFINE_int32(num_levels, MIZAR_NAMESPACE::Options().num_levels,
+DEFINE_int32(compaction_pri, ROCKSDB_NAMESPACE::Options().compaction_pri,
+             "Which file from a level should be picked to merge to the next "
+             "level in level-based compaction");
+
+DEFINE_int32(num_levels, ROCKSDB_NAMESPACE::Options().num_levels,
              "Number of levels in the DB");
 
 DEFINE_int32(level0_file_num_compaction_trigger,
-             MIZAR_NAMESPACE::Options().level0_file_num_compaction_trigger,
+             ROCKSDB_NAMESPACE::Options().level0_file_num_compaction_trigger,
              "Level0 compaction start trigger");
 
 DEFINE_int32(level0_slowdown_writes_trigger,
-             MIZAR_NAMESPACE::Options().level0_slowdown_writes_trigger,
+             ROCKSDB_NAMESPACE::Options().level0_slowdown_writes_trigger,
              "Number of files in level-0 that will slow down writes");
 
 DEFINE_int32(level0_stop_writes_trigger,
-             MIZAR_NAMESPACE::Options().level0_stop_writes_trigger,
+             ROCKSDB_NAMESPACE::Options().level0_stop_writes_trigger,
              "Number of files in level-0 that will trigger put stop.");
 
 DEFINE_int32(block_size,
              static_cast<int32_t>(
-                 MIZAR_NAMESPACE::BlockBasedTableOptions().block_size),
+                 ROCKSDB_NAMESPACE::BlockBasedTableOptions().block_size),
              "Number of bytes in a block.");
 
 DEFINE_int32(format_version,
              static_cast<int32_t>(
-                 MIZAR_NAMESPACE::BlockBasedTableOptions().format_version),
+                 ROCKSDB_NAMESPACE::BlockBasedTableOptions().format_version),
              "Format version of SST files.");
 
 DEFINE_int32(
     index_block_restart_interval,
-    MIZAR_NAMESPACE::BlockBasedTableOptions().index_block_restart_interval,
+    ROCKSDB_NAMESPACE::BlockBasedTableOptions().index_block_restart_interval,
     "Number of keys between restart points "
     "for delta encoding of keys in index block.");
 
+DEFINE_bool(disable_auto_compactions,
+            ROCKSDB_NAMESPACE::Options().disable_auto_compactions,
+            "If true, RocksDB internally will not trigger compactions.");
+
 DEFINE_int32(max_background_compactions,
-             MIZAR_NAMESPACE::Options().max_background_compactions,
+             ROCKSDB_NAMESPACE::Options().max_background_compactions,
              "The maximum number of concurrent background compactions "
              "that can occur in parallel.");
 
@@ -243,7 +264,7 @@ DEFINE_int32(compaction_thread_pool_variations, 2,
              "periodically.");
 
 DEFINE_int32(max_background_flushes,
-             MIZAR_NAMESPACE::Options().max_background_flushes,
+             ROCKSDB_NAMESPACE::Options().max_background_flushes,
              "The maximum number of concurrent background flushes "
              "that can occur in parallel.");
 
@@ -295,31 +316,55 @@ DEFINE_int64(cache_size, 2LL * KB * KB * KB,
 DEFINE_int32(cache_numshardbits, 6,
              "Number of shards for the block cache"
              " is 2 ** cache_numshardbits. Negative means use default settings."
-             " This is applied only if FLAGS_cache_size is non-negative.");
+             " This is applied only if FLAGS_cache_size is greater than 0.");
 
 DEFINE_bool(cache_index_and_filter_blocks, false,
             "True if indexes/filters should be cached in block cache.");
 
+DEFINE_bool(charge_compression_dictionary_building_buffer, false,
+            "Setting for "
+            "CacheEntryRoleOptions::charged of "
+            "CacheEntryRole::kCompressionDictionaryBuildingBuffer");
+
+DEFINE_bool(charge_filter_construction, false,
+            "Setting for "
+            "CacheEntryRoleOptions::charged of "
+            "CacheEntryRole::kFilterConstruction");
+
+DEFINE_bool(charge_table_reader, false,
+            "Setting for "
+            "CacheEntryRoleOptions::charged of "
+            "CacheEntryRole::kBlockBasedTableReader");
+
+DEFINE_bool(charge_file_metadata, false,
+            "Setting for "
+            "CacheEntryRoleOptions::charged of "
+            "kFileMetadata");
+
+DEFINE_bool(charge_blob_cache, false,
+            "Setting for "
+            "CacheEntryRoleOptions::charged of "
+            "kBlobCache");
+
 DEFINE_int32(
     top_level_index_pinning,
-    static_cast<int32_t>(MIZAR_NAMESPACE::PinningTier::kFallback),
+    static_cast<int32_t>(ROCKSDB_NAMESPACE::PinningTier::kFallback),
     "Type of pinning for top-level indexes into metadata partitions (see "
     "`enum PinningTier` in table.h)");
 
 DEFINE_int32(
     partition_pinning,
-    static_cast<int32_t>(MIZAR_NAMESPACE::PinningTier::kFallback),
+    static_cast<int32_t>(ROCKSDB_NAMESPACE::PinningTier::kFallback),
     "Type of pinning for metadata partitions (see `enum PinningTier` in "
     "table.h)");
 
 DEFINE_int32(
     unpartitioned_pinning,
-    static_cast<int32_t>(MIZAR_NAMESPACE::PinningTier::kFallback),
+    static_cast<int32_t>(ROCKSDB_NAMESPACE::PinningTier::kFallback),
     "Type of pinning for unpartitioned metadata blocks (see `enum PinningTier` "
     "in table.h)");
 
-DEFINE_bool(use_clock_cache, false,
-            "Replace default LRU block cache with clock cache.");
+DEFINE_string(cache_type, "lru_cache", "Type of block cache.");
 
 DEFINE_uint64(subcompactions, 1,
               "Maximum number of subcompactions to divide L0-L1 compactions "
@@ -331,6 +376,10 @@ DEFINE_uint64(periodic_compaction_seconds, 1000,
 DEFINE_uint64(compaction_ttl, 1000,
               "Files older than TTL will be compacted to the next level.");
 
+DEFINE_bool(fifo_allow_compaction, false,
+            "If true, set `Options::compaction_options_fifo.allow_compaction = "
+            "true`. It only take effect when FIFO compaction is used.");
+
 DEFINE_bool(allow_concurrent_memtable_write, false,
             "Allow multi-writers to update mem tables in parallel.");
 
@@ -341,35 +390,35 @@ DEFINE_double(experimental_mempurge_threshold, 0.0,
 DEFINE_bool(enable_write_thread_adaptive_yield, true,
             "Use a yielding spin loop for brief writer thread waits.");
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 // Options for StackableDB-based BlobDB
 DEFINE_bool(use_blob_db, false, "[Stacked BlobDB] Use BlobDB.");
 
 DEFINE_uint64(
     blob_db_min_blob_size,
-    MIZAR_NAMESPACE::blob_db::BlobDBOptions().min_blob_size,
+    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().min_blob_size,
     "[Stacked BlobDB] Smallest blob to store in a file. Blobs "
     "smaller than this will be inlined with the key in the LSM tree.");
 
 DEFINE_uint64(
     blob_db_bytes_per_sync,
-    MIZAR_NAMESPACE::blob_db::BlobDBOptions().bytes_per_sync,
+    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().bytes_per_sync,
     "[Stacked BlobDB] Sync blob files once per every N bytes written.");
 
 DEFINE_uint64(blob_db_file_size,
-              MIZAR_NAMESPACE::blob_db::BlobDBOptions().blob_file_size,
+              ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().blob_file_size,
               "[Stacked BlobDB] Target size of each blob file.");
 
 DEFINE_bool(
     blob_db_enable_gc,
-    MIZAR_NAMESPACE::blob_db::BlobDBOptions().enable_garbage_collection,
+    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().enable_garbage_collection,
     "[Stacked BlobDB] Enable BlobDB garbage collection.");
 
 DEFINE_double(
     blob_db_gc_cutoff,
-    MIZAR_NAMESPACE::blob_db::BlobDBOptions().garbage_collection_cutoff,
+    ROCKSDB_NAMESPACE::blob_db::BlobDBOptions().garbage_collection_cutoff,
     "[Stacked BlobDB] Cutoff ratio for BlobDB garbage collection.");
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
 // Options for integrated BlobDB
 DEFINE_bool(allow_setting_blob_options_dynamically, false,
@@ -377,16 +426,16 @@ DEFINE_bool(allow_setting_blob_options_dynamically, false,
 
 DEFINE_bool(
     enable_blob_files,
-    MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().enable_blob_files,
+    ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().enable_blob_files,
     "[Integrated BlobDB] Enable writing large values to separate blob files.");
 
 DEFINE_uint64(min_blob_size,
-              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().min_blob_size,
+              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().min_blob_size,
               "[Integrated BlobDB] The size of the smallest value to be stored "
               "separately in a blob file.");
 
 DEFINE_uint64(blob_file_size,
-              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions().blob_file_size,
+              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().blob_file_size,
               "[Integrated BlobDB] The size limit for blob files.");
 
 DEFINE_string(blob_compression_type, "none",
@@ -394,26 +443,66 @@ DEFINE_string(blob_compression_type, "none",
               "values stored in blob files.");
 
 DEFINE_bool(enable_blob_garbage_collection,
-            MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
+            ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
                 .enable_blob_garbage_collection,
             "[Integrated BlobDB] Enable blob garbage collection.");
 
 DEFINE_double(blob_garbage_collection_age_cutoff,
-              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
+              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_garbage_collection_age_cutoff,
               "[Integrated BlobDB] The cutoff in terms of blob file age for "
               "garbage collection.");
 
 DEFINE_double(blob_garbage_collection_force_threshold,
-              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
+              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_garbage_collection_force_threshold,
               "[Integrated BlobDB] The threshold for the ratio of garbage in "
               "the oldest blob files for forcing garbage collection.");
 
 DEFINE_uint64(blob_compaction_readahead_size,
-              MIZAR_NAMESPACE::AdvancedColumnFamilyOptions()
+              ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions()
                   .blob_compaction_readahead_size,
               "[Integrated BlobDB] Compaction readahead for blob files.");
+
+DEFINE_int32(
+    blob_file_starting_level,
+    ROCKSDB_NAMESPACE::AdvancedColumnFamilyOptions().blob_file_starting_level,
+    "[Integrated BlobDB] Enable writing blob files during flushes and "
+    "compactions starting from the specified level.");
+
+DEFINE_bool(use_blob_cache, false, "[Integrated BlobDB] Enable blob cache.");
+
+DEFINE_bool(
+    use_shared_block_and_blob_cache, true,
+    "[Integrated BlobDB] Use a shared backing cache for both block "
+    "cache and blob cache. It only takes effect if use_blob_cache is enabled.");
+
+DEFINE_uint64(
+    blob_cache_size, 2LL * KB * KB * KB,
+    "[Integrated BlobDB] Number of bytes to use as a cache of blobs. It only "
+    "takes effect if the block and blob caches are different "
+    "(use_shared_block_and_blob_cache = false).");
+
+DEFINE_int32(blob_cache_numshardbits, 6,
+             "[Integrated BlobDB] Number of shards for the blob cache is 2 ** "
+             "blob_cache_numshardbits. Negative means use default settings. "
+             "It only takes effect if blob_cache_size is greater than 0, and "
+             "the block and blob caches are different "
+             "(use_shared_block_and_blob_cache = false).");
+
+DEFINE_int32(prepopulate_blob_cache, 0,
+             "[Integrated BlobDB] Pre-populate hot/warm blobs in blob cache. 0 "
+             "to disable and 1 to insert during flush.");
+
+DEFINE_bool(enable_tiered_storage, false, "Set last_level_temperature");
+
+DEFINE_int64(preclude_last_level_data_seconds, 0,
+             "Preclude data from the last level. Used with tiered storage "
+             "feature to preclude new data from comacting to the last level.");
+
+DEFINE_int64(
+    preserve_internal_time_seconds, 0,
+    "Preserve internal time information which is attached to each SST.");
 
 static const bool FLAGS_subcompactions_dummy __attribute__((__unused__)) =
     RegisterFlagValidator(&FLAGS_subcompactions, &ValidateUint32Range);
@@ -434,10 +523,6 @@ DEFINE_double(bloom_bits, 10,
               "Bloom filter bits per key. "
               "Negative means use default settings.");
 
-DEFINE_bool(use_block_based_filter, false,
-            "use block based filter"
-            "instead of full filter for block based table");
-
 DEFINE_int32(
     ribbon_starting_level, 999,
     "Use Bloom filter on levels below specified and Ribbon beginning on level "
@@ -450,21 +535,35 @@ DEFINE_bool(partition_filters, false,
 
 DEFINE_bool(
     optimize_filters_for_memory,
-    MIZAR_NAMESPACE::BlockBasedTableOptions().optimize_filters_for_memory,
+    ROCKSDB_NAMESPACE::BlockBasedTableOptions().optimize_filters_for_memory,
     "Minimize memory footprint of filters");
+
+DEFINE_bool(
+    detect_filter_construct_corruption,
+    ROCKSDB_NAMESPACE::BlockBasedTableOptions()
+        .detect_filter_construct_corruption,
+    "Detect corruption during new Bloom Filter and Ribbon Filter construction");
 
 DEFINE_int32(
     index_type,
     static_cast<int32_t>(
-        MIZAR_NAMESPACE::BlockBasedTableOptions::kBinarySearch),
+        ROCKSDB_NAMESPACE::BlockBasedTableOptions().index_type),
     "Type of block-based table index (see `enum IndexType` in table.h)");
+
+DEFINE_int32(
+    data_block_index_type,
+    static_cast<int32_t>(
+        ROCKSDB_NAMESPACE::BlockBasedTableOptions().data_block_index_type),
+    "Index type for data blocks (see `enum DataBlockIndexType` in table.h)");
 
 DEFINE_string(db, "", "Use the db with the following name.");
 
 DEFINE_string(secondaries_base, "",
               "Use this path as the base path for secondary instances.");
 
-DEFINE_bool(test_secondary, false, "Test secondary instance.");
+DEFINE_bool(test_secondary, false,
+            "If true, start an additional secondary instance which can be used "
+            "for verification.");
 
 DEFINE_string(
     expected_values_dir, "",
@@ -479,17 +578,17 @@ DEFINE_string(
 DEFINE_bool(verify_checksum, false,
             "Verify checksum for every block read from storage");
 
-DEFINE_bool(mmap_read, MIZAR_NAMESPACE::Options().allow_mmap_reads,
+DEFINE_bool(mmap_read, ROCKSDB_NAMESPACE::Options().allow_mmap_reads,
             "Allow reads to occur via mmap-ing files");
 
-DEFINE_bool(mmap_write, MIZAR_NAMESPACE::Options().allow_mmap_writes,
+DEFINE_bool(mmap_write, ROCKSDB_NAMESPACE::Options().allow_mmap_writes,
             "Allow writes to occur via mmap-ing files");
 
-DEFINE_bool(use_direct_reads, MIZAR_NAMESPACE::Options().use_direct_reads,
+DEFINE_bool(use_direct_reads, ROCKSDB_NAMESPACE::Options().use_direct_reads,
             "Use O_DIRECT for reading data");
 
 DEFINE_bool(use_direct_io_for_flush_and_compaction,
-            MIZAR_NAMESPACE::Options().use_direct_io_for_flush_and_compaction,
+            ROCKSDB_NAMESPACE::Options().use_direct_io_for_flush_and_compaction,
             "Use O_DIRECT for writing data");
 
 DEFINE_bool(mock_direct_io, false,
@@ -500,6 +599,15 @@ DEFINE_bool(statistics, false, "Create database statistics");
 DEFINE_bool(sync, false, "Sync all writes to disk");
 
 DEFINE_bool(use_fsync, false, "If true, issue fsync instead of fdatasync");
+
+DEFINE_uint64(bytes_per_sync, ROCKSDB_NAMESPACE::Options().bytes_per_sync,
+              "If nonzero, sync SST file data incrementally after every "
+              "`bytes_per_sync` bytes are written");
+
+DEFINE_uint64(wal_bytes_per_sync,
+              ROCKSDB_NAMESPACE::Options().wal_bytes_per_sync,
+              "If nonzero, sync WAL file data incrementally after every "
+              "`bytes_per_sync` bytes are written");
 
 DEFINE_int32(kill_random_test, 0,
              "If non-zero, kill at various points in source code with "
@@ -515,18 +623,18 @@ extern std::vector<std::string> rocksdb_kill_exclude_prefixes;
 DEFINE_bool(disable_wal, false, "If true, do not write WAL for write.");
 
 DEFINE_uint64(recycle_log_file_num,
-              MIZAR_NAMESPACE::Options().recycle_log_file_num,
+              ROCKSDB_NAMESPACE::Options().recycle_log_file_num,
               "Number of old WAL files to keep around for later recycling");
 
 DEFINE_int64(target_file_size_base,
-             MIZAR_NAMESPACE::Options().target_file_size_base,
+             ROCKSDB_NAMESPACE::Options().target_file_size_base,
              "Target level-1 file size for compaction");
 
 DEFINE_int32(target_file_size_multiplier, 1,
              "A multiplier to compute target level-N file size (N >= 2)");
 
 DEFINE_uint64(max_bytes_for_level_base,
-              MIZAR_NAMESPACE::Options().max_bytes_for_level_base,
+              ROCKSDB_NAMESPACE::Options().max_bytes_for_level_base,
               "Max bytes for level-1");
 
 DEFINE_double(max_bytes_for_level_multiplier, 2,
@@ -539,6 +647,16 @@ DEFINE_uint64(rate_limiter_bytes_per_sec, 0, "Set options.rate_limiter value.");
 
 DEFINE_bool(rate_limit_bg_reads, false,
             "Use options.rate_limiter on compaction reads");
+
+DEFINE_bool(rate_limit_user_ops, false,
+            "When true use Env::IO_USER priority level to charge internal rate "
+            "limiter for reads associated with user operations.");
+
+DEFINE_bool(rate_limit_auto_wal_flush, false,
+            "When true use Env::IO_USER priority level to charge internal rate "
+            "limiter for automatic WAL flush (`Options::manual_wal_flush` == "
+            "false) after the user "
+            "write operation.");
 
 DEFINE_uint64(sst_file_manager_bytes_per_sec, 0,
               "Set `Options::sst_file_manager` to delete at this rate. By "
@@ -581,7 +699,7 @@ DEFINE_int32(ingest_external_file_one_in, 0,
              "every N operations on average.  0 indicates IngestExternalFile() "
              "is disabled.");
 
-DEFINE_int32(ingest_external_file_width, 1000,
+DEFINE_int32(ingest_external_file_width, 100,
              "The width of the ingested external files.");
 
 DEFINE_int32(compact_files_one_in, 0,
@@ -702,23 +820,25 @@ DEFINE_uint64(compression_max_dict_buffer_bytes, 0,
               "Buffering limit for SST file data to sample for dictionary "
               "compression.");
 
+DEFINE_bool(
+    compression_use_zstd_dict_trainer, true,
+    "Use zstd's trainer to generate dictionary. If the options is false, "
+    "zstd's finalizeDictionary() API is used to generate dictionary. "
+    "ZSTD 1.4.5+ is required. If ZSTD 1.4.5+ is not linked with the binary, "
+    "this flag will have the default value true.");
+
 DEFINE_string(bottommost_compression_type, "disable",
               "Algorithm to use to compress bottommost level of the database. "
               "\"disable\" means disabling the feature");
 
 DEFINE_string(checksum_type, "kCRC32c", "Algorithm to use to checksum blocks");
 
-DEFINE_string(hdfs, "",
-              "Name of hdfs environment. Mutually exclusive with"
-              " --env_uri and --fs_uri.");
-
-DEFINE_string(
-    env_uri, "",
-    "URI for env lookup. Mutually exclusive with --hdfs and --fs_uri");
+DEFINE_string(env_uri, "",
+              "URI for env lookup. Mutually exclusive with --fs_uri");
 
 DEFINE_string(fs_uri, "",
               "URI for registry Filesystem lookup. Mutually exclusive"
-              " with --hdfs and --env_uri."
+              " with --env_uri."
               " Creates a default environment with the specified filesystem.");
 
 DEFINE_uint64(ops_per_thread, 1200000, "Number of operations per thread.");
@@ -732,11 +852,6 @@ static const bool FLAGS_log2_keys_per_lock_dummy __attribute__((__unused__)) =
 DEFINE_uint64(max_manifest_file_size, 16384, "Maximum size of a MANIFEST file");
 
 DEFINE_bool(in_place_update, false, "On true, does inplace update in memtable");
-
-DEFINE_int32(secondary_catch_up_one_in, 0,
-             "If non-zero, the secondaries attemp to catch up with the primary "
-             "once for every N operations on average. 0 indicates the "
-             "secondaries do not try to catch up after open.");
 
 DEFINE_string(memtablerep, "skip_list", "");
 
@@ -758,6 +873,10 @@ DEFINE_bool(use_merge, false,
             "On true, replaces all writes with a Merge "
             "that behaves like a Put");
 
+DEFINE_uint32(use_put_entity_one_in, 0,
+              "If greater than zero, PutEntity will be used once per every N "
+              "write ops on average.");
+
 DEFINE_bool(use_full_merge_v1, false,
             "On true, use a merge operator that implement the deprecated "
             "version of FullMerge");
@@ -767,24 +886,24 @@ DEFINE_int32(sync_wal_one_in, 0,
              "on average. 0 indicates that calls to SyncWAL() are disabled.");
 
 DEFINE_bool(avoid_unnecessary_blocking_io,
-            MIZAR_NAMESPACE::Options().avoid_unnecessary_blocking_io,
+            ROCKSDB_NAMESPACE::Options().avoid_unnecessary_blocking_io,
             "If true, some expensive cleaning up operations will be moved from "
             "user reads to high-pri background threads.");
 
 DEFINE_bool(write_dbid_to_manifest,
-            MIZAR_NAMESPACE::Options().write_dbid_to_manifest,
+            ROCKSDB_NAMESPACE::Options().write_dbid_to_manifest,
             "Write DB_ID to manifest");
 
 DEFINE_bool(avoid_flush_during_recovery,
-            MIZAR_NAMESPACE::Options().avoid_flush_during_recovery,
+            ROCKSDB_NAMESPACE::Options().avoid_flush_during_recovery,
             "Avoid flush during recovery");
 
 DEFINE_uint64(max_write_batch_group_size_bytes,
-              MIZAR_NAMESPACE::Options().max_write_batch_group_size_bytes,
+              ROCKSDB_NAMESPACE::Options().max_write_batch_group_size_bytes,
               "Max write batch group size");
 
 DEFINE_bool(level_compaction_dynamic_level_bytes,
-            MIZAR_NAMESPACE::Options().level_compaction_dynamic_level_bytes,
+            ROCKSDB_NAMESPACE::Options().level_compaction_dynamic_level_bytes,
             "Use dynamic level");
 
 DEFINE_int32(verify_checksum_one_in, 0,
@@ -806,7 +925,7 @@ DEFINE_int32(approximate_size_one_in, 64,
              " random key ranges.");
 
 DEFINE_int32(read_fault_one_in, 1000,
-            "On non-zero, enables fault injection on read");
+             "On non-zero, enables fault injection on read");
 
 DEFINE_int32(get_property_one_in, 1000,
              "If non-zero, then DB::GetProperty() will be called to get various"
@@ -822,7 +941,9 @@ DEFINE_bool(sync_fault_injection, false,
 
 DEFINE_bool(best_efforts_recovery, false,
             "If true, use best efforts recovery.");
-DEFINE_bool(skip_verifydb, false, "If true, skip VerifyDb() calls.");
+DEFINE_bool(skip_verifydb, false,
+            "If true, skip VerifyDb() calls and Get()/Iterator verifications"
+            "against expected state.");
 
 DEFINE_bool(enable_compaction_filter, false,
             "If true, configures a compaction filter that returns a kRemove "
@@ -841,6 +962,12 @@ DEFINE_uint64(batch_protection_bytes_per_key, 0,
               "specified number of bytes per key. Currently the only supported "
               "nonzero value is eight.");
 
+DEFINE_uint32(
+    memtable_protection_bytes_per_key, 0,
+    "If nonzero, enables integrity protection in memtable entries at the "
+    "specified number of bytes per key. Currently the supported "
+    "nonzero values are 1, 2, 4 and 8.");
+
 DEFINE_string(file_checksum_impl, "none",
               "Name of an implementation for file_checksum_gen_factory, or "
               "\"none\" for null.");
@@ -856,13 +983,13 @@ DEFINE_int32(open_metadata_write_fault_one_in, 0,
              "On non-zero, enables fault injection on file metadata write "
              "during DB reopen.");
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 DEFINE_string(secondary_cache_uri, "",
               "Full URI for creating a customized secondary cache object");
 DEFINE_int32(secondary_cache_fault_one_in, 0,
              "On non-zero, enables fault injection in secondary cache inserts"
              " and lookups");
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 DEFINE_int32(open_write_fault_one_in, 0,
              "On non-zero, enables fault injection on file writes "
              "during DB reopen.");
@@ -874,9 +1001,78 @@ DEFINE_int32(injest_error_severity, 1,
              "retryable error), 2 is fatal error, and the default is "
              "retryable error.");
 DEFINE_int32(prepopulate_block_cache,
-             static_cast<int32_t>(MIZAR_NAMESPACE::BlockBasedTableOptions::
+             static_cast<int32_t>(ROCKSDB_NAMESPACE::BlockBasedTableOptions::
                                       PrepopulateBlockCache::kDisable),
              "Options related to cache warming (see `enum "
              "PrepopulateBlockCache` in table.h)");
+
+DEFINE_bool(two_write_queues, false,
+            "Set to true to enable two write queues. Default: false");
+#ifndef ROCKSDB_LITE
+
+DEFINE_bool(use_only_the_last_commit_time_batch_for_recovery, false,
+            "If true, the commit-time write batch will not be immediately "
+            "inserted into the memtables. Default: false");
+
+DEFINE_uint64(
+    wp_snapshot_cache_bits, 7ull,
+    "Number of bits to represent write-prepared transaction db's snapshot "
+    "cache. Default: 7 (128 entries)");
+
+DEFINE_uint64(wp_commit_cache_bits, 23ull,
+              "Number of bits to represent write-prepared transaction db's "
+              "commit cache. Default: 23 (8M entries)");
+#endif  // !ROCKSDB_LITE
+
+DEFINE_bool(adaptive_readahead, false,
+            "Carry forward internal auto readahead size from one file to next "
+            "file at each level during iteration");
+DEFINE_bool(
+    async_io, false,
+    "Does asynchronous prefetching when internal auto readahead is enabled");
+
+DEFINE_string(wal_compression, "none",
+              "Algorithm to use for WAL compression. none to disable.");
+
+DEFINE_bool(
+    verify_sst_unique_id_in_manifest, false,
+    "Enable DB options `verify_sst_unique_id_in_manifest`, if true, during "
+    "DB-open try verifying the SST unique id between MANIFEST and SST "
+    "properties.");
+
+DEFINE_int32(
+    create_timestamped_snapshot_one_in, 0,
+    "On non-zero, create timestamped snapshots upon transaction commits.");
+
+DEFINE_bool(allow_data_in_errors,
+            ROCKSDB_NAMESPACE::Options().allow_data_in_errors,
+            "If true, allow logging data, e.g. key, value in LOG files.");
+
+DEFINE_int32(verify_iterator_with_expected_state_one_in, 0,
+             "If non-zero, when TestIterate() is to be called, there is a "
+             "1/verify_iterator_with_expected_state_one_in "
+             "chance that the iterator is verified against the expected state "
+             "file, instead of comparing keys between two iterators.");
+
+DEFINE_uint64(readahead_size, 0, "Iterator readahead size");
+DEFINE_uint64(initial_auto_readahead_size, 0,
+              "Initial auto readahead size for prefetching during Iteration");
+DEFINE_uint64(max_auto_readahead_size, 0,
+              "Max auto readahead size for prefetching during Iteration");
+DEFINE_uint64(
+    num_file_reads_for_auto_readahead, 0,
+    "Num of sequential reads to enable auto prefetching during Iteration");
+
+DEFINE_bool(
+    preserve_unverified_changes, false,
+    "DB files of the current run will all be preserved in `FLAGS_db`. DB files "
+    "from the last run will be preserved in `FLAGS_db/unverified` until the "
+    "first verification succeeds. Expected state files from the last run will "
+    "be preserved similarly under `FLAGS_expected_values_dir/unverified` when "
+    "`--expected_values_dir` is nonempty.");
+
+DEFINE_uint64(stats_dump_period_sec,
+              ROCKSDB_NAMESPACE::Options().stats_dump_period_sec,
+              "Gap between printing stats to log in seconds");
 
 #endif  // GFLAGS

@@ -4,15 +4,15 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
-
-#include "mizar/utilities/checkpoint.h"
+#ifndef ROCKSDB_LITE
 
 #include <string>
-#include "file/filename.h"
-#include "mizar/db.h"
 
-namespace MIZAR_NAMESPACE {
+#include "file/filename.h"
+#include "rocksdb/db.h"
+#include "rocksdb/utilities/checkpoint.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 class CheckpointImpl : public Checkpoint {
  public:
@@ -35,7 +35,8 @@ class CheckpointImpl : public Checkpoint {
       std::function<Status(const std::string& src_dirname,
                            const std::string& fname, uint64_t size_limit_bytes,
                            FileType type, const std::string& checksum_func_name,
-                           const std::string& checksum_val)>
+                           const std::string& checksum_val,
+                           const Temperature src_temperature)>
           copy_file_cb,
       std::function<Status(const std::string& fname,
                            const std::string& contents, FileType type)>
@@ -60,6 +61,6 @@ class CheckpointImpl : public Checkpoint {
   DB* db_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

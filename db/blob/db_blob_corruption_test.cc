@@ -7,7 +7,7 @@
 #include "port/stack_trace.h"
 #include "test_util/sync_point.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBBlobCorruptionTest : public DBTestBase {
  protected:
@@ -34,14 +34,14 @@ class DBBlobCorruptionTest : public DBTestBase {
   }
 };
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_F(DBBlobCorruptionTest, VerifyWholeBlobFileChecksum) {
   Options options = GetDefaultOptions();
   options.enable_blob_files = true;
   options.min_blob_size = 0;
   options.create_if_missing = true;
   options.file_checksum_gen_factory =
-      MIZAR_NAMESPACE::GetFileChecksumGenCrc32cFactory();
+      ROCKSDB_NAMESPACE::GetFileChecksumGenCrc32cFactory();
   Reopen(options);
 
   ASSERT_OK(Put(Slice("key_1"), Slice("blob_value_1")));
@@ -68,14 +68,14 @@ TEST_F(DBBlobCorruptionTest, VerifyWholeBlobFileChecksum) {
   ASSERT_TRUE(db_->VerifyFileChecksums(ReadOptions()).IsCorruption());
   ASSERT_EQ(1, count);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // !MIZAR_LITE
-}  // namespace MIZAR_NAMESPACE
+#endif  // !ROCKSDB_LITE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();

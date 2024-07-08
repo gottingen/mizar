@@ -10,13 +10,13 @@
 
 #include "db/blob/blob_file_reader.h"
 #include "options/cf_options.h"
-#include "mizar/cache.h"
-#include "mizar/slice.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/slice.h"
 #include "test_util/sync_point.h"
 #include "trace_replay/io_tracer.h"
 #include "util/hash.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 BlobFileCache::BlobFileCache(Cache* cache,
                              const ImmutableOptions* immutable_options,
@@ -42,13 +42,13 @@ Status BlobFileCache::GetBlobFileReader(
   assert(blob_file_reader);
   assert(blob_file_reader->IsEmpty());
 
-  const Slice key = GetSlice(&blob_file_number);
+  const Slice key = GetSliceForKey(&blob_file_number);
 
   assert(cache_);
 
-  Cache::Handle* handle = cache_->Lookup(key);
+  TypedHandle* handle = cache_.Lookup(key);
   if (handle) {
-    *blob_file_reader = CacheHandleGuard<BlobFileReader>(cache_, handle);
+    *blob_file_reader = cache_.Guard(handle);
     return Status::OK();
   }
 
@@ -57,9 +57,9 @@ Status BlobFileCache::GetBlobFileReader(
   // Check again while holding mutex
   MutexLock lock(mutex_.get(key));
 
-  handle = cache_->Lookup(key);
+  handle = cache_.Lookup(key);
   if (handle) {
-    *blob_file_reader = CacheHandleGuard<BlobFileReader>(cache_, handle);
+    *blob_file_reader = cache_.Guard(handle);
     return Status::OK();
   }
 
@@ -84,8 +84,7 @@ Status BlobFileCache::GetBlobFileReader(
   {
     constexpr size_t charge = 1;
 
-    const Status s = cache_->Insert(key, reader.get(), charge,
-                                    &DeleteCacheEntry<BlobFileReader>, &handle);
+    const Status s = cache_.Insert(key, reader.get(), charge, &handle);
     if (!s.ok()) {
       RecordTick(statistics, NO_FILE_ERRORS);
       return s;
@@ -94,9 +93,9 @@ Status BlobFileCache::GetBlobFileReader(
 
   reader.release();
 
-  *blob_file_reader = CacheHandleGuard<BlobFileReader>(cache_, handle);
+  *blob_file_reader = cache_.Guard(handle);
 
   return Status::OK();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -1,6 +1,12 @@
+//  Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
+
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "mizar/db.h"
+#include "rocksdb/db.h"
 
 enum OperationType {
   kPut,
@@ -25,11 +31,11 @@ constexpr char db_path[] = "/tmp/testdb";
 // enum. The goal is to capture sanitizer bugs, so the code should be
 // compiled with a given sanitizer (ASan, UBSan, MSan).
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  MIZAR_NAMESPACE::DB* db;
-  MIZAR_NAMESPACE::Options options;
+  ROCKSDB_NAMESPACE::DB* db;
+  ROCKSDB_NAMESPACE::Options options;
   options.create_if_missing = true;
-  MIZAR_NAMESPACE::Status status =
-      MIZAR_NAMESPACE::DB::Open(options, db_path, &db);
+  ROCKSDB_NAMESPACE::Status status =
+      ROCKSDB_NAMESPACE::DB::Open(options, db_path, &db);
   if (!status.ok()) {
     return 0;
   }
@@ -44,18 +50,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       case kPut: {
         std::string key = fuzzed_data.ConsumeRandomLengthString();
         std::string val = fuzzed_data.ConsumeRandomLengthString();
-        db->Put(MIZAR_NAMESPACE::WriteOptions(), key, val);
+        db->Put(ROCKSDB_NAMESPACE::WriteOptions(), key, val);
         break;
       }
       case kGet: {
         std::string key = fuzzed_data.ConsumeRandomLengthString();
         std::string value;
-        db->Get(MIZAR_NAMESPACE::ReadOptions(), key, &value);
+        db->Get(ROCKSDB_NAMESPACE::ReadOptions(), key, &value);
         break;
       }
       case kDelete: {
         std::string key = fuzzed_data.ConsumeRandomLengthString();
-        db->Delete(MIZAR_NAMESPACE::WriteOptions(), key);
+        db->Delete(ROCKSDB_NAMESPACE::WriteOptions(), key);
         break;
       }
       case kGetProperty: {
@@ -65,17 +71,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
         break;
       }
       case kIterator: {
-        MIZAR_NAMESPACE::Iterator* it =
-            db->NewIterator(MIZAR_NAMESPACE::ReadOptions());
+        ROCKSDB_NAMESPACE::Iterator* it =
+            db->NewIterator(ROCKSDB_NAMESPACE::ReadOptions());
         for (it->SeekToFirst(); it->Valid(); it->Next()) {
         }
         delete it;
         break;
       }
       case kSnapshot: {
-        MIZAR_NAMESPACE::ReadOptions snapshot_options;
+        ROCKSDB_NAMESPACE::ReadOptions snapshot_options;
         snapshot_options.snapshot = db->GetSnapshot();
-        MIZAR_NAMESPACE::Iterator* it = db->NewIterator(snapshot_options);
+        ROCKSDB_NAMESPACE::Iterator* it = db->NewIterator(snapshot_options);
         db->ReleaseSnapshot(snapshot_options.snapshot);
         delete it;
         break;
@@ -83,54 +89,54 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
       case kOpenClose: {
         db->Close();
         delete db;
-        status = MIZAR_NAMESPACE::DB::Open(options, db_path, &db);
+        status = ROCKSDB_NAMESPACE::DB::Open(options, db_path, &db);
         if (!status.ok()) {
-          MIZAR_NAMESPACE::DestroyDB(db_path, options);
+          ROCKSDB_NAMESPACE::DestroyDB(db_path, options);
           return 0;
         }
 
         break;
       }
       case kColumn: {
-        MIZAR_NAMESPACE::ColumnFamilyHandle* cf;
-        MIZAR_NAMESPACE::Status s;
-        s = db->CreateColumnFamily(MIZAR_NAMESPACE::ColumnFamilyOptions(),
+        ROCKSDB_NAMESPACE::ColumnFamilyHandle* cf;
+        ROCKSDB_NAMESPACE::Status s;
+        s = db->CreateColumnFamily(ROCKSDB_NAMESPACE::ColumnFamilyOptions(),
                                    "new_cf", &cf);
         s = db->DestroyColumnFamilyHandle(cf);
         db->Close();
         delete db;
 
         // open DB with two column families
-        std::vector<MIZAR_NAMESPACE::ColumnFamilyDescriptor> column_families;
+        std::vector<ROCKSDB_NAMESPACE::ColumnFamilyDescriptor> column_families;
         // have to open default column family
-        column_families.push_back(MIZAR_NAMESPACE::ColumnFamilyDescriptor(
-            MIZAR_NAMESPACE::kDefaultColumnFamilyName,
-            MIZAR_NAMESPACE::ColumnFamilyOptions()));
+        column_families.push_back(ROCKSDB_NAMESPACE::ColumnFamilyDescriptor(
+            ROCKSDB_NAMESPACE::kDefaultColumnFamilyName,
+            ROCKSDB_NAMESPACE::ColumnFamilyOptions()));
         // open the new one, too
-        column_families.push_back(MIZAR_NAMESPACE::ColumnFamilyDescriptor(
-            "new_cf", MIZAR_NAMESPACE::ColumnFamilyOptions()));
-        std::vector<MIZAR_NAMESPACE::ColumnFamilyHandle*> handles;
-        s = MIZAR_NAMESPACE::DB::Open(MIZAR_NAMESPACE::DBOptions(), db_path,
+        column_families.push_back(ROCKSDB_NAMESPACE::ColumnFamilyDescriptor(
+            "new_cf", ROCKSDB_NAMESPACE::ColumnFamilyOptions()));
+        std::vector<ROCKSDB_NAMESPACE::ColumnFamilyHandle*> handles;
+        s = ROCKSDB_NAMESPACE::DB::Open(ROCKSDB_NAMESPACE::DBOptions(), db_path,
                                         column_families, &handles, &db);
 
         if (s.ok()) {
           std::string key1 = fuzzed_data.ConsumeRandomLengthString();
           std::string val1 = fuzzed_data.ConsumeRandomLengthString();
           std::string key2 = fuzzed_data.ConsumeRandomLengthString();
-          s = db->Put(MIZAR_NAMESPACE::WriteOptions(), handles[1], key1,
+          s = db->Put(ROCKSDB_NAMESPACE::WriteOptions(), handles[1], key1,
                       val1);
           std::string value;
-          s = db->Get(MIZAR_NAMESPACE::ReadOptions(), handles[1], key2,
+          s = db->Get(ROCKSDB_NAMESPACE::ReadOptions(), handles[1], key2,
                       &value);
           s = db->DropColumnFamily(handles[1]);
           for (auto handle : handles) {
             s = db->DestroyColumnFamilyHandle(handle);
           }
         } else {
-          status = MIZAR_NAMESPACE::DB::Open(options, db_path, &db);
+          status = ROCKSDB_NAMESPACE::DB::Open(options, db_path, &db);
           if (!status.ok()) {
             // At this point there is no saving to do. So we exit
-            MIZAR_NAMESPACE::DestroyDB(db_path, MIZAR_NAMESPACE::Options());
+            ROCKSDB_NAMESPACE::DestroyDB(db_path, ROCKSDB_NAMESPACE::Options());
             return 0;
           }
         }
@@ -140,25 +146,27 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
         std::string slice_start = fuzzed_data.ConsumeRandomLengthString();
         std::string slice_end = fuzzed_data.ConsumeRandomLengthString();
 
-        MIZAR_NAMESPACE::Slice begin(slice_start);
-        MIZAR_NAMESPACE::Slice end(slice_end);
-        MIZAR_NAMESPACE::CompactRangeOptions options;
-        MIZAR_NAMESPACE::Status s = db->CompactRange(options, &begin, &end);
+        ROCKSDB_NAMESPACE::Slice begin(slice_start);
+        ROCKSDB_NAMESPACE::Slice end(slice_end);
+        ROCKSDB_NAMESPACE::CompactRangeOptions options;
+        ROCKSDB_NAMESPACE::Status s = db->CompactRange(options, &begin, &end);
         break;
       }
       case kSeekForPrev: {
         std::string key = fuzzed_data.ConsumeRandomLengthString();
-        auto iter = db->NewIterator(MIZAR_NAMESPACE::ReadOptions());
+        auto iter = db->NewIterator(ROCKSDB_NAMESPACE::ReadOptions());
         iter->SeekForPrev(key);
         delete iter;
         break;
       }
+      case OP_COUNT:
+        break;
     }
   }
 
   // Cleanup DB
   db->Close();
   delete db;
-  MIZAR_NAMESPACE::DestroyDB(db_path, options);
+  ROCKSDB_NAMESPACE::DestroyDB(db_path, options);
   return 0;
 }

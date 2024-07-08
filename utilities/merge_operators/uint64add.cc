@@ -6,18 +6,18 @@
 #include <memory>
 
 #include "logging/logging.h"
-#include "mizar/env.h"
-#include "mizar/merge_operator.h"
-#include "mizar/slice.h"
+#include "rocksdb/env.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
 #include "util/coding.h"
 #include "utilities/merge_operators.h"
 
-namespace { // anonymous namespace
+namespace {  // anonymous namespace
 
-using MIZAR_NAMESPACE::AssociativeMergeOperator;
-using MIZAR_NAMESPACE::InfoLogLevel;
-using MIZAR_NAMESPACE::Logger;
-using MIZAR_NAMESPACE::Slice;
+using ROCKSDB_NAMESPACE::AssociativeMergeOperator;
+using ROCKSDB_NAMESPACE::InfoLogLevel;
+using ROCKSDB_NAMESPACE::Logger;
+using ROCKSDB_NAMESPACE::Slice;
 
 // A 'model' merge operator with uint64 addition semantics
 // Implemented as an AssociativeMergeOperator for simplicity and example.
@@ -27,14 +27,14 @@ class UInt64AddOperator : public AssociativeMergeOperator {
              const Slice& value, std::string* new_value,
              Logger* logger) const override {
     uint64_t orig_value = 0;
-    if (existing_value){
+    if (existing_value) {
       orig_value = DecodeInteger(*existing_value, logger);
     }
     uint64_t operand = DecodeInteger(value, logger);
 
     assert(new_value);
     new_value->clear();
-    MIZAR_NAMESPACE::PutFixed64(new_value, orig_value + operand);
+    ROCKSDB_NAMESPACE::PutFixed64(new_value, orig_value + operand);
 
     return true;  // Return true always since corruption will be treated as 0
   }
@@ -51,7 +51,7 @@ class UInt64AddOperator : public AssociativeMergeOperator {
     uint64_t result = 0;
 
     if (value.size() == sizeof(uint64_t)) {
-      result = MIZAR_NAMESPACE::DecodeFixed64(value.data());
+      result = ROCKSDB_NAMESPACE::DecodeFixed64(value.data());
     } else if (logger != nullptr) {
       // If value is corrupted, treat it as 0
       ROCKS_LOG_ERROR(logger,
@@ -66,10 +66,10 @@ class UInt64AddOperator : public AssociativeMergeOperator {
 
 }  // anonymous namespace
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 std::shared_ptr<MergeOperator> MergeOperators::CreateUInt64AddOperator() {
   return std::make_shared<UInt64AddOperator>();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

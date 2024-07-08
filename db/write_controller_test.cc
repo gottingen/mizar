@@ -8,10 +8,10 @@
 #include <array>
 #include <ratio>
 
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace {
 class TimeSetClock : public SystemClockWrapper {
  public:
@@ -20,7 +20,7 @@ class TimeSetClock : public SystemClockWrapper {
   uint64_t now_micros_ = 6666;
   uint64_t NowNanos() override { return now_micros_ * std::milli::den; }
 };
-}  // namespace
+}  // anonymous namespace
 class WriteControllerTest : public testing::Test {
  public:
   WriteControllerTest() { clock_ = std::make_shared<TimeSetClock>(); }
@@ -239,9 +239,10 @@ TEST_F(WriteControllerTest, CreditAccumulation) {
   ASSERT_EQ(10 SECS, controller.GetDelay(clock_.get(), 10 MB));
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

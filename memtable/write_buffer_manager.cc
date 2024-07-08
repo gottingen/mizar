@@ -7,15 +7,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "mizar/write_buffer_manager.h"
+#include "rocksdb/write_buffer_manager.h"
+
+#include <memory>
 
 #include "cache/cache_entry_roles.h"
 #include "cache/cache_reservation_manager.h"
 #include "db/db_impl/db_impl.h"
-#include "mizar/status.h"
+#include "rocksdb/status.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 WriteBufferManager::WriteBufferManager(size_t _buffer_size,
                                        std::shared_ptr<Cache> cache,
                                        bool allow_stall)
@@ -26,17 +28,18 @@ WriteBufferManager::WriteBufferManager(size_t _buffer_size,
       cache_res_mgr_(nullptr),
       allow_stall_(allow_stall),
       stall_active_(false) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   if (cache) {
     // Memtable's memory usage tends to fluctuate frequently
     // therefore we set delayed_decrease = true to save some dummy entry
     // insertion on memory increase right after memory decrease
-    cache_res_mgr_.reset(
-        new CacheReservationManager(cache, true /* delayed_decrease */));
+    cache_res_mgr_ = std::make_shared<
+        CacheReservationManagerImpl<CacheEntryRole::kWriteBuffer>>(
+        cache, true /* delayed_decrease */);
   }
 #else
   (void)cache;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
 WriteBufferManager::~WriteBufferManager() {
@@ -67,7 +70,7 @@ void WriteBufferManager::ReserveMem(size_t mem) {
 
 // Should only be called from write thread
 void WriteBufferManager::ReserveMemWithCache(size_t mem) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   assert(cache_res_mgr_ != nullptr);
   // Use a mutex to protect various data structures. Can be optimized to a
   // lock-free solution if it ends up with a performance bottleneck.
@@ -75,19 +78,17 @@ void WriteBufferManager::ReserveMemWithCache(size_t mem) {
 
   size_t new_mem_used = memory_used_.load(std::memory_order_relaxed) + mem;
   memory_used_.store(new_mem_used, std::memory_order_relaxed);
-  Status s =
-      cache_res_mgr_->UpdateCacheReservation<CacheEntryRole::kWriteBuffer>(
-          new_mem_used);
+  Status s = cache_res_mgr_->UpdateCacheReservation(new_mem_used);
 
   // We absorb the error since WriteBufferManager is not able to handle
   // this failure properly. Ideallly we should prevent this allocation
-  // from happening if this cache reservation fails.
+  // from happening if this cache charging fails.
   // [TODO] We'll need to improve it in the future and figure out what to do on
   // error
   s.PermitUncheckedError();
 #else
   (void)mem;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
 void WriteBufferManager::ScheduleFreeMem(size_t mem) {
@@ -107,16 +108,14 @@ void WriteBufferManager::FreeMem(size_t mem) {
 }
 
 void WriteBufferManager::FreeMemWithCache(size_t mem) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   assert(cache_res_mgr_ != nullptr);
   // Use a mutex to protect various data structures. Can be optimized to a
   // lock-free solution if it ends up with a performance bottleneck.
   std::lock_guard<std::mutex> lock(cache_res_mgr_mu_);
   size_t new_mem_used = memory_used_.load(std::memory_order_relaxed) - mem;
   memory_used_.store(new_mem_used, std::memory_order_relaxed);
-  Status s =
-      cache_res_mgr_->UpdateCacheReservation<CacheEntryRole::kWriteBuffer>(
-          new_mem_used);
+  Status s = cache_res_mgr_->UpdateCacheReservation(new_mem_used);
 
   // We absorb the error since WriteBufferManager is not able to handle
   // this failure properly.
@@ -125,7 +124,7 @@ void WriteBufferManager::FreeMemWithCache(size_t mem) {
   s.PermitUncheckedError();
 #else
   (void)mem;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
 void WriteBufferManager::BeginWriteStall(StallInterface* wbm_stall) {
@@ -200,4 +199,4 @@ void WriteBufferManager::RemoveDBFromQueue(StallInterface* wbm_stall) {
   wbm_stall->Signal();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

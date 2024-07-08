@@ -13,11 +13,12 @@
 #include <memory>
 #include <string>
 
+#include "cache/cache_reservation_manager.h"
 #include "port/port.h"
-#include "mizar/flush_block_policy.h"
-#include "mizar/table.h"
+#include "rocksdb/flush_block_policy.h"
+#include "rocksdb/table.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 struct ColumnFamilyOptions;
 struct ConfigOptions;
 struct DBOptions;
@@ -79,7 +80,7 @@ class BlockBasedTableFactory : public TableFactory {
 
  protected:
   const void* GetOptionsPtr(const std::string& name) const override;
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   Status ParseOption(const ConfigOptions& config_options,
                      const OptionTypeInfo& opt_info,
                      const std::string& opt_name, const std::string& opt_value,
@@ -89,6 +90,7 @@ class BlockBasedTableFactory : public TableFactory {
 
  private:
   BlockBasedTableOptions table_options_;
+  std::shared_ptr<CacheReservationManager> table_reader_cache_res_mgr_;
   mutable TailPrefetchStats tail_prefetch_stats_;
 };
 
@@ -96,4 +98,4 @@ extern const std::string kHashIndexPrefixesBlock;
 extern const std::string kHashIndexPrefixesMetadataBlock;
 extern const std::string kPropTrue;
 extern const std::string kPropFalse;
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

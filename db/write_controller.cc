@@ -10,9 +10,9 @@
 #include <cassert>
 #include <ratio>
 
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 std::unique_ptr<WriteControllerToken> WriteController::GetStopToken() {
   ++total_stopped_;
@@ -118,4 +118,4 @@ CompactionPressureToken::~CompactionPressureToken() {
   assert(controller_->total_compaction_pressure_ >= 0);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

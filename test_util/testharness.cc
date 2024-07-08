@@ -13,7 +13,7 @@
 #include <string>
 #include <thread>
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace test {
 
 #ifdef OS_WIN
@@ -28,8 +28,7 @@ std::string GetPidStr() { return std::to_string(getpid()); }
   if (s.ok()) {
     return ::testing::AssertionSuccess();
   } else {
-    return ::testing::AssertionFailure() << s_expr << std::endl
-                                         << s.ToString();
+    return ::testing::AssertionFailure() << s_expr << std::endl << s.ToString();
   }
 }
 
@@ -69,8 +68,6 @@ TestRegex::TestRegex(const char* pattern)
 
 const std::string& TestRegex::GetPattern() const { return pattern_; }
 
-// Sorry about code duplication with regex.cc, but it doesn't support LITE
-// due to exception handling
 class TestRegex::Impl : public std::regex {
  public:
   using std::regex::basic_regex;
@@ -107,4 +104,4 @@ bool TestRegex::Matches(const std::string& str) const {
 }
 
 }  // namespace test
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

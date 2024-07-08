@@ -9,13 +9,13 @@
 #include <cinttypes>
 #include <cstdio>
 
-#include "mizar/convenience.h"
-#include "mizar/statistics.h"
-#include "mizar/utilities/customizable_util.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/statistics.h"
+#include "rocksdb/utilities/customizable_util.h"
+#include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // The order of items listed in  Tickers should be the same as
 // the order listed in TickersNameMap
@@ -222,7 +222,20 @@ const std::vector<std::pair<Tickers, std::string>> TickersNameMap = {
     {HOT_FILE_READ_COUNT, "rocksdb.hot.file.read.count"},
     {WARM_FILE_READ_COUNT, "rocksdb.warm.file.read.count"},
     {COLD_FILE_READ_COUNT, "rocksdb.cold.file.read.count"},
-};
+    {LAST_LEVEL_READ_BYTES, "rocksdb.last.level.read.bytes"},
+    {LAST_LEVEL_READ_COUNT, "rocksdb.last.level.read.count"},
+    {NON_LAST_LEVEL_READ_BYTES, "rocksdb.non.last.level.read.bytes"},
+    {NON_LAST_LEVEL_READ_COUNT, "rocksdb.non.last.level.read.count"},
+    {BLOCK_CHECKSUM_COMPUTE_COUNT, "rocksdb.block.checksum.compute.count"},
+    {MULTIGET_COROUTINE_COUNT, "rocksdb.multiget.coroutine.count"},
+    {BLOB_DB_CACHE_MISS, "rocksdb.blobdb.cache.miss"},
+    {BLOB_DB_CACHE_HIT, "rocksdb.blobdb.cache.hit"},
+    {BLOB_DB_CACHE_ADD, "rocksdb.blobdb.cache.add"},
+    {BLOB_DB_CACHE_ADD_FAILURES, "rocksdb.blobdb.cache.add.failures"},
+    {BLOB_DB_CACHE_BYTES_READ, "rocksdb.blobdb.cache.bytes.read"},
+    {BLOB_DB_CACHE_BYTES_WRITE, "rocksdb.blobdb.cache.bytes.write"},
+    {READ_ASYNC_MICROS, "rocksdb.read.async.micros"},
+    {ASYNC_READ_ERROR_COUNT, "rocksdb.async.read.error.count"}};
 
 const std::vector<std::pair<Histograms, std::string>> HistogramsNameMap = {
     {DB_GET, "rocksdb.db.get.micros"},
@@ -279,13 +292,19 @@ const std::vector<std::pair<Histograms, std::string>> HistogramsNameMap = {
     {NUM_SST_READ_PER_LEVEL, "rocksdb.num.sst.read.per.level"},
     {ERROR_HANDLER_AUTORESUME_RETRY_COUNT,
      "rocksdb.error.handler.autoresume.retry.count"},
+    {ASYNC_READ_BYTES, "rocksdb.async.read.bytes"},
+    {POLL_WAIT_MICROS, "rocksdb.poll.wait.micros"},
+    {PREFETCHED_BYTES_DISCARDED, "rocksdb.prefetched.bytes.discarded"},
+    {MULTIGET_IO_BATCH_SIZE, "rocksdb.multiget.io.batch.size"},
+    {NUM_LEVEL_READ_PER_MULTIGET, "rocksdb.num.level.read.per.multiget"},
+    {ASYNC_PREFETCH_ABORT_MICROS, "rocksdb.async.prefetch.abort.micros"},
 };
 
 std::shared_ptr<Statistics> CreateDBStatistics() {
   return std::make_shared<StatisticsImpl>(nullptr);
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 static int RegisterBuiltinStatistics(ObjectLibrary& library,
                                      const std::string& /*arg*/) {
   library.AddFactory<Statistics>(
@@ -297,17 +316,17 @@ static int RegisterBuiltinStatistics(ObjectLibrary& library,
       });
   return 1;
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 Status Statistics::CreateFromString(const ConfigOptions& config_options,
                                     const std::string& id,
                                     std::shared_ptr<Statistics>* result) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   static std::once_flag once;
   std::call_once(once, [&]() {
     RegisterBuiltinStatistics(*(ObjectLibrary::Default().get()), "");
   });
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   Status s;
   if (id == "" || id == StatisticsImpl::kClassName()) {
     result->reset(new StatisticsImpl(nullptr));
@@ -320,11 +339,11 @@ Status Statistics::CreateFromString(const ConfigOptions& config_options,
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> stats_type_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     {"inner", OptionTypeInfo::AsCustomSharedPtr<Statistics>(
                   0, OptionVerificationType::kByNameAllowFromNull,
                   OptionTypeFlags::kCompareNever)},
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 };
 
 StatisticsImpl::StatisticsImpl(std::shared_ptr<Statistics> stats)
@@ -452,7 +471,7 @@ namespace {
 // a buffer size used for temp string buffers
 const int kTmpStrBufferSize = 200;
 
-} // namespace
+}  // namespace
 
 std::string StatisticsImpl::ToString() const {
   MutexLock lock(&aggregate_lock_);
@@ -505,4 +524,4 @@ bool StatisticsImpl::HistEnabledForType(uint32_t type) const {
   return type < HISTOGRAM_ENUM_MAX;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

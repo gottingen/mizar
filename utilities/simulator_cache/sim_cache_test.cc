@@ -3,14 +3,14 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "mizar/utilities/sim_cache.h"
+#include "rocksdb/utilities/sim_cache.h"
 
 #include <cstdlib>
 
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class SimCacheTest : public DBTestBase {
  private:
@@ -36,7 +36,7 @@ class SimCacheTest : public DBTestBase {
     Options options = CurrentOptions();
     options.create_if_missing = true;
     // options.compression = kNoCompression;
-    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
     options.table_factory.reset(NewBlockBasedTableFactory(table_options));
     return options;
   }
@@ -44,7 +44,7 @@ class SimCacheTest : public DBTestBase {
   void InitTable(const Options& /*options*/) {
     std::string value(kValueSize, 'a');
     for (size_t i = 0; i < kNumBlocks * 2; i++) {
-      ASSERT_OK(Put(ToString(i), value.c_str()));
+      ASSERT_OK(Put(std::to_string(i), value.c_str()));
     }
   }
 
@@ -98,7 +98,7 @@ TEST_F(SimCacheTest, SimCache) {
   // Load blocks into cache.
   for (size_t i = 0; i < kNumBlocks; i++) {
     iter = db_->NewIterator(read_options);
-    iter->Seek(ToString(i));
+    iter->Seek(std::to_string(i));
     ASSERT_OK(iter->status());
     CheckCacheCounters(options, 1, 0, 1, 0);
     iterators[i].reset(iter);
@@ -115,8 +115,8 @@ TEST_F(SimCacheTest, SimCache) {
   // Test with strict capacity limit.
   simCache->SetStrictCapacityLimit(true);
   iter = db_->NewIterator(read_options);
-  iter->Seek(ToString(kNumBlocks * 2 - 1));
-  ASSERT_TRUE(iter->status().IsIncomplete());
+  iter->Seek(std::to_string(kNumBlocks * 2 - 1));
+  ASSERT_TRUE(iter->status().IsMemoryLimit());
   CheckCacheCounters(options, 1, 0, 0, 1);
   delete iter;
   iter = nullptr;
@@ -129,14 +129,14 @@ TEST_F(SimCacheTest, SimCache) {
   // Add kNumBlocks again
   for (size_t i = 0; i < kNumBlocks; i++) {
     std::unique_ptr<Iterator> it(db_->NewIterator(read_options));
-    it->Seek(ToString(i));
+    it->Seek(std::to_string(i));
     ASSERT_OK(it->status());
     CheckCacheCounters(options, 0, 1, 0, 0);
   }
   ASSERT_EQ(5, simCache->get_hit_counter());
   for (size_t i = kNumBlocks; i < kNumBlocks * 2; i++) {
     std::unique_ptr<Iterator> it(db_->NewIterator(read_options));
-    it->Seek(ToString(i));
+    it->Seek(std::to_string(i));
     ASSERT_OK(it->status());
     CheckCacheCounters(options, 1, 0, 1, 0);
   }
@@ -217,10 +217,10 @@ TEST_F(SimCacheTest, SimCacheLogging) {
   ASSERT_GT(fsize, max_size - 100);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

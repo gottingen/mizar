@@ -3,22 +3,22 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/sst_file_reader.h"
+#include "rocksdb/sst_file_reader.h"
 
 #include "db/arena_wrapped_db_iter.h"
 #include "db/db_iter.h"
 #include "db/dbformat.h"
 #include "file/random_access_file_reader.h"
 #include "options/cf_options.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
 #include "table/get_context.h"
 #include "table/table_builder.h"
 #include "table/table_reader.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 struct SstFileReader::Rep {
   Options options;
@@ -96,6 +96,6 @@ Status SstFileReader::VerifyChecksum(const ReadOptions& read_options) {
                                             TableReaderCaller::kSSTFileReader);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

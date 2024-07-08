@@ -4,17 +4,16 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #include "util/stop_watch.h"
-#ifndef MIZAR_LITE
-
-#include "tools/simulated_hybrid_file_system.h"
+#ifndef ROCKSDB_LITE
 
 #include <algorithm>
 #include <sstream>
 #include <string>
 
-#include "mizar/rate_limiter.h"
+#include "rocksdb/rate_limiter.h"
+#include "tools/simulated_hybrid_file_system.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 const int64_t kUsPerSec = 1000000;
 const int64_t kDummyBytesPerUs = 1024;
@@ -241,6 +240,6 @@ IOStatus SimulatedWritableFile::Sync(const IOOptions& options,
   }
   return target()->Sync(options, dbg);
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

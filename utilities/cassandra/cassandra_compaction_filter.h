@@ -6,11 +6,11 @@
 #pragma once
 #include <string>
 
-#include "mizar/compaction_filter.h"
-#include "mizar/slice.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/slice.h"
 #include "utilities/cassandra/cassandra_options.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace cassandra {
 
 /**
@@ -25,18 +25,18 @@ namespace cassandra {
  * promoted to kValue type after serials of merging in compaction.
  */
 class CassandraCompactionFilter : public CompactionFilter {
-public:
- explicit CassandraCompactionFilter(bool purge_ttl_on_expiration,
-                                    int32_t gc_grace_period_in_seconds);
- static const char* kClassName() { return "CassandraCompactionFilter"; }
- const char* Name() const override { return kClassName(); }
+ public:
+  explicit CassandraCompactionFilter(bool purge_ttl_on_expiration,
+                                     int32_t gc_grace_period_in_seconds);
+  static const char* kClassName() { return "CassandraCompactionFilter"; }
+  const char* Name() const override { return kClassName(); }
 
- virtual Decision FilterV2(int level, const Slice& key, ValueType value_type,
-                           const Slice& existing_value, std::string* new_value,
-                           std::string* skip_until) const override;
+  virtual Decision FilterV2(int level, const Slice& key, ValueType value_type,
+                            const Slice& existing_value, std::string* new_value,
+                            std::string* skip_until) const override;
 
-private:
- CassandraOptions options_;
+ private:
+  CassandraOptions options_;
 };
 
 class CassandraCompactionFilterFactory : public CompactionFilterFactory {
@@ -54,4 +54,4 @@ class CassandraCompactionFilterFactory : public CompactionFilterFactory {
   CassandraOptions options_;
 };
 }  // namespace cassandra
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

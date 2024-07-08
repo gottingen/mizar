@@ -3,12 +3,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#include "util/defer.h"
+
 #include "port/port.h"
 #include "port/stack_trace.h"
 #include "test_util/testharness.h"
-#include "util/defer.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DeferTest {};
 
@@ -41,10 +42,10 @@ TEST(SaveAndRestoreTest, BlockScope) {
   ASSERT_EQ(v, 1);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

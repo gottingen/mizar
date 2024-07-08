@@ -8,14 +8,15 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include "table/two_level_iterator.h"
+
 #include "db/pinned_iterators_manager.h"
 #include "memory/arena.h"
-#include "mizar/options.h"
-#include "mizar/table.h"
+#include "rocksdb/options.h"
+#include "rocksdb/table.h"
 #include "table/block_based/block.h"
 #include "table/format.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 
@@ -216,4 +217,4 @@ InternalIteratorBase<IndexValue>* NewTwoLevelIterator(
     InternalIteratorBase<IndexValue>* first_level_iter) {
   return new TwoLevelIndexIterator(state, first_level_iter);
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,10 +5,11 @@
 //
 
 #include "logging/env_logger.h"
+
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 // In this test we only want to Log some simple log message with
@@ -153,9 +154,10 @@ TEST_F(EnvLoggerTest, ConcurrentLogging) {
   DeleteLogFile();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

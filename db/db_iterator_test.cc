@@ -14,13 +14,13 @@
 #include "db/db_test_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/iostats_context.h"
-#include "mizar/perf_context.h"
+#include "rocksdb/iostats_context.h"
+#include "rocksdb/perf_context.h"
 #include "table/block_based/flush_block_policy.h"
 #include "util/random.h"
 #include "utilities/merge_operators/string_append/stringappend2.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // A dumb ReadCallback which saying every key is committed.
 class DummyReadCallback : public ReadCallback {
@@ -111,9 +111,12 @@ TEST_P(DBIteratorTest, PersistedTierOnIterator) {
 TEST_P(DBIteratorTest, NonBlockingIteration) {
   do {
     ReadOptions non_blocking_opts, regular_opts;
-    Options options = CurrentOptions();
-    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+    anon::OptionsOverride options_override;
+    options_override.full_block_cache = true;
+    Options options = CurrentOptions(options_override);
+    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
     non_blocking_opts.read_tier = kBlockCacheTier;
+
     CreateAndReopenWithCF({"pikachu"}, options);
     // write one kv to the database.
     ASSERT_OK(Put(1, "a", "b"));
@@ -233,7 +236,7 @@ namespace {
 std::string MakeLongKey(size_t length, char c) {
   return std::string(length, c);
 }
-}  // namespace
+}  // anonymous namespace
 
 TEST_P(DBIteratorTest, IterLongKeys) {
   ASSERT_OK(Put(MakeLongKey(20, 0), "0"));
@@ -540,7 +543,7 @@ TEST_P(DBIteratorTest, IterReseek) {
   Options options = CurrentOptions(options_override);
   options.max_sequential_skip_in_iterations = 3;
   options.create_if_missing = true;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   CreateAndReopenWithCF({"pikachu"}, options);
 
@@ -624,7 +627,7 @@ TEST_F(DBIteratorTest, ReseekUponDirectionChange) {
   Options options = GetDefaultOptions();
   options.create_if_missing = true;
   options.prefix_extractor.reset(NewFixedPrefixTransform(1));
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   options.merge_operator.reset(
       new StringAppendTESTOperator(/*delim_char=*/' '));
   DestroyAndReopen(options);
@@ -888,7 +891,7 @@ TEST_P(DBIteratorTest, IteratorDeleteAfterCfDrop) {
 }
 
 // SetOptions not defined in ROCKSDB LITE
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_P(DBIteratorTest, DBIteratorBoundTest) {
   Options options = CurrentOptions();
   options.env = env_;
@@ -1034,7 +1037,8 @@ TEST_P(DBIteratorTest, DBIteratorBoundTest) {
     iter->Next();
 
     ASSERT_TRUE(iter->Valid());
-    ASSERT_EQ(static_cast<int>(get_perf_context()->internal_delete_skipped_count), 2);
+    ASSERT_EQ(
+        static_cast<int>(get_perf_context()->internal_delete_skipped_count), 2);
 
     // now testing with iterate_bound
     Slice prefix("c");
@@ -1057,7 +1061,8 @@ TEST_P(DBIteratorTest, DBIteratorBoundTest) {
     // even though the key is deleted
     // hence internal_delete_skipped_count should be 0
     ASSERT_TRUE(!iter->Valid());
-    ASSERT_EQ(static_cast<int>(get_perf_context()->internal_delete_skipped_count), 0);
+    ASSERT_EQ(
+        static_cast<int>(get_perf_context()->internal_delete_skipped_count), 0);
   }
 }
 
@@ -1065,7 +1070,7 @@ TEST_P(DBIteratorTest, DBIteratorBoundMultiSeek) {
   Options options = CurrentOptions();
   options.env = env_;
   options.create_if_missing = true;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   options.prefix_extractor = nullptr;
   DestroyAndReopen(options);
   ASSERT_OK(Put("a", "0"));
@@ -1120,10 +1125,10 @@ TEST_P(DBIteratorTest, DBIteratorBoundOptimizationTest) {
   for (auto format_version : {2, 3, 4}) {
     int upper_bound_hits = 0;
     Options options = CurrentOptions();
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
         "BlockBasedTableIterator:out_of_bound",
         [&upper_bound_hits](void*) { upper_bound_hits++; });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     options.env = env_;
     options.create_if_missing = true;
     options.prefix_extractor = nullptr;
@@ -1171,7 +1176,7 @@ TEST_P(DBIteratorTest, IndexWithFirstKey) {
     options.create_if_missing = true;
     options.prefix_extractor = nullptr;
     options.merge_operator = MergeOperators::CreateStringAppendOperator();
-    options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+    options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
     Statistics* stats = options.statistics.get();
     BlockBasedTableOptions table_options;
     table_options.index_type =
@@ -1292,7 +1297,7 @@ TEST_P(DBIteratorTest, IndexWithFirstKeyGet) {
   options.create_if_missing = true;
   options.prefix_extractor = nullptr;
   options.merge_operator = MergeOperators::CreateStringAppendOperator();
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   Statistics* stats = options.statistics.get();
   BlockBasedTableOptions table_options;
   table_options.index_type =
@@ -1533,7 +1538,7 @@ class DBIteratorTestForPinnedData : public DBIteratorTest {
     }
 
     delete iter;
-}
+  }
 };
 
 #if !defined(ROCKSDB_VALGRIND_RUN) || defined(ROCKSDB_FULL_VALGRIND_RUN)
@@ -1559,7 +1564,7 @@ INSTANTIATE_TEST_CASE_P(DBIteratorTestForPinnedDataInstance,
                         DBIteratorTestForPinnedData,
                         testing::Values(true, false));
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_P(DBIteratorTest, PinnedDataIteratorMultipleFiles) {
   Options options = CurrentOptions();
   BlockBasedTableOptions table_options;
@@ -2089,7 +2094,7 @@ TEST_P(DBIteratorTest, IterPrevKeyCrossingBlocksRandomized) {
 
 TEST_P(DBIteratorTest, IteratorWithLocalStatistics) {
   Options options = CurrentOptions();
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   Random rnd(301);
@@ -2177,8 +2182,8 @@ TEST_P(DBIteratorTest, IteratorWithLocalStatistics) {
   ASSERT_EQ(TestGetTickerCount(options, NUMBER_DB_PREV), (uint64_t)total_prev);
   ASSERT_EQ(TestGetTickerCount(options, NUMBER_DB_PREV_FOUND),
             (uint64_t)total_prev_found);
-  ASSERT_EQ(TestGetTickerCount(options, ITER_BYTES_READ), (uint64_t)total_bytes);
-
+  ASSERT_EQ(TestGetTickerCount(options, ITER_BYTES_READ),
+            (uint64_t)total_bytes);
 }
 
 TEST_P(DBIteratorTest, ReadAhead) {
@@ -2187,7 +2192,7 @@ TEST_P(DBIteratorTest, ReadAhead) {
   options.env = env_;
   options.disable_auto_compactions = true;
   options.write_buffer_size = 4 << 20;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions table_options;
   table_options.block_size = 1024;
   table_options.no_block_cache = true;
@@ -2211,9 +2216,9 @@ TEST_P(DBIteratorTest, ReadAhead) {
     ASSERT_OK(Put(Key(i), value));
   }
   ASSERT_OK(Flush());
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   ASSERT_EQ("1,1,1", FilesPerLevel());
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
   env_->random_read_bytes_counter_ = 0;
   options.statistics->setTickerCount(NO_FILE_OPENS, 0);
@@ -2265,7 +2270,7 @@ TEST_P(DBIteratorTest, DBIteratorSkipRecentDuplicatesTest) {
   options.max_sequential_skip_in_iterations = 3;
   options.prefix_extractor = nullptr;
   options.write_buffer_size = 1 << 27;  // big enough to avoid flush
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   // Insert.
@@ -2280,7 +2285,7 @@ TEST_P(DBIteratorTest, DBIteratorSkipRecentDuplicatesTest) {
     ASSERT_OK(Put("b", std::to_string(i + 1).c_str()));
   }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   // Check that memtable wasn't flushed.
   std::string val;
   ASSERT_TRUE(db_->GetProperty("rocksdb.num-files-at-level0", &val));
@@ -2307,8 +2312,8 @@ TEST_P(DBIteratorTest, DBIteratorSkipRecentDuplicatesTest) {
   EXPECT_EQ(get_perf_context()->internal_merge_count, 0);
   EXPECT_GE(get_perf_context()->internal_recent_skipped_count, 2);
   EXPECT_GE(get_perf_context()->seek_on_memtable_count, 2);
-  EXPECT_EQ(1, options.statistics->getTickerCount(
-                 NUMBER_OF_RESEEKS_IN_ITERATION));
+  EXPECT_EQ(1,
+            options.statistics->getTickerCount(NUMBER_OF_RESEEKS_IN_ITERATION));
 }
 
 TEST_P(DBIteratorTest, Refresh) {
@@ -2561,7 +2566,7 @@ TEST_P(DBIteratorTest, UpperBoundWithPrevReseek) {
 
 TEST_P(DBIteratorTest, SkipStatistics) {
   Options options = CurrentOptions();
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
 
   int skip_count = 0;
@@ -2589,7 +2594,7 @@ TEST_P(DBIteratorTest, SkipStatistics) {
   }
   ASSERT_EQ(count, 3);
   delete iter;
-  skip_count += 8; // 3 deletes + 3 original keys + 2 lower in sequence
+  skip_count += 8;  // 3 deletes + 3 original keys + 2 lower in sequence
   ASSERT_EQ(skip_count, TestGetTickerCount(options, NUMBER_ITER_SKIP));
 
   iter = NewIterator(ReadOptions());
@@ -2600,7 +2605,7 @@ TEST_P(DBIteratorTest, SkipStatistics) {
   }
   ASSERT_EQ(count, 3);
   delete iter;
-  skip_count += 8; // Same as above, but in reverse order
+  skip_count += 8;  // Same as above, but in reverse order
   ASSERT_EQ(skip_count, TestGetTickerCount(options, NUMBER_ITER_SKIP));
 
   ASSERT_OK(Put("aa", "1"));
@@ -2618,18 +2623,18 @@ TEST_P(DBIteratorTest, SkipStatistics) {
 
   iter = NewIterator(ro);
   count = 0;
-  for(iter->Seek("aa"); iter->Valid(); iter->Next()) {
+  for (iter->Seek("aa"); iter->Valid(); iter->Next()) {
     ASSERT_OK(iter->status());
     count++;
   }
   ASSERT_EQ(count, 1);
   delete iter;
-  skip_count += 6; // 3 deletes + 3 original keys
+  skip_count += 6;  // 3 deletes + 3 original keys
   ASSERT_EQ(skip_count, TestGetTickerCount(options, NUMBER_ITER_SKIP));
 
   iter = NewIterator(ro);
   count = 0;
-  for(iter->SeekToLast(); iter->Valid(); iter->Prev()) {
+  for (iter->SeekToLast(); iter->Valid(); iter->Prev()) {
     ASSERT_OK(iter->status());
     count++;
   }
@@ -3157,7 +3162,7 @@ TEST_F(DBIteratorWithReadCallbackTest, ReadCallback) {
   uint64_t num_versions =
       CurrentOptions().max_sequential_skip_in_iterations + 10;
   for (uint64_t i = 0; i < num_versions; i++) {
-    ASSERT_OK(Put("bar", ToString(i)));
+    ASSERT_OK(Put("bar", std::to_string(i)));
   }
   SequenceNumber seq3 = db_->GetLatestSequenceNumber();
   TestReadCallback callback2(seq3);
@@ -3186,7 +3191,7 @@ TEST_F(DBIteratorWithReadCallbackTest, ReadCallback) {
   ASSERT_TRUE(iter->Valid());
   ASSERT_OK(iter->status());
   ASSERT_EQ("bar", iter->key());
-  ASSERT_EQ(ToString(num_versions - 1), iter->value());
+  ASSERT_EQ(std::to_string(num_versions - 1), iter->value());
 
   delete iter;
 }
@@ -3229,10 +3234,32 @@ TEST_F(DBIteratorTest, BackwardIterationOnInplaceUpdateMemtable) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+TEST_F(DBIteratorTest, IteratorRefreshReturnSV) {
+  Options options = CurrentOptions();
+  options.disable_auto_compactions = true;
+  DestroyAndReopen(options);
+  ASSERT_OK(
+      db_->DeleteRange(WriteOptions(), db_->DefaultColumnFamily(), "a", "z"));
+  std::unique_ptr<Iterator> iter{db_->NewIterator(ReadOptions())};
+  SyncPoint::GetInstance()->SetCallBack(
+      "ArenaWrappedDBIter::Refresh:SV", [&](void*) {
+        ASSERT_OK(db_->Put(WriteOptions(), "dummy", "new SV"));
+        // This makes the local SV obselete.
+        ASSERT_OK(Flush());
+        SyncPoint::GetInstance()->DisableProcessing();
+      });
+  SyncPoint::GetInstance()->EnableProcessing();
+  ASSERT_OK(iter->Refresh());
+  iter.reset();
+  // iter used to not cleanup SV, so the Close() below would hit an assertion
+  // error.
+  Close();
+}
+
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

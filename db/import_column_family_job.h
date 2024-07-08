@@ -1,3 +1,9 @@
+//  Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
+
 #pragma once
 #include <string>
 #include <unordered_set>
@@ -7,12 +13,12 @@
 #include "db/external_sst_file_ingestion_job.h"
 #include "db/snapshot_impl.h"
 #include "options/db_options.h"
-#include "mizar/db.h"
-#include "mizar/metadata.h"
-#include "mizar/sst_file_writer.h"
+#include "rocksdb/db.h"
+#include "rocksdb/metadata.h"
+#include "rocksdb/sst_file_writer.h"
 #include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 struct EnvOptions;
 class SystemClock;
 
@@ -73,4 +79,4 @@ class ImportColumnFamilyJob {
   const std::shared_ptr<IOTracer> io_tracer_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

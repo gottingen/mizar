@@ -7,11 +7,11 @@
 
 #include <cstdint>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace blob_db {
 
@@ -52,5 +52,5 @@ class BlobDBGarbageCollectionStats {
 };
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

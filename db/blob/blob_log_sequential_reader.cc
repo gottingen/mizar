@@ -10,7 +10,7 @@
 #include "monitoring/statistics.h"
 #include "util/stop_watch.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 BlobLogSequentialReader::BlobLogSequentialReader(
     std::unique_ptr<RandomAccessFileReader>&& file_reader, SystemClock* clock,
@@ -28,8 +28,10 @@ Status BlobLogSequentialReader::ReadSlice(uint64_t size, Slice* slice,
   assert(file_);
 
   StopWatch read_sw(clock_, statistics_, BLOB_DB_BLOB_FILE_READ_MICROS);
-  Status s = file_->Read(IOOptions(), next_byte_, static_cast<size_t>(size),
-                         slice, buf, nullptr);
+  // TODO: rate limit `BlobLogSequentialReader` reads (it appears unused?)
+  Status s =
+      file_->Read(IOOptions(), next_byte_, static_cast<size_t>(size), slice,
+                  buf, nullptr, Env::IO_TOTAL /* rate_limiter_priority */);
   next_byte_ += size;
   if (!s.ok()) {
     return s;
@@ -129,4 +131,4 @@ Status BlobLogSequentialReader::ReadFooter(BlobLogFooter* footer) {
   return footer->DecodeFrom(buffer_);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

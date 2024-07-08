@@ -79,6 +79,9 @@ quasardb uses a heavily tuned RocksDB as its persistence layer.
 ## TiKV
 [TiKV](https://github.com/pingcap/tikv) is a GEO-replicated, high-performance, distributed, transactional key-value database. TiKV is powered by Rust and Raft. TiKV uses RocksDB as its persistence layer.
 
+## Apache Spark
+[Spark Structured Streaming](https://docs.databricks.com/structured-streaming/rocksdb-state-store.html) uses RocksDB as the local state store.
+
 ## Apache Flink
 [Apache Flink](https://flink.apache.org/news/2016/03/08/release-1.0.0.html) uses RocksDB to store state locally on a machine.
 
@@ -121,6 +124,8 @@ LzLabs is using RocksDB as a storage engine in their multi-database distributed 
 ## Kafka
 [Kafka](https://kafka.apache.org/) is an open-source distributed event streaming platform, it uses RocksDB to store state in Kafka Streams: https://www.confluent.io/blog/how-to-tune-rocksdb-kafka-streams-state-stores-performance/.
 
+## Solana Labs
+[Solana](https://github.com/solana-labs/solana) is a fast, secure, scalable, and decentralized blockchain.  It uses RocksDB as the underlying storage for its ledger store.
+
 ## Others
 More databases using RocksDB can be found at [dbdb.io](https://dbdb.io/browse?embeds=rocksdb).
-

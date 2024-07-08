@@ -8,19 +8,22 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #pragma once
 #include <errno.h>
-#if defined(MIZAR_IOURING_PRESENT)
+#if defined(ROCKSDB_IOURING_PRESENT)
 #include <liburing.h>
 #include <sys/uio.h>
 #endif
 #include <unistd.h>
+
 #include <atomic>
 #include <functional>
 #include <map>
 #include <string>
+
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
-#include "mizar/io_status.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/io_status.h"
+#include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 #include "util/thread_local.h"
 
@@ -32,9 +35,15 @@
 #define POSIX_FADV_SEQUENTIAL 2 /* [MC1] expect sequential page refs */
 #define POSIX_FADV_WILLNEED 3   /* [MC1] will need these pages */
 #define POSIX_FADV_DONTNEED 4   /* [MC1] don't need these pages */
+
+#define POSIX_MADV_NORMAL 0     /* [MC1] no further special treatment */
+#define POSIX_MADV_RANDOM 1     /* [MC1] expect random page refs */
+#define POSIX_MADV_SEQUENTIAL 2 /* [MC1] expect sequential page refs */
+#define POSIX_MADV_WILLNEED 3   /* [MC1] will need these pages */
+#define POSIX_MADV_DONTNEED 4   /* [MC1] don't need these pages */
 #endif
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 std::string IOErrorMsg(const std::string& context,
                        const std::string& file_name);
 // file_name can be left empty if it is not unkown.
@@ -48,6 +57,107 @@ class PosixHelper {
   static Status GetLogicalBlockSizeOfDirectory(const std::string& directory,
                                                size_t* size);
 };
+
+/*
+ * DirectIOHelper
+ */
+inline bool IsSectorAligned(const size_t off, size_t sector_size) {
+  assert((sector_size & (sector_size - 1)) == 0);
+  return (off & (sector_size - 1)) == 0;
+}
+
+#ifndef NDEBUG
+inline bool IsSectorAligned(const void* ptr, size_t sector_size) {
+  return uintptr_t(ptr) % sector_size == 0;
+}
+#endif
+
+#if defined(ROCKSDB_IOURING_PRESENT)
+struct Posix_IOHandle {
+  Posix_IOHandle(struct io_uring* _iu,
+                 std::function<void(const FSReadRequest&, void*)> _cb,
+                 void* _cb_arg, uint64_t _offset, size_t _len, char* _scratch,
+                 bool _use_direct_io, size_t _alignment)
+      : iu(_iu),
+        cb(_cb),
+        cb_arg(_cb_arg),
+        offset(_offset),
+        len(_len),
+        scratch(_scratch),
+        use_direct_io(_use_direct_io),
+        alignment(_alignment),
+        is_finished(false),
+        req_count(0) {}
+
+  struct iovec iov;
+  struct io_uring* iu;
+  std::function<void(const FSReadRequest&, void*)> cb;
+  void* cb_arg;
+  uint64_t offset;
+  size_t len;
+  char* scratch;
+  bool use_direct_io;
+  size_t alignment;
+  bool is_finished;
+  // req_count is used by AbortIO API to keep track of number of requests.
+  uint32_t req_count;
+};
+
+inline void UpdateResult(struct io_uring_cqe* cqe, const std::string& file_name,
+                         size_t len, size_t iov_len, bool async_read,
+                         bool use_direct_io, size_t alignment,
+                         size_t& finished_len, FSReadRequest* req,
+                         size_t& bytes_read, bool& read_again) {
+  read_again = false;
+  if (cqe->res < 0) {
+    req->result = Slice(req->scratch, 0);
+    req->status = IOError("Req failed", file_name, cqe->res);
+  } else {
+    bytes_read = static_cast<size_t>(cqe->res);
+    TEST_SYNC_POINT_CALLBACK("UpdateResults::io_uring_result", &bytes_read);
+    if (bytes_read == iov_len) {
+      req->result = Slice(req->scratch, req->len);
+      req->status = IOStatus::OK();
+    } else if (bytes_read == 0) {
+      /// cqe->res == 0 can means EOF, or can mean partial results. See
+      // comment
+      // https://github.com/facebook/rocksdb/pull/6441#issuecomment-589843435
+      // Fall back to pread in this case.
+      if (use_direct_io && !IsSectorAligned(finished_len, alignment)) {
+        // Bytes reads don't fill sectors. Should only happen at the end
+        // of the file.
+        req->result = Slice(req->scratch, finished_len);
+        req->status = IOStatus::OK();
+      } else {
+        if (async_read) {
+          // No  bytes read. It can means EOF. In case of partial results, it's
+          // caller responsibility to call read/readasync again.
+          req->result = Slice(req->scratch, 0);
+          req->status = IOStatus::OK();
+        } else {
+          read_again = true;
+        }
+      }
+    } else if (bytes_read < iov_len) {
+      assert(bytes_read > 0);
+      if (async_read) {
+        req->result = Slice(req->scratch, bytes_read);
+        req->status = IOStatus::OK();
+      } else {
+        assert(bytes_read + finished_len < len);
+        finished_len += bytes_read;
+      }
+    } else {
+      req->result = Slice(req->scratch, 0);
+      req->status = IOError("Req returned more bytes than requested", file_name,
+                            cqe->res);
+    }
+  }
+#ifdef NDEBUG
+  (void)len;
+#endif
+}
+#endif
 
 #ifdef OS_LINUX
 // Files under a specific directory have the same logical block size.
@@ -132,8 +242,7 @@ class PosixSequentialFile : public FSSequentialFile {
 
  public:
   PosixSequentialFile(const std::string& fname, FILE* file, int fd,
-                      size_t logical_block_size,
-                      const EnvOptions& options);
+                      size_t logical_block_size, const EnvOptions& options);
   virtual ~PosixSequentialFile();
 
   virtual IOStatus Read(size_t n, const IOOptions& opts, Slice* result,
@@ -149,7 +258,7 @@ class PosixSequentialFile : public FSSequentialFile {
   }
 };
 
-#if defined(MIZAR_IOURING_PRESENT)
+#if defined(ROCKSDB_IOURING_PRESENT)
 // io_uring instance queue depth
 const unsigned int kIoUringDepth = 256;
 
@@ -167,7 +276,7 @@ inline struct io_uring* CreateIOUring() {
   }
   return new_io_uring;
 }
-#endif  // defined(MIZAR_IOURING_PRESENT)
+#endif  // defined(ROCKSDB_IOURING_PRESENT)
 
 class PosixRandomAccessFile : public FSRandomAccessFile {
  protected:
@@ -175,15 +284,14 @@ class PosixRandomAccessFile : public FSRandomAccessFile {
   int fd_;
   bool use_direct_io_;
   size_t logical_sector_size_;
-#if defined(MIZAR_IOURING_PRESENT)
+#if defined(ROCKSDB_IOURING_PRESENT)
   ThreadLocalPtr* thread_local_io_urings_;
 #endif
 
  public:
   PosixRandomAccessFile(const std::string& fname, int fd,
-                        size_t logical_block_size,
-                        const EnvOptions& options
-#if defined(MIZAR_IOURING_PRESENT)
+                        size_t logical_block_size, const EnvOptions& options
+#if defined(ROCKSDB_IOURING_PRESENT)
                         ,
                         ThreadLocalPtr* thread_local_io_urings
 #endif
@@ -210,6 +318,11 @@ class PosixRandomAccessFile : public FSRandomAccessFile {
   virtual size_t GetRequiredBufferAlignment() const override {
     return logical_sector_size_;
   }
+  // EXPERIMENTAL
+  virtual IOStatus ReadAsync(
+      FSReadRequest& req, const IOOptions& opts,
+      std::function<void(const FSReadRequest&, void*)> cb, void* cb_arg,
+      void** io_handle, IOHandleDeleter* del_fn, IODebugContext* dbg) override;
 };
 
 class PosixWritableFile : public FSWritableFile {
@@ -219,15 +332,15 @@ class PosixWritableFile : public FSWritableFile {
   int fd_;
   uint64_t filesize_;
   size_t logical_sector_size_;
-#ifdef MIZAR_FALLOCATE_PRESENT
+#ifdef ROCKSDB_FALLOCATE_PRESENT
   bool allow_fallocate_;
   bool fallocate_with_keep_size_;
 #endif
-#ifdef MIZAR_RANGESYNC_PRESENT
+#ifdef ROCKSDB_RANGESYNC_PRESENT
   // Even if the syscall is present, the filesystem may still not properly
   // support it, so we need to do a dynamic check too.
   bool sync_file_range_supported_;
-#endif  // MIZAR_RANGESYNC_PRESENT
+#endif  // ROCKSDB_RANGESYNC_PRESENT
 
  public:
   explicit PosixWritableFile(const std::string& fname, int fd,
@@ -268,7 +381,7 @@ class PosixWritableFile : public FSWritableFile {
   virtual size_t GetRequiredBufferAlignment() const override {
     return logical_sector_size_;
   }
-#ifdef MIZAR_FALLOCATE_PRESENT
+#ifdef ROCKSDB_FALLOCATE_PRESENT
   virtual IOStatus Allocate(uint64_t offset, uint64_t len,
                             const IOOptions& opts,
                             IODebugContext* dbg) override;
@@ -293,10 +406,10 @@ class PosixMmapReadableFile : public FSRandomAccessFile {
   PosixMmapReadableFile(const int fd, const std::string& fname, void* base,
                         size_t length, const EnvOptions& options);
   virtual ~PosixMmapReadableFile();
-  virtual IOStatus Read(uint64_t offset, size_t n, const IOOptions& opts,
-                        Slice* result, char* scratch,
-                        IODebugContext* dbg) const override;
-  virtual IOStatus InvalidateCache(size_t offset, size_t length) override;
+  IOStatus Read(uint64_t offset, size_t n, const IOOptions& opts, Slice* result,
+                char* scratch, IODebugContext* dbg) const override;
+  void Hint(AccessPattern pattern) override;
+  IOStatus InvalidateCache(size_t offset, size_t length) override;
 };
 
 class PosixMmapFile : public FSWritableFile {
@@ -310,7 +423,7 @@ class PosixMmapFile : public FSWritableFile {
   char* dst_;             // Where to write next  (in range [base_,limit_])
   char* last_sync_;       // Where have we synced up to
   uint64_t file_offset_;  // Offset of base_ in file
-#ifdef MIZAR_FALLOCATE_PRESENT
+#ifdef ROCKSDB_FALLOCATE_PRESENT
   bool allow_fallocate_;  // If false, fallocate calls are bypassed
   bool fallocate_with_keep_size_;
 #endif
@@ -353,7 +466,7 @@ class PosixMmapFile : public FSWritableFile {
   virtual uint64_t GetFileSize(const IOOptions& opts,
                                IODebugContext* dbg) override;
   virtual IOStatus InvalidateCache(size_t offset, size_t length) override;
-#ifdef MIZAR_FALLOCATE_PRESENT
+#ifdef ROCKSDB_FALLOCATE_PRESENT
   virtual IOStatus Allocate(uint64_t offset, uint64_t len,
                             const IOOptions& opts,
                             IODebugContext* dbg) override;
@@ -391,9 +504,11 @@ struct PosixMemoryMappedFileBuffer : public MemoryMappedFileBuffer {
 
 class PosixDirectory : public FSDirectory {
  public:
-  explicit PosixDirectory(int fd);
+  explicit PosixDirectory(int fd, const std::string& directory_name);
   ~PosixDirectory();
   virtual IOStatus Fsync(const IOOptions& opts, IODebugContext* dbg) override;
+
+  virtual IOStatus Close(const IOOptions& opts, IODebugContext* dbg) override;
 
   virtual IOStatus FsyncWithDirOptions(
       const IOOptions&, IODebugContext*,
@@ -402,6 +517,7 @@ class PosixDirectory : public FSDirectory {
  private:
   int fd_;
   bool is_btrfs_;
+  const std::string directory_name_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

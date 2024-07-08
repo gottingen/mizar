@@ -4,9 +4,9 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#include "mizar/types.h"
+#include "rocksdb/types.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 enum class SnapshotCheckerResult : int {
   kInSnapshot = 0,
@@ -33,10 +33,9 @@ class DisableGCSnapshotChecker : public SnapshotChecker {
     // By returning kNotInSnapshot, we prevent all the values from being GCed
     return SnapshotCheckerResult::kNotInSnapshot;
   }
-  static DisableGCSnapshotChecker* Instance() { return &instance_; }
+  static DisableGCSnapshotChecker* Instance();
 
  protected:
-  static DisableGCSnapshotChecker instance_;
   explicit DisableGCSnapshotChecker() {}
 };
 
@@ -53,9 +52,9 @@ class WritePreparedSnapshotChecker : public SnapshotChecker {
       SequenceNumber sequence, SequenceNumber snapshot_sequence) const override;
 
  private:
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   const WritePreparedTxnDB* const txn_db_;
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,11 +5,11 @@
 
 #include "db/wal_edit.h"
 
-#include "mizar/slice.h"
-#include "mizar/status.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/status.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 void WalAddition::EncodeTo(std::string* dst) const {
   PutVarint64(dst, number_);
@@ -112,26 +112,33 @@ Status WalSet::AddWal(const WalAddition& wal) {
 
   auto it = wals_.lower_bound(wal.GetLogNumber());
   bool existing = it != wals_.end() && it->first == wal.GetLogNumber();
-  if (existing && !wal.GetMetadata().HasSyncedSize()) {
+
+  if (!existing) {
+    wals_.insert(it, {wal.GetLogNumber(), wal.GetMetadata()});
+    return Status::OK();
+  }
+
+  assert(existing);
+  if (!wal.GetMetadata().HasSyncedSize()) {
     std::stringstream ss;
     ss << "WAL " << wal.GetLogNumber() << " is created more than once";
     return Status::Corruption("WalSet::AddWal", ss.str());
   }
-  // If the WAL has synced size, it must >= the previous size.
-  if (wal.GetMetadata().HasSyncedSize() && existing &&
-      it->second.HasSyncedSize() &&
-      wal.GetMetadata().GetSyncedSizeInBytes() <
-          it->second.GetSyncedSizeInBytes()) {
-    std::stringstream ss;
-    ss << "WAL " << wal.GetLogNumber()
-       << " must not have smaller synced size than previous one";
-    return Status::Corruption("WalSet::AddWal", ss.str());
+
+  assert(wal.GetMetadata().HasSyncedSize());
+  if (it->second.HasSyncedSize() && wal.GetMetadata().GetSyncedSizeInBytes() <=
+                                        it->second.GetSyncedSizeInBytes()) {
+    // This is possible because version edits with different synced WAL sizes
+    // for the same WAL can be committed out-of-order. For example, thread
+    // 1 synces the first 10 bytes of 1.log, while thread 2 synces the first 20
+    // bytes of 1.log. It's possible that thread 1 calls LogAndApply() after
+    // thread 2.
+    // In this case, just return ok.
+    return Status::OK();
   }
-  if (existing) {
-    it->second.SetSyncedSizeInBytes(wal.GetMetadata().GetSyncedSizeInBytes());
-  } else {
-    wals_.insert(it, {wal.GetLogNumber(), wal.GetMetadata()});
-  }
+
+  // Update synced size for the given WAL.
+  it->second.SetSyncedSizeInBytes(wal.GetMetadata().GetSyncedSizeInBytes());
   return Status::OK();
 }
 
@@ -201,4 +208,4 @@ Status WalSet::CheckWals(
   return s;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

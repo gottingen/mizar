@@ -6,12 +6,13 @@
 #pragma once
 
 #include <ctime>
+
 #include "memory/arena.h"
 #include "port/sys_time.h"
-#include "mizar/env.h"
+#include "rocksdb/env.h"
 #include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Logger;
 
@@ -35,8 +36,8 @@ class LogBuffer {
  private:
   // One log entry with its timestamp
   struct BufferedLog {
-    struct timeval now_tv;  // Timestamp of the log
-    char message[1];        // Beginning of log message
+    port::TimeVal now_tv;  // Timestamp of the log
+    char message[1];       // Beginning of log message
   };
 
   const InfoLogLevel log_level_;
@@ -53,4 +54,4 @@ extern void LogToBuffer(LogBuffer* log_buffer, size_t max_log_size,
 // Same as previous function, but with default max log size.
 extern void LogToBuffer(LogBuffer* log_buffer, const char* format, ...);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

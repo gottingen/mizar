@@ -2,23 +2,23 @@
 // Copyright (c) 2011 The LevelDB Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/ttl/db_ttl_impl.h"
 
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "logging/logging.h"
-#include "mizar/convenience.h"
-#include "mizar/env.h"
-#include "mizar/iterator.h"
-#include "mizar/system_clock.h"
-#include "mizar/utilities/db_ttl.h"
-#include "mizar/utilities/object_registry.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
+#include "rocksdb/system_clock.h"
+#include "rocksdb/utilities/db_ttl.h"
+#include "rocksdb/utilities/object_registry.h"
+#include "rocksdb/utilities/options_type.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 static std::unordered_map<std::string, OptionTypeInfo> ttl_merge_op_type_info =
     {{"user_operator",
       OptionTypeInfo::AsCustomSharedPtr<MergeOperator>(
@@ -68,6 +68,7 @@ bool TtlMergeOperator::FullMergeV2(const MergeOperationInput& merge_in,
                             merge_in.logger),
         &user_merge_out);
   }
+  merge_out->op_failure_scope = user_merge_out.op_failure_scope;
 
   // Return false if the user merge operator returned false
   if (!good) {
@@ -325,18 +326,6 @@ Status DBWithTTLImpl::Close() {
     closed_ = true;
   }
   return ret;
-}
-
-Status UtilityDB::OpenTtlDB(const Options& options, const std::string& dbname,
-                            StackableDB** dbptr, int32_t ttl, bool read_only) {
-  DBWithTTL* db;
-  Status s = DBWithTTL::Open(options, dbname, &db, ttl, read_only);
-  if (s.ok()) {
-    *dbptr = db;
-  } else {
-    *dbptr = nullptr;
-  }
-  return s;
 }
 
 void DBWithTTLImpl::RegisterTtlClasses() {
@@ -607,16 +596,15 @@ Iterator* DBWithTTLImpl::NewIterator(const ReadOptions& opts,
   return new TtlIterator(db_->NewIterator(opts, column_family));
 }
 
-void DBWithTTLImpl::SetTtl(ColumnFamilyHandle *h, int32_t ttl) {
+void DBWithTTLImpl::SetTtl(ColumnFamilyHandle* h, int32_t ttl) {
   std::shared_ptr<TtlCompactionFilterFactory> filter;
   Options opts;
   opts = GetOptions(h);
   filter = std::static_pointer_cast<TtlCompactionFilterFactory>(
-                                       opts.compaction_filter_factory);
-  if (!filter)
-    return;
+      opts.compaction_filter_factory);
+  if (!filter) return;
   filter->SetTtl(ttl);
 }
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

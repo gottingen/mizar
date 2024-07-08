@@ -13,9 +13,9 @@ RocksDB options can be provided using a file or any string to RocksDB. The forma
 
 ```c++
 #include <string>
-#include "mizar/db.h"
-#include "mizar/table.h"
-#include "mizar/utilities/convenience.h"
+#include "rocksdb/db.h"
+#include "rocksdb/table.h"
+#include "rocksdb/utilities/convenience.h"
 
 using namespace rocksdb;                                                                                           
 

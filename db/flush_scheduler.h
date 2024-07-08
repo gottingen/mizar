@@ -12,7 +12,7 @@
 
 #include "util/autovector.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class ColumnFamilyData;
 
@@ -52,4 +52,4 @@ class FlushScheduler {
 #endif  // NDEBUG
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

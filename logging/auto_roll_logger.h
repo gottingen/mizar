@@ -17,11 +17,11 @@
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class FileSystem;
 class SystemClock;
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 // Rolls the log file by size and/or time
 class AutoRollLogger : public Logger {
  public:
@@ -40,9 +40,7 @@ class AutoRollLogger : public Logger {
   virtual void LogHeader(const char* format, va_list ap) override;
 
   // check if the logger has encountered any problem.
-  Status GetStatus() {
-    return status_;
-  }
+  Status GetStatus() { return status_; }
 
   size_t GetLogFileSize() const override {
     if (!logger_) {
@@ -101,9 +99,7 @@ class AutoRollLogger : public Logger {
   }
 
   // Expose the log file path for testing purpose
-  std::string TEST_log_fname() const {
-    return log_fname_;
-  }
+  std::string TEST_log_fname() const { return log_fname_; }
 
   uint64_t TEST_ctime() const { return ctime_; }
 
@@ -134,7 +130,7 @@ class AutoRollLogger : public Logger {
   std::string ValistToString(const char* format, va_list args) const;
   // Write the logs marked as headers to the new log file
   void WriteHeaderInfo();
-  std::string log_fname_; // Current active info log's file name.
+  std::string log_fname_;  // Current active info log's file name.
   std::string dbname_;
   std::string db_log_dir_;
   std::string db_absolute_path_;
@@ -162,11 +158,11 @@ class AutoRollLogger : public Logger {
   IODebugContext io_context_;
   mutable port::Mutex mutex_;
 };
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
 // Facade to craete logger automatically
 Status CreateLoggerFromOptions(const std::string& dbname,
                                const DBOptions& options,
                                std::shared_ptr<Logger>* logger);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

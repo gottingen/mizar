@@ -11,9 +11,9 @@
 
 #include "db_stress_tool/db_stress_common.h"
 #include "db_stress_tool/db_stress_shared_state.h"
-#include "mizar/compaction_filter.h"
+#include "rocksdb/compaction_filter.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // DbStressCompactionFilter is safe to use with db_stress as it does not perform
 // any mutation. It only makes `kRemove` decisions for keys that are already
@@ -36,9 +36,14 @@ class DbStressCompactionFilter : public CompactionFilter {
       return Decision::kKeep;
     }
     uint64_t key_num = 0;
-    bool ok = GetIntVal(key.ToString(), &key_num);
-    assert(ok);
-    (void)ok;
+    {
+      Slice ukey_without_ts = key;
+      assert(ukey_without_ts.size() >= FLAGS_user_timestamp_size);
+      ukey_without_ts.remove_suffix(FLAGS_user_timestamp_size);
+      [[maybe_unused]] bool ok =
+          GetIntVal(ukey_without_ts.ToString(), &key_num);
+      assert(ok);
+    }
     port::Mutex* key_mutex = state_->GetMutexForKey(cf_id_, key_num);
     if (!key_mutex->TryLock()) {
       return Decision::kKeep;
@@ -46,11 +51,12 @@ class DbStressCompactionFilter : public CompactionFilter {
     // Reaching here means we acquired the lock.
 
     bool key_exists = state_->Exists(cf_id_, key_num);
+    const bool allow_overwrite = state_->AllowsOverwrite(key_num);
 
     key_mutex->Unlock();
 
     if (!key_exists) {
-      return Decision::kRemove;
+      return allow_overwrite ? Decision::kRemove : Decision::kPurge;
     }
     return Decision::kKeep;
   }
@@ -87,4 +93,4 @@ class DbStressCompactionFilterFactory : public CompactionFilterFactory {
   SharedState* state_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

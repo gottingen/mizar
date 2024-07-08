@@ -3,13 +3,13 @@
 // COPYING file in the root directory) and Apache 2.0 License
 // (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/lock/lock_manager.h"
 
 #include "utilities/transactions/lock/point/point_lock_manager.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 std::shared_ptr<LockManager> NewLockManager(PessimisticTransactionDB* db,
                                             const TransactionDBOptions& opt) {
@@ -24,6 +24,6 @@ std::shared_ptr<LockManager> NewLockManager(PessimisticTransactionDB* db,
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

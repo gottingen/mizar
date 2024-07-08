@@ -5,14 +5,15 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
-#include <memory>
-#include <string>
+#ifndef ROCKSDB_LITE
 #include <stdint.h>
 
-#include "mizar/table.h"
+#include <memory>
+#include <string>
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/table.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 struct EnvOptions;
 
@@ -177,6 +178,5 @@ class PlainTableFactory : public TableFactory {
   PlainTableOptions table_options_;
 };
 
-
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

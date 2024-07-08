@@ -8,8 +8,8 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 // Syncpoint prevents us building and running tests in release
-#ifndef MIZAR_LITE
-#include "mizar/utilities/checkpoint.h"
+#ifndef ROCKSDB_LITE
+#include "rocksdb/utilities/checkpoint.h"
 
 #ifndef OS_WIN
 #include <unistd.h>
@@ -22,16 +22,16 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/utilities/transaction_db.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "utilities/fault_injection_env.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class CheckpointTest : public testing::Test {
  protected:
   // Sequence of option configurations to try
@@ -78,9 +78,9 @@ class CheckpointTest : public testing::Test {
   }
 
   ~CheckpointTest() override {
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({});
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
     if (cfh_reverse_comp_) {
       EXPECT_OK(db_->DestroyColumnFamilyHandle(cfh_reverse_comp_));
       cfh_reverse_comp_ = nullptr;
@@ -136,9 +136,8 @@ class CheckpointTest : public testing::Test {
     ASSERT_OK(TryReopenWithColumnFamilies(cfs, options));
   }
 
-  Status TryReopenWithColumnFamilies(
-      const std::vector<std::string>& cfs,
-      const std::vector<Options>& options) {
+  Status TryReopenWithColumnFamilies(const std::vector<std::string>& cfs,
+                                     const std::vector<Options>& options) {
     Close();
     EXPECT_EQ(cfs.size(), options.size());
     std::vector<ColumnFamilyDescriptor> column_families;
@@ -156,9 +155,7 @@ class CheckpointTest : public testing::Test {
     return TryReopenWithColumnFamilies(cfs, v_opts);
   }
 
-  void Reopen(const Options& options) {
-    ASSERT_OK(TryReopen(options));
-  }
+  void Reopen(const Options& options) { ASSERT_OK(TryReopen(options)); }
 
   void CompactAll() {
     for (auto h : handles_) {
@@ -223,9 +220,7 @@ class CheckpointTest : public testing::Test {
     return db_->Put(wo, handles_[cf], k, v);
   }
 
-  Status Delete(const std::string& k) {
-    return db_->Delete(WriteOptions(), k);
-  }
+  Status Delete(const std::string& k) { return db_->Delete(WriteOptions(), k); }
 
   Status Delete(int cf, const std::string& k) {
     return db_->Delete(WriteOptions(), handles_[cf], k);
@@ -465,11 +460,11 @@ TEST_F(CheckpointTest, ExportColumnFamilyNegativeTest) {
 TEST_F(CheckpointTest, CheckpointCF) {
   Options options = CurrentOptions();
   CreateAndReopenWithCF({"one", "two", "three", "four", "five"}, options);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"CheckpointTest::CheckpointCF:2", "DBImpl::GetLiveFiles:2"},
        {"DBImpl::GetLiveFiles:1", "CheckpointTest::CheckpointCF:1"}});
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   ASSERT_OK(Put(0, "Default", "Default"));
   ASSERT_OK(Put(1, "one", "one"));
@@ -484,7 +479,7 @@ TEST_F(CheckpointTest, CheckpointCF) {
   std::vector<ColumnFamilyHandle*> cphandles;
 
   // Take a snapshot
-  MIZAR_NAMESPACE::port::Thread t([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t([&]() {
     Checkpoint* checkpoint;
     ASSERT_OK(Checkpoint::Create(db_, &checkpoint));
     ASSERT_OK(checkpoint->CreateCheckpoint(snapshot_name_));
@@ -499,7 +494,7 @@ TEST_F(CheckpointTest, CheckpointCF) {
   ASSERT_OK(Put(5, "five", "fifteen"));
   TEST_SYNC_POINT("CheckpointTest::CheckpointCF:2");
   t.join();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_OK(Put(1, "one", "twentyone"));
   ASSERT_OK(Put(2, "two", "twentytwo"));
   ASSERT_OK(Put(3, "three", "twentythree"));
@@ -512,18 +507,18 @@ TEST_F(CheckpointTest, CheckpointCF) {
   std::vector<std::string> cfs;
   cfs = {kDefaultColumnFamilyName, "one", "two", "three", "four", "five"};
   std::vector<ColumnFamilyDescriptor> column_families;
-    for (size_t i = 0; i < cfs.size(); ++i) {
-      column_families.push_back(ColumnFamilyDescriptor(cfs[i], options));
-    }
-  ASSERT_OK(DB::Open(options, snapshot_name_,
-        column_families, &cphandles, &snapshotDB));
+  for (size_t i = 0; i < cfs.size(); ++i) {
+    column_families.push_back(ColumnFamilyDescriptor(cfs[i], options));
+  }
+  ASSERT_OK(DB::Open(options, snapshot_name_, column_families, &cphandles,
+                     &snapshotDB));
   ASSERT_OK(snapshotDB->Get(roptions, cphandles[0], "Default", &result));
   ASSERT_EQ("Default1", result);
   ASSERT_OK(snapshotDB->Get(roptions, cphandles[1], "one", &result));
   ASSERT_EQ("eleven", result);
   ASSERT_OK(snapshotDB->Get(roptions, cphandles[2], "two", &result));
   for (auto h : cphandles) {
-      delete h;
+    delete h;
   }
   cphandles.clear();
   delete snapshotDB;
@@ -534,7 +529,7 @@ TEST_F(CheckpointTest, CheckpointCFNoFlush) {
   Options options = CurrentOptions();
   CreateAndReopenWithCF({"one", "two", "three", "four", "five"}, options);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   ASSERT_OK(Put(0, "Default", "Default"));
   ASSERT_OK(Put(1, "one", "one"));
@@ -547,16 +542,16 @@ TEST_F(CheckpointTest, CheckpointCFNoFlush) {
   std::vector<ColumnFamilyHandle*> cphandles;
 
   // Take a snapshot
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::BackgroundCallFlush:start", [&](void* /*arg*/) {
         // Flush should never trigger.
         FAIL();
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   Checkpoint* checkpoint;
   ASSERT_OK(Checkpoint::Create(db_, &checkpoint));
   ASSERT_OK(checkpoint->CreateCheckpoint(snapshot_name_, 1000000));
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   delete checkpoint;
   ASSERT_OK(Put(1, "one", "two"));
@@ -594,7 +589,7 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing) {
   options.max_manifest_file_size = 0;  // always rollover manifest for file add
   Reopen(options);
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {// Get past the flush in the checkpoint thread before adding any keys to
        // the db so the checkpoint thread won't hit the WriteManifest
        // syncpoints.
@@ -606,9 +601,9 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing) {
         "VersionSet::LogAndApply:WriteManifest"},
        {"VersionSet::LogAndApply:WriteManifestDone",
         "CheckpointImpl::CreateCheckpoint:SavedLiveFiles2"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread t([&]() {
+  ROCKSDB_NAMESPACE::port::Thread t([&]() {
     Checkpoint* checkpoint;
     ASSERT_OK(Checkpoint::Create(db_, &checkpoint));
     ASSERT_OK(checkpoint->CreateCheckpoint(snapshot_name_));
@@ -620,7 +615,7 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing) {
   ASSERT_OK(Flush());
   t.join();
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   DB* snapshotDB;
   // Successful Open() implies that CURRENT pointed to the manifest in the
@@ -683,13 +678,13 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing2PC) {
     }
     delete tx;
   }
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"CheckpointImpl::CreateCheckpoint:SavedLiveFiles1",
         "CheckpointTest::CurrentFileModifiedWhileCheckpointing2PC:PreCommit"},
        {"CheckpointTest::CurrentFileModifiedWhileCheckpointing2PC:PostCommit",
         "CheckpointImpl::CreateCheckpoint:SavedLiveFiles2"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-  MIZAR_NAMESPACE::port::Thread t([&]() {
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::port::Thread t([&]() {
     Checkpoint* checkpoint;
     ASSERT_OK(Checkpoint::Create(txdb, &checkpoint));
     ASSERT_OK(checkpoint->CreateCheckpoint(snapshot_name_));
@@ -703,7 +698,7 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing2PC) {
       "CheckpointTest::CurrentFileModifiedWhileCheckpointing2PC:PostCommit");
   t.join();
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 
   // No more than two logs files should exist.
   std::vector<std::string> files;
@@ -729,7 +724,7 @@ TEST_F(CheckpointTest, CurrentFileModifiedWhileCheckpointing2PC) {
       ColumnFamilyDescriptor("CFA", ColumnFamilyOptions()));
   column_families.push_back(
       ColumnFamilyDescriptor("CFB", ColumnFamilyOptions()));
-  std::vector<MIZAR_NAMESPACE::ColumnFamilyHandle*> cf_handles;
+  std::vector<ROCKSDB_NAMESPACE::ColumnFamilyHandle*> cf_handles;
   ASSERT_OK(TransactionDB::Open(options, txn_db_options, snapshot_name_,
                                 column_families, &cf_handles, &snapshotDB));
   ASSERT_OK(snapshotDB->Get(read_options, "foo", &value));
@@ -915,10 +910,55 @@ TEST_F(CheckpointTest, CheckpointWithDbPath) {
   delete checkpoint;
 }
 
-}  // namespace MIZAR_NAMESPACE
+TEST_F(CheckpointTest, PutRaceWithCheckpointTrackedWalSync) {
+  // Repro for a race condition where a user write comes in after the checkpoint
+  // syncs WAL for `track_and_verify_wals_in_manifest` but before the
+  // corresponding MANIFEST update. With the bug, that scenario resulted in an
+  // unopenable DB with error "Corruption: Size mismatch: WAL ...".
+  Options options = CurrentOptions();
+  std::unique_ptr<FaultInjectionTestEnv> fault_env(
+      new FaultInjectionTestEnv(env_));
+  options.env = fault_env.get();
+  options.track_and_verify_wals_in_manifest = true;
+  Reopen(options);
+
+  ASSERT_OK(Put("key1", "val1"));
+
+  SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::SyncWAL:BeforeMarkLogsSynced:1",
+      [this](void* /* arg */) { ASSERT_OK(Put("key2", "val2")); });
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+
+  std::unique_ptr<Checkpoint> checkpoint;
+  {
+    Checkpoint* checkpoint_ptr;
+    ASSERT_OK(Checkpoint::Create(db_, &checkpoint_ptr));
+    checkpoint.reset(checkpoint_ptr);
+  }
+
+  ASSERT_OK(checkpoint->CreateCheckpoint(snapshot_name_));
+
+  // Ensure callback ran.
+  ASSERT_EQ("val2", Get("key2"));
+
+  Close();
+
+  // Simulate full loss of unsynced data. This drops "key2" -> "val2" from the
+  // DB WAL.
+  fault_env->DropUnsyncedFileData();
+
+  // Before the bug fix, reopening the DB would fail because the MANIFEST's
+  // AddWal entry indicated the WAL should be synced through "key2" -> "val2".
+  Reopen(options);
+
+  // Need to close before `fault_env` goes out of scope.
+  Close();
+}
+
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -927,8 +967,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as Checkpoint is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "SKIPPED as Checkpoint is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

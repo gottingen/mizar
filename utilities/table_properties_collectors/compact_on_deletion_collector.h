@@ -5,9 +5,9 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
-#include "mizar/utilities/table_properties_collectors.h"
-namespace MIZAR_NAMESPACE {
+#ifndef ROCKSDB_LITE
+#include "rocksdb/utilities/table_properties_collectors.h"
+namespace ROCKSDB_NAMESPACE {
 
 class CompactOnDeletionCollector : public TablePropertiesCollector {
  public:
@@ -41,9 +41,7 @@ class CompactOnDeletionCollector : public TablePropertiesCollector {
   }
 
   // EXPERIMENTAL Return whether the output file should be further compacted
-  virtual bool NeedCompact() const override {
-    return need_compaction_;
-  }
+  virtual bool NeedCompact() const override { return need_compaction_; }
 
   static const int kNumBuckets = 128;
 
@@ -68,5 +66,5 @@ class CompactOnDeletionCollector : public TablePropertiesCollector {
   bool need_compaction_;
   bool finished_;
 };
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

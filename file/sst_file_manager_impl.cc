@@ -11,14 +11,14 @@
 #include "db/db_impl/db_impl.h"
 #include "logging/logging.h"
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/sst_file_manager.h"
+#include "rocksdb/env.h"
+#include "rocksdb/sst_file_manager.h"
 #include "test_util/sync_point.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 SstFileManagerImpl::SstFileManagerImpl(
     const std::shared_ptr<SystemClock>& clock,
     const std::shared_ptr<FileSystem>& fs,
@@ -161,9 +161,8 @@ bool SstFileManagerImpl::EnoughRoomForCompaction(
 
   // Update cur_compactions_reserved_size_ so concurrent compaction
   // don't max out space
-  size_t needed_headroom =
-      cur_compactions_reserved_size_ + size_added_by_compaction +
-      compaction_buffer_size_;
+  size_t needed_headroom = cur_compactions_reserved_size_ +
+                           size_added_by_compaction + compaction_buffer_size_;
   if (max_allowed_space_ != 0 &&
       (needed_headroom + total_files_size_ > max_allowed_space_)) {
     return false;
@@ -256,7 +255,7 @@ void SstFileManagerImpl::ClearError() {
   while (true) {
     MutexLock l(&mu_);
 
-    if (closing_) {
+    if (error_handler_list_.empty() || closing_) {
       return;
     }
 
@@ -297,7 +296,8 @@ void SstFileManagerImpl::ClearError() {
 
     // Someone could have called CancelErrorRecovery() and the list could have
     // become empty, so check again here
-    if (s.ok() && !error_handler_list_.empty()) {
+    if (s.ok()) {
+      assert(!error_handler_list_.empty());
       auto error_handler = error_handler_list_.front();
       // Since we will release the mutex, set cur_instance_ to signal to the
       // shutdown thread, if it calls // CancelErrorRecovery() the meantime,
@@ -414,13 +414,12 @@ bool SstFileManagerImpl::CancelErrorRecovery(ErrorHandler* handler) {
   return false;
 }
 
-Status SstFileManagerImpl::ScheduleFileDeletion(
-    const std::string& file_path, const std::string& path_to_sync,
-    const bool force_bg) {
+Status SstFileManagerImpl::ScheduleFileDeletion(const std::string& file_path,
+                                                const std::string& path_to_sync,
+                                                const bool force_bg) {
   TEST_SYNC_POINT_CALLBACK("SstFileManagerImpl::ScheduleFileDeletion",
                            const_cast<std::string*>(&file_path));
-  return delete_scheduler_.DeleteFile(file_path, path_to_sync,
-                                      force_bg);
+  return delete_scheduler_.DeleteFile(file_path, path_to_sync, force_bg);
 }
 
 void SstFileManagerImpl::WaitForEmptyTrash() {
@@ -516,11 +515,11 @@ SstFileManager* NewSstFileManager(Env* /*env*/,
                                   uint64_t /*bytes_max_delete_chunk*/) {
   if (status) {
     *status =
-        Status::NotSupported("SstFileManager is not supported in MIZAR_LITE");
+        Status::NotSupported("SstFileManager is not supported in ROCKSDB_LITE");
   }
   return nullptr;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

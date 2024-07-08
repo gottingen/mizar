@@ -7,17 +7,19 @@
 
 #include <cstdint>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Represents the types of blocks used in the block based table format.
 // See https://github.com/facebook/rocksdb/wiki/Rocksdb-BlockBasedTable-Format
 // for details.
-
+// For code sanity, BlockType should imply a specific TBlocklike for
+// BlocklikeTraits.
 enum class BlockType : uint8_t {
   kData,
-  kFilter,
+  kFilter,  // for second level partitioned filters and full filters
+  kFilterPartitionIndex,  // for top-level index of filter partitions
   kProperties,
   kCompressionDictionary,
   kRangeDeletion,
@@ -29,4 +31,4 @@ enum class BlockType : uint8_t {
   kInvalid
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

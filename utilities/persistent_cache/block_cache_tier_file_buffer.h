@@ -8,11 +8,11 @@
 #include <memory>
 #include <string>
 
-#include "mizar/comparator.h"
 #include "memory/arena.h"
+#include "rocksdb/comparator.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 //
 // CacheWriteBuffer
@@ -124,4 +124,4 @@ class CacheWriteBufferAllocator {
   std::list<CacheWriteBuffer*> bufs_;  // Buffer stash
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

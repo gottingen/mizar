@@ -3,13 +3,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/utilities/memory_util.h"
+#include "rocksdb/utilities/memory_util.h"
 
 #include "db/db_impl/db_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 Status MemoryUtil::GetApproximateMemoryUsageByType(
     const std::vector<DB*>& dbs,
@@ -48,5 +48,5 @@ Status MemoryUtil::GetApproximateMemoryUsageByType(
 
   return Status::OK();
 }
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

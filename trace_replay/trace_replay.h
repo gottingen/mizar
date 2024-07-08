@@ -11,13 +11,13 @@
 #include <unordered_map>
 #include <utility>
 
-#include "mizar/options.h"
-#include "mizar/rocksdb_namespace.h"
-#include "mizar/status.h"
-#include "mizar/trace_record.h"
-#include "mizar/utilities/replayer.h"
+#include "rocksdb/options.h"
+#include "rocksdb/rocksdb_namespace.h"
+#include "rocksdb/status.h"
+#include "rocksdb/trace_record.h"
+#include "rocksdb/utilities/replayer.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // This file contains Tracer and Replayer classes that enable capturing and
 // replaying RocksDB traces.
@@ -180,4 +180,4 @@ class Tracer {
   uint64_t trace_request_count_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

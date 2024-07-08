@@ -11,17 +11,17 @@
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "monitoring/statistics.h"
-#include "mizar/cache.h"
-#include "mizar/compaction_filter.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/filter_policy.h"
-#include "mizar/options.h"
-#include "mizar/perf_context.h"
-#include "mizar/slice.h"
-#include "mizar/slice_transform.h"
-#include "mizar/table.h"
-#include "mizar/table_properties.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/options.h"
+#include "rocksdb/perf_context.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/table.h"
+#include "rocksdb/table_properties.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
@@ -31,9 +31,9 @@
 #include "util/string_util.h"
 #include "utilities/merge_operators.h"
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class EventListenerTest : public DBTestBase {
  public:
@@ -51,26 +51,26 @@ class EventListenerTest : public DBTestBase {
 };
 
 struct TestPropertiesCollector
-    : public MIZAR_NAMESPACE::TablePropertiesCollector {
-  MIZAR_NAMESPACE::Status AddUserKey(
-      const MIZAR_NAMESPACE::Slice& /*key*/,
-      const MIZAR_NAMESPACE::Slice& /*value*/,
-      MIZAR_NAMESPACE::EntryType /*type*/,
-      MIZAR_NAMESPACE::SequenceNumber /*seq*/,
+    : public ROCKSDB_NAMESPACE::TablePropertiesCollector {
+  ROCKSDB_NAMESPACE::Status AddUserKey(
+      const ROCKSDB_NAMESPACE::Slice& /*key*/,
+      const ROCKSDB_NAMESPACE::Slice& /*value*/,
+      ROCKSDB_NAMESPACE::EntryType /*type*/,
+      ROCKSDB_NAMESPACE::SequenceNumber /*seq*/,
       uint64_t /*file_size*/) override {
     return Status::OK();
   }
-  MIZAR_NAMESPACE::Status Finish(
-      MIZAR_NAMESPACE::UserCollectedProperties* properties) override {
+  ROCKSDB_NAMESPACE::Status Finish(
+      ROCKSDB_NAMESPACE::UserCollectedProperties* properties) override {
     properties->insert({"0", "1"});
     return Status::OK();
   }
 
   const char* Name() const override { return "TestTablePropertiesCollector"; }
 
-  MIZAR_NAMESPACE::UserCollectedProperties GetReadableProperties()
+  ROCKSDB_NAMESPACE::UserCollectedProperties GetReadableProperties()
       const override {
-    MIZAR_NAMESPACE::UserCollectedProperties ret;
+    ROCKSDB_NAMESPACE::UserCollectedProperties ret;
     ret["2"] = "3";
     return ret;
   }
@@ -89,7 +89,7 @@ class TestCompactionListener : public EventListener {
  public:
   explicit TestCompactionListener(EventListenerTest* test) : test_(test) {}
 
-  void OnCompactionCompleted(DB *db, const CompactionJobInfo& ci) override {
+  void OnCompactionCompleted(DB* db, const CompactionJobInfo& ci) override {
     std::lock_guard<std::mutex> lock(mutex_);
     compacted_dbs_.push_back(db);
     ASSERT_GT(ci.input_files.size(), 0U);
@@ -172,9 +172,9 @@ TEST_F(EventListenerTest, OnSingleDBCompactionTest) {
 
   TestCompactionListener* listener = new TestCompactionListener(this);
   options.listeners.emplace_back(listener);
-  std::vector<std::string> cf_names = {
-      "pikachu", "ilya", "muromec", "dobrynia",
-      "nikitich", "alyosha", "popovich"};
+  std::vector<std::string> cf_names = {"pikachu",  "ilya",     "muromec",
+                                       "dobrynia", "nikitich", "alyosha",
+                                       "popovich"};
   CreateAndReopenWithCF(cf_names, options);
   ASSERT_OK(Put(1, "pikachu", std::string(90000, 'p')));
 
@@ -214,8 +214,7 @@ class TestFlushListener : public EventListener {
   virtual ~TestFlushListener() {
     prev_fc_info_.status.PermitUncheckedError();  // Ignore the status
   }
-  void OnTableFileCreated(
-      const TableFileCreationInfo& info) override {
+  void OnTableFileCreated(const TableFileCreationInfo& info) override {
     // remember the info for later checking the FlushJobInfo.
     prev_fc_info_ = info;
     ASSERT_GT(info.db_name.size(), 0U);
@@ -250,8 +249,7 @@ class TestFlushListener : public EventListener {
 #endif  // ROCKSDB_USING_THREAD_STATUS
   }
 
-  void OnFlushCompleted(
-      DB* db, const FlushJobInfo& info) override {
+  void OnFlushCompleted(DB* db, const FlushJobInfo& info) override {
     flushed_dbs_.push_back(db);
     flushed_column_family_names_.push_back(info.cf_name);
     if (info.triggered_writes_slowdown) {
@@ -317,9 +315,9 @@ TEST_F(EventListenerTest, OnSingleDBFlushTest) {
 #endif  // ROCKSDB_USING_THREAD_STATUS
   TestFlushListener* listener = new TestFlushListener(options.env, this);
   options.listeners.emplace_back(listener);
-  std::vector<std::string> cf_names = {
-      "pikachu", "ilya", "muromec", "dobrynia",
-      "nikitich", "alyosha", "popovich"};
+  std::vector<std::string> cf_names = {"pikachu",  "ilya",     "muromec",
+                                       "dobrynia", "nikitich", "alyosha",
+                                       "popovich"};
   options.table_properties_collector_factories.push_back(
       std::make_shared<TestPropertiesCollectorFactory>());
   CreateAndReopenWithCF(cf_names, options);
@@ -340,6 +338,9 @@ TEST_F(EventListenerTest, OnSingleDBFlushTest) {
   for (int i = 1; i < 8; ++i) {
     ASSERT_OK(Flush(i));
     ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable());
+    // Ensure background work is fully finished including listener callbacks
+    // before accessing listener state.
+    ASSERT_OK(dbfull()->TEST_WaitForBackgroundWork());
     ASSERT_EQ(listener->flushed_dbs_.size(), i);
     ASSERT_EQ(listener->flushed_column_family_names_.size(), i);
   }
@@ -378,18 +379,27 @@ TEST_F(EventListenerTest, MultiCF) {
     ASSERT_OK(Put(5, "nikitich", std::string(90000, 'n')));
     ASSERT_OK(Put(6, "alyosha", std::string(90000, 'a')));
     ASSERT_OK(Put(7, "popovich", std::string(90000, 'p')));
+
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+
     for (int i = 1; i < 8; ++i) {
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+          {{"DBImpl::NotifyOnFlushCompleted::PostAllOnFlushCompleted",
+            "EventListenerTest.MultiCF:PreVerifyListener"}});
       ASSERT_OK(Flush(i));
-      ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable());
+      TEST_SYNC_POINT("EventListenerTest.MultiCF:PreVerifyListener");
       ASSERT_EQ(listener->flushed_dbs_.size(), i);
       ASSERT_EQ(listener->flushed_column_family_names_.size(), i);
+      // make sure callback functions are called in the right order
+      if (i == 7) {
+        for (size_t j = 0; j < cf_names.size(); j++) {
+          ASSERT_EQ(listener->flushed_dbs_[j], db_);
+          ASSERT_EQ(listener->flushed_column_family_names_[j], cf_names[j]);
+        }
+      }
     }
 
-    // make sure callback functions are called in the right order
-    for (size_t i = 0; i < cf_names.size(); i++) {
-      ASSERT_EQ(listener->flushed_dbs_[i], db_);
-      ASSERT_EQ(listener->flushed_column_family_names_[i], cf_names[i]);
-    }
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
     Close();
   }
 }
@@ -409,9 +419,9 @@ TEST_F(EventListenerTest, MultiDBMultiListeners) {
     listeners.emplace_back(new TestFlushListener(options.env, this));
   }
 
-  std::vector<std::string> cf_names = {
-      "pikachu", "ilya", "muromec", "dobrynia",
-      "nikitich", "alyosha", "popovich"};
+  std::vector<std::string> cf_names = {"pikachu",  "ilya",     "muromec",
+                                       "dobrynia", "nikitich", "alyosha",
+                                       "popovich"};
 
   options.create_if_missing = true;
   for (int i = 0; i < kNumListeners; ++i) {
@@ -421,13 +431,13 @@ TEST_F(EventListenerTest, MultiDBMultiListeners) {
   ColumnFamilyOptions cf_opts(options);
 
   std::vector<DB*> dbs;
-  std::vector<std::vector<ColumnFamilyHandle *>> vec_handles;
+  std::vector<std::vector<ColumnFamilyHandle*>> vec_handles;
 
   for (int d = 0; d < kNumDBs; ++d) {
-    ASSERT_OK(DestroyDB(dbname_ + ToString(d), options));
+    ASSERT_OK(DestroyDB(dbname_ + std::to_string(d), options));
     DB* db;
     std::vector<ColumnFamilyHandle*> handles;
-    ASSERT_OK(DB::Open(options, dbname_ + ToString(d), &db));
+    ASSERT_OK(DB::Open(options, dbname_ + std::to_string(d), &db));
     for (size_t c = 0; c < cf_names.size(); ++c) {
       ColumnFamilyHandle* handle;
       ASSERT_OK(db->CreateColumnFamily(cf_opts, cf_names[c], &handle));
@@ -440,8 +450,8 @@ TEST_F(EventListenerTest, MultiDBMultiListeners) {
 
   for (int d = 0; d < kNumDBs; ++d) {
     for (size_t c = 0; c < cf_names.size(); ++c) {
-      ASSERT_OK(dbs[d]->Put(WriteOptions(), vec_handles[d][c],
-                cf_names[c], cf_names[c]));
+      ASSERT_OK(dbs[d]->Put(WriteOptions(), vec_handles[d][c], cf_names[c],
+                            cf_names[c]));
     }
   }
 
@@ -451,6 +461,13 @@ TEST_F(EventListenerTest, MultiDBMultiListeners) {
       ASSERT_OK(
           static_cast_with_check<DBImpl>(dbs[d])->TEST_WaitForFlushMemTable());
     }
+  }
+
+  for (int d = 0; d < kNumDBs; ++d) {
+    // Ensure background work is fully finished including listener callbacks
+    // before accessing listener state.
+    ASSERT_OK(
+        static_cast_with_check<DBImpl>(dbs[d])->TEST_WaitForBackgroundWork());
   }
 
   for (auto* listener : listeners) {
@@ -463,7 +480,6 @@ TEST_F(EventListenerTest, MultiDBMultiListeners) {
       }
     }
   }
-
 
   for (auto handles : vec_handles) {
     for (auto h : handles) {
@@ -508,16 +524,17 @@ TEST_F(EventListenerTest, DisableBGCompaction) {
   // keep writing until writes are forced to stop.
   for (int i = 0; static_cast<int>(cf_meta.file_count) < kSlowdownTrigger * 10;
        ++i) {
-    ASSERT_OK(Put(1, ToString(i), std::string(10000, 'x'), WriteOptions()));
+    ASSERT_OK(
+        Put(1, std::to_string(i), std::string(10000, 'x'), WriteOptions()));
     FlushOptions fo;
     fo.allow_write_stall = true;
     ASSERT_OK(db_->Flush(fo, handles_[1]));
     db_->GetColumnFamilyMetaData(handles_[1], &cf_meta);
   }
-  ASSERT_GE(listener->slowdown_count, kSlowdownTrigger * 9);
-  // We don't want the listener executing during DBTestBase::Close() due to
-  // race on handles_.
+  // Ensure background work is fully finished including listener callbacks
+  // before accessing listener state.
   ASSERT_OK(dbfull()->TEST_WaitForBackgroundWork());
+  ASSERT_GE(listener->slowdown_count, kSlowdownTrigger * 9);
 }
 
 class TestCompactionReasonListener : public EventListener {
@@ -772,11 +789,13 @@ class TableFileCreationListener : public EventListener {
     ASSERT_EQ(info.file_checksum, kUnknownFileChecksum);
     ASSERT_EQ(info.file_checksum_func_name, kUnknownFileChecksumFuncName);
     if (info.status.ok()) {
-      ASSERT_GT(info.table_properties.data_size, 0U);
-      ASSERT_GT(info.table_properties.raw_key_size, 0U);
-      ASSERT_GT(info.table_properties.raw_value_size, 0U);
-      ASSERT_GT(info.table_properties.num_data_blocks, 0U);
-      ASSERT_GT(info.table_properties.num_entries, 0U);
+      if (info.table_properties.num_range_deletions == 0U) {
+        ASSERT_GT(info.table_properties.data_size, 0U);
+        ASSERT_GT(info.table_properties.raw_key_size, 0U);
+        ASSERT_GT(info.table_properties.raw_value_size, 0U);
+        ASSERT_GT(info.table_properties.num_data_blocks, 0U);
+        ASSERT_GT(info.table_properties.num_entries, 0U);
+      }
     } else {
       if (idx >= 0) {
         failure_[idx]++;
@@ -828,14 +847,6 @@ TEST_F(EventListenerTest, TableFileCreationListenersTest) {
   ASSERT_OK(dbfull()->TEST_WaitForCompact());
   listener->CheckAndResetCounters(0, 0, 0, 1, 1, 0);
 
-  // Verify that an empty table file that is immediately deleted gives Aborted
-  // status to listener.
-  ASSERT_OK(Put("baz", "z"));
-  ASSERT_OK(SingleDelete("baz"));
-  ASSERT_OK(Flush());
-  listener->CheckAndResetCounters(1, 1, 1, 0, 0, 0);
-  ASSERT_TRUE(listener->last_failure_.IsAborted());
-
   ASSERT_OK(Put("foo", "aaa3"));
   ASSERT_OK(Put("bar", "bbb3"));
   ASSERT_OK(Flush());
@@ -845,20 +856,45 @@ TEST_F(EventListenerTest, TableFileCreationListenersTest) {
   ASSERT_NOK(dbfull()->TEST_WaitForCompact());
   listener->CheckAndResetCounters(1, 1, 0, 1, 1, 1);
   ASSERT_TRUE(listener->last_failure_.IsNotSupported());
-  Close();
+
+  // Reset
+  test_env->SetStatus(Status::OK());
+  DestroyAndReopen(options);
+
+  // Verify that an empty table file that is immediately deleted gives Aborted
+  // status to listener.
+  ASSERT_OK(Put("baz", "z"));
+  ASSERT_OK(SingleDelete("baz"));
+  ASSERT_OK(Flush());
+  listener->CheckAndResetCounters(1, 1, 1, 0, 0, 0);
+  ASSERT_TRUE(listener->last_failure_.IsAborted());
+
+  // Also in compaction
+  ASSERT_OK(Put("baz", "z"));
+  ASSERT_OK(Flush());
+  ASSERT_OK(db_->DeleteRange(WriteOptions(), db_->DefaultColumnFamily(),
+                             kRangeStart, kRangeEnd));
+  ASSERT_OK(Flush());
+  ASSERT_OK(db_->CompactRange(CompactRangeOptions(), nullptr, nullptr));
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+  listener->CheckAndResetCounters(2, 2, 0, 1, 1, 1);
+  ASSERT_TRUE(listener->last_failure_.IsAborted());
+
+  Close();  // Avoid UAF on listener
 }
 
 class MemTableSealedListener : public EventListener {
-private:
+ private:
   SequenceNumber latest_seq_number_;
-public:
+
+ public:
   MemTableSealedListener() {}
   void OnMemTableSealed(const MemTableInfo& info) override {
     latest_seq_number_ = info.first_seqno;
   }
 
   void OnFlushCompleted(DB* /*db*/,
-    const FlushJobInfo& flush_job_info) override {
+                        const FlushJobInfo& flush_job_info) override {
     ASSERT_LE(flush_job_info.smallest_seqno, latest_seq_number_);
   }
 };
@@ -873,8 +909,8 @@ TEST_F(EventListenerTest, MemTableSealedListenerTest) {
 
   for (unsigned int i = 0; i < 10; i++) {
     std::string tag = std::to_string(i);
-    ASSERT_OK(Put("foo"+tag, "aaa"));
-    ASSERT_OK(Put("bar"+tag, "bbb"));
+    ASSERT_OK(Put("foo" + tag, "aaa"));
+    ASSERT_OK(Put("bar" + tag, "bbb"));
 
     ASSERT_OK(Flush());
   }
@@ -951,10 +987,10 @@ TEST_F(EventListenerTest, BackgroundErrorListenerFailedFlushTest) {
 
   // the usual TEST_WaitForFlushMemTable() doesn't work for failed flushes, so
   // forge a custom one for the failed flush case.
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::BGWorkFlush:done",
         "EventListenerTest:BackgroundErrorListenerFailedFlushTest:1"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   env_->drop_writes_.store(true, std::memory_order_release);
   env_->SetMockSleep();
@@ -1238,22 +1274,7 @@ class BlobDBJobLevelEventListenerTest : public EventListener {
   explicit BlobDBJobLevelEventListenerTest(EventListenerTest* test)
       : test_(test), call_count_(0) {}
 
-  std::shared_ptr<BlobFileMetaData> GetBlobFileMetaData(
-      const VersionStorageInfo::BlobFiles& blob_files,
-      uint64_t blob_file_number) {
-    const auto it = blob_files.find(blob_file_number);
-
-    if (it == blob_files.end()) {
-      return nullptr;
-    }
-
-    const auto& meta = it->second;
-    assert(meta);
-
-    return meta;
-  }
-
-  const VersionStorageInfo::BlobFiles& GetBlobFiles() {
+  const VersionStorageInfo* GetVersionStorageInfo() const {
     VersionSet* const versions = test_->dbfull()->GetVersionSet();
     assert(versions);
 
@@ -1266,8 +1287,28 @@ class BlobDBJobLevelEventListenerTest : public EventListener {
     const VersionStorageInfo* const storage_info = current->storage_info();
     EXPECT_NE(storage_info, nullptr);
 
-    const auto& blob_files = storage_info->GetBlobFiles();
-    return blob_files;
+    return storage_info;
+  }
+
+  void CheckBlobFileAdditions(
+      const std::vector<BlobFileAdditionInfo>& blob_file_addition_infos) const {
+    const auto* vstorage = GetVersionStorageInfo();
+
+    EXPECT_FALSE(blob_file_addition_infos.empty());
+
+    for (const auto& blob_file_addition_info : blob_file_addition_infos) {
+      const auto meta = vstorage->GetBlobFileMetaData(
+          blob_file_addition_info.blob_file_number);
+
+      EXPECT_NE(meta, nullptr);
+      EXPECT_EQ(meta->GetBlobFileNumber(),
+                blob_file_addition_info.blob_file_number);
+      EXPECT_EQ(meta->GetTotalBlobBytes(),
+                blob_file_addition_info.total_blob_bytes);
+      EXPECT_EQ(meta->GetTotalBlobCount(),
+                blob_file_addition_info.total_blob_count);
+      EXPECT_FALSE(blob_file_addition_info.blob_file_path.empty());
+    }
   }
 
   std::vector<std::string> GetFlushedFiles() {
@@ -1281,46 +1322,28 @@ class BlobDBJobLevelEventListenerTest : public EventListener {
 
   void OnFlushCompleted(DB* /*db*/, const FlushJobInfo& info) override {
     call_count_++;
-    EXPECT_FALSE(info.blob_file_addition_infos.empty());
-    const auto& blob_files = GetBlobFiles();
+
     {
       std::lock_guard<std::mutex> lock(mutex_);
       flushed_files_.push_back(info.file_path);
     }
+
     EXPECT_EQ(info.blob_compression_type, kNoCompression);
 
-    for (const auto& blob_file_addition_info : info.blob_file_addition_infos) {
-      const auto meta = GetBlobFileMetaData(
-          blob_files, blob_file_addition_info.blob_file_number);
-      EXPECT_EQ(meta->GetBlobFileNumber(),
-                blob_file_addition_info.blob_file_number);
-      EXPECT_EQ(meta->GetTotalBlobBytes(),
-                blob_file_addition_info.total_blob_bytes);
-      EXPECT_EQ(meta->GetTotalBlobCount(),
-                blob_file_addition_info.total_blob_count);
-      EXPECT_FALSE(blob_file_addition_info.blob_file_path.empty());
-    }
+    CheckBlobFileAdditions(info.blob_file_addition_infos);
   }
 
-  void OnCompactionCompleted(DB* /*db*/, const CompactionJobInfo& ci) override {
+  void OnCompactionCompleted(DB* /*db*/,
+                             const CompactionJobInfo& info) override {
     call_count_++;
-    EXPECT_FALSE(ci.blob_file_garbage_infos.empty());
-    const auto& blob_files = GetBlobFiles();
-    EXPECT_EQ(ci.blob_compression_type, kNoCompression);
 
-    for (const auto& blob_file_addition_info : ci.blob_file_addition_infos) {
-      const auto meta = GetBlobFileMetaData(
-          blob_files, blob_file_addition_info.blob_file_number);
-      EXPECT_EQ(meta->GetBlobFileNumber(),
-                blob_file_addition_info.blob_file_number);
-      EXPECT_EQ(meta->GetTotalBlobBytes(),
-                blob_file_addition_info.total_blob_bytes);
-      EXPECT_EQ(meta->GetTotalBlobCount(),
-                blob_file_addition_info.total_blob_count);
-      EXPECT_FALSE(blob_file_addition_info.blob_file_path.empty());
-    }
+    EXPECT_EQ(info.blob_compression_type, kNoCompression);
 
-    for (const auto& blob_file_garbage_info : ci.blob_file_garbage_infos) {
+    CheckBlobFileAdditions(info.blob_file_addition_infos);
+
+    EXPECT_FALSE(info.blob_file_garbage_infos.empty());
+
+    for (const auto& blob_file_garbage_info : info.blob_file_garbage_infos) {
       EXPECT_GT(blob_file_garbage_info.blob_file_number, 0U);
       EXPECT_GT(blob_file_garbage_info.garbage_blob_count, 0U);
       EXPECT_GT(blob_file_garbage_info.garbage_blob_bytes, 0U);
@@ -1561,11 +1584,12 @@ TEST_F(EventListenerTest, BlobDBFileTest) {
   blob_event_listener->CheckCounters();
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

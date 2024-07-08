@@ -11,10 +11,10 @@
 #include <atomic>
 #include <string>
 
-#include "mizar/status.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/status.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // A SystemClock that can "mock" sleep and counts its operations.
 class EmulatedSystemClock : public SystemClockWrapper {
  private:
@@ -111,4 +111,4 @@ class EmulatedSystemClock : public SystemClockWrapper {
     sleep_counter_.store(0);
   }
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

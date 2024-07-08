@@ -6,10 +6,9 @@
 #pragma once
 
 #include <atomic>
+#include "rocksdb/memory_allocator.h"
 
-#include "mizar/memory_allocator.h"
-
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 // A memory allocator using new/delete
 class DefaultMemoryAllocator : public MemoryAllocator {
  public:
@@ -26,7 +25,7 @@ class DefaultMemoryAllocator : public MemoryAllocator {
 // and implements the methods in failuse mode (assert if the methods are
 // invoked). Implementations can extend this class and override these methods
 // when they are enabled via compiler switches (e.g., the
-// JeMallocMemoryAllocator can define these methods if MIZAR_JEMALLOC is
+// JeMallocMemoryAllocator can define these methods if ROCKSDB_JEMALLOC is
 // defined at compile time.  If compiled in "disabled" mode, this class provides
 // default/failure implementations.  If compiled in "enabled" mode, the derived
 // class needs to provide the appopriate "enabled" methods for the "real"
@@ -101,4 +100,4 @@ class CountedMemoryAllocator : public MemoryAllocatorWrapper {
   std::atomic<uint64_t> allocations_;
   std::atomic<uint64_t> deallocations_;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

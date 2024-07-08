@@ -4,15 +4,16 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #include <memory>
-#include "mizar/slice.h"
-#include "mizar/merge_operator.h"
+
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
 #include "utilities/merge_operators.h"
 
-namespace { // anonymous namespace
+namespace {  // anonymous namespace
 
-using MIZAR_NAMESPACE::Logger;
-using MIZAR_NAMESPACE::MergeOperator;
-using MIZAR_NAMESPACE::Slice;
+using ROCKSDB_NAMESPACE::Logger;
+using ROCKSDB_NAMESPACE::MergeOperator;
+using ROCKSDB_NAMESPACE::Slice;
 
 // A merge operator that mimics Put semantics
 // Since this merge-operator will not be used in production,
@@ -77,9 +78,9 @@ class PutOperatorV2 : public PutOperator {
   const char* NickName() const override { return kNickName(); }
 };
 
-} // end of anonymous namespace
+}  // end of anonymous namespace
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 std::shared_ptr<MergeOperator> MergeOperators::CreateDeprecatedPutOperator() {
   return std::make_shared<PutOperator>();
@@ -88,4 +89,4 @@ std::shared_ptr<MergeOperator> MergeOperators::CreateDeprecatedPutOperator() {
 std::shared_ptr<MergeOperator> MergeOperators::CreatePutOperator() {
   return std::make_shared<PutOperatorV2>();
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

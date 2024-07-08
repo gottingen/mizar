@@ -10,10 +10,11 @@
 #pragma once
 #include <string>
 #include <utility>
-#include "mizar/slice.h"
-#include "mizar/types.h"
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/slice.h"
+#include "rocksdb/types.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 // A helper class useful for DBImpl::Get()
 class LookupKey {
@@ -35,7 +36,9 @@ class LookupKey {
     return Slice(kstart_, static_cast<size_t>(end_ - kstart_));
   }
 
-  // Return the user key
+  // Return the user key.
+  // If user-defined timestamp is enabled, then timestamp is included in the
+  // result.
   Slice user_key() const {
     return Slice(kstart_, static_cast<size_t>(end_ - kstart_ - 8));
   }
@@ -62,4 +65,4 @@ inline LookupKey::~LookupKey() {
   if (start_ != space_) delete[] start_;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

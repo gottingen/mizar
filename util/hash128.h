@@ -8,10 +8,10 @@
 // 128-bit hash gets it own header so that more popular hash.h doesn't
 // depend on math128.h
 
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 #include "util/math128.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Stable/persistent 128-bit hash for non-cryptographic applications.
 Unsigned128 Hash128(const char* data, size_t n, uint64_t seed);
@@ -23,4 +23,4 @@ inline Unsigned128 GetSliceHash128(const Slice& key) {
   return Hash128(key.data(), key.size());
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

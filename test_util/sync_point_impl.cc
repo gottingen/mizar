@@ -6,7 +6,7 @@
 #include "test_util/sync_point_impl.h"
 
 #ifndef NDEBUG
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 KillPoint* KillPoint::GetInstance() {
   static KillPoint kp;
   return &kp;
@@ -37,7 +37,8 @@ void KillPoint::TestKillRandom(std::string kill_point, int odds_weight,
   }
 }
 
-void SyncPoint::Data::LoadDependency(const std::vector<SyncPointPair>& dependencies) {
+void SyncPoint::Data::LoadDependency(
+    const std::vector<SyncPointPair>& dependencies) {
   std::lock_guard<std::mutex> lock(mutex_);
   successors_.clear();
   predecessors_.clear();
@@ -52,8 +53,8 @@ void SyncPoint::Data::LoadDependency(const std::vector<SyncPointPair>& dependenc
 }
 
 void SyncPoint::Data::LoadDependencyAndMarkers(
-  const std::vector<SyncPointPair>& dependencies,
-  const std::vector<SyncPointPair>& markers) {
+    const std::vector<SyncPointPair>& dependencies,
+    const std::vector<SyncPointPair>& markers) {
   std::lock_guard<std::mutex> lock(mutex_);
   successors_.clear();
   predecessors_.clear();
@@ -147,5 +148,5 @@ void SyncPoint::Data::Process(const Slice& point, void* cb_arg) {
   cleared_points_.insert(point_string);
   cv_.notify_all();
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif

@@ -3,16 +3,15 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/env.h"
-#include "mizar/perf_context.h"
+#include "rocksdb/env.h"
+#include "rocksdb/perf_context.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-class TimedEnvTest : public testing::Test {
-};
+class TimedEnvTest : public testing::Test {};
 
 TEST_F(TimedEnvTest, BasicTest) {
   SetPerfLevel(PerfLevel::kEnableTime);
@@ -26,19 +25,20 @@ TEST_F(TimedEnvTest, BasicTest) {
   ASSERT_GT(get_perf_context()->env_new_writable_file_nanos, 0);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
-#else  // MIZAR_LITE
+#else  // ROCKSDB_LITE
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as TimedEnv is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "SKIPPED as TimedEnv is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

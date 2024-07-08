@@ -3,13 +3,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 //
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/persistent_cache/volatile_tier_impl.h"
 
 #include <string>
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 void VolatileCacheTier::DeleteCacheData(VolatileCacheTier::CacheData* data) {
   assert(data);
@@ -135,6 +135,6 @@ bool VolatileCacheTier::Evict() {
   return true;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

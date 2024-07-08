@@ -8,10 +8,10 @@
 #include "db/db_test_util.h"
 #include "monitoring/thread_status_util.h"
 #include "port/stack_trace.h"
-#include "mizar/statistics.h"
+#include "rocksdb/statistics.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBStatisticsTest : public DBTestBase {
  public:
@@ -47,7 +47,7 @@ TEST_F(DBStatisticsTest, CompressionStatsTest) {
 
   Options options = CurrentOptions();
   options.compression = type;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   options.statistics->set_stats_level(StatsLevel::kExceptTimeForMutex);
   DestroyAndReopen(options);
 
@@ -70,9 +70,9 @@ TEST_F(DBStatisticsTest, CompressionStatsTest) {
   options.compression = kNoCompression;
   DestroyAndReopen(options);
   uint64_t currentCompressions =
-            options.statistics->getTickerCount(NUMBER_BLOCK_COMPRESSED);
+      options.statistics->getTickerCount(NUMBER_BLOCK_COMPRESSED);
   uint64_t currentDecompressions =
-            options.statistics->getTickerCount(NUMBER_BLOCK_DECOMPRESSED);
+      options.statistics->getTickerCount(NUMBER_BLOCK_DECOMPRESSED);
 
   // Check that compressions do not occur when turned off
   for (int i = 0; i < kNumKeysWritten; ++i) {
@@ -80,20 +80,22 @@ TEST_F(DBStatisticsTest, CompressionStatsTest) {
     ASSERT_OK(Put(Key(i), rnd.RandomString(128) + std::string(128, 'a')));
   }
   ASSERT_OK(Flush());
-  ASSERT_EQ(options.statistics->getTickerCount(NUMBER_BLOCK_COMPRESSED)
-            - currentCompressions, 0);
+  ASSERT_EQ(options.statistics->getTickerCount(NUMBER_BLOCK_COMPRESSED) -
+                currentCompressions,
+            0);
 
   for (int i = 0; i < kNumKeysWritten; ++i) {
     auto r = Get(Key(i));
   }
-  ASSERT_EQ(options.statistics->getTickerCount(NUMBER_BLOCK_DECOMPRESSED)
-            - currentDecompressions, 0);
+  ASSERT_EQ(options.statistics->getTickerCount(NUMBER_BLOCK_DECOMPRESSED) -
+                currentDecompressions,
+            0);
 }
 
 TEST_F(DBStatisticsTest, MutexWaitStatsDisabledByDefault) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   CreateAndReopenWithCF({"pikachu"}, options);
   const uint64_t kMutexWaitDelay = 100;
   ThreadStatusUtil::TEST_SetStateDelay(ThreadStatus::STATE_MUTEX_WAIT,
@@ -106,7 +108,7 @@ TEST_F(DBStatisticsTest, MutexWaitStatsDisabledByDefault) {
 TEST_F(DBStatisticsTest, MutexWaitStats) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   options.statistics->set_stats_level(StatsLevel::kAll);
   CreateAndReopenWithCF({"pikachu"}, options);
   const uint64_t kMutexWaitDelay = 100;
@@ -120,7 +122,7 @@ TEST_F(DBStatisticsTest, MutexWaitStats) {
 TEST_F(DBStatisticsTest, ResetStats) {
   Options options = CurrentOptions();
   options.create_if_missing = true;
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   for (int i = 0; i < 2; ++i) {
     // pick arbitrary ticker and histogram. On first iteration they're zero
@@ -144,7 +146,7 @@ TEST_F(DBStatisticsTest, ResetStats) {
 
 TEST_F(DBStatisticsTest, ExcludeTickers) {
   Options options = CurrentOptions();
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   DestroyAndReopen(options);
   options.statistics->set_stats_level(StatsLevel::kExceptTickers);
   ASSERT_OK(Put("foo", "value"));
@@ -155,12 +157,12 @@ TEST_F(DBStatisticsTest, ExcludeTickers) {
   ASSERT_GT(options.statistics->getTickerCount(BYTES_READ), 0);
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 TEST_F(DBStatisticsTest, VerifyChecksumReadStat) {
   Options options = CurrentOptions();
   options.file_checksum_gen_factory = GetFileChecksumGenCrc32cFactory();
-  options.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  options.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   Reopen(options);
 
   // Expected to be populated regardless of `PerfLevel` in user thread
@@ -202,12 +204,12 @@ TEST_F(DBStatisticsTest, VerifyChecksumReadStat) {
   }
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

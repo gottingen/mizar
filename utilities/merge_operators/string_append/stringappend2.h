@@ -15,10 +15,10 @@
 #include <deque>
 #include <string>
 
-#include "mizar/merge_operator.h"
-#include "mizar/slice.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class StringAppendTESTOperator : public MergeOperator {
  public:
@@ -31,8 +31,8 @@ class StringAppendTESTOperator : public MergeOperator {
 
   virtual bool PartialMergeMulti(const Slice& key,
                                  const std::deque<Slice>& operand_list,
-                                 std::string* new_value, Logger* logger) const
-      override;
+                                 std::string* new_value,
+                                 Logger* logger) const override;
 
   static const char* kClassName() { return "StringAppendTESTOperator"; }
   static const char* kNickName() { return "stringappendtest"; }
@@ -49,4 +49,4 @@ class StringAppendTESTOperator : public MergeOperator {
   std::string delim_;  // The delimiter is inserted between elements
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -5,26 +5,26 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <stack>
 #include <string>
 #include <vector>
 
 #include "db/write_batch_internal.h"
-#include "mizar/db.h"
-#include "mizar/slice.h"
-#include "mizar/snapshot.h"
-#include "mizar/status.h"
-#include "mizar/types.h"
-#include "mizar/utilities/transaction.h"
-#include "mizar/utilities/transaction_db.h"
-#include "mizar/utilities/write_batch_with_index.h"
+#include "rocksdb/db.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/snapshot.h"
+#include "rocksdb/status.h"
+#include "rocksdb/types.h"
+#include "rocksdb/utilities/transaction.h"
+#include "rocksdb/utilities/transaction_db.h"
+#include "rocksdb/utilities/write_batch_with_index.h"
 #include "util/autovector.h"
 #include "utilities/transactions/lock/lock_tracker.h"
 #include "utilities/transactions/transaction_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class TransactionBaseImpl : public Transaction {
  public:
@@ -93,8 +93,9 @@ class TransactionBaseImpl : public Transaction {
   std::vector<Status> MultiGet(const ReadOptions& options,
                                const std::vector<Slice>& keys,
                                std::vector<std::string>* values) override {
-    return MultiGet(options, std::vector<ColumnFamilyHandle*>(
-                                 keys.size(), db_->DefaultColumnFamily()),
+    return MultiGet(options,
+                    std::vector<ColumnFamilyHandle*>(
+                        keys.size(), db_->DefaultColumnFamily()),
                     keys, values);
   }
 
@@ -206,6 +207,10 @@ class TransactionBaseImpl : public Transaction {
     return snapshot_.get();
   }
 
+  std::shared_ptr<const Snapshot> GetTimestampedSnapshot() const override {
+    return snapshot_;
+  }
+
   virtual void SetSnapshot() override;
   void SetSnapshotOnNextOperation(
       std::shared_ptr<TransactionNotifier> notifier = nullptr) override;
@@ -219,6 +224,8 @@ class TransactionBaseImpl : public Transaction {
   void DisableIndexing() override { indexing_enabled_ = false; }
 
   void EnableIndexing() override { indexing_enabled_ = true; }
+
+  bool IndexingEnabled() const { return indexing_enabled_; }
 
   uint64_t GetElapsedTime() const override;
 
@@ -277,6 +284,8 @@ class TransactionBaseImpl : public Transaction {
     auto s = WriteBatchInternal::InsertNoop(write_batch_.GetWriteBatch());
     assert(s.ok());
   }
+
+  WriteBatchBase* GetBatchForWrite();
 
   DB* db_;
   DBImpl* dbimpl_;
@@ -342,7 +351,9 @@ class TransactionBaseImpl : public Transaction {
       save_points_;
 
  private:
+  friend class WriteCommittedTxn;
   friend class WritePreparedTxn;
+
   // Extra data to be persisted with the commit. Note this is only used when
   // prepare phase is not skipped.
   WriteBatch commit_time_batch_;
@@ -365,10 +376,9 @@ class TransactionBaseImpl : public Transaction {
                  bool read_only, bool exclusive, const bool do_validate = true,
                  const bool assume_tracked = false);
 
-  WriteBatchBase* GetBatchForWrite();
   void SetSnapshotInternal(const Snapshot* snapshot);
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

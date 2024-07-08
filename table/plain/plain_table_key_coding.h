@@ -5,11 +5,11 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <array>
 
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 #include "table/plain/plain_table_reader.h"
 
 // The file contains three helper classes of PlainTable format,
@@ -17,7 +17,7 @@
 // These classes issue the lowest level of operations of PlainTable.
 // Actual data format of the key is documented in comments of class
 // PlainTableFactory.
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class WritableFile;
 struct ParsedInternalKey;
@@ -196,6 +196,6 @@ class PlainTableKeyDecoder {
                            uint32_t* bytes_read);
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

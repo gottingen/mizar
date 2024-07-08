@@ -11,11 +11,12 @@
 #include <stdexcept>
 #include <vector>
 
-#include "mizar/rocksdb_namespace.h"
+#include "port/lang.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
 template <class T, size_t kSize = 8>
 class autovector : public std::vector<T> {
   using std::vector<T>::vector;
@@ -35,7 +36,7 @@ class autovector : public std::vector<T> {
 // full-fledged generic container.
 //
 // Currently we don't support:
-//  * reserve()/shrink_to_fit()
+//  * shrink_to_fit()
 //     If used correctly, in most cases, people should not touch the
 //     underlying vector at all.
 //  * random insert()/erase(), please only use push_back()/pop_back().
@@ -72,7 +73,7 @@ class autovector {
     using iterator_category = std::random_access_iterator_tag;
 
     iterator_impl(TAutoVector* vect, size_t index)
-        : vect_(vect), index_(index) {};
+        : vect_(vect), index_(index){};
     iterator_impl(const iterator_impl&) = default;
     ~iterator_impl() {}
     iterator_impl& operator=(const iterator_impl&) = default;
@@ -138,9 +139,7 @@ class autovector {
       return &(*vect_)[index_];
     }
 
-    reference operator[](difference_type len) const {
-      return *(*this + len);
-    }
+    reference operator[](difference_type len) const { return *(*this + len); }
 
     // -- Logical Operators
     bool operator==(const self_type& other) const {
@@ -222,6 +221,16 @@ class autovector {
 
   bool empty() const { return size() == 0; }
 
+  size_type capacity() const { return kSize + vect_.capacity(); }
+
+  void reserve(size_t cap) {
+    if (cap > kSize) {
+      vect_.reserve(cap - kSize);
+    }
+
+    assert(cap <= capacity());
+  }
+
   const_reference operator[](size_type n) const {
     assert(n < size());
     if (n < kSize) {
@@ -288,6 +297,16 @@ class autovector {
   }
 
   template <class... Args>
+#if _LIBCPP_STD_VER > 14
+  reference emplace_back(Args&&... args) {
+    if (num_stack_items_ < kSize) {
+      return *(new ((void*)(&values_[num_stack_items_++]))
+                   value_type(std::forward<Args>(args)...));
+    } else {
+      return vect_.emplace_back(std::forward<Args>(args)...);
+    }
+  }
+#else
   void emplace_back(Args&&... args) {
     if (num_stack_items_ < kSize) {
       new ((void*)(&values_[num_stack_items_++]))
@@ -296,6 +315,7 @@ class autovector {
       vect_.emplace_back(std::forward<Args>(args)...);
     }
   }
+#endif
 
   void pop_back() {
     assert(!empty());
@@ -319,6 +339,9 @@ class autovector {
   autovector(const autovector& other) { assign(other); }
 
   autovector& operator=(const autovector& other) { return assign(other); }
+
+  autovector(autovector&& other) noexcept { *this = std::move(other); }
+  autovector& operator=(autovector&& other);
 
   // -- Iterator Operations
   iterator begin() { return iterator(this, 0); }
@@ -352,7 +375,8 @@ class autovector {
 };
 
 template <class T, size_t kSize>
-autovector<T, kSize>& autovector<T, kSize>::assign(const autovector& other) {
+autovector<T, kSize>& autovector<T, kSize>::assign(
+    const autovector<T, kSize>& other) {
   values_ = reinterpret_cast<pointer>(buf_);
   // copy the internal vector
   vect_.assign(other.vect_.begin(), other.vect_.end());
@@ -363,5 +387,20 @@ autovector<T, kSize>& autovector<T, kSize>::assign(const autovector& other) {
 
   return *this;
 }
-#endif  // MIZAR_LITE
-}  // namespace MIZAR_NAMESPACE
+
+template <class T, size_t kSize>
+autovector<T, kSize>& autovector<T, kSize>::operator=(
+    autovector<T, kSize>&& other) {
+  values_ = reinterpret_cast<pointer>(buf_);
+  vect_ = std::move(other.vect_);
+  size_t n = other.num_stack_items_;
+  num_stack_items_ = n;
+  other.num_stack_items_ = 0;
+  for (size_t i = 0; i < n; ++i) {
+    values_[i] = std::move(other.values_[i]);
+  }
+  return *this;
+}
+
+#endif  // ROCKSDB_LITE
+}  // namespace ROCKSDB_NAMESPACE

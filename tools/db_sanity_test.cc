@@ -5,22 +5,22 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "mizar/db.h"
-#include "mizar/options.h"
-#include "mizar/env.h"
-#include "mizar/slice.h"
-#include "mizar/status.h"
-#include "mizar/comparator.h"
-#include "mizar/table.h"
-#include "mizar/slice_transform.h"
-#include "mizar/filter_policy.h"
 #include "port/port.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/slice_transform.h"
+#include "rocksdb/status.h"
+#include "rocksdb/table.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class SanityTest {
  public:
@@ -37,16 +37,19 @@ class SanityTest {
     Options options = GetOptions();
     options.create_if_missing = true;
     std::string dbname = path_ + Name();
-    DestroyDB(dbname, options);
+    Status s = DestroyDB(dbname, options);
+    if (!s.ok()) {
+      return s;
+    }
     DB* db = nullptr;
-    Status s = DB::Open(options, dbname, &db);
+    s = DB::Open(options, dbname, &db);
     std::unique_ptr<DB> db_guard(db);
     if (!s.ok()) {
       return s;
     }
     for (int i = 0; i < 1000000; ++i) {
-      std::string k = "key" + ToString(i);
-      std::string v = "value" + ToString(i);
+      std::string k = "key" + std::to_string(i);
+      std::string v = "value" + std::to_string(i);
       s = db->Put(WriteOptions(), Slice(k), Slice(v));
       if (!s.ok()) {
         return s;
@@ -63,8 +66,8 @@ class SanityTest {
       return s;
     }
     for (int i = 0; i < 1000000; ++i) {
-      std::string k = "key" + ToString(i);
-      std::string v = "value" + ToString(i);
+      std::string k = "key" + std::to_string(i);
+      std::string v = "value" + std::to_string(i);
       std::string result;
       s = db->Get(ReadOptions(), Slice(k), &result);
       if (!s.ok()) {
@@ -195,7 +198,7 @@ class SanityTestZSTDCompression : public SanityTest {
   Options options_;
 };
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 class SanityTestPlainTableFactory : public SanityTest {
  public:
   explicit SanityTestPlainTableFactory(const std::string& path)
@@ -211,7 +214,7 @@ class SanityTestPlainTableFactory : public SanityTest {
  private:
   Options options_;
 };
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 class SanityTestBloomFilter : public SanityTest {
  public:
@@ -241,9 +244,9 @@ bool RunSanityTests(const std::string& command, const std::string& path) {
       new SanityTestLZ4Compression(path),
       new SanityTestLZ4HCCompression(path),
       new SanityTestZSTDCompression(path),
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
       new SanityTestPlainTableFactory(path),
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
       new SanityTestBloomFilter(path)};
 
   if (command == "create") {
@@ -273,7 +276,7 @@ bool RunSanityTests(const std::string& command, const std::string& path) {
 }
 }  // namespace
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
   std::string path, command;
@@ -291,7 +294,7 @@ int main(int argc, char** argv) {
     path += "/";
   }
 
-  bool sanity_ok = MIZAR_NAMESPACE::RunSanityTests(command, path);
+  bool sanity_ok = ROCKSDB_NAMESPACE::RunSanityTests(command, path);
 
   return sanity_ok ? 0 : 1;
 }

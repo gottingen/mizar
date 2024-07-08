@@ -11,20 +11,20 @@
 #include "options/options_helper.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/file_system.h"
+#include "rocksdb/file_system.h"
 #include "test_util/sync_point.h"
 #include "utilities/fault_injection_env.h"
 #include "utilities/fault_injection_fs.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class DBWALTestBase : public DBTestBase {
  protected:
   explicit DBWALTestBase(const std::string& dir_name)
       : DBTestBase(dir_name, /*env_do_fsync=*/true) {}
 
-#if defined(MIZAR_PLATFORM_POSIX)
+#if defined(ROCKSDB_PLATFORM_POSIX)
  public:
-#if defined(MIZAR_FALLOCATE_PRESENT)
+#if defined(ROCKSDB_FALLOCATE_PRESENT)
   bool IsFallocateSupported() {
     // Test fallocate support of running file system.
     // Skip this test if fallocate is not supported.
@@ -46,7 +46,7 @@ class DBWALTestBase : public DBTestBase {
     assert(alloc_status == 0);
     return true;
   }
-#endif  // MIZAR_FALLOCATE_PRESENT
+#endif  // ROCKSDB_FALLOCATE_PRESENT
 
   uint64_t GetAllocatedFileSize(std::string file_name) {
     struct stat sbuf;
@@ -54,7 +54,7 @@ class DBWALTestBase : public DBTestBase {
     assert(err == 0);
     return sbuf.st_blocks * 512;
   }
-#endif  // MIZAR_PLATFORM_POSIX
+#endif  // ROCKSDB_PLATFORM_POSIX
 };
 
 class DBWALTest : public DBWALTestBase {
@@ -224,15 +224,15 @@ TEST_F(DBWALTest, SyncWALNotBlockWrite) {
   ASSERT_OK(Put("foo1", "bar1"));
   ASSERT_OK(Put("foo5", "bar5"));
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"WritableFileWriter::SyncWithoutFlush:1",
        "DBWALTest::SyncWALNotBlockWrite:1"},
       {"DBWALTest::SyncWALNotBlockWrite:2",
        "WritableFileWriter::SyncWithoutFlush:2"},
   });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread thread([&]() { ASSERT_OK(db_->SyncWAL()); });
+  ROCKSDB_NAMESPACE::port::Thread thread([&]() { ASSERT_OK(db_->SyncWAL()); });
 
   TEST_SYNC_POINT("DBWALTest::SyncWALNotBlockWrite:1");
   ASSERT_OK(Put("foo2", "bar2"));
@@ -251,20 +251,20 @@ TEST_F(DBWALTest, SyncWALNotBlockWrite) {
   ASSERT_EQ(Get("foo3"), "bar3");
   ASSERT_EQ(Get("foo4"), "bar4");
   ASSERT_EQ(Get("foo5"), "bar5");
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(DBWALTest, SyncWALNotWaitWrite) {
   ASSERT_OK(Put("foo1", "bar1"));
   ASSERT_OK(Put("foo3", "bar3"));
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
       {"SpecialEnv::WalFile::Append:1", "DBWALTest::SyncWALNotWaitWrite:1"},
       {"DBWALTest::SyncWALNotWaitWrite:2", "SpecialEnv::WalFile::Append:2"},
   });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
-  MIZAR_NAMESPACE::port::Thread thread(
+  ROCKSDB_NAMESPACE::port::Thread thread(
       [&]() { ASSERT_OK(Put("foo2", "bar2")); });
   // Moving this to SyncWAL before the actual fsync
   // TEST_SYNC_POINT("DBWALTest::SyncWALNotWaitWrite:1");
@@ -276,7 +276,7 @@ TEST_F(DBWALTest, SyncWALNotWaitWrite) {
 
   ASSERT_EQ(Get("foo1"), "bar1");
   ASSERT_EQ(Get("foo2"), "bar2");
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(DBWALTest, Recover) {
@@ -287,7 +287,6 @@ TEST_F(DBWALTest, Recover) {
 
     ReopenWithColumnFamilies({"default", "pikachu"}, CurrentOptions());
     ASSERT_EQ("v1", Get(1, "foo"));
-
     ASSERT_EQ("v1", Get(1, "foo"));
     ASSERT_EQ("v5", Get(1, "baz"));
     ASSERT_OK(Put(1, "bar", "v2"));
@@ -327,7 +326,7 @@ TEST_F(DBWALTest, RecoverWithTableHandle) {
       // happen.
       options.max_open_files = kSmallMaxOpenFiles;
       // RocksDB sanitize max open files to at least 20. Modify it back.
-      MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+      ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
           "SanitizeOptions::AfterChangeMaxOpenFiles", [&](void* arg) {
             int* max_open_files = static_cast<int*>(arg);
             *max_open_files = kSmallMaxOpenFiles;
@@ -339,10 +338,10 @@ TEST_F(DBWALTest, RecoverWithTableHandle) {
     } else {
       options.max_open_files = -1;
     }
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
     ReopenWithColumnFamilies({"default", "pikachu"}, options);
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
     std::vector<std::vector<FileMetaData>> files;
     dbfull()->TEST_GetFilesMetaData(handles_[1], &files);
@@ -433,7 +432,7 @@ TEST_F(DBWALTest, RecoverWithBlob) {
   const auto& blob_files = storage_info->GetBlobFiles();
   ASSERT_EQ(blob_files.size(), 1);
 
-  const auto& blob_file = blob_files.begin()->second;
+  const auto& blob_file = blob_files.front();
   ASSERT_NE(blob_file, nullptr);
 
   ASSERT_EQ(table_file->smallest.user_key(), "key1");
@@ -445,7 +444,7 @@ TEST_F(DBWALTest, RecoverWithBlob) {
 
   ASSERT_EQ(blob_file->GetTotalBlobCount(), 1);
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   const InternalStats* const internal_stats = cfd->internal_stats();
   ASSERT_NE(internal_stats, nullptr);
 
@@ -461,7 +460,7 @@ TEST_F(DBWALTest, RecoverWithBlob) {
   ASSERT_EQ(cf_stats_value[InternalStats::BYTES_FLUSHED],
             compaction_stats[0].bytes_written +
                 compaction_stats[0].bytes_written_blob);
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }
 
 TEST_F(DBWALTest, RecoverWithBlobMultiSST) {
@@ -531,7 +530,7 @@ TEST_F(DBWALTest, RecoverWithBlobMultiSST) {
 }
 
 TEST_F(DBWALTest, WALWithChecksumHandoff) {
-#ifndef MIZAR_ASSERT_STATUS_CHECKED
+#ifndef ROCKSDB_ASSERT_STATUS_CHECKED
   if (mem_env_ || encrypted_env_) {
     ROCKSDB_GTEST_SKIP("Test requires non-mem or non-encrypted environment");
     return;
@@ -608,8 +607,54 @@ TEST_F(DBWALTest, WALWithChecksumHandoff) {
 
     Destroy(options);
   } while (ChangeWalOptions());
-#endif  // MIZAR_ASSERT_STATUS_CHECKED
+#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
 }
+
+#ifndef ROCKSDB_LITE
+TEST_F(DBWALTest, LockWal) {
+  do {
+    Options options = CurrentOptions();
+    options.create_if_missing = true;
+    DestroyAndReopen(options);
+    SyncPoint::GetInstance()->DisableProcessing();
+    SyncPoint::GetInstance()->LoadDependency(
+        {{"DBWALTest::LockWal:AfterGetSortedWal",
+          "DBWALTest::LockWal:BeforeFlush:1"}});
+    SyncPoint::GetInstance()->EnableProcessing();
+
+    ASSERT_OK(Put("foo", "v"));
+    ASSERT_OK(Put("bar", "v"));
+    port::Thread worker([&]() {
+      TEST_SYNC_POINT("DBWALTest::LockWal:BeforeFlush:1");
+      Status tmp_s = db_->Flush(FlushOptions());
+      ASSERT_OK(tmp_s);
+    });
+
+    ASSERT_OK(db_->LockWAL());
+    // Verify writes are stopped
+    WriteOptions wopts;
+    wopts.no_slowdown = true;
+    Status s = db_->Put(wopts, "foo", "dontcare");
+    ASSERT_TRUE(s.IsIncomplete());
+    {
+      VectorLogPtr wals;
+      ASSERT_OK(db_->GetSortedWalFiles(wals));
+      ASSERT_FALSE(wals.empty());
+    }
+    TEST_SYNC_POINT("DBWALTest::LockWal:AfterGetSortedWal");
+    FlushOptions flush_opts;
+    flush_opts.wait = false;
+    s = db_->Flush(flush_opts);
+    ASSERT_TRUE(s.IsTryAgain());
+    ASSERT_OK(db_->UnlockWAL());
+    ASSERT_OK(db_->Put(WriteOptions(), "foo", "dontcare"));
+
+    worker.join();
+
+    SyncPoint::GetInstance()->DisableProcessing();
+  } while (ChangeWalOptions());
+}
+#endif  //! ROCKSDB_LITE
 
 class DBRecoveryTestBlobError
     : public DBWALTest,
@@ -770,38 +815,38 @@ TEST_F(DBWALTest, PreallocateBlock) {
   DestroyAndReopen(options);
 
   std::atomic<int> called(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBTestWalFile.GetPreallocationStatus", [&](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         size_t preallocation_size = *(static_cast<size_t*>(arg));
         ASSERT_EQ(expected_preallocation_size, preallocation_size);
         called.fetch_add(1);
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(Put("", ""));
   ASSERT_OK(Flush());
   ASSERT_OK(Put("", ""));
   Close();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(2, called.load());
 
   options.max_total_wal_size = 1000 * 1000;
   expected_preallocation_size = static_cast<size_t>(options.max_total_wal_size);
   Reopen(options);
   called.store(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBTestWalFile.GetPreallocationStatus", [&](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         size_t preallocation_size = *(static_cast<size_t*>(arg));
         ASSERT_EQ(expected_preallocation_size, preallocation_size);
         called.fetch_add(1);
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(Put("", ""));
   ASSERT_OK(Flush());
   ASSERT_OK(Put("", ""));
   Close();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(2, called.load());
 
   options.db_write_buffer_size = 800 * 1000;
@@ -809,19 +854,19 @@ TEST_F(DBWALTest, PreallocateBlock) {
       static_cast<size_t>(options.db_write_buffer_size);
   Reopen(options);
   called.store(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBTestWalFile.GetPreallocationStatus", [&](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         size_t preallocation_size = *(static_cast<size_t*>(arg));
         ASSERT_EQ(expected_preallocation_size, preallocation_size);
         called.fetch_add(1);
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(Put("", ""));
   ASSERT_OK(Flush());
   ASSERT_OK(Put("", ""));
   Close();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(2, called.load());
 
   expected_preallocation_size = 700 * 1000;
@@ -830,24 +875,24 @@ TEST_F(DBWALTest, PreallocateBlock) {
   options.write_buffer_manager = write_buffer_manager;
   Reopen(options);
   called.store(0);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "DBTestWalFile.GetPreallocationStatus", [&](void* arg) {
         ASSERT_TRUE(arg != nullptr);
         size_t preallocation_size = *(static_cast<size_t*>(arg));
         ASSERT_EQ(expected_preallocation_size, preallocation_size);
         called.fetch_add(1);
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   ASSERT_OK(Put("", ""));
   ASSERT_OK(Flush());
   ASSERT_OK(Put("", ""));
   Close();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
   ASSERT_EQ(2, called.load());
 }
 #endif  // !(defined NDEBUG) || !defined(OS_WIN)
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_F(DBWALTest, DISABLED_FullPurgePreservesRecycledLog) {
   // TODO(ajkr): Disabled until WAL recycling is fixed for
   // `kPointInTimeRecovery`.
@@ -910,14 +955,14 @@ TEST_F(DBWALTest, DISABLED_FullPurgePreservesLogPendingReuse) {
     // The second flush can recycle the first log. Sync points enforce the
     // full purge happens after choosing the log to recycle and before it is
     // renamed.
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency({
         {"DBImpl::CreateWAL:BeforeReuseWritableFile1",
          "DBWALTest::FullPurgePreservesLogPendingReuse:PreFullPurge"},
         {"DBWALTest::FullPurgePreservesLogPendingReuse:PostFullPurge",
          "DBImpl::CreateWAL:BeforeReuseWritableFile2"},
     });
-    MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
-    MIZAR_NAMESPACE::port::Thread thread([&]() {
+    ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+    ROCKSDB_NAMESPACE::port::Thread thread([&]() {
       TEST_SYNC_POINT(
           "DBWALTest::FullPurgePreservesLogPendingReuse:PreFullPurge");
       ASSERT_OK(db_->EnableFileDeletions(true));
@@ -1010,7 +1055,7 @@ TEST_F(DBWALTest, RecoveryWithLogDataForSomeCFs) {
       if (log_files.size() > 0) {
         earliest_log_nums[i] = log_files[0]->LogNumber();
       } else {
-        earliest_log_nums[i] = port::kMaxUint64;
+        earliest_log_nums[i] = std::numeric_limits<uint64_t>::max();
       }
     }
     // Check at least the first WAL was cleaned up during the recovery.
@@ -1262,11 +1307,11 @@ class RecoveryTestHelper {
     std::unique_ptr<WalManager> wal_manager;
     WriteController write_controller;
 
-    versions.reset(new VersionSet(test->dbname_, &db_options, file_options,
-                                  table_cache.get(), &write_buffer_manager,
-                                  &write_controller,
-                                  /*block_cache_tracer=*/nullptr,
-                                  /*io_tracer=*/nullptr, /*db_session_id*/ ""));
+    versions.reset(new VersionSet(
+        test->dbname_, &db_options, file_options, table_cache.get(),
+        &write_buffer_manager, &write_controller,
+        /*block_cache_tracer=*/nullptr,
+        /*io_tracer=*/nullptr, /*db_id*/ "", /*db_session_id*/ ""));
 
     wal_manager.reset(
         new WalManager(db_options, file_options, /*io_tracer=*/nullptr));
@@ -1280,13 +1325,16 @@ class RecoveryTestHelper {
       ASSERT_OK(WritableFileWriter::Create(db_options.env->GetFileSystem(),
                                            fname, file_options, &file_writer,
                                            nullptr));
-      current_log_writer.reset(
+      log::Writer* log_writer =
           new log::Writer(std::move(file_writer), current_log_number,
-                          db_options.recycle_log_file_num > 0));
+                          db_options.recycle_log_file_num > 0, false,
+                          db_options.wal_compression);
+      ASSERT_OK(log_writer->AddCompressionTypeRecord());
+      current_log_writer.reset(log_writer);
 
       WriteBatch batch;
       for (int i = 0; i < kKeysPerWALFile; i++) {
-        std::string key = "key" + ToString((*count)++);
+        std::string key = "key" + std::to_string((*count)++);
         std::string value = test->DummyString(kValueSize);
         ASSERT_NE(current_log_writer.get(), nullptr);
         uint64_t seq = versions->LastSequence() + 1;
@@ -1317,7 +1365,7 @@ class RecoveryTestHelper {
   static size_t GetData(DBWALTestBase* test) {
     size_t count = 0;
     for (size_t i = 0; i < kWALFilesCount * kKeysPerWALFile; i++) {
-      if (test->Get("key" + ToString(i)) != "NOT_FOUND") {
+      if (test->Get("key" + std::to_string(i)) != "NOT_FOUND") {
         ++count;
       }
     }
@@ -1351,9 +1399,9 @@ class RecoveryTestHelper {
   }
 };
 
-class DBWALTestWithParams
-    : public DBWALTestBase,
-      public ::testing::WithParamInterface<std::tuple<bool, int, int>> {
+class DBWALTestWithParams : public DBWALTestBase,
+                            public ::testing::WithParamInterface<
+                                std::tuple<bool, int, int, CompressionType>> {
  public:
   DBWALTestWithParams() : DBWALTestBase("/db_wal_test_with_params") {}
 };
@@ -1364,12 +1412,14 @@ INSTANTIATE_TEST_CASE_P(
                        ::testing::Range(RecoveryTestHelper::kWALFileOffset,
                                         RecoveryTestHelper::kWALFileOffset +
                                             RecoveryTestHelper::kWALFilesCount,
-                                        1)));
+                                        1),
+                       ::testing::Values(CompressionType::kNoCompression,
+                                         CompressionType::kZSTD)));
 
 class DBWALTestWithParamsVaryingRecoveryMode
     : public DBWALTestBase,
       public ::testing::WithParamInterface<
-          std::tuple<bool, int, int, WALRecoveryMode>> {
+          std::tuple<bool, int, int, WALRecoveryMode, CompressionType>> {
  public:
   DBWALTestWithParamsVaryingRecoveryMode()
       : DBWALTestBase("/db_wal_test_with_params_mode") {}
@@ -1386,7 +1436,9 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(WALRecoveryMode::kTolerateCorruptedTailRecords,
                           WALRecoveryMode::kAbsoluteConsistency,
                           WALRecoveryMode::kPointInTimeRecovery,
-                          WALRecoveryMode::kSkipAnyCorruptedRecords)));
+                          WALRecoveryMode::kSkipAnyCorruptedRecords),
+        ::testing::Values(CompressionType::kNoCompression,
+                          CompressionType::kZSTD)));
 
 // Test scope:
 // - We expect to open the data store when there is incomplete trailing writes
@@ -1432,6 +1484,9 @@ TEST_P(DBWALTestWithParams, kAbsoluteConsistency) {
   // Corruption offset position
   int corrupt_offset = std::get<1>(GetParam());
   int wal_file_id = std::get<2>(GetParam());  // WAL file
+  // WAL compression type
+  CompressionType compression_type = std::get<3>(GetParam());
+  options.wal_compression = compression_type;
 
   if (trunc && corrupt_offset == 0) {
     return;
@@ -1440,7 +1495,7 @@ TEST_P(DBWALTestWithParams, kAbsoluteConsistency) {
   // fill with new date
   RecoveryTestHelper::FillData(this, &options);
   // corrupt the wal
-  RecoveryTestHelper::CorruptWAL(this, options, corrupt_offset * .3,
+  RecoveryTestHelper::CorruptWAL(this, options, corrupt_offset * .33,
                                  /*len%=*/.1, wal_file_id, trunc);
   // verify
   options.wal_recovery_mode = WALRecoveryMode::kAbsoluteConsistency;
@@ -1481,6 +1536,198 @@ TEST_F(DBWALTest, kPointInTimeRecoveryCFConsistency) {
   ASSERT_NOK(TryReopenWithColumnFamilies({"default", "one", "two"}, options));
 }
 
+TEST_F(DBWALTest, RaceInstallFlushResultsWithWalObsoletion) {
+  Options options = CurrentOptions();
+  options.env = env_;
+  options.track_and_verify_wals_in_manifest = true;
+  // The following make sure there are two bg flush threads.
+  options.max_background_jobs = 8;
+
+  DestroyAndReopen(options);
+
+  const std::string cf1_name("cf1");
+  CreateAndReopenWithCF({cf1_name}, options);
+  assert(handles_.size() == 2);
+
+  {
+    dbfull()->TEST_LockMutex();
+    ASSERT_LE(2, dbfull()->GetBGJobLimits().max_flushes);
+    dbfull()->TEST_UnlockMutex();
+  }
+
+  ASSERT_OK(dbfull()->PauseBackgroundWork());
+
+  ASSERT_OK(db_->Put(WriteOptions(), handles_[1], "foo", "value"));
+  ASSERT_OK(db_->Put(WriteOptions(), "foo", "value"));
+
+  ASSERT_OK(dbfull()->TEST_FlushMemTable(
+      /*wait=*/false, /*allow_write_stall=*/true, handles_[1]));
+
+  ASSERT_OK(db_->Put(WriteOptions(), "foo", "value"));
+
+  ASSERT_OK(dbfull()->TEST_FlushMemTable(
+      /*wait=*/false, /*allow_write_stall=*/true, handles_[0]));
+
+  bool called = false;
+  std::atomic<int> bg_flush_threads{0};
+  std::atomic<bool> wal_synced{false};
+  SyncPoint::GetInstance()->DisableProcessing();
+  SyncPoint::GetInstance()->ClearAllCallBacks();
+  SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::BackgroundCallFlush:start", [&](void* /*arg*/) {
+        int cur = bg_flush_threads.load();
+        int desired = cur + 1;
+        if (cur > 0 ||
+            !bg_flush_threads.compare_exchange_strong(cur, desired)) {
+          while (!wal_synced.load()) {
+            // Wait until the other bg flush thread finishes committing WAL sync
+            // operation to the MANIFEST.
+          }
+        }
+      });
+  SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::FlushMemTableToOutputFile:CommitWal:1",
+      [&](void* /*arg*/) { wal_synced.store(true); });
+  // This callback will be called when the first bg flush thread reaches the
+  // point before entering the MANIFEST write queue after flushing the SST
+  // file.
+  // The purpose of the sync points here is to ensure both bg flush threads
+  // finish computing `min_wal_number_to_keep` before any of them updates the
+  // `log_number` for the column family that's being flushed.
+  SyncPoint::GetInstance()->SetCallBack(
+      "MemTableList::TryInstallMemtableFlushResults:AfterComputeMinWalToKeep",
+      [&](void* /*arg*/) {
+        dbfull()->mutex()->AssertHeld();
+        if (!called) {
+          // We are the first bg flush thread in the MANIFEST write queue.
+          // We set up the dependency between sync points for two threads that
+          // will be executing the same code.
+          // For the interleaving of events, see
+          // https://github.com/facebook/rocksdb/pull/9715.
+          // bg flush thread1 will release the db mutex while in the MANIFEST
+          // write queue. In the meantime, bg flush thread2 locks db mutex and
+          // computes the min_wal_number_to_keep (before thread1 writes to
+          // MANIFEST thus before cf1->log_number is updated). Bg thread2 joins
+          // the MANIFEST write queue afterwards and bg flush thread1 proceeds
+          // with writing to MANIFEST.
+          called = true;
+          SyncPoint::GetInstance()->LoadDependency({
+              {"VersionSet::LogAndApply:WriteManifestStart",
+               "DBWALTest::RaceInstallFlushResultsWithWalObsoletion:BgFlush2"},
+              {"DBWALTest::RaceInstallFlushResultsWithWalObsoletion:BgFlush2",
+               "VersionSet::LogAndApply:WriteManifest"},
+          });
+        } else {
+          // The other bg flush thread has already been in the MANIFEST write
+          // queue, and we are after.
+          TEST_SYNC_POINT(
+              "DBWALTest::RaceInstallFlushResultsWithWalObsoletion:BgFlush2");
+        }
+      });
+  SyncPoint::GetInstance()->EnableProcessing();
+
+  ASSERT_OK(dbfull()->ContinueBackgroundWork());
+
+  ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable(handles_[0]));
+  ASSERT_OK(dbfull()->TEST_WaitForFlushMemTable(handles_[1]));
+
+  ASSERT_TRUE(called);
+
+  Close();
+
+  SyncPoint::GetInstance()->DisableProcessing();
+  SyncPoint::GetInstance()->ClearAllCallBacks();
+
+  DB* db1 = nullptr;
+  Status s = DB::OpenForReadOnly(options, dbname_, &db1);
+  ASSERT_OK(s);
+  assert(db1);
+  delete db1;
+}
+
+TEST_F(DBWALTest, FixSyncWalOnObseletedWalWithNewManifestCausingMissingWAL) {
+  Options options = CurrentOptions();
+  options.track_and_verify_wals_in_manifest = true;
+  DestroyAndReopen(options);
+
+  // Accumulate memtable m1 and create the 1st wal (i.e, 4.log)
+  ASSERT_OK(Put(Key(1), ""));
+  ASSERT_OK(Put(Key(2), ""));
+  ASSERT_OK(Put(Key(3), ""));
+
+  const std::string wal_file_path = db_->GetName() + "/000004.log";
+
+  // Coerce the following sequence of events:
+  // (1) Flush() marks 4.log to be obsoleted, 8.log to be the latest (i.e,
+  // active) log and release the lock
+  // (2) SyncWAL() proceeds with the lock. It
+  // creates a new manifest and syncs all the inactive wals before the latest
+  // (i.e, active log), which is 4.log. Note that SyncWAL() is not aware of the
+  // fact that 4.log has marked as to be obseleted. Prior to the fix, such wal
+  // sync will then add a WAL addition record of 4.log to the new manifest
+  // without any special treatment.
+  // (3) BackgroundFlush() will eventually purge 4.log.
+  bool wal_synced = false;
+  SyncPoint::GetInstance()->SetCallBack(
+      "FindObsoleteFiles::PostMutexUnlock", [&](void*) {
+        ASSERT_OK(env_->FileExists(wal_file_path));
+
+        SyncPoint::GetInstance()->SetCallBack(
+            "VersionSet::ProcessManifestWrites:"
+            "PostDecidingCreateNewManifestOrNot",
+            [&](void* arg) {
+              bool* new_descriptor_log = (bool*)arg;
+              *new_descriptor_log = true;
+            });
+
+        ASSERT_OK(db_->SyncWAL());
+        wal_synced = true;
+      });
+
+  SyncPoint::GetInstance()->SetCallBack(
+      "DBImpl::DeleteObsoleteFileImpl:AfterDeletion2", [&](void* arg) {
+        std::string* file_name = (std::string*)arg;
+        if (*file_name == wal_file_path) {
+          TEST_SYNC_POINT(
+              "DBWALTest::"
+              "FixSyncWalOnObseletedWalWithNewManifestCausingMissingWAL::"
+              "PostDeleteWAL");
+        }
+      });
+
+  SyncPoint::GetInstance()->LoadDependency(
+      {{"DBImpl::BackgroundCallFlush:FilesFound",
+        "PreConfrimObsoletedWALSynced"},
+       {"DBWALTest::FixSyncWalOnObseletedWalWithNewManifestCausingMissingWAL::"
+        "PostDeleteWAL",
+        "PreConfrimWALDeleted"}});
+
+  SyncPoint::GetInstance()->EnableProcessing();
+
+  ASSERT_OK(Flush());
+
+  TEST_SYNC_POINT("PreConfrimObsoletedWALSynced");
+  ASSERT_TRUE(wal_synced);
+
+  TEST_SYNC_POINT("PreConfrimWALDeleted");
+  // BackgroundFlush() purged 4.log
+  // because the memtable associated with the WAL was flushed and new WAL was
+  // created (i.e, 8.log)
+  ASSERT_TRUE(env_->FileExists(wal_file_path).IsNotFound());
+
+  SyncPoint::GetInstance()->ClearAllCallBacks();
+  SyncPoint::GetInstance()->DisableProcessing();
+
+  // To verify the corruption of "Missing WAL with log number: 4" under
+  // `options.track_and_verify_wals_in_manifest = true` is fixed.
+  //
+  // Before the fix, `db_->SyncWAL()` will sync and record WAL addtion of the
+  // obseleted WAL 4.log in a new manifest without any special treament.
+  // This will result in missing-wal corruption in DB::Reopen().
+  Status s = TryReopen(options);
+  EXPECT_OK(s);
+}
+
 // Test scope:
 // - We expect to open data store under all circumstances
 // - We expect only data upto the point where the first error was encountered
@@ -1492,13 +1739,19 @@ TEST_P(DBWALTestWithParams, kPointInTimeRecovery) {
   // Corruption offset position
   int corrupt_offset = std::get<1>(GetParam());
   int wal_file_id = std::get<2>(GetParam());  // WAL file
+  // WAL compression type
+  CompressionType compression_type = std::get<3>(GetParam());
 
   // Fill data for testing
   Options options = CurrentOptions();
+  options.wal_compression = compression_type;
   const size_t row_count = RecoveryTestHelper::FillData(this, &options);
 
   // Corrupt the wal
-  RecoveryTestHelper::CorruptWAL(this, options, corrupt_offset * .3,
+  // The offset here was 0.3 which cuts off right at the end of a
+  // valid fragment after wal zstd compression checksum is enabled,
+  // so changed the value to 0.33.
+  RecoveryTestHelper::CorruptWAL(this, options, corrupt_offset * .33,
                                  /*len%=*/.1, wal_file_id, trunc);
 
   // Verify
@@ -1517,7 +1770,7 @@ TEST_P(DBWALTestWithParams, kPointInTimeRecovery) {
   if (!trunc || corrupt_offset != 0) {
     bool expect_data = true;
     for (size_t k = 0; k < maxkeys; ++k) {
-      bool found = Get("key" + ToString(k)) != "NOT_FOUND";
+      bool found = Get("key" + std::to_string(k)) != "NOT_FOUND";
       if (expect_data && !found) {
         expect_data = false;
       }
@@ -1543,9 +1796,12 @@ TEST_P(DBWALTestWithParams, kSkipAnyCorruptedRecords) {
   // Corruption offset position
   int corrupt_offset = std::get<1>(GetParam());
   int wal_file_id = std::get<2>(GetParam());  // WAL file
+  // WAL compression type
+  CompressionType compression_type = std::get<3>(GetParam());
 
   // Fill data for testing
   Options options = CurrentOptions();
+  options.wal_compression = compression_type;
   const size_t row_count = RecoveryTestHelper::FillData(this, &options);
 
   // Corrupt the WAL
@@ -1650,7 +1906,7 @@ TEST_F(DBWALTest, RecoverWithoutFlush) {
   size_t count = RecoveryTestHelper::FillData(this, &options);
   auto validateData = [this, count]() {
     for (size_t i = 0; i < count; i++) {
-      ASSERT_NE(Get("key" + ToString(i)), "NOT_FOUND");
+      ASSERT_NE(Get("key" + std::to_string(i)), "NOT_FOUND");
     }
   };
   Reopen(options);
@@ -1769,8 +2025,11 @@ TEST_P(DBWALTestWithParamsVaryingRecoveryMode,
   int corrupt_offset = std::get<1>(GetParam());
   int wal_file_id = std::get<2>(GetParam());  // WAL file
   WALRecoveryMode recovery_mode = std::get<3>(GetParam());
+  // WAL compression type
+  CompressionType compression_type = std::get<4>(GetParam());
 
   options.wal_recovery_mode = recovery_mode;
+  options.wal_compression = compression_type;
   // Create corrupted WAL
   RecoveryTestHelper::FillData(this, &options);
   RecoveryTestHelper::CorruptWAL(this, options, corrupt_offset * .3,
@@ -1786,7 +2045,7 @@ TEST_P(DBWALTestWithParamsVaryingRecoveryMode,
   ASSERT_OK(TryReopen(options));
   // Append some more data.
   for (int k = 0; k < kAppendKeys; k++) {
-    std::string key = "extra_key" + ToString(k);
+    std::string key = "extra_key" + std::to_string(k);
     std::string value = DummyString(RecoveryTestHelper::kValueSize);
     ASSERT_OK(Put(key, value));
   }
@@ -1820,7 +2079,7 @@ TEST_F(DBWALTest, RestoreTotalLogSizeAfterRecoverWithoutFlush) {
   std::string value_300k(300 * kKB, 'v');
   ASSERT_OK(Put(0, "foo", "v1"));
   for (int i = 0; i < 9; i++) {
-    ASSERT_OK(Put(1, "key" + ToString(i), value_100k));
+    ASSERT_OK(Put(1, "key" + std::to_string(i), value_100k));
   }
   // Get log files before reopen.
   VectorLogPtr log_files_before;
@@ -1850,8 +2109,8 @@ TEST_F(DBWALTest, RestoreTotalLogSizeAfterRecoverWithoutFlush) {
   ASSERT_EQ(2, test_listener->count.load());
 }
 
-#if defined(MIZAR_PLATFORM_POSIX)
-#if defined(MIZAR_FALLOCATE_PRESENT)
+#if defined(ROCKSDB_PLATFORM_POSIX)
+#if defined(ROCKSDB_FALLOCATE_PRESENT)
 // Tests that we will truncate the preallocated space of the last log from
 // previous.
 TEST_F(DBWALTest, TruncateLastLogAfterRecoverWithoutFlush) {
@@ -1918,12 +2177,12 @@ TEST_F(DBWALTest, TruncateLastLogAfterRecoverWithFlush) {
   // The log file has preallocated space.
   Close();
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::PurgeObsoleteFiles:Begin",
         "DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterRecover"},
        {"DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterTruncate",
         "DBImpl::DeleteObsoleteFileImpl::BeforeDeletion"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   port::Thread reopen_thread([&]() { Reopen(options); });
 
   TEST_SYNC_POINT(
@@ -1937,7 +2196,7 @@ TEST_F(DBWALTest, TruncateLastLogAfterRecoverWithFlush) {
   TEST_SYNC_POINT(
       "DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterTruncate");
   reopen_thread.join();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
 }
 
 TEST_F(DBWALTest, TruncateLastLogAfterRecoverWALEmpty) {
@@ -1971,15 +2230,15 @@ TEST_F(DBWALTest, TruncateLastLogAfterRecoverWALEmpty) {
   }
   ASSERT_NE(last_log, "");
   last_log = dbname_ + '/' + last_log;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->LoadDependency(
       {{"DBImpl::PurgeObsoleteFiles:Begin",
         "DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterRecover"},
        {"DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterTruncate",
         "DBImpl::DeleteObsoleteFileImpl::BeforeDeletion"}});
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "PosixWritableFile::Close",
       [](void* arg) { *(reinterpret_cast<size_t*>(arg)) = 0; });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
   // Preallocate space for the empty log file. This could happen if WAL data
   // was buffered in memory and the process crashed.
   std::unique_ptr<WritableFile> log_file;
@@ -1999,8 +2258,8 @@ TEST_F(DBWALTest, TruncateLastLogAfterRecoverWALEmpty) {
   TEST_SYNC_POINT(
       "DBWALTest::TruncateLastLogAfterRecoverWithFlush:AfterTruncate");
   reopen_thread.join();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
 TEST_F(DBWALTest, ReadOnlyRecoveryNoTruncate) {
@@ -2057,10 +2316,63 @@ TEST_F(DBWALTest, ReadOnlyRecoveryNoTruncate) {
   SyncPoint::GetInstance()->DisableProcessing();
   SyncPoint::GetInstance()->ClearAllCallBacks();
 }
-#endif  // MIZAR_FALLOCATE_PRESENT
-#endif  // MIZAR_PLATFORM_POSIX
+#endif  // ROCKSDB_FALLOCATE_PRESENT
+#endif  // ROCKSDB_PLATFORM_POSIX
 
-#endif  // MIZAR_LITE
+TEST_F(DBWALTest, WalInManifestButNotInSortedWals) {
+  Options options = CurrentOptions();
+  options.track_and_verify_wals_in_manifest = true;
+  options.wal_recovery_mode = WALRecoveryMode::kAbsoluteConsistency;
+
+  // Build a way to make wal files selectively go missing
+  bool wals_go_missing = false;
+  struct MissingWalFs : public FileSystemWrapper {
+    MissingWalFs(const std::shared_ptr<FileSystem>& t,
+                 bool* _wals_go_missing_flag)
+        : FileSystemWrapper(t), wals_go_missing_flag(_wals_go_missing_flag) {}
+    bool* wals_go_missing_flag;
+    IOStatus GetChildren(const std::string& dir, const IOOptions& io_opts,
+                         std::vector<std::string>* r,
+                         IODebugContext* dbg) override {
+      IOStatus s = target_->GetChildren(dir, io_opts, r, dbg);
+      if (s.ok() && *wals_go_missing_flag) {
+        for (size_t i = 0; i < r->size();) {
+          if (EndsWith(r->at(i), ".log")) {
+            r->erase(r->begin() + i);
+          } else {
+            ++i;
+          }
+        }
+      }
+      return s;
+    }
+    const char* Name() const override { return "MissingWalFs"; }
+  };
+  auto my_fs =
+      std::make_shared<MissingWalFs>(env_->GetFileSystem(), &wals_go_missing);
+  std::unique_ptr<Env> my_env(NewCompositeEnv(my_fs));
+  options.env = my_env.get();
+
+  CreateAndReopenWithCF({"blah"}, options);
+
+  // Currently necessary to get a WAL tracked in manifest; see
+  // https://github.com/facebook/rocksdb/issues/10080
+  ASSERT_OK(Put(0, "x", "y"));
+  ASSERT_OK(db_->SyncWAL());
+  ASSERT_OK(Put(1, "x", "y"));
+  ASSERT_OK(db_->SyncWAL());
+  ASSERT_OK(Flush(1));
+
+  ASSERT_FALSE(dbfull()->GetVersionSet()->GetWalSet().GetWals().empty());
+  std::vector<std::unique_ptr<LogFile>> wals;
+  ASSERT_OK(db_->GetSortedWalFiles(wals));
+  wals_go_missing = true;
+  ASSERT_NOK(db_->GetSortedWalFiles(wals));
+  wals_go_missing = false;
+  Close();
+}
+
+#endif  // ROCKSDB_LITE
 
 TEST_F(DBWALTest, WalTermTest) {
   Options options = CurrentOptions();
@@ -2085,10 +2397,47 @@ TEST_F(DBWALTest, WalTermTest) {
   ASSERT_EQ("bar", Get(1, "foo"));
   ASSERT_EQ("NOT_FOUND", Get(1, "foo2"));
 }
-}  // namespace MIZAR_NAMESPACE
+
+#ifndef ROCKSDB_LITE
+TEST_F(DBWALTest, GetCompressedWalsAfterSync) {
+  if (db_->GetOptions().wal_compression == kNoCompression) {
+    ROCKSDB_GTEST_BYPASS("stream compression not present");
+    return;
+  }
+  Options options = GetDefaultOptions();
+  options.wal_recovery_mode = WALRecoveryMode::kPointInTimeRecovery;
+  options.create_if_missing = true;
+  options.env = env_;
+  options.avoid_flush_during_recovery = true;
+  options.track_and_verify_wals_in_manifest = true;
+  // Enable WAL compression so that the newly-created WAL will be non-empty
+  // after DB open, even if point-in-time WAL recovery encounters no
+  // corruption.
+  options.wal_compression = kZSTD;
+  DestroyAndReopen(options);
+
+  // Write something to memtable and WAL so that log_empty_ will be false after
+  // next DB::Open().
+  ASSERT_OK(Put("a", "v"));
+
+  Reopen(options);
+
+  // New WAL is created, thanks to !log_empty_.
+  ASSERT_OK(dbfull()->TEST_SwitchWAL());
+
+  ASSERT_OK(Put("b", "v"));
+
+  ASSERT_OK(db_->SyncWAL());
+
+  VectorLogPtr wals;
+  Status s = dbfull()->GetSortedWalFiles(wals);
+  ASSERT_OK(s);
+}
+#endif  // ROCKSDB_LITE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

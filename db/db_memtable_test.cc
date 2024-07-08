@@ -10,10 +10,10 @@
 #include "db/memtable.h"
 #include "db/range_del_aggregator.h"
 #include "port/stack_trace.h"
-#include "mizar/memtablerep.h"
-#include "mizar/slice_transform.h"
+#include "rocksdb/memtablerep.h"
+#include "rocksdb/slice_transform.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBMemTableTest : public DBTestBase {
  public:
@@ -97,7 +97,7 @@ class MockMemTableRepFactory : public MemTableRepFactory {
 
  private:
   MockMemTableRep* mock_rep_;
-  // workaround since there's no port::kMaxUint32 yet.
+  // workaround since there's no std::numeric_limits<uint32_t>::max() yet.
   uint32_t last_column_family_id_ = static_cast<uint32_t>(-1);
 };
 
@@ -171,7 +171,7 @@ TEST_F(DBMemTableTest, DuplicateSeq) {
     if (!insert_dup) {
       seq++;
     }
-    Status s = mem->Add(seq, kTypeValue, "foo", "value" + ToString(seq),
+    Status s = mem->Add(seq, kTypeValue, "foo", "value" + std::to_string(seq),
                         nullptr /* kv_prot_info */);
     if (insert_dup) {
       ASSERT_TRUE(s.IsTryAgain());
@@ -235,7 +235,7 @@ TEST_F(DBMemTableTest, ConcurrentMergeWrite) {
   value.clear();
 
   // Write Merge concurrently
-  MIZAR_NAMESPACE::port::Thread write_thread1([&]() {
+  ROCKSDB_NAMESPACE::port::Thread write_thread1([&]() {
     MemTablePostProcessInfo post_process_info1;
     std::string v1;
     for (int seq = 1; seq < num_ops / 2; seq++) {
@@ -245,7 +245,7 @@ TEST_F(DBMemTableTest, ConcurrentMergeWrite) {
       v1.clear();
     }
   });
-  MIZAR_NAMESPACE::port::Thread write_thread2([&]() {
+  ROCKSDB_NAMESPACE::port::Thread write_thread2([&]() {
     MemTablePostProcessInfo post_process_info2;
     std::string v2;
     for (int seq = num_ops / 2; seq < num_ops; seq++) {
@@ -262,8 +262,9 @@ TEST_F(DBMemTableTest, ConcurrentMergeWrite) {
   ReadOptions roptions;
   SequenceNumber max_covering_tombstone_seq = 0;
   LookupKey lkey("key", kMaxSequenceNumber);
-  bool res = mem->Get(lkey, &value, /*timestamp=*/nullptr, &status,
-                      &merge_context, &max_covering_tombstone_seq, roptions);
+  bool res = mem->Get(lkey, &value, /*columns=*/nullptr, /*timestamp=*/nullptr,
+                      &status, &merge_context, &max_covering_tombstone_seq,
+                      roptions, false /* immutable_memtable */);
   ASSERT_OK(status);
   ASSERT_TRUE(res);
   uint64_t ivalue = DecodeFixed64(Slice(value).data());
@@ -334,10 +335,10 @@ TEST_F(DBMemTableTest, ColumnFamilyId) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

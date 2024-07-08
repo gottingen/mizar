@@ -7,10 +7,10 @@
 
 #ifdef OS_LINUX
 #include "env/io_posix.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class EnvWithCustomLogicalBlockSizeCache : public EnvWrapper {
  public:
   EnvWithCustomLogicalBlockSizeCache(Env* env, LogicalBlockSizeCache* cache)
@@ -72,7 +72,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenClose) {
       printf("Open\n");
       ASSERT_OK(DB::Open(options, dbname_, &db));
     } else {
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -104,7 +104,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenDelete) {
       printf("Open\n");
       ASSERT_OK(DB::Open(options, dbname_, &db));
     } else {
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -167,9 +167,14 @@ TEST_F(DBLogicalBlockSizeCacheTest, CreateColumnFamily) {
 }
 
 TEST_F(DBLogicalBlockSizeCacheTest, CreateColumnFamilies) {
-  // Tests that CreateColumnFamilies will cache the cf_paths,
-  // drop the column family handle won't drop the cache,
-  // drop and then delete the column family handle will drop the cache.
+  // To test:
+  // (1) CreateColumnFamilies will cache the cf_paths in
+  // DBLogicalBlockSizeCache
+  // (2) Dropping column family handles associated with
+  // that cf_paths won't drop the cached cf_paths
+  // (3) Deleting all the column family handles associated
+  //  with that cf_paths will drop the cached cf_paths
+
   Options options;
   options.create_if_missing = true;
   options.env = env_.get();
@@ -190,7 +195,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, CreateColumnFamilies) {
   ASSERT_TRUE(cache_->Contains(cf_path_0_));
   ASSERT_EQ(2, cache_->GetRefCount(cf_path_0_));
 
-  // Drop column family does not drop cache.
+  // Drop column family does not drop cf_path_0_'s entry from cache
   for (ColumnFamilyHandle* cf : cfs) {
     ASSERT_OK(db->DropColumnFamily(cf));
     ASSERT_EQ(2, cache_->Size());
@@ -200,25 +205,27 @@ TEST_F(DBLogicalBlockSizeCacheTest, CreateColumnFamilies) {
     ASSERT_EQ(2, cache_->GetRefCount(cf_path_0_));
   }
 
-  // Delete one handle will not drop cache because another handle is still
-  // referencing cf_path_0_.
+  // Delete one cf handle will not drop cf_path_0_'s entry from cache because
+  // another handle is still referencing cf_path_0_.
   ASSERT_OK(db->DestroyColumnFamilyHandle(cfs[0]));
   ASSERT_EQ(2, cache_->Size());
   ASSERT_TRUE(cache_->Contains(dbname_));
   ASSERT_EQ(1, cache_->GetRefCount(dbname_));
   ASSERT_TRUE(cache_->Contains(cf_path_0_));
-  ASSERT_EQ(1, cache_->GetRefCount(cf_path_0_));
 
-  // Delete the last handle will drop cache.
+  // Delete all cf handles and ensure the ref count of cf_path_0_ in cache_
+  // can be properly decreased by releasing any background reference to the
+  // ColumnFamilyData during db deletion
   ASSERT_OK(db->DestroyColumnFamilyHandle(cfs[1]));
-  ASSERT_EQ(1, cache_->Size());
   ASSERT_TRUE(cache_->Contains(dbname_));
   ASSERT_EQ(1, cache_->GetRefCount(dbname_));
-
   delete db;
+
+  // Now cf_path_0_ in cache_ has been properly decreased and cf_path_0_'s entry
+  // is dropped from cache
   ASSERT_EQ(0, cache_->Size());
-  ASSERT_OK(DestroyDB(dbname_, options,
-      {{"cf1", cf_options}, {"cf2", cf_options}}));
+  ASSERT_OK(
+      DestroyDB(dbname_, options, {{"cf1", cf_options}, {"cf2", cf_options}}));
 }
 
 TEST_F(DBLogicalBlockSizeCacheTest, OpenWithColumnFamilies) {
@@ -254,7 +261,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenWithColumnFamilies) {
                           {"default", ColumnFamilyOptions()}},
                          &cfs, &db));
     } else {
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -306,8 +313,8 @@ TEST_F(DBLogicalBlockSizeCacheTest, OpenWithColumnFamilies) {
     delete db;
     ASSERT_EQ(0, cache_->Size());
   }
-  ASSERT_OK(DestroyDB(dbname_, options,
-      {{"cf1", cf_options}, {"cf2", cf_options}}));
+  ASSERT_OK(
+      DestroyDB(dbname_, options, {{"cf1", cf_options}, {"cf2", cf_options}}));
 }
 
 TEST_F(DBLogicalBlockSizeCacheTest, DestroyColumnFamilyHandle) {
@@ -353,7 +360,7 @@ TEST_F(DBLogicalBlockSizeCacheTest, DestroyColumnFamilyHandle) {
           options, dbname_,
           {{"cf", cf_options}, {"default", ColumnFamilyOptions()}}, &cfs, &db));
     } else {
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
       break;
 #else
       printf("OpenForReadOnly\n");
@@ -504,10 +511,11 @@ TEST_F(DBLogicalBlockSizeCacheTest, MultiDBWithSamePaths) {
   ASSERT_OK(DestroyDB(dbname_ + "/db1", options, {{"cf", cf_options}}));
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif  // OS_LINUX
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -3,18 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "mizar/customizable.h"
+#include "rocksdb/customizable.h"
 
 #include <sstream>
 
 #include "options/options_helper.h"
 #include "port/port.h"
-#include "mizar/convenience.h"
-#include "mizar/status.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/status.h"
+#include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 std::string Customizable::GetOptionName(const std::string& long_name) const {
   const std::string& name = Name();
@@ -35,7 +35,7 @@ std::string Customizable::GenerateIndividualId() const {
   return ostr.str();
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 Status Customizable::GetOption(const ConfigOptions& config_options,
                                const std::string& opt_name,
                                std::string* value) const {
@@ -68,7 +68,7 @@ std::string Customizable::SerializeOptions(const ConfigOptions& config_options,
   return result;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 bool Customizable::AreEquivalent(const ConfigOptions& config_options,
                                  const Configurable* other,
@@ -76,7 +76,9 @@ bool Customizable::AreEquivalent(const ConfigOptions& config_options,
   if (config_options.sanity_level > ConfigOptions::kSanityLevelNone &&
       this != other) {
     const Customizable* custom = reinterpret_cast<const Customizable*>(other);
-    if (GetId() != custom->GetId()) {
+    if (custom == nullptr) {  // Cast failed
+      return false;
+    } else if (GetId() != custom->GetId()) {
       *mismatch = OptionTypeInfo::kIdPropName();
       return false;
     } else if (config_options.sanity_level >
@@ -100,7 +102,7 @@ Status Customizable::GetOptionsMap(
   } else if (customizable != nullptr) {
     status =
         Configurable::GetOptionsMap(value, customizable->GetId(), id, props);
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
     (void)config_options;
 #else
     if (status.ok() && customizable->IsInstanceOf(*id)) {
@@ -116,7 +118,7 @@ Status Customizable::GetOptionsMap(
         }
       }
     }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   } else {
     status = Configurable::GetOptionsMap(value, "", id, props);
   }
@@ -134,4 +136,4 @@ Status Customizable::ConfigureNewObject(
   }
   return status;
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

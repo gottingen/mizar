@@ -4,12 +4,12 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/transactions/write_prepared_txn_db.h"
 #include "utilities/transactions/write_unprepared_txn.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class WriteUnpreparedTxn;
 
@@ -104,5 +104,5 @@ class WriteUnpreparedCommitEntryPreReleaseCallback : public PreReleaseCallback {
   bool publish_seq_;
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

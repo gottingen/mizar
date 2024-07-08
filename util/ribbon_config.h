@@ -11,9 +11,9 @@
 #include <cstdint>
 
 #include "port/lang.h"  // for FALLTHROUGH_INTENDED
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace ribbon {
 
@@ -179,4 +179,4 @@ struct BandingConfigHelper {
 
 }  // namespace ribbon
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

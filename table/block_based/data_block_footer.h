@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "mizar/table.h"
+#include "rocksdb/table.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 uint32_t PackIndexTypeAndNumRestarts(
     BlockBasedTableOptions::DataBlockIndexType index_type,
@@ -22,4 +22,4 @@ void UnPackIndexTypeAndNumRestarts(
     BlockBasedTableOptions::DataBlockIndexType* index_type,
     uint32_t* num_restarts);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

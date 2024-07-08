@@ -3,17 +3,18 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #include "table/plain/plain_table_key_coding.h"
 
 #include <algorithm>
 #include <string>
+
 #include "db/dbformat.h"
 #include "file/writable_file_writer.h"
 #include "table/plain/plain_table_factory.h"
 #include "table/plain/plain_table_reader.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 enum PlainTableEntryType : unsigned char {
   kFullKey = 0,
@@ -212,9 +213,11 @@ bool PlainTableFileReader::ReadNonMmap(uint32_t file_offset, uint32_t len,
     new_buffer->buf_len = 0;
   }
   Slice read_result;
+  // TODO: rate limit plain table reads.
   Status s =
       file_info_->file->Read(IOOptions(), file_offset, size_to_read,
-                             &read_result, new_buffer->buf.get(), nullptr);
+                             &read_result, new_buffer->buf.get(), nullptr,
+                             Env::IO_TOTAL /* rate_limiter_priority */);
   if (!s.ok()) {
     status_ = s;
     return false;
@@ -502,5 +505,5 @@ Status PlainTableKeyDecoder::NextKeyNoValue(uint32_t start_offset,
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif  // ROCKSDB_LIT

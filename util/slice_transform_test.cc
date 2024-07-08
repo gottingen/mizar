@@ -7,16 +7,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "mizar/slice_transform.h"
+#include "rocksdb/slice_transform.h"
 
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/filter_policy.h"
-#include "mizar/statistics.h"
-#include "mizar/table.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/statistics.h"
+#include "rocksdb/table.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class SliceTransformTest : public testing::Test {};
 
@@ -98,7 +98,7 @@ uint64_t TestGetTickerCount(const Options& options, Tickers ticker_type) {
 
 TEST_F(SliceTransformDBTest, CapPrefix) {
   last_options_.prefix_extractor.reset(NewCappedPrefixTransform(8));
-  last_options_.statistics = MIZAR_NAMESPACE::CreateDBStatistics();
+  last_options_.statistics = ROCKSDB_NAMESPACE::CreateDBStatistics();
   BlockBasedTableOptions bbto;
   bbto.filter_policy.reset(NewBloomFilterPolicy(10, false));
   bbto.whole_key_filtering = false;
@@ -145,9 +145,10 @@ TEST_F(SliceTransformDBTest, CapPrefix) {
   ASSERT_EQ(TestGetTickerCount(last_options_, BLOOM_FILTER_PREFIX_USEFUL), 3U);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

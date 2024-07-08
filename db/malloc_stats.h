@@ -9,16 +9,16 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <string>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 void DumpMallocStats(std::string*);
 
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

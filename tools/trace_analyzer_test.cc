@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -24,16 +24,16 @@ int main() {
 
 #include "db/db_test_util.h"
 #include "file/line_file_reader.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/status.h"
-#include "mizar/trace_reader_writer.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/status.h"
+#include "rocksdb/trace_reader_writer.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "tools/trace_analyzer_tool.h"
 #include "trace_replay/trace_replay.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 static const int kMaxArgCount = 100;
@@ -50,7 +50,7 @@ class TraceAnalyzerTest : public testing::Test {
   TraceAnalyzerTest() : rnd_(0xFB) {
     // test_path_ = test::TmpDir() + "trace_analyzer_test";
     test_path_ = test::PerThreadDBPath("trace_analyzer_test");
-    env_ = MIZAR_NAMESPACE::Env::Default();
+    env_ = ROCKSDB_NAMESPACE::Env::Default();
     env_->CreateDir(test_path_).PermitUncheckedError();
     dbname_ = test_path_ + "/db";
   }
@@ -111,7 +111,7 @@ class TraceAnalyzerTest : public testing::Test {
     single_iter->SeekForPrev("b");
     ASSERT_OK(single_iter->status());
     delete single_iter;
-    std::this_thread::sleep_for (std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     db_->Get(ro, "g", &value).PermitUncheckedError();
 
@@ -143,7 +143,7 @@ class TraceAnalyzerTest : public testing::Test {
       cursor += static_cast<int>(arg.size()) + 1;
     }
 
-    ASSERT_EQ(0, MIZAR_NAMESPACE::trace_analyzer_tool(argc, argv));
+    ASSERT_EQ(0, ROCKSDB_NAMESPACE::trace_analyzer_tool(argc, argv));
   }
 
   void CheckFileContent(const std::vector<std::string>& cnt,
@@ -160,7 +160,8 @@ class TraceAnalyzerTest : public testing::Test {
 
     std::vector<std::string> result;
     std::string line;
-    while (lf_reader.ReadLine(&line)) {
+    while (
+        lf_reader.ReadLine(&line, Env::IO_TOTAL /* rate_limiter_priority */)) {
       result.push_back(line);
     }
 
@@ -202,7 +203,7 @@ class TraceAnalyzerTest : public testing::Test {
     RunTraceAnalyzer(paras);
   }
 
-  MIZAR_NAMESPACE::Env* env_;
+  ROCKSDB_NAMESPACE::Env* env_;
   EnvOptions env_options_;
   std::string test_path_;
   std::string dbname_;
@@ -870,9 +871,10 @@ TEST_F(TraceAnalyzerTest, MultiGet) {
   */
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -881,8 +883,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "Trace_analyzer test is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "Trace_analyzer test is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE  return RUN_ALL_TESTS();
+#endif  // !ROCKSDB_LITE  return RUN_ALL_TESTS();

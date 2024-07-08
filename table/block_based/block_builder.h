@@ -8,14 +8,15 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
+#include <stdint.h>
+
 #include <vector>
 
-#include <stdint.h>
-#include "mizar/slice.h"
-#include "mizar/table.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/table.h"
 #include "table/block_based/data_block_hash_index.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class BlockBuilder {
  public:
@@ -98,4 +99,4 @@ class BlockBuilder {
 #endif
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

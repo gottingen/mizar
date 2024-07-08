@@ -3,19 +3,19 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "utilities/trace/replayer_impl.h"
 
 #include <cmath>
 #include <thread>
 
-#include "mizar/options.h"
-#include "mizar/slice.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/options.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/system_clock.h"
 #include "util/threadpool_imp.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 ReplayerImpl::ReplayerImpl(DB* db,
                            const std::vector<ColumnFamilyHandle*>& handles,
@@ -312,5 +312,5 @@ void ReplayerImpl::BackgroundWork(void* arg) {
   record.reset();
 }
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

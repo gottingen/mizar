@@ -5,7 +5,7 @@
 //
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <limits>
 #include <list>
@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "monitoring/histogram.h"
-#include "mizar/env.h"
-#include "mizar/persistent_cache.h"
-#include "mizar/status.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/env.h"
+#include "rocksdb/persistent_cache.h"
+#include "rocksdb/status.h"
+#include "rocksdb/system_clock.h"
 
 // Persistent Cache
 //
@@ -53,7 +53,7 @@
 //               |
 //               V
 //              null
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Persistent Cache Config
 //
@@ -337,6 +337,6 @@ class PersistentTieredCache : public PersistentCacheTier {
   std::list<Tier> tiers_;  // list of tiers top-down
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 #endif

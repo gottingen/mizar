@@ -9,12 +9,12 @@
 
 #include "util/compression_context_cache.h"
 
+#include <atomic>
+
 #include "util/compression.h"
 #include "util/core_local.h"
 
-#include <atomic>
-
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace compression_cache {
 
 void* const SentinelValue = nullptr;
@@ -103,4 +103,4 @@ void CompressionContextCache::ReturnCachedZSTDUncompressData(int64_t idx) {
 
 CompressionContextCache::~CompressionContextCache() { delete rep_; }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

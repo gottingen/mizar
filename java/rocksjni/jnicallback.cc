@@ -6,16 +6,18 @@
 // This file implements the callback "bridge" between Java and C++ for
 // JNI Callbacks from C++ to sub-classes or org.rocksdb.RocksCallbackObject
 
-#include <assert.h>
 #include "rocksjni/jnicallback.h"
+
+#include <assert.h>
+
 #include "rocksjni/portal.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 JniCallback::JniCallback(JNIEnv* env, jobject jcallback_obj) {
   // Note: jcallback_obj may be accessed by multiple threads,
   // so we ref the jvm not the env
   const jint rs = env->GetJavaVM(&m_jvm);
-  if(rs != JNI_OK) {
+  if (rs != JNI_OK) {
     // exception thrown
     return;
   }
@@ -24,7 +26,7 @@ JniCallback::JniCallback(JNIEnv* env, jobject jcallback_obj) {
   // across multiple method calls, so we create a global ref
   assert(jcallback_obj != nullptr);
   m_jcallback_obj = env->NewGlobalRef(jcallback_obj);
-  if(jcallback_obj == nullptr) {
+  if (jcallback_obj == nullptr) {
     // exception thrown: OutOfMemoryError
     return;
   }
@@ -49,4 +51,4 @@ JniCallback::~JniCallback() {
 
   releaseJniEnv(attached_thread);
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

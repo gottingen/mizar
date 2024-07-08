@@ -3,12 +3,12 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
 #include "table/cuckoo/cuckoo_table_factory.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
 #include "table/meta_blocks.h"
@@ -17,7 +17,7 @@
 #include "util/cast_util.h"
 #include "util/string_util.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class CuckooTableDBTest : public testing::Test {
  private:
@@ -77,9 +77,7 @@ class CuckooTableDBTest : public testing::Test {
     return db_->Put(WriteOptions(), k, v);
   }
 
-  Status Delete(const std::string& k) {
-    return db_->Delete(WriteOptions(), k);
-  }
+  Status Delete(const std::string& k) { return db_->Delete(WriteOptions(), k); }
 
   std::string Get(const std::string& k) {
     ReadOptions options;
@@ -95,8 +93,8 @@ class CuckooTableDBTest : public testing::Test {
 
   int NumTableFilesAtLevel(int level) {
     std::string property;
-    EXPECT_TRUE(db_->GetProperty("rocksdb.num-files-at-level" + ToString(level),
-                                 &property));
+    EXPECT_TRUE(db_->GetProperty(
+        "rocksdb.num-files-at-level" + std::to_string(level), &property));
     return atoi(property.c_str());
   }
 
@@ -313,23 +311,21 @@ TEST_F(CuckooTableDBTest, AdaptiveTable) {
   // Write some keys using plain table.
   std::shared_ptr<TableFactory> block_based_factory(
       NewBlockBasedTableFactory());
-  std::shared_ptr<TableFactory> plain_table_factory(
-      NewPlainTableFactory());
-  std::shared_ptr<TableFactory> cuckoo_table_factory(
-      NewCuckooTableFactory());
+  std::shared_ptr<TableFactory> plain_table_factory(NewPlainTableFactory());
+  std::shared_ptr<TableFactory> cuckoo_table_factory(NewCuckooTableFactory());
   options.create_if_missing = false;
-  options.table_factory.reset(NewAdaptiveTableFactory(
-    plain_table_factory, block_based_factory, plain_table_factory,
-    cuckoo_table_factory));
+  options.table_factory.reset(
+      NewAdaptiveTableFactory(plain_table_factory, block_based_factory,
+                              plain_table_factory, cuckoo_table_factory));
   Reopen(&options);
   ASSERT_OK(Put("key4", "v4"));
   ASSERT_OK(Put("key1", "v5"));
   ASSERT_OK(dbfull()->TEST_FlushMemTable());
 
   // Write some keys using block based table.
-  options.table_factory.reset(NewAdaptiveTableFactory(
-    block_based_factory, block_based_factory, plain_table_factory,
-    cuckoo_table_factory));
+  options.table_factory.reset(
+      NewAdaptiveTableFactory(block_based_factory, block_based_factory,
+                              plain_table_factory, cuckoo_table_factory));
   Reopen(&options);
   ASSERT_OK(Put("key5", "v6"));
   ASSERT_OK(Put("key2", "v7"));
@@ -341,10 +337,11 @@ TEST_F(CuckooTableDBTest, AdaptiveTable) {
   ASSERT_EQ("v4", Get("key4"));
   ASSERT_EQ("v6", Get("key5"));
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  if (MIZAR_NAMESPACE::port::kLittleEndian) {
+  if (ROCKSDB_NAMESPACE::port::kLittleEndian) {
+    ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
   } else {
@@ -357,8 +354,8 @@ int main(int argc, char** argv) {
 #include <stdio.h>
 
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "SKIPPED as Cuckoo table is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

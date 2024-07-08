@@ -5,10 +5,10 @@
 
 #include "test_util/testharness.h"
 
-#ifdef MIZAR_LIB_IO_POSIX
+#ifdef ROCKSDB_LIB_IO_POSIX
 #include "env/io_posix.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 #ifdef OS_LINUX
 class LogicalBlockSizeCacheTest : public testing::Test {};
@@ -131,10 +131,11 @@ TEST_F(LogicalBlockSizeCacheTest, Ref) {
 }
 #endif
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

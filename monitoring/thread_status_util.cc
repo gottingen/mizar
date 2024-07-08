@@ -6,15 +6,15 @@
 #include "monitoring/thread_status_util.h"
 
 #include "monitoring/thread_status_updater.h"
-#include "mizar/env.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/env.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
-__thread ThreadStatusUpdater* ThreadStatusUtil::thread_updater_local_cache_ =
-    nullptr;
-__thread bool ThreadStatusUtil::thread_updater_initialized_ = false;
+thread_local ThreadStatusUpdater*
+    ThreadStatusUtil::thread_updater_local_cache_ = nullptr;
+thread_local bool ThreadStatusUtil::thread_updater_initialized_ = false;
 
 void ThreadStatusUtil::RegisterThread(const Env* env,
                                       ThreadStatus::ThreadType thread_type) {
@@ -204,4 +204,4 @@ AutoThreadOperationStageUpdater::~AutoThreadOperationStageUpdater() {}
 
 #endif  // ROCKSDB_USING_THREAD_STATUS
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

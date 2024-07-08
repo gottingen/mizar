@@ -1,15 +1,20 @@
+//  Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
 
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/utilities/transaction_db.h"
+#include "rocksdb/utilities/transaction_db.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "utilities/transactions/lock/point/point_lock_manager.h"
 #include "utilities/transactions/pessimistic_transaction_db.h"
 #include "utilities/transactions/transaction_db_mutex_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class MockColumnFamilyHandle : public ColumnFamilyHandle {
  public:
@@ -188,17 +193,17 @@ TEST_P(AnyLockManagerTest, LockConflict) {
 port::Thread BlockUntilWaitingTxn(const char* sync_point_name,
                                   std::function<void()> f) {
   std::atomic<bool> reached(false);
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       sync_point_name, [&](void* /*arg*/) { reached.store(true); });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   port::Thread t(f);
 
   while (!reached.load()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 
   return t;
 }
@@ -316,4 +321,4 @@ TEST_P(AnyLockManagerTest, GetWaitingTxns_MultipleTxns) {
   delete txn3;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

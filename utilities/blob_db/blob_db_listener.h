@@ -5,15 +5,15 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <atomic>
 
-#include "mizar/listener.h"
+#include "rocksdb/listener.h"
 #include "util/mutexlock.h"
 #include "utilities/blob_db/blob_db_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace blob_db {
 
 class BlobDBListener : public EventListener {
@@ -67,5 +67,5 @@ class BlobDBListenerGC : public BlobDBListener {
 };
 
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

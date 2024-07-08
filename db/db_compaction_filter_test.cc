@@ -10,7 +10,7 @@
 #include "db/db_test_util.h"
 #include "port/stack_trace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 static int cfilter_count = 0;
 static int cfilter_skips = 0;
@@ -285,7 +285,7 @@ class ChangeFilterFactory : public CompactionFilterFactory {
   const char* Name() const override { return "ChangeFilterFactory"; }
 };
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_F(DBTestCompactionFilter, CompactionFilter) {
   Options options = CurrentOptions();
   options.max_open_files = -1;
@@ -328,11 +328,9 @@ TEST_F(DBTestCompactionFilter, CompactionFilter) {
   Arena arena;
   {
     InternalKeyComparator icmp(options.comparator);
-    ReadRangeDelAggregator range_del_agg(&icmp,
-                                         kMaxSequenceNumber /* upper_bound */);
     ReadOptions read_options;
     ScopedArenaIterator iter(dbfull()->NewInternalIterator(
-        read_options, &arena, &range_del_agg, kMaxSequenceNumber, handles_[1]));
+        read_options, &arena, kMaxSequenceNumber, handles_[1]));
     iter->SeekToFirst();
     ASSERT_OK(iter->status());
     while (iter->Valid()) {
@@ -422,11 +420,9 @@ TEST_F(DBTestCompactionFilter, CompactionFilter) {
   count = 0;
   {
     InternalKeyComparator icmp(options.comparator);
-    ReadRangeDelAggregator range_del_agg(&icmp,
-                                         kMaxSequenceNumber /* upper_bound */);
     ReadOptions read_options;
     ScopedArenaIterator iter(dbfull()->NewInternalIterator(
-        read_options, &arena, &range_del_agg, kMaxSequenceNumber, handles_[1]));
+        read_options, &arena, kMaxSequenceNumber, handles_[1]));
     iter->SeekToFirst();
     ASSERT_OK(iter->status());
     while (iter->Valid()) {
@@ -454,7 +450,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterDeletesAll) {
   // put some data
   for (int table = 0; table < 4; ++table) {
     for (int i = 0; i < 10 + table; ++i) {
-      ASSERT_OK(Put(ToString(table * 100 + i), "val"));
+      ASSERT_OK(Put(std::to_string(table * 100 + i), "val"));
     }
     ASSERT_OK(Flush());
   }
@@ -473,7 +469,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterDeletesAll) {
 
   delete itr;
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST_F(DBTestCompactionFilter, CompactionFilterFlush) {
   // Tests a `CompactionFilterFactory` that filters when table file is created
@@ -659,7 +655,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterWithMergeOperator) {
   ASSERT_EQ(newvalue, four);
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_F(DBTestCompactionFilter, CompactionFilterContextManual) {
   KeepFilterFactory* filter = new KeepFilterFactory(true, true);
 
@@ -701,11 +697,9 @@ TEST_F(DBTestCompactionFilter, CompactionFilterContextManual) {
     int total = 0;
     Arena arena;
     InternalKeyComparator icmp(options.comparator);
-    ReadRangeDelAggregator range_del_agg(&icmp,
-                                         kMaxSequenceNumber /* snapshots */);
     ReadOptions read_options;
-    ScopedArenaIterator iter(dbfull()->NewInternalIterator(
-        read_options, &arena, &range_del_agg, kMaxSequenceNumber));
+    ScopedArenaIterator iter(dbfull()->NewInternalIterator(read_options, &arena,
+                                                           kMaxSequenceNumber));
     iter->SeekToFirst();
     ASSERT_OK(iter->status());
     while (iter->Valid()) {
@@ -721,7 +715,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterContextManual) {
     ASSERT_EQ(count, 0);
   }
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST_F(DBTestCompactionFilter, CompactionFilterContextCfId) {
   KeepFilterFactory* filter = new KeepFilterFactory(false, true);
@@ -752,10 +746,10 @@ TEST_F(DBTestCompactionFilter, CompactionFilterContextCfId) {
   ASSERT_TRUE(filter->compaction_filter_created());
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 // Compaction filters aplies to all records, regardless snapshots.
 TEST_F(DBTestCompactionFilter, CompactionFilterIgnoreSnapshot) {
-  std::string five = ToString(5);
+  std::string five = std::to_string(5);
   Options options = CurrentOptions();
   options.compaction_filter_factory = std::make_shared<DeleteISFilterFactory>();
   options.disable_auto_compactions = true;
@@ -766,7 +760,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterIgnoreSnapshot) {
   const Snapshot* snapshot = nullptr;
   for (int table = 0; table < 4; ++table) {
     for (int i = 0; i < 10; ++i) {
-      ASSERT_OK(Put(ToString(table * 100 + i), "val"));
+      ASSERT_OK(Put(std::to_string(table * 100 + i), "val"));
     }
     ASSERT_OK(Flush());
 
@@ -813,7 +807,7 @@ TEST_F(DBTestCompactionFilter, CompactionFilterIgnoreSnapshot) {
   // removed.
   db_->ReleaseSnapshot(snapshot);
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST_F(DBTestCompactionFilter, SkipUntil) {
   Options options = CurrentOptions();
@@ -968,10 +962,75 @@ TEST_F(DBTestCompactionFilter, IgnoreSnapshotsFalseRecovery) {
   ASSERT_TRUE(TryReopen(options).IsNotSupported());
 }
 
-}  // namespace MIZAR_NAMESPACE
+TEST_F(DBTestCompactionFilter, DropKeyWithSingleDelete) {
+  Options options = GetDefaultOptions();
+  options.create_if_missing = true;
+
+  Reopen(options);
+
+  ASSERT_OK(Put("a", "v0"));
+  ASSERT_OK(Put("b", "v0"));
+  const Snapshot* snapshot = db_->GetSnapshot();
+
+  ASSERT_OK(SingleDelete("b"));
+  ASSERT_OK(Flush());
+
+  {
+    CompactRangeOptions cro;
+    cro.change_level = true;
+    cro.target_level = options.num_levels - 1;
+    ASSERT_OK(db_->CompactRange(cro, nullptr, nullptr));
+  }
+
+  db_->ReleaseSnapshot(snapshot);
+  Close();
+
+  class DeleteFilterV2 : public CompactionFilter {
+   public:
+    Decision FilterV2(int /*level*/, const Slice& key, ValueType /*value_type*/,
+                      const Slice& /*existing_value*/,
+                      std::string* /*new_value*/,
+                      std::string* /*skip_until*/) const override {
+      if (key.starts_with("b")) {
+        return Decision::kPurge;
+      }
+      return Decision::kRemove;
+    }
+
+    const char* Name() const override { return "DeleteFilterV2"; }
+  } delete_filter_v2;
+
+  options.compaction_filter = &delete_filter_v2;
+  options.level0_file_num_compaction_trigger = 2;
+  Reopen(options);
+
+  ASSERT_OK(Put("b", "v1"));
+  ASSERT_OK(Put("x", "v1"));
+  ASSERT_OK(Flush());
+
+  ASSERT_OK(Put("r", "v1"));
+  ASSERT_OK(Put("z", "v1"));
+  ASSERT_OK(Flush());
+
+  ASSERT_OK(dbfull()->TEST_WaitForCompact());
+
+  Close();
+
+  options.compaction_filter = nullptr;
+  Reopen(options);
+  ASSERT_OK(SingleDelete("b"));
+  ASSERT_OK(Flush());
+  {
+    CompactRangeOptions cro;
+    cro.bottommost_level_compaction = BottommostLevelCompaction::kForce;
+    ASSERT_OK(db_->CompactRange(cro, nullptr, nullptr));
+  }
+}
+
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

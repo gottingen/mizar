@@ -14,13 +14,16 @@
 #include "util/work_queue.h"
 
 #include <gtest/gtest.h>
+
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <vector>
 
-namespace MIZAR_NAMESPACE {
+#include "port/stack_trace.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 // Unit test for work_queue.h.
 //
@@ -260,9 +263,10 @@ TEST(WorkQueue, FailedPop) {
   EXPECT_EQ(5, x);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

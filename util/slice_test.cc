@@ -3,19 +3,25 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "mizar/slice.h"
+#include "rocksdb/slice.h"
 
 #include <gtest/gtest.h>
 
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/data_structure.h"
-#include "mizar/types.h"
-#include "mizar/utilities/regex.h"
+#include "rocksdb/data_structure.h"
+#include "rocksdb/types.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
+
+TEST(SliceTest, StringView) {
+  std::string s = "foo";
+  std::string_view sv = s;
+  ASSERT_EQ(Slice(s), Slice(sv));
+  ASSERT_EQ(Slice(s), Slice(std::move(sv)));
+}
 
 // Use this to keep track of the cleanups that were actually performed
 void Multiplier(void* arg1, void* arg2) {
@@ -26,8 +32,7 @@ void Multiplier(void* arg1, void* arg2) {
 
 class PinnableSliceTest : public testing::Test {
  public:
-  void AssertSameData(const std::string& expected,
-                      const PinnableSlice& slice) {
+  void AssertSameData(const std::string& expected, const PinnableSlice& slice) {
     std::string got;
     got.assign(slice.data(), slice.size());
     ASSERT_EQ(expected, got);
@@ -177,39 +182,10 @@ TEST_F(SmallEnumSetTest, SmallSetTest) {
   ASSERT_FALSE(fs.Contains(FileType::kDBLockFile));
 }
 
-// ***************************************************************** //
-// Unit test for Regex
-#ifndef MIZAR_LITE
-TEST(RegexTest, ParseEtc) {
-  Regex r;
-  ASSERT_OK(Regex::Parse("[abc]{5}", &r));
-  ASSERT_TRUE(r.Matches("abcba"));
-  ASSERT_FALSE(r.Matches("abcb"));    // too short
-  ASSERT_FALSE(r.Matches("abcbaa"));  // too long
-
-  ASSERT_OK(Regex::Parse(".*foo.*", &r));
-  ASSERT_TRUE(r.Matches("123forfoodie456"));
-  ASSERT_FALSE(r.Matches("123forfodie456"));
-  // Ensure copy operator
-  Regex r2;
-  r2 = r;
-  ASSERT_TRUE(r2.Matches("123forfoodie456"));
-  ASSERT_FALSE(r2.Matches("123forfodie456"));
-  // Ensure copy constructor
-  Regex r3{r};
-  ASSERT_TRUE(r3.Matches("123forfoodie456"));
-  ASSERT_FALSE(r3.Matches("123forfodie456"));
-
-  ASSERT_TRUE(Regex::Parse("*foo.*", &r).IsInvalidArgument());
-  ASSERT_TRUE(Regex::Parse("[abc", &r).IsInvalidArgument());
-  ASSERT_TRUE(Regex::Parse("[abc]{1", &r).IsInvalidArgument());
-}
-#endif  // MIZAR_LITE
-
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

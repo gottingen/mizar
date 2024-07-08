@@ -6,9 +6,9 @@
 #pragma once
 #include "monitoring/perf_level_imp.h"
 #include "monitoring/statistics.h"
-#include "mizar/system_clock.h"
+#include "rocksdb/system_clock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class PerfStepTimer {
  public:
@@ -26,9 +26,7 @@ class PerfStepTimer {
         metric_(metric),
         statistics_(statistics) {}
 
-  ~PerfStepTimer() {
-    Stop();
-  }
+  ~PerfStepTimer() { Stop(); }
 
   void Start() {
     if (perf_counter_enabled_ || statistics_ != nullptr) {
@@ -76,4 +74,4 @@ class PerfStepTimer {
   Statistics* statistics_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

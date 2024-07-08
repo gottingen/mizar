@@ -5,10 +5,10 @@
  */
 
 #pragma once
-#include "mizar/merge_operator.h"
-#include "mizar/slice.h"
+#include "rocksdb/merge_operator.h"
+#include "rocksdb/slice.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class StringAppendOperator : public AssociativeMergeOperator {
  public:
@@ -16,10 +16,8 @@ class StringAppendOperator : public AssociativeMergeOperator {
   explicit StringAppendOperator(char delim_char);
   explicit StringAppendOperator(const std::string& delim);
 
-  virtual bool Merge(const Slice& key,
-                     const Slice* existing_value,
-                     const Slice& value,
-                     std::string* new_value,
+  virtual bool Merge(const Slice& key, const Slice* existing_value,
+                     const Slice& value, std::string* new_value,
                      Logger* logger) const override;
 
   static const char* kClassName() { return "StringAppendOperator"; }
@@ -31,4 +29,4 @@ class StringAppendOperator : public AssociativeMergeOperator {
   std::string delim_;  // The delimiter is inserted between elements
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

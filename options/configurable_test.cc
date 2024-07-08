@@ -17,7 +17,7 @@
 #include "options/configurable_helper.h"
 #include "options/options_helper.h"
 #include "options/options_parser.h"
-#include "mizar/configurable.h"
+#include "rocksdb/configurable.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 
@@ -29,7 +29,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_bool(enable_print, false, "Print options generated to console.");
 #endif  // GFLAGS
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace test {
 class StringLogger : public Logger {
  public:
@@ -46,20 +46,20 @@ class StringLogger : public Logger {
   std::string string_;
 };
 static std::unordered_map<std::string, OptionTypeInfo> struct_option_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     {"struct", OptionTypeInfo::Struct("struct", &simple_option_info, 0,
                                       OptionVerificationType::kNormal,
                                       OptionTypeFlags::kMutable)},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 static std::unordered_map<std::string, OptionTypeInfo> imm_struct_option_info =
     {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"struct", OptionTypeInfo::Struct("struct", &simple_option_info, 0,
                                           OptionVerificationType::kNormal,
                                           OptionTypeFlags::kNone)},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 class SimpleConfigurable : public TestConfigurable<Configurable> {
@@ -113,7 +113,7 @@ TEST_F(ConfigurableTest, ConfigureFromMapTest) {
   auto* opts = configurable->GetOptions<TestOptions>("simple");
   ASSERT_OK(configurable->ConfigureFromMap(config_options_, {}));
   ASSERT_NE(opts, nullptr);
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   std::unordered_map<std::string, std::string> options_map = {
       {"int", "1"}, {"bool", "true"}, {"string", "string"}};
   ASSERT_OK(configurable->ConfigureFromMap(config_options_, options_map));
@@ -128,7 +128,7 @@ TEST_F(ConfigurableTest, ConfigureFromStringTest) {
   auto* opts = configurable->GetOptions<TestOptions>("simple");
   ASSERT_OK(configurable->ConfigureFromString(config_options_, ""));
   ASSERT_NE(opts, nullptr);
-#ifndef MIZAR_LITE  // GetOptionsFromMap is not supported in MIZAR_LITE
+#ifndef ROCKSDB_LITE  // GetOptionsFromMap is not supported in ROCKSDB_LITE
   ASSERT_OK(configurable->ConfigureFromString(config_options_,
                                               "int=1;bool=true;string=s"));
   ASSERT_EQ(opts->i, 1);
@@ -137,7 +137,7 @@ TEST_F(ConfigurableTest, ConfigureFromStringTest) {
 #endif
 }
 
-#ifndef MIZAR_LITE  // GetOptionsFromMap is not supported in MIZAR_LITE
+#ifndef ROCKSDB_LITE  // GetOptionsFromMap is not supported in ROCKSDB_LITE
 TEST_F(ConfigurableTest, ConfigureIgnoreTest) {
   std::unique_ptr<Configurable> configurable(SimpleConfigurable::Create());
   std::unordered_map<std::string, std::string> options_map = {{"unused", "u"}};
@@ -173,7 +173,7 @@ TEST_F(ConfigurableTest, GetOptionsTest) {
   int i = 11;
   for (auto opt : {"", "shared.", "unique.", "pointer."}) {
     std::string value;
-    std::string expected = ToString(i);
+    std::string expected = std::to_string(i);
     std::string opt_name = opt;
     ASSERT_OK(
         simple->ConfigureOption(config_options_, opt_name + "int", expected));
@@ -217,27 +217,27 @@ TEST_F(ConfigurableTest, InvalidOptionTest) {
 }
 
 static std::unordered_map<std::string, OptionTypeInfo> validated_option_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     {"validated",
      {0, OptionType::kBoolean, OptionVerificationType::kNormal,
       OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo> prepared_option_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     {"prepared",
      {0, OptionType::kInt, OptionVerificationType::kNormal,
       OptionTypeFlags::kMutable}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 static std::unordered_map<std::string, OptionTypeInfo>
     dont_prepare_option_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"unique",
          {0, OptionType::kConfigurable, OptionVerificationType::kNormal,
           (OptionTypeFlags::kUnique | OptionTypeFlags::kDontPrepare)}},
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 class ValidatedConfigurable : public SimpleConfigurable {
@@ -367,11 +367,11 @@ TEST_F(ConfigurableTest, CopyObjectTest) {
 
 TEST_F(ConfigurableTest, MutableOptionsTest) {
   static std::unordered_map<std::string, OptionTypeInfo> imm_option_info = {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
       {"imm", OptionTypeInfo::Struct("imm", &simple_option_info, 0,
                                      OptionVerificationType::kNormal,
                                      OptionTypeFlags::kNone)},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   };
 
   class MutableConfigurable : public SimpleConfigurable {
@@ -610,7 +610,7 @@ TEST_F(ConfigurableTest, ConfigurableEnumTest) {
   ASSERT_NOK(base->ConfigureOption(config_options_, "unknown", "bad"));
 }
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 static std::unordered_map<std::string, OptionTypeInfo> noserialize_option_info =
     {
         {"int",
@@ -867,11 +867,12 @@ INSTANTIATE_TEST_CASE_P(
         std::pair<std::string, std::string>("BlockBased",
                                             "block_size=1024;"
                                             "no_block_cache=true;")));
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 }  // namespace test
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
 #ifdef GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);

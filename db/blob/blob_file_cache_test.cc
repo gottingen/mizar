@@ -15,15 +15,15 @@
 #include "file/read_write_util.h"
 #include "file/writable_file_writer.h"
 #include "options/cf_options.h"
-#include "mizar/cache.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
-#include "mizar/options.h"
-#include "mizar/statistics.h"
+#include "rocksdb/cache.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+#include "rocksdb/options.h"
+#include "rocksdb/statistics.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 
@@ -254,15 +254,16 @@ TEST_F(BlobFileCacheTest, GetBlobFileReader_CacheFull) {
   CacheHandleGuard<BlobFileReader> reader;
 
   ASSERT_TRUE(blob_file_cache.GetBlobFileReader(blob_file_number, &reader)
-                  .IsIncomplete());
+                  .IsMemoryLimit());
   ASSERT_EQ(reader.GetValue(), nullptr);
   ASSERT_EQ(options.statistics->getTickerCount(NO_FILE_OPENS), 1);
   ASSERT_EQ(options.statistics->getTickerCount(NO_FILE_ERRORS), 1);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

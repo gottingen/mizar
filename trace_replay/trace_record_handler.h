@@ -9,13 +9,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "mizar/db.h"
-#include "mizar/options.h"
-#include "mizar/status.h"
-#include "mizar/system_clock.h"
-#include "mizar/trace_record.h"
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
+#include "rocksdb/status.h"
+#include "rocksdb/system_clock.h"
+#include "rocksdb/trace_record.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Handler to execute TraceRecord.
 class TraceExecutionHandler : public TraceRecord::Handler {
@@ -43,4 +43,4 @@ class TraceExecutionHandler : public TraceRecord::Handler {
 
 // To do: Handler for trace_analyzer.
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

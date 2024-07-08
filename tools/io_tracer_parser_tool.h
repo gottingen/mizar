@@ -3,15 +3,15 @@
 // COPYING file in the root directory) and Apache 2.0 License
 // (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #pragma once
 
 #include <memory>
 
-#include "mizar/env.h"
-#include "mizar/status.h"
+#include "rocksdb/env.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 struct IOTraceHeader;
 struct IOTraceRecord;
@@ -36,5 +36,5 @@ class IOTraceRecordParser {
 
 int io_tracer_parser(int argc, char** argv);
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

@@ -5,14 +5,14 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <set>
 
 #include "utilities/transactions/write_prepared_txn.h"
 #include "utilities/transactions/write_unprepared_txn_db.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class WriteUnpreparedTxnDB;
 class WriteUnpreparedTxn;
@@ -336,6 +336,6 @@ class WriteUnpreparedTxn : public WritePreparedTxn {
   KeySet untracked_keys_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

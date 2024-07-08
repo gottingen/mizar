@@ -3,9 +3,9 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#include "mizar/flush_block_policy.h"
+#include "rocksdb/flush_block_policy.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // FlushBlockEveryKeyPolicy currently used only in tests.
 
@@ -37,4 +37,4 @@ class FlushBlockEveryKeyPolicyFactory : public FlushBlockPolicyFactory {
   }
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

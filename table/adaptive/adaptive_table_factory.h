@@ -5,13 +5,14 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <string>
-#include "mizar/options.h"
-#include "mizar/table.h"
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/options.h"
+#include "rocksdb/table.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 struct EnvOptions;
 
@@ -53,5 +54,5 @@ class AdaptiveTableFactory : public TableFactory {
   std::shared_ptr<TableFactory> cuckoo_table_factory_;
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

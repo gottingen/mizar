@@ -7,11 +7,11 @@
 
 #include <algorithm>
 #include <string>
-#include "util/dynamic_bloom.h"
 
 #include "memory/allocator.h"
+#include "util/dynamic_bloom.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 
@@ -75,4 +75,4 @@ void BloomBlockBuilder::AddKeysHashes(
 Slice BloomBlockBuilder::Finish() { return bloom_.GetRawData(); }
 
 const std::string BloomBlockBuilder::kBloomBlock = "kBloomBlock";
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

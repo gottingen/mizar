@@ -4,9 +4,9 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::Cache.
+// ROCKSDB_NAMESPACE::Cache.
 
-#include "mizar/cache.h"
+#include "rocksdb/cache.h"
 
 #include <jni.h>
 
@@ -19,7 +19,7 @@
  */
 jlong Java_org_rocksdb_Cache_getUsage(JNIEnv*, jclass, jlong jhandle) {
   auto* sptr_cache =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::Cache>*>(jhandle);
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::Cache>*>(jhandle);
   return static_cast<jlong>(sptr_cache->get()->GetUsage());
 }
 
@@ -30,6 +30,6 @@ jlong Java_org_rocksdb_Cache_getUsage(JNIEnv*, jclass, jlong jhandle) {
  */
 jlong Java_org_rocksdb_Cache_getPinnedUsage(JNIEnv*, jclass, jlong jhandle) {
   auto* sptr_cache =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::Cache>*>(jhandle);
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::Cache>*>(jhandle);
   return static_cast<jlong>(sptr_cache->get()->GetPinnedUsage());
 }

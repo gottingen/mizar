@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <string>
 
-#include "mizar/rocksdb_namespace.h"
+#include "rocksdb/rocksdb_namespace.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class ObjectLibrary;
 namespace cassandra {
 struct CassandraOptions {
@@ -34,10 +34,10 @@ struct CassandraOptions {
   // data back.
   bool purge_ttl_on_expiration;
 };
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 extern "C" {
 int RegisterCassandraObjects(ObjectLibrary& library, const std::string& arg);
 }  // extern "C"
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 }  // namespace cassandra
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

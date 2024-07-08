@@ -5,14 +5,16 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <string>
 #include <vector>
+
 #include "db/db_impl/db_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
+// TODO: Share common structure with CompactedDBImpl and DBImplSecondary
 class DBImplReadOnly : public DBImpl {
  public:
   DBImplReadOnly(const DBOptions& options, const std::string& dbname);
@@ -27,6 +29,9 @@ class DBImplReadOnly : public DBImpl {
   virtual Status Get(const ReadOptions& options,
                      ColumnFamilyHandle* column_family, const Slice& key,
                      PinnableSlice* value) override;
+  Status Get(const ReadOptions& options, ColumnFamilyHandle* column_family,
+             const Slice& key, PinnableSlice* value,
+             std::string* timestamp) override;
 
   // TODO: Implement ReadOnly MultiGet?
 
@@ -45,6 +50,15 @@ class DBImplReadOnly : public DBImpl {
                      const Slice& /*key*/, const Slice& /*value*/) override {
     return Status::NotSupported("Not supported operation in read only mode.");
   }
+
+  using DBImpl::PutEntity;
+  Status PutEntity(const WriteOptions& /* options */,
+                   ColumnFamilyHandle* /* column_family */,
+                   const Slice& /* key */,
+                   const WideColumns& /* columns */) override {
+    return Status::NotSupported("Not supported operation in read only mode.");
+  }
+
   using DBImpl::Merge;
   virtual Status Merge(const WriteOptions& /*options*/,
                        ColumnFamilyHandle* /*column_family*/,
@@ -129,6 +143,16 @@ class DBImplReadOnly : public DBImpl {
     return Status::NotSupported("Not supported operation in read only mode.");
   }
 
+  // FIXME: some missing overrides for more "write" functions
+
+ protected:
+#ifndef ROCKSDB_LITE
+  Status FlushForGetLiveFiles() override {
+    // No-op for read-only DB
+    return Status::OK();
+  }
+#endif  // !ROCKSDB_LITE
+
  private:
   // A "helper" function for DB::OpenForReadOnly without column families
   // to reduce unnecessary I/O
@@ -141,6 +165,6 @@ class DBImplReadOnly : public DBImpl {
       bool error_if_wal_file_exists = false);
   friend class DB;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

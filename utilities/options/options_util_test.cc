@@ -3,9 +3,9 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/utilities/options_util.h"
+#include "rocksdb/utilities/options_util.h"
 
 #include <cctype>
 #include <cinttypes>
@@ -14,9 +14,9 @@
 #include "env/mock_env.h"
 #include "file/filename.h"
 #include "options/options_parser.h"
-#include "mizar/convenience.h"
-#include "mizar/db.h"
-#include "mizar/table.h"
+#include "rocksdb/convenience.h"
+#include "rocksdb/db.h"
+#include "rocksdb/table.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
@@ -29,7 +29,7 @@ using GFLAGS_NAMESPACE::ParseCommandLineFlags;
 DEFINE_bool(enable_print, false, "Print options generated to console.");
 #endif  // GFLAGS
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class OptionsUtilTest : public testing::Test {
  public:
   OptionsUtilTest() : rnd_(0xFB) {
@@ -505,7 +505,7 @@ static void WriteOptionsFile(Env* env, const std::string& path,
       "\n"
       "[Version]\n"
       "  rocksdb_version=" +
-      ToString(major) + "." + ToString(minor) +
+      std::to_string(major) + "." + std::to_string(minor) +
       ".0\n"
       "  options_file_version=1\n";
 
@@ -758,9 +758,10 @@ TEST_F(OptionsUtilTest, WalDirInOptins) {
   ASSERT_OK(LoadLatestOptions(dbname_, options.env, &db_opts, &cf_descs));
   ASSERT_EQ(db_opts.wal_dir, "");
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
 #ifdef GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
@@ -775,4 +776,4 @@ int main(int /*argc*/, char** /*argv*/) {
   printf("Skipped in RocksDBLite as utilities are not supported.\n");
   return 0;
 }
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

@@ -7,11 +7,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
-#include "mizar/utilities/env_mirror.h"
+#include "rocksdb/utilities/env_mirror.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // An implementation of Env that mirrors all work over two backend
 // Env's.  This is useful for debugging purposes.
@@ -271,5 +271,5 @@ Status EnvMirror::ReuseWritableFile(const std::string& fname,
   return as;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 #endif

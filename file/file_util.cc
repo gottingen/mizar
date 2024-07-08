@@ -5,34 +5,31 @@
 //
 #include "file/file_util.h"
 
-#include <string>
 #include <algorithm>
+#include <string>
 
 #include "file/random_access_file_reader.h"
 #include "file/sequence_file_reader.h"
 #include "file/sst_file_manager_impl.h"
 #include "file/writable_file_writer.h"
-#include "mizar/env.h"
+#include "rocksdb/env.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // Utility function to copy a file up to a specified length
 IOStatus CopyFile(FileSystem* fs, const std::string& source,
-                  const std::string& destination, uint64_t size, bool use_fsync,
-                  const std::shared_ptr<IOTracer>& io_tracer) {
-  const FileOptions soptions;
+                  std::unique_ptr<WritableFileWriter>& dest_writer,
+                  uint64_t size, bool use_fsync,
+                  const std::shared_ptr<IOTracer>& io_tracer,
+                  const Temperature temperature) {
+  FileOptions soptions;
   IOStatus io_s;
   std::unique_ptr<SequentialFileReader> src_reader;
-  std::unique_ptr<WritableFileWriter> dest_writer;
 
   {
+    soptions.temperature = temperature;
     std::unique_ptr<FSSequentialFile> srcfile;
     io_s = fs->NewSequentialFile(source, soptions, &srcfile, nullptr);
-    if (!io_s.ok()) {
-      return io_s;
-    }
-    std::unique_ptr<FSWritableFile> destfile;
-    io_s = fs->NewWritableFile(destination, soptions, &destfile, nullptr);
     if (!io_s.ok()) {
       return io_s;
     }
@@ -46,15 +43,16 @@ IOStatus CopyFile(FileSystem* fs, const std::string& source,
     }
     src_reader.reset(
         new SequentialFileReader(std::move(srcfile), source, io_tracer));
-    dest_writer.reset(
-        new WritableFileWriter(std::move(destfile), destination, soptions));
   }
 
   char buffer[4096];
   Slice slice;
   while (size > 0) {
     size_t bytes_to_read = std::min(sizeof(buffer), static_cast<size_t>(size));
-    io_s = status_to_io_status(src_reader->Read(bytes_to_read, &slice, buffer));
+    // TODO: rate limit copy file
+    io_s = status_to_io_status(
+        src_reader->Read(bytes_to_read, &slice, buffer,
+                         Env::IO_TOTAL /* rate_limiter_priority */));
     if (!io_s.ok()) {
       return io_s;
     }
@@ -68,6 +66,30 @@ IOStatus CopyFile(FileSystem* fs, const std::string& source,
     size -= slice.size();
   }
   return dest_writer->Sync(use_fsync);
+}
+
+IOStatus CopyFile(FileSystem* fs, const std::string& source,
+                  const std::string& destination, uint64_t size, bool use_fsync,
+                  const std::shared_ptr<IOTracer>& io_tracer,
+                  const Temperature temperature) {
+  FileOptions options;
+  IOStatus io_s;
+  std::unique_ptr<WritableFileWriter> dest_writer;
+
+  {
+    options.temperature = temperature;
+    std::unique_ptr<FSWritableFile> destfile;
+    io_s = fs->NewWritableFile(destination, options, &destfile, nullptr);
+    if (!io_s.ok()) {
+      return io_s;
+    }
+
+    dest_writer.reset(
+        new WritableFileWriter(std::move(destfile), destination, options));
+  }
+
+  return CopyFile(fs, source, dest_writer, size, use_fsync, io_tracer,
+                  temperature);
 }
 
 // Utility function to create a file with the provided contents
@@ -94,7 +116,7 @@ IOStatus CreateFile(FileSystem* fs, const std::string& destination,
 Status DeleteDBFile(const ImmutableDBOptions* db_options,
                     const std::string& fname, const std::string& dir_to_sync,
                     const bool force_bg, const bool force_fg) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   SstFileManagerImpl* sfm =
       static_cast<SstFileManagerImpl*>(db_options->sst_file_manager.get());
   if (sfm && !force_fg) {
@@ -106,7 +128,7 @@ Status DeleteDBFile(const ImmutableDBOptions* db_options,
   (void)dir_to_sync;
   (void)force_bg;
   (void)force_fg;
-  // SstFileManager is not supported in MIZAR_LITE
+  // SstFileManager is not supported in ROCKSDB_LITE
   // Delete file immediately
   return db_options->env->DeleteFile(fname);
 #endif
@@ -123,7 +145,8 @@ IOStatus GenerateOneFileChecksum(
     const std::string& requested_checksum_func_name, std::string* file_checksum,
     std::string* file_checksum_func_name,
     size_t verify_checksums_readahead_size, bool allow_mmap_reads,
-    std::shared_ptr<IOTracer>& io_tracer, RateLimiter* rate_limiter) {
+    std::shared_ptr<IOTracer>& io_tracer, RateLimiter* rate_limiter,
+    Env::IOPriority rate_limiter_priority) {
   if (checksum_factory == nullptr) {
     return IOStatus::InvalidArgument("Checksum factory is invalid");
   }
@@ -195,7 +218,8 @@ IOStatus GenerateOneFileChecksum(
         static_cast<size_t>(std::min(uint64_t{readahead_size}, size));
     if (!prefetch_buffer.TryReadFromCache(
             opts, reader.get(), offset, bytes_to_read, &slice,
-            nullptr /* status */, false /* for_compaction */)) {
+            nullptr /* status */, rate_limiter_priority,
+            false /* for_compaction */)) {
       return IOStatus::Corruption("file read failed");
     }
     if (slice.size() == 0) {
@@ -255,4 +279,4 @@ Status DestroyDir(Env* env, const std::string& dir) {
   return s;
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

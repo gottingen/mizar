@@ -4,12 +4,13 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::CompactionOptionsUniversal.
+// ROCKSDB_NAMESPACE::CompactionOptionsUniversal.
 
 #include <jni.h>
 
 #include "include/org_rocksdb_CompactionOptionsUniversal.h"
-#include "mizar/advanced_options.h"
+#include "rocksdb/advanced_options.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -19,8 +20,8 @@
  */
 jlong Java_org_rocksdb_CompactionOptionsUniversal_newCompactionOptionsUniversal(
     JNIEnv*, jclass) {
-  const auto* opt = new MIZAR_NAMESPACE::CompactionOptionsUniversal();
-  return reinterpret_cast<jlong>(opt);
+  const auto* opt = new ROCKSDB_NAMESPACE::CompactionOptionsUniversal();
+  return GET_CPLUSPLUS_POINTER(opt);
 }
 
 /*
@@ -31,7 +32,7 @@ jlong Java_org_rocksdb_CompactionOptionsUniversal_newCompactionOptionsUniversal(
 void Java_org_rocksdb_CompactionOptionsUniversal_setSizeRatio(
     JNIEnv*, jobject, jlong jhandle, jint jsize_ratio) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->size_ratio = static_cast<unsigned int>(jsize_ratio);
 }
 
@@ -40,10 +41,10 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setSizeRatio(
  * Method:    sizeRatio
  * Signature: (J)I
  */
-jint Java_org_rocksdb_CompactionOptionsUniversal_sizeRatio(
-    JNIEnv*, jobject, jlong jhandle) {
+jint Java_org_rocksdb_CompactionOptionsUniversal_sizeRatio(JNIEnv*, jobject,
+                                                           jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return static_cast<jint>(opt->size_ratio);
 }
 
@@ -55,7 +56,7 @@ jint Java_org_rocksdb_CompactionOptionsUniversal_sizeRatio(
 void Java_org_rocksdb_CompactionOptionsUniversal_setMinMergeWidth(
     JNIEnv*, jobject, jlong jhandle, jint jmin_merge_width) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->min_merge_width = static_cast<unsigned int>(jmin_merge_width);
 }
 
@@ -64,10 +65,10 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setMinMergeWidth(
  * Method:    minMergeWidth
  * Signature: (J)I
  */
-jint Java_org_rocksdb_CompactionOptionsUniversal_minMergeWidth(
-    JNIEnv*, jobject, jlong jhandle) {
+jint Java_org_rocksdb_CompactionOptionsUniversal_minMergeWidth(JNIEnv*, jobject,
+                                                               jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return static_cast<jint>(opt->min_merge_width);
 }
 
@@ -79,7 +80,7 @@ jint Java_org_rocksdb_CompactionOptionsUniversal_minMergeWidth(
 void Java_org_rocksdb_CompactionOptionsUniversal_setMaxMergeWidth(
     JNIEnv*, jobject, jlong jhandle, jint jmax_merge_width) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->max_merge_width = static_cast<unsigned int>(jmax_merge_width);
 }
 
@@ -88,10 +89,10 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setMaxMergeWidth(
  * Method:    maxMergeWidth
  * Signature: (J)I
  */
-jint Java_org_rocksdb_CompactionOptionsUniversal_maxMergeWidth(
-    JNIEnv*, jobject, jlong jhandle) {
+jint Java_org_rocksdb_CompactionOptionsUniversal_maxMergeWidth(JNIEnv*, jobject,
+                                                               jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return static_cast<jint>(opt->max_merge_width);
 }
 
@@ -103,7 +104,7 @@ jint Java_org_rocksdb_CompactionOptionsUniversal_maxMergeWidth(
 void Java_org_rocksdb_CompactionOptionsUniversal_setMaxSizeAmplificationPercent(
     JNIEnv*, jobject, jlong jhandle, jint jmax_size_amplification_percent) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->max_size_amplification_percent =
       static_cast<unsigned int>(jmax_size_amplification_percent);
 }
@@ -116,7 +117,7 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setMaxSizeAmplificationPercent(
 jint Java_org_rocksdb_CompactionOptionsUniversal_maxSizeAmplificationPercent(
     JNIEnv*, jobject, jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return static_cast<jint>(opt->max_size_amplification_percent);
 }
 
@@ -126,10 +127,9 @@ jint Java_org_rocksdb_CompactionOptionsUniversal_maxSizeAmplificationPercent(
  * Signature: (JI)V
  */
 void Java_org_rocksdb_CompactionOptionsUniversal_setCompressionSizePercent(
-    JNIEnv*, jobject, jlong jhandle,
-    jint jcompression_size_percent) {
+    JNIEnv*, jobject, jlong jhandle, jint jcompression_size_percent) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->compression_size_percent =
       static_cast<unsigned int>(jcompression_size_percent);
 }
@@ -142,7 +142,7 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setCompressionSizePercent(
 jint Java_org_rocksdb_CompactionOptionsUniversal_compressionSizePercent(
     JNIEnv*, jobject, jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return static_cast<jint>(opt->compression_size_percent);
 }
 
@@ -154,9 +154,9 @@ jint Java_org_rocksdb_CompactionOptionsUniversal_compressionSizePercent(
 void Java_org_rocksdb_CompactionOptionsUniversal_setStopStyle(
     JNIEnv*, jobject, jlong jhandle, jbyte jstop_style_value) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->stop_style =
-      MIZAR_NAMESPACE::CompactionStopStyleJni::toCppCompactionStopStyle(
+      ROCKSDB_NAMESPACE::CompactionStopStyleJni::toCppCompactionStopStyle(
           jstop_style_value);
 }
 
@@ -165,11 +165,11 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setStopStyle(
  * Method:    stopStyle
  * Signature: (J)B
  */
-jbyte Java_org_rocksdb_CompactionOptionsUniversal_stopStyle(
-    JNIEnv*, jobject, jlong jhandle) {
+jbyte Java_org_rocksdb_CompactionOptionsUniversal_stopStyle(JNIEnv*, jobject,
+                                                            jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
-  return MIZAR_NAMESPACE::CompactionStopStyleJni::toJavaCompactionStopStyle(
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+  return ROCKSDB_NAMESPACE::CompactionStopStyleJni::toJavaCompactionStopStyle(
       opt->stop_style);
 }
 
@@ -181,7 +181,7 @@ jbyte Java_org_rocksdb_CompactionOptionsUniversal_stopStyle(
 void Java_org_rocksdb_CompactionOptionsUniversal_setAllowTrivialMove(
     JNIEnv*, jobject, jlong jhandle, jboolean jallow_trivial_move) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   opt->allow_trivial_move = static_cast<bool>(jallow_trivial_move);
 }
 
@@ -193,7 +193,7 @@ void Java_org_rocksdb_CompactionOptionsUniversal_setAllowTrivialMove(
 jboolean Java_org_rocksdb_CompactionOptionsUniversal_allowTrivialMove(
     JNIEnv*, jobject, jlong jhandle) {
   auto* opt =
-      reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
+      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(jhandle);
   return opt->allow_trivial_move;
 }
 
@@ -204,6 +204,6 @@ jboolean Java_org_rocksdb_CompactionOptionsUniversal_allowTrivialMove(
  */
 void Java_org_rocksdb_CompactionOptionsUniversal_disposeInternal(
     JNIEnv*, jobject, jlong jhandle) {
-  delete reinterpret_cast<MIZAR_NAMESPACE::CompactionOptionsUniversal*>(
+  delete reinterpret_cast<ROCKSDB_NAMESPACE::CompactionOptionsUniversal*>(
       jhandle);
 }

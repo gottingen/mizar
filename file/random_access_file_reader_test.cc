@@ -10,13 +10,13 @@
 #include "file/file_util.h"
 #include "port/port.h"
 #include "port/stack_trace.h"
-#include "mizar/file_system.h"
+#include "rocksdb/file_system.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class RandomAccessFileReaderTest : public testing::Test {
  public:
@@ -60,13 +60,11 @@ class RandomAccessFileReaderTest : public testing::Test {
   std::shared_ptr<FileSystem> fs_;
   std::string test_dir_;
 
-  std::string Path(const std::string& fname) {
-    return test_dir_ + "/" + fname;
-  }
+  std::string Path(const std::string& fname) { return test_dir_ + "/" + fname; }
 };
 
 // Skip the following tests in lite mode since direct I/O is unsupported.
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 TEST_F(RandomAccessFileReaderTest, ReadDirectIO) {
   std::string fname = "read-direct-io";
@@ -85,22 +83,22 @@ TEST_F(RandomAccessFileReaderTest, ReadDirectIO) {
   size_t len = page_size / 3;
   Slice result;
   AlignedBuf buf;
-  for (bool for_compaction : {true, false}) {
+  for (Env::IOPriority rate_limiter_priority : {Env::IO_LOW, Env::IO_TOTAL}) {
     ASSERT_OK(r->Read(IOOptions(), offset, len, &result, nullptr, &buf,
-                      for_compaction));
+                      rate_limiter_priority));
     ASSERT_EQ(result.ToString(), content.substr(offset, len));
   }
 }
 
 TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
   std::vector<FSReadRequest> aligned_reqs;
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->SetCallBack(
       "RandomAccessFileReader::MultiRead:AlignedReqs", [&](void* reqs) {
         // Copy reqs, since it's allocated on stack inside MultiRead, which will
         // be deallocated after MultiRead returns.
         aligned_reqs = *reinterpret_cast<std::vector<FSReadRequest>*>(reqs);
       });
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->EnableProcessing();
 
   // Creates a file with 3 pages.
   std::string fname = "multi-read-direct-io";
@@ -138,8 +136,8 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     reqs.push_back(std::move(r0));
     reqs.push_back(std::move(r1));
     AlignedBuf aligned_buf;
-    ASSERT_OK(
-        r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf));
+    ASSERT_OK(r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf,
+                           Env::IO_TOTAL /* rate_limiter_priority */));
 
     AssertResult(content, reqs);
 
@@ -183,8 +181,8 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     reqs.push_back(std::move(r1));
     reqs.push_back(std::move(r2));
     AlignedBuf aligned_buf;
-    ASSERT_OK(
-        r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf));
+    ASSERT_OK(r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf,
+                           Env::IO_TOTAL /* rate_limiter_priority */));
 
     AssertResult(content, reqs);
 
@@ -228,8 +226,8 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     reqs.push_back(std::move(r1));
     reqs.push_back(std::move(r2));
     AlignedBuf aligned_buf;
-    ASSERT_OK(
-        r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf));
+    ASSERT_OK(r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf,
+                           Env::IO_TOTAL /* rate_limiter_priority */));
 
     AssertResult(content, reqs);
 
@@ -265,8 +263,8 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     reqs.push_back(std::move(r0));
     reqs.push_back(std::move(r1));
     AlignedBuf aligned_buf;
-    ASSERT_OK(
-        r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf));
+    ASSERT_OK(r->MultiRead(IOOptions(), reqs.data(), reqs.size(), &aligned_buf,
+                           Env::IO_TOTAL /* rate_limiter_priority */));
 
     AssertResult(content, reqs);
 
@@ -282,11 +280,11 @@ TEST_F(RandomAccessFileReaderTest, MultiReadDirectIO) {
     ASSERT_EQ(aligned_r1.len, page_size);
   }
 
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
-  MIZAR_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->DisableProcessing();
+  ROCKSDB_NAMESPACE::SyncPoint::GetInstance()->ClearAllCallBacks();
 }
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
 TEST(FSReadRequest, Align) {
   FSReadRequest r;
@@ -474,10 +472,10 @@ TEST(FSReadRequest, TryMerge) {
   }
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

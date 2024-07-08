@@ -4,16 +4,18 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// MIZAR_NAMESPACE::FilterPolicy.
+// ROCKSDB_NAMESPACE::FilterPolicy.
 
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <string>
 
 #include "include/org_rocksdb_BloomFilter.h"
 #include "include/org_rocksdb_Filter.h"
-#include "mizar/filter_policy.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 #include "rocksjni/portal.h"
 
 /*
@@ -21,14 +23,13 @@
  * Method:    createBloomFilter
  * Signature: (DZ)J
  */
-jlong Java_org_rocksdb_BloomFilter_createNewBloomFilter(
-    JNIEnv* /*env*/, jclass /*jcls*/, jdouble bits_per_key,
-    jboolean use_block_base_builder) {
+jlong Java_org_rocksdb_BloomFilter_createNewBloomFilter(JNIEnv* /*env*/,
+                                                        jclass /*jcls*/,
+                                                        jdouble bits_per_key) {
   auto* sptr_filter =
-      new std::shared_ptr<const MIZAR_NAMESPACE::FilterPolicy>(
-          MIZAR_NAMESPACE::NewBloomFilterPolicy(bits_per_key,
-                                                  use_block_base_builder));
-  return reinterpret_cast<jlong>(sptr_filter);
+      new std::shared_ptr<const ROCKSDB_NAMESPACE::FilterPolicy>(
+          ROCKSDB_NAMESPACE::NewBloomFilterPolicy(bits_per_key));
+  return GET_CPLUSPLUS_POINTER(sptr_filter);
 }
 
 /*
@@ -39,7 +40,7 @@ jlong Java_org_rocksdb_BloomFilter_createNewBloomFilter(
 void Java_org_rocksdb_Filter_disposeInternal(JNIEnv* /*env*/, jobject /*jobj*/,
                                              jlong jhandle) {
   auto* handle =
-      reinterpret_cast<std::shared_ptr<const MIZAR_NAMESPACE::FilterPolicy>*>(
+      reinterpret_cast<std::shared_ptr<const ROCKSDB_NAMESPACE::FilterPolicy>*>(
           jhandle);
   delete handle;  // delete std::shared_ptr
 }

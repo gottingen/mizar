@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #ifndef GFLAGS
 #include <cstdio>
 int main() {
@@ -16,15 +16,15 @@ int main() {
 #include <string>
 #include <vector>
 
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/status.h"
-#include "mizar/trace_reader_writer.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/status.h"
+#include "rocksdb/trace_reader_writer.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "tools/io_tracer_parser_tool.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 namespace {
 const int kMaxArgCount = 100;
@@ -35,7 +35,7 @@ class IOTracerParserTest : public testing::Test {
  public:
   IOTracerParserTest() {
     test_path_ = test::PerThreadDBPath("io_tracer_parser_test");
-    env_ = MIZAR_NAMESPACE::Env::Default();
+    env_ = ROCKSDB_NAMESPACE::Env::Default();
     EXPECT_OK(env_->CreateDirIfMissing(test_path_));
     trace_file_path_ = test_path_ + "/io_trace_file";
     dbname_ = test_path_ + "/db";
@@ -95,7 +95,7 @@ class IOTracerParserTest : public testing::Test {
       argv[argc++] = arg_buffer + cursor;
       cursor += static_cast<int>(arg.size()) + 1;
     }
-    ASSERT_EQ(0, MIZAR_NAMESPACE::io_tracer_parser(argc, argv));
+    ASSERT_EQ(0, ROCKSDB_NAMESPACE::io_tracer_parser(argc, argv));
   }
 
   DB* db_;
@@ -123,7 +123,7 @@ TEST_F(IOTracerParserTest, InvalidArguments) {
       argv[argc++] = arg_buffer + cursor;
       cursor += static_cast<int>(arg.size()) + 1;
     }
-    ASSERT_EQ(1, MIZAR_NAMESPACE::io_tracer_parser(argc, argv));
+    ASSERT_EQ(1, ROCKSDB_NAMESPACE::io_tracer_parser(argc, argv));
   }
 }
 
@@ -173,9 +173,10 @@ TEST_F(IOTracerParserTest, NoRecordingBeforeStartIOTrace) {
     RunIOTracerParserTool();
   }
 }
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
@@ -183,7 +184,7 @@ int main(int argc, char** argv) {
 #else
 #include <stdio.h>
 int main(int /*argc*/, char** /*argv*/) {
-  fprintf(stderr, "io_tracer_parser_test is not supported in MIZAR_LITE\n");
+  fprintf(stderr, "io_tracer_parser_test is not supported in ROCKSDB_LITE\n");
   return 0;
 }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

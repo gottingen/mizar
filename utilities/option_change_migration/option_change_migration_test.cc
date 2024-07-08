@@ -7,7 +7,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#include "mizar/utilities/option_change_migration.h"
+#include "rocksdb/utilities/option_change_migration.h"
 
 #include <set>
 
@@ -15,12 +15,12 @@
 #include "port/stack_trace.h"
 #include "util/random.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class DBOptionChangeMigrationTests
     : public DBTestBase,
       public testing::WithParamInterface<
-          std::tuple<int, int, bool, int, int, bool>> {
+          std::tuple<int, int, bool, int, int, bool, uint64_t>> {
  public:
   DBOptionChangeMigrationTests()
       : DBTestBase("db_option_change_migration_test", /*env_do_fsync=*/true) {
@@ -31,6 +31,7 @@ class DBOptionChangeMigrationTests
     level2_ = std::get<3>(GetParam());
     compaction_style2_ = std::get<4>(GetParam());
     is_dynamic2_ = std::get<5>(GetParam());
+    fifo_max_table_files_size_ = std::get<6>(GetParam());
   }
 
   // Required if inheriting from testing::WithParamInterface<>
@@ -44,9 +45,11 @@ class DBOptionChangeMigrationTests
   int level2_;
   int compaction_style2_;
   bool is_dynamic2_;
+
+  uint64_t fifo_max_table_files_size_;
 };
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 TEST_P(DBOptionChangeMigrationTests, Migrate1) {
   Options old_options = CurrentOptions();
   old_options.compaction_style =
@@ -96,6 +99,10 @@ TEST_P(DBOptionChangeMigrationTests, Migrate1) {
   }
   if (new_options.compaction_style == CompactionStyle::kCompactionStyleFIFO) {
     new_options.max_open_files = -1;
+  }
+  if (fifo_max_table_files_size_ != 0) {
+    new_options.compaction_options_fifo.max_table_files_size =
+        fifo_max_table_files_size_;
   }
   new_options.target_file_size_base = 256 * 1024;
   new_options.num_levels = level2_;
@@ -171,6 +178,10 @@ TEST_P(DBOptionChangeMigrationTests, Migrate2) {
   }
   if (new_options.compaction_style == CompactionStyle::kCompactionStyleFIFO) {
     new_options.max_open_files = -1;
+  }
+  if (fifo_max_table_files_size_ != 0) {
+    new_options.compaction_options_fifo.max_table_files_size =
+        fifo_max_table_files_size_;
   }
   new_options.target_file_size_base = 256 * 1024;
   new_options.num_levels = level1_;
@@ -250,6 +261,10 @@ TEST_P(DBOptionChangeMigrationTests, Migrate3) {
   }
   if (new_options.compaction_style == CompactionStyle::kCompactionStyleFIFO) {
     new_options.max_open_files = -1;
+  }
+  if (fifo_max_table_files_size_ != 0) {
+    new_options.compaction_options_fifo.max_table_files_size =
+        fifo_max_table_files_size_;
   }
   new_options.target_file_size_base = 256 * 1024;
   new_options.num_levels = level2_;
@@ -332,6 +347,10 @@ TEST_P(DBOptionChangeMigrationTests, Migrate4) {
   if (new_options.compaction_style == CompactionStyle::kCompactionStyleFIFO) {
     new_options.max_open_files = -1;
   }
+  if (fifo_max_table_files_size_ != 0) {
+    new_options.compaction_options_fifo.max_table_files_size =
+        fifo_max_table_files_size_;
+  }
   new_options.target_file_size_base = 256 * 1024;
   new_options.num_levels = level1_;
   new_options.max_bytes_for_level_base = 150 * 1024;
@@ -357,21 +376,100 @@ TEST_P(DBOptionChangeMigrationTests, Migrate4) {
 
 INSTANTIATE_TEST_CASE_P(
     DBOptionChangeMigrationTests, DBOptionChangeMigrationTests,
-    ::testing::Values(std::make_tuple(3, 0, false, 4, 0, false),
-                      std::make_tuple(3, 0, true, 4, 0, true),
-                      std::make_tuple(3, 0, true, 4, 0, false),
-                      std::make_tuple(3, 0, false, 4, 0, true),
-                      std::make_tuple(3, 1, false, 4, 1, false),
-                      std::make_tuple(1, 1, false, 4, 1, false),
-                      std::make_tuple(3, 0, false, 4, 1, false),
-                      std::make_tuple(3, 0, false, 1, 1, false),
-                      std::make_tuple(3, 0, true, 4, 1, false),
-                      std::make_tuple(3, 0, true, 1, 1, false),
-                      std::make_tuple(1, 1, false, 4, 0, false),
-                      std::make_tuple(4, 0, false, 1, 2, false),
-                      std::make_tuple(3, 0, true, 2, 2, false),
-                      std::make_tuple(3, 1, false, 3, 2, false),
-                      std::make_tuple(1, 1, false, 4, 2, false)));
+    ::testing::Values(
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 0 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 0 /* new compaction style */,
+                        true /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 0 /* new compaction style */,
+                        false, 0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 0 /* new compaction style */,
+                        true /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(1 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        1 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        1 /* old num_levels */, 1 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(1 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 0 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(4 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        1 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        2 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        3 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        0 /*fifo max_table_files_size*/),
+        std::make_tuple(1 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */, 0),
+        std::make_tuple(4 /* old num_levels */, 0 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        1 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        5 * 1024 * 1024 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 0 /* old compaction style */,
+                        true /* is dynamic leveling in old option */,
+                        2 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        5 * 1024 * 1024 /*fifo max_table_files_size*/),
+        std::make_tuple(3 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        3 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        5 * 1024 * 1024 /*fifo max_table_files_size*/),
+        std::make_tuple(1 /* old num_levels */, 1 /* old compaction style */,
+                        false /* is dynamic leveling in old option */,
+                        4 /* old num_levels */, 2 /* new compaction style */,
+                        false /* is dynamic leveling in new option */,
+                        5 * 1024 * 1024 /*fifo max_table_files_size*/)));
 
 class DBOptionChangeMigrationTest : public DBTestBase {
  public:
@@ -442,11 +540,11 @@ TEST_F(DBOptionChangeMigrationTest, CompactedSrcToUniversal) {
   }
 }
 
-#endif  // MIZAR_LITE
-}  // namespace MIZAR_NAMESPACE
+#endif  // ROCKSDB_LITE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

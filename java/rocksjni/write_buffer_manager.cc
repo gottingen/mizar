@@ -3,12 +3,13 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
+#include "rocksdb/write_buffer_manager.h"
+
 #include <jni.h>
 
 #include "include/org_rocksdb_WriteBufferManager.h"
-
-#include "mizar/cache.h"
-#include "mizar/write_buffer_manager.h"
+#include "rocksdb/cache.h"
+#include "rocksjni/cplusplus_to_java_convert.h"
 
 /*
  * Class:     org_rocksdb_WriteBufferManager
@@ -19,13 +20,13 @@ jlong Java_org_rocksdb_WriteBufferManager_newWriteBufferManager(
     JNIEnv* /*env*/, jclass /*jclazz*/, jlong jbuffer_size, jlong jcache_handle,
     jboolean allow_stall) {
   auto* cache_ptr =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::Cache>*>(
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::Cache>*>(
           jcache_handle);
   auto* write_buffer_manager =
-      new std::shared_ptr<MIZAR_NAMESPACE::WriteBufferManager>(
-          std::make_shared<MIZAR_NAMESPACE::WriteBufferManager>(
+      new std::shared_ptr<ROCKSDB_NAMESPACE::WriteBufferManager>(
+          std::make_shared<ROCKSDB_NAMESPACE::WriteBufferManager>(
               jbuffer_size, *cache_ptr, allow_stall));
-  return reinterpret_cast<jlong>(write_buffer_manager);
+  return GET_CPLUSPLUS_POINTER(write_buffer_manager);
 }
 
 /*
@@ -33,10 +34,11 @@ jlong Java_org_rocksdb_WriteBufferManager_newWriteBufferManager(
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_org_rocksdb_WriteBufferManager_disposeInternal(
-        JNIEnv* /*env*/, jobject /*jobj*/, jlong jhandle) {
+void Java_org_rocksdb_WriteBufferManager_disposeInternal(JNIEnv* /*env*/,
+                                                         jobject /*jobj*/,
+                                                         jlong jhandle) {
   auto* write_buffer_manager =
-      reinterpret_cast<std::shared_ptr<MIZAR_NAMESPACE::WriteBufferManager>*>(
+      reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::WriteBufferManager>*>(
           jhandle);
   assert(write_buffer_manager != nullptr);
   delete write_buffer_manager;

@@ -3,16 +3,16 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #pragma once
 
 #include <string>
 
-#include "mizar/compaction_filter.h"
-#include "mizar/slice.h"
+#include "rocksdb/compaction_filter.h"
+#include "rocksdb/slice.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class RemoveEmptyValueCompactionFilter : public CompactionFilter {
  public:
@@ -24,5 +24,5 @@ class RemoveEmptyValueCompactionFilter : public CompactionFilter {
               std::string* new_value, bool* value_changed) const override;
 };
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

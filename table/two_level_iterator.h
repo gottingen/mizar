@@ -8,11 +8,11 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
-#include "mizar/iterator.h"
-#include "mizar/env.h"
+#include "rocksdb/env.h"
+#include "rocksdb/iterator.h"
 #include "table/iterator_wrapper.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 struct ReadOptions;
 class InternalKeyComparator;
@@ -40,4 +40,4 @@ extern InternalIteratorBase<IndexValue>* NewTwoLevelIterator(
     TwoLevelIteratorState* state,
     InternalIteratorBase<IndexValue>* first_level_iter);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

@@ -3,16 +3,16 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 #include "table/cuckoo/cuckoo_table_factory.h"
 
 #include "db/dbformat.h"
 #include "options/configurable_helper.h"
-#include "mizar/utilities/options_type.h"
+#include "rocksdb/utilities/options_type.h"
 #include "table/cuckoo/cuckoo_table_builder.h"
 #include "table/cuckoo/cuckoo_table_reader.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 Status CuckooTableFactory::NewTableReader(
     const ReadOptions& /*ro*/, const TableReaderOptions& table_reader_options,
@@ -67,7 +67,7 @@ std::string CuckooTableFactory::GetPrintableOptions() const {
 
 static std::unordered_map<std::string, OptionTypeInfo> cuckoo_table_type_info =
     {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
         {"hash_table_ratio",
          {offsetof(struct CuckooTableOptions, hash_table_ratio),
           OptionType::kDouble, OptionVerificationType::kNormal,
@@ -88,7 +88,7 @@ static std::unordered_map<std::string, OptionTypeInfo> cuckoo_table_type_info =
          {offsetof(struct CuckooTableOptions, use_module_hash),
           OptionType::kBoolean, OptionVerificationType::kNormal,
           OptionTypeFlags::kNone}},
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 };
 
 CuckooTableFactory::CuckooTableFactory(const CuckooTableOptions& table_options)
@@ -100,5 +100,5 @@ TableFactory* NewCuckooTableFactory(const CuckooTableOptions& table_options) {
   return new CuckooTableFactory(table_options);
 }
 
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

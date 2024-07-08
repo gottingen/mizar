@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <string>
 #include <vector>
@@ -13,9 +13,9 @@
 #include "memory/arena.h"
 #include "monitoring/histogram.h"
 #include "options/cf_options.h"
-#include "mizar/options.h"
+#include "rocksdb/options.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // The file contains two classes PlainTableIndex and PlainTableIndexBuilder
 // The two classes implement the index format of PlainTable.
@@ -188,8 +188,8 @@ class PlainTableIndexBuilder {
              num_records_in_current_group_;
     }
     IndexRecord* At(size_t index) {
-      return &(groups_[index / kNumRecordsPerGroup]
-                      [index % kNumRecordsPerGroup]);
+      return &(
+          groups_[index / kNumRecordsPerGroup][index % kNumRecordsPerGroup]);
     }
 
    private:
@@ -243,6 +243,6 @@ class PlainTableIndexBuilder {
   static const size_t kRecordsPerGroup = 256;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE

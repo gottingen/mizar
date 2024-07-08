@@ -13,17 +13,17 @@
 
 #include "env/file_system_tracer.h"
 #include "port/port.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // SequentialFileReader is a wrapper on top of Env::SequentialFile. It handles
 // Buffered (i.e when page cache is enabled) and Direct (with O_DIRECT / page
 // cache disabled) reads appropriately, and also updates the IO stats.
 class SequentialFileReader {
  private:
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   void NotifyOnFileReadFinish(
       uint64_t offset, size_t length,
       const FileOperationInfo::StartTimePoint& start_ts,
@@ -49,7 +49,7 @@ class SequentialFileReader {
                     }
                   });
   }
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
   bool ShouldNotifyListeners() const { return !listeners_.empty(); }
 
@@ -57,16 +57,20 @@ class SequentialFileReader {
   FSSequentialFilePtr file_;
   std::atomic<size_t> offset_{0};  // read offset
   std::vector<std::shared_ptr<EventListener>> listeners_{};
+  RateLimiter* rate_limiter_;
 
  public:
   explicit SequentialFileReader(
       std::unique_ptr<FSSequentialFile>&& _file, const std::string& _file_name,
       const std::shared_ptr<IOTracer>& io_tracer = nullptr,
-      const std::vector<std::shared_ptr<EventListener>>& listeners = {})
+      const std::vector<std::shared_ptr<EventListener>>& listeners = {},
+      RateLimiter* rate_limiter =
+          nullptr)  // TODO: migrate call sites to provide rate limiter
       : file_name_(_file_name),
         file_(std::move(_file), io_tracer, _file_name),
-        listeners_() {
-#ifndef MIZAR_LITE
+        listeners_(),
+        rate_limiter_(rate_limiter) {
+#ifndef ROCKSDB_LITE
     AddFileIOListeners(listeners);
 #else
     (void)listeners;
@@ -77,12 +81,15 @@ class SequentialFileReader {
       std::unique_ptr<FSSequentialFile>&& _file, const std::string& _file_name,
       size_t _readahead_size,
       const std::shared_ptr<IOTracer>& io_tracer = nullptr,
-      const std::vector<std::shared_ptr<EventListener>>& listeners = {})
+      const std::vector<std::shared_ptr<EventListener>>& listeners = {},
+      RateLimiter* rate_limiter =
+          nullptr)  // TODO: migrate call sites to provide rate limiter
       : file_name_(_file_name),
         file_(NewReadaheadSequentialFile(std::move(_file), _readahead_size),
               io_tracer, _file_name),
-        listeners_() {
-#ifndef MIZAR_LITE
+        listeners_(),
+        rate_limiter_(rate_limiter) {
+#ifndef ROCKSDB_LITE
     AddFileIOListeners(listeners);
 #else
     (void)listeners;
@@ -91,12 +98,19 @@ class SequentialFileReader {
   static IOStatus Create(const std::shared_ptr<FileSystem>& fs,
                          const std::string& fname, const FileOptions& file_opts,
                          std::unique_ptr<SequentialFileReader>* reader,
-                         IODebugContext* dbg);
+                         IODebugContext* dbg, RateLimiter* rate_limiter);
 
   SequentialFileReader(const SequentialFileReader&) = delete;
   SequentialFileReader& operator=(const SequentialFileReader&) = delete;
 
-  IOStatus Read(size_t n, Slice* result, char* scratch);
+  // `rate_limiter_priority` is used to charge the internal rate limiter when
+  // enabled. The special value `Env::IO_TOTAL` makes this operation bypass the
+  // rate limiter. The amount charged to the internal rate limiter is n, even
+  // when less than n bytes are actually read (e.g. at end of file). To avoid
+  // overcharging the rate limiter, the caller can use file size to cap n to
+  // read until end of file.
+  IOStatus Read(size_t n, Slice* result, char* scratch,
+                Env::IOPriority rate_limiter_priority);
 
   IOStatus Skip(uint64_t n);
 
@@ -112,4 +126,4 @@ class SequentialFileReader {
   static std::unique_ptr<FSSequentialFile> NewReadaheadSequentialFile(
       std::unique_ptr<FSSequentialFile>&& file, size_t readahead_size);
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

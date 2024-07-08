@@ -5,15 +5,16 @@
 
 #include "db/snapshot_checker.h"
 
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
 #include <assert.h>
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
 
+#include "port/lang.h"
 #include "utilities/transactions/write_prepared_txn_db.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
-#ifdef MIZAR_LITE
+#ifdef ROCKSDB_LITE
 WritePreparedSnapshotChecker::WritePreparedSnapshotChecker(
     WritePreparedTxnDB* /*txn_db*/) {}
 
@@ -43,7 +44,10 @@ SnapshotCheckerResult WritePreparedSnapshotChecker::CheckInSnapshot(
                      : SnapshotCheckerResult::kNotInSnapshot;
 }
 
-#endif  // MIZAR_LITE
-DisableGCSnapshotChecker DisableGCSnapshotChecker::instance_;
+#endif  // ROCKSDB_LITE
 
-}  // namespace MIZAR_NAMESPACE
+DisableGCSnapshotChecker* DisableGCSnapshotChecker::Instance() {
+  STATIC_AVOID_DESTRUCTION(DisableGCSnapshotChecker, instance);
+  return &instance;
+}
+}  // namespace ROCKSDB_NAMESPACE

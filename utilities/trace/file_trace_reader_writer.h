@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "mizar/trace_reader_writer.h"
+#include "rocksdb/trace_reader_writer.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class RandomAccessFileReader;
 class WritableFileWriter;
@@ -45,4 +45,4 @@ class FileTraceWriter : public TraceWriter {
   std::unique_ptr<WritableFileWriter> file_writer_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

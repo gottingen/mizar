@@ -7,29 +7,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include <stdlib.h>
+
 #include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
+
 #include "db/db_impl/db_impl.h"
 #include "db/db_test_util.h"
 #include "db/version_set.h"
 #include "db/write_batch_internal.h"
 #include "file/filename.h"
 #include "port/stack_trace.h"
-#include "mizar/db.h"
-#include "mizar/env.h"
-#include "mizar/transaction_log.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
+#include "rocksdb/transaction_log.h"
 #include "test_util/sync_point.h"
 #include "test_util/testharness.h"
 #include "test_util/testutil.h"
 #include "util/string_util.h"
 
-
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class ObsoleteFilesTest : public DBTestBase {
  public:
@@ -40,8 +41,8 @@ class ObsoleteFilesTest : public DBTestBase {
   void AddKeys(int numkeys, int startkey) {
     WriteOptions options;
     options.sync = false;
-    for (int i = startkey; i < (numkeys + startkey) ; i++) {
-      std::string temp = ToString(i);
+    for (int i = startkey; i < (numkeys + startkey); i++) {
+      std::string temp = std::to_string(i);
       Slice key(temp);
       Slice value(temp);
       ASSERT_OK(db_->Put(options, key, value));
@@ -117,7 +118,7 @@ TEST_F(ObsoleteFilesTest, RaceForObsoleteFileDeletion) {
        "ObsoleteFilesTest::RaceForObsoleteFileDeletion:1"},
       {"DBImpl::BackgroundCallCompaction:PurgedObsoleteFiles",
        "ObsoleteFilesTest::RaceForObsoleteFileDeletion:2"},
-      });
+  });
   SyncPoint::GetInstance()->SetCallBack(
       "DBImpl::DeleteObsoleteFileImpl:AfterDeletion", [&](void* arg) {
         Status* p_status = reinterpret_cast<Status*>(arg);
@@ -306,10 +307,10 @@ TEST_F(ObsoleteFilesTest, BlobFiles) {
   ASSERT_EQ(deleted_files, expected_deleted_files);
 }
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
 
 int main(int argc, char** argv) {
-  MIZAR_NAMESPACE::port::InstallStackTraceHandler();
+  ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ::testing::InitGoogleTest(&argc, argv);
   RegisterCustomObjects(argc, argv);
   return RUN_ALL_TESTS();
@@ -320,8 +321,8 @@ int main(int argc, char** argv) {
 
 int main(int /*argc*/, char** /*argv*/) {
   fprintf(stderr,
-          "SKIPPED as DBImpl::DeleteFile is not supported in MIZAR_LITE\n");
+          "SKIPPED as DBImpl::DeleteFile is not supported in ROCKSDB_LITE\n");
   return 0;
 }
 
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE

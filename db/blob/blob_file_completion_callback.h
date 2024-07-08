@@ -11,9 +11,9 @@
 #include "db/error_handler.h"
 #include "db/event_helpers.h"
 #include "file/sst_file_manager_impl.h"
-#include "mizar/status.h"
+#include "rocksdb/status.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class BlobFileCompletionCallback {
  public:
@@ -23,7 +23,7 @@ class BlobFileCompletionCallback {
       const std::vector<std::shared_ptr<EventListener>>& listeners,
       const std::string& dbname)
       : event_logger_(event_logger), listeners_(listeners), dbname_(dbname) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     sst_file_manager_ = sst_file_manager;
     mutex_ = mutex;
     error_handler_ = error_handler;
@@ -31,14 +31,14 @@ class BlobFileCompletionCallback {
     (void)sst_file_manager;
     (void)mutex;
     (void)error_handler;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   }
 
   void OnBlobFileCreationStarted(const std::string& file_name,
                                  const std::string& column_family_name,
                                  int job_id,
                                  BlobFileCreationReason creation_reason) {
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     // Notify the listeners.
     EventHelpers::NotifyBlobFileCreationStarted(listeners_, dbname_,
                                                 column_family_name, file_name,
@@ -61,7 +61,7 @@ class BlobFileCompletionCallback {
                              uint64_t blob_count, uint64_t blob_bytes) {
     Status s;
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
     auto sfm = static_cast<SstFileManagerImpl*>(sst_file_manager_);
     if (sfm) {
       // Report new blob files to SstFileManagerImpl
@@ -74,7 +74,7 @@ class BlobFileCompletionCallback {
         error_handler_->SetBGError(s, BackgroundErrorReason::kFlush);
       }
     }
-#endif  // !MIZAR_LITE
+#endif  // !ROCKSDB_LITE
 
     // Notify the listeners.
     EventHelpers::LogAndNotifyBlobFileCreationFinished(
@@ -89,13 +89,13 @@ class BlobFileCompletionCallback {
   }
 
  private:
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
   SstFileManager* sst_file_manager_;
   InstrumentedMutex* mutex_;
   ErrorHandler* error_handler_;
-#endif  // MIZAR_LITE
+#endif  // ROCKSDB_LITE
   EventLogger* event_logger_;
   std::vector<std::shared_ptr<EventListener>> listeners_;
   std::string dbname_;
 };
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

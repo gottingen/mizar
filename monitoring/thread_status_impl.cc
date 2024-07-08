@@ -6,12 +6,12 @@
 
 #include <sstream>
 
-#include "mizar/env.h"
-#include "mizar/thread_status.h"
+#include "rocksdb/env.h"
+#include "rocksdb/thread_status.h"
 #include "util/string_util.h"
 #include "util/thread_operation.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 #ifdef ROCKSDB_USING_THREAD_STATUS
 std::string ThreadStatus::GetThreadTypeName(
@@ -160,4 +160,4 @@ std::map<std::string, uint64_t> ThreadStatus::InterpretOperationProperties(
 }
 
 #endif  // ROCKSDB_USING_THREAD_STATUS
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

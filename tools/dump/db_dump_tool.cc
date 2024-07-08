@@ -3,23 +3,24 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
+
+#include "rocksdb/db_dump_tool.h"
 
 #include <cinttypes>
 #include <iostream>
 
-#include "mizar/db.h"
-#include "mizar/db_dump_tool.h"
-#include "mizar/env.h"
+#include "rocksdb/db.h"
+#include "rocksdb/env.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 bool DbDumpTool::Run(const DumpOptions& dump_options,
-                     MIZAR_NAMESPACE::Options options) {
-  MIZAR_NAMESPACE::DB* dbptr;
-  MIZAR_NAMESPACE::Status status;
-  std::unique_ptr<MIZAR_NAMESPACE::WritableFile> dumpfile;
+                     ROCKSDB_NAMESPACE::Options options) {
+  ROCKSDB_NAMESPACE::DB* dbptr;
+  ROCKSDB_NAMESPACE::Status status;
+  std::unique_ptr<ROCKSDB_NAMESPACE::WritableFile> dumpfile;
   char hostname[1024];
   int64_t timesec = 0;
   std::string abspath;
@@ -28,11 +29,11 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
   static const char* magicstr = "ROCKDUMP";
   static const char versionstr[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
-  MIZAR_NAMESPACE::Env* env = MIZAR_NAMESPACE::Env::Default();
+  ROCKSDB_NAMESPACE::Env* env = ROCKSDB_NAMESPACE::Env::Default();
 
   // Open the database
   options.create_if_missing = false;
-  status = MIZAR_NAMESPACE::DB::OpenForReadOnly(options, dump_options.db_path,
+  status = ROCKSDB_NAMESPACE::DB::OpenForReadOnly(options, dump_options.db_path,
                                                   &dbptr);
   if (!status.ok()) {
     std::cerr << "Unable to open database '" << dump_options.db_path
@@ -40,24 +41,24 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
     return false;
   }
 
-  const std::unique_ptr<MIZAR_NAMESPACE::DB> db(dbptr);
+  const std::unique_ptr<ROCKSDB_NAMESPACE::DB> db(dbptr);
 
   status = env->NewWritableFile(dump_options.dump_location, &dumpfile,
-                                MIZAR_NAMESPACE::EnvOptions());
+                                ROCKSDB_NAMESPACE::EnvOptions());
   if (!status.ok()) {
     std::cerr << "Unable to open dump file '" << dump_options.dump_location
               << "' for writing: " << status.ToString() << std::endl;
     return false;
   }
 
-  MIZAR_NAMESPACE::Slice magicslice(magicstr, 8);
+  ROCKSDB_NAMESPACE::Slice magicslice(magicstr, 8);
   status = dumpfile->Append(magicslice);
   if (!status.ok()) {
     std::cerr << "Append failed: " << status.ToString() << std::endl;
     return false;
   }
 
-  MIZAR_NAMESPACE::Slice versionslice(versionstr, 8);
+  ROCKSDB_NAMESPACE::Slice versionslice(versionstr, 8);
   status = dumpfile->Append(versionslice);
   if (!status.ok()) {
     std::cerr << "Append failed: " << status.ToString() << std::endl;
@@ -76,10 +77,10 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
              abspath.c_str(), hostname, timesec);
   }
 
-  MIZAR_NAMESPACE::Slice infoslice(json, strlen(json));
+  ROCKSDB_NAMESPACE::Slice infoslice(json, strlen(json));
   char infosize[4];
-  MIZAR_NAMESPACE::EncodeFixed32(infosize, (uint32_t)infoslice.size());
-  MIZAR_NAMESPACE::Slice infosizeslice(infosize, 4);
+  ROCKSDB_NAMESPACE::EncodeFixed32(infosize, (uint32_t)infoslice.size());
+  ROCKSDB_NAMESPACE::Slice infosizeslice(infosize, 4);
   status = dumpfile->Append(infosizeslice);
   if (!status.ok()) {
     std::cerr << "Append failed: " << status.ToString() << std::endl;
@@ -91,12 +92,12 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
     return false;
   }
 
-  const std::unique_ptr<MIZAR_NAMESPACE::Iterator> it(
-      db->NewIterator(MIZAR_NAMESPACE::ReadOptions()));
+  const std::unique_ptr<ROCKSDB_NAMESPACE::Iterator> it(
+      db->NewIterator(ROCKSDB_NAMESPACE::ReadOptions()));
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     char keysize[4];
-    MIZAR_NAMESPACE::EncodeFixed32(keysize, (uint32_t)it->key().size());
-    MIZAR_NAMESPACE::Slice keysizeslice(keysize, 4);
+    ROCKSDB_NAMESPACE::EncodeFixed32(keysize, (uint32_t)it->key().size());
+    ROCKSDB_NAMESPACE::Slice keysizeslice(keysize, 4);
     status = dumpfile->Append(keysizeslice);
     if (!status.ok()) {
       std::cerr << "Append failed: " << status.ToString() << std::endl;
@@ -109,8 +110,8 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
     }
 
     char valsize[4];
-    MIZAR_NAMESPACE::EncodeFixed32(valsize, (uint32_t)it->value().size());
-    MIZAR_NAMESPACE::Slice valsizeslice(valsize, 4);
+    ROCKSDB_NAMESPACE::EncodeFixed32(valsize, (uint32_t)it->value().size());
+    ROCKSDB_NAMESPACE::Slice valsizeslice(valsize, 4);
     status = dumpfile->Append(valsizeslice);
     if (!status.ok()) {
       std::cerr << "Append failed: " << status.ToString() << std::endl;
@@ -131,21 +132,21 @@ bool DbDumpTool::Run(const DumpOptions& dump_options,
 }
 
 bool DbUndumpTool::Run(const UndumpOptions& undump_options,
-                       MIZAR_NAMESPACE::Options options) {
-  MIZAR_NAMESPACE::DB* dbptr;
-  MIZAR_NAMESPACE::Status status;
-  MIZAR_NAMESPACE::Env* env;
-  std::unique_ptr<MIZAR_NAMESPACE::SequentialFile> dumpfile;
-  MIZAR_NAMESPACE::Slice slice;
+                       ROCKSDB_NAMESPACE::Options options) {
+  ROCKSDB_NAMESPACE::DB* dbptr;
+  ROCKSDB_NAMESPACE::Status status;
+  ROCKSDB_NAMESPACE::Env* env;
+  std::unique_ptr<ROCKSDB_NAMESPACE::SequentialFile> dumpfile;
+  ROCKSDB_NAMESPACE::Slice slice;
   char scratch8[8];
 
   static const char* magicstr = "ROCKDUMP";
   static const char versionstr[8] = {0, 0, 0, 0, 0, 0, 0, 1};
 
-  env = MIZAR_NAMESPACE::Env::Default();
+  env = ROCKSDB_NAMESPACE::Env::Default();
 
   status = env->NewSequentialFile(undump_options.dump_location, &dumpfile,
-                                  MIZAR_NAMESPACE::EnvOptions());
+                                  ROCKSDB_NAMESPACE::EnvOptions());
   if (!status.ok()) {
     std::cerr << "Unable to open dump file '" << undump_options.dump_location
               << "' for reading: " << status.ToString() << std::endl;
@@ -173,7 +174,7 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
     std::cerr << "Unable to read info blob size." << std::endl;
     return false;
   }
-  uint32_t infosize = MIZAR_NAMESPACE::DecodeFixed32(slice.data());
+  uint32_t infosize = ROCKSDB_NAMESPACE::DecodeFixed32(slice.data());
   status = dumpfile->Skip(infosize);
   if (!status.ok()) {
     std::cerr << "Unable to skip info blob: " << status.ToString() << std::endl;
@@ -181,14 +182,14 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
   }
 
   options.create_if_missing = true;
-  status = MIZAR_NAMESPACE::DB::Open(options, undump_options.db_path, &dbptr);
+  status = ROCKSDB_NAMESPACE::DB::Open(options, undump_options.db_path, &dbptr);
   if (!status.ok()) {
     std::cerr << "Unable to open database '" << undump_options.db_path
               << "' for writing: " << status.ToString() << std::endl;
     return false;
   }
 
-  const std::unique_ptr<MIZAR_NAMESPACE::DB> db(dbptr);
+  const std::unique_ptr<ROCKSDB_NAMESPACE::DB> db(dbptr);
 
   uint32_t last_keysize = 64;
   size_t last_valsize = 1 << 20;
@@ -197,12 +198,12 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
 
   while (1) {
     uint32_t keysize, valsize;
-    MIZAR_NAMESPACE::Slice keyslice;
-    MIZAR_NAMESPACE::Slice valslice;
+    ROCKSDB_NAMESPACE::Slice keyslice;
+    ROCKSDB_NAMESPACE::Slice valslice;
 
     status = dumpfile->Read(4, &slice, scratch8);
     if (!status.ok() || slice.size() != 4) break;
-    keysize = MIZAR_NAMESPACE::DecodeFixed32(slice.data());
+    keysize = ROCKSDB_NAMESPACE::DecodeFixed32(slice.data());
     if (keysize > last_keysize) {
       while (keysize > last_keysize) last_keysize *= 2;
       keyscratch = std::unique_ptr<char[]>(new char[last_keysize]);
@@ -223,7 +224,7 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
                 << std::endl;
       return false;
     }
-    valsize = MIZAR_NAMESPACE::DecodeFixed32(slice.data());
+    valsize = ROCKSDB_NAMESPACE::DecodeFixed32(slice.data());
     if (valsize > last_valsize) {
       while (valsize > last_valsize) last_valsize *= 2;
       valscratch = std::unique_ptr<char[]>(new char[last_valsize]);
@@ -237,7 +238,7 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
       return false;
     }
 
-    status = db->Put(MIZAR_NAMESPACE::WriteOptions(), keyslice, valslice);
+    status = db->Put(ROCKSDB_NAMESPACE::WriteOptions(), keyslice, valslice);
     if (!status.ok()) {
       fprintf(stderr, "Unable to write database entry\n");
       return false;
@@ -245,7 +246,7 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
   }
 
   if (undump_options.compact_db) {
-    status = db->CompactRange(MIZAR_NAMESPACE::CompactRangeOptions(), nullptr,
+    status = db->CompactRange(ROCKSDB_NAMESPACE::CompactRangeOptions(), nullptr,
                               nullptr);
     if (!status.ok()) {
       fprintf(stderr,
@@ -255,5 +256,5 @@ bool DbUndumpTool::Run(const UndumpOptions& undump_options,
   }
   return true;
 }
-}  // namespace MIZAR_NAMESPACE
-#endif  // MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // ROCKSDB_LITE

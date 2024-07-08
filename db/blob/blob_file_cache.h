@@ -7,18 +7,18 @@
 
 #include <cinttypes>
 
-#include "cache/cache_helpers.h"
-#include "mizar/rocksdb_namespace.h"
+#include "cache/typed_cache.h"
+#include "db/blob/blob_file_reader.h"
+#include "rocksdb/rocksdb_namespace.h"
 #include "util/mutexlock.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 class Cache;
 struct ImmutableOptions;
 struct FileOptions;
 class HistogramImpl;
 class Status;
-class BlobFileReader;
 class Slice;
 class IOTracer;
 
@@ -36,7 +36,10 @@ class BlobFileCache {
                            CacheHandleGuard<BlobFileReader>* blob_file_reader);
 
  private:
-  Cache* cache_;
+  using CacheInterface =
+      BasicTypedCacheInterface<BlobFileReader, CacheEntryRole::kMisc>;
+  using TypedHandle = CacheInterface::TypedHandle;
+  CacheInterface cache_;
   // Note: mutex_ below is used to guard against multiple threads racing to open
   // the same file.
   Striped<port::Mutex, Slice> mutex_;
@@ -49,4 +52,4 @@ class BlobFileCache {
   static constexpr size_t kNumberOfMutexStripes = 1 << 7;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

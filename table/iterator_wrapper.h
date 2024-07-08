@@ -14,7 +14,7 @@
 #include "table/internal_iterator.h"
 #include "test_util/sync_point.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 
 // A internal wrapper class with an interface similar to Iterator that caches
 // the valid() and key() results for an underlying iterator.
@@ -145,9 +145,7 @@ class IteratorWrapperBase {
     return iter_->IsValuePinned();
   }
 
-  bool IsValuePrepared() const {
-    return result_.value_prepared;
-  }
+  bool IsValuePrepared() const { return result_.value_prepared; }
 
   Slice user_key() const {
     assert(Valid());
@@ -160,6 +158,10 @@ class IteratorWrapperBase {
       old_iter->GetReadaheadState(&readahead_file_info);
       iter_->SetReadaheadState(&readahead_file_info);
     }
+  }
+
+  bool IsDeleteRangeSentinelKey() const {
+    return iter_->IsDeleteRangeSentinelKey();
   }
 
  private:
@@ -185,4 +187,4 @@ class Arena;
 template <class TValue = Slice>
 extern InternalIteratorBase<TValue>* NewEmptyInternalIterator(Arena* arena);
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

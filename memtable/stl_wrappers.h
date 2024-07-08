@@ -7,12 +7,12 @@
 #include <map>
 #include <string>
 
-#include "mizar/comparator.h"
-#include "mizar/memtablerep.h"
-#include "mizar/slice.h"
+#include "rocksdb/comparator.h"
+#include "rocksdb/memtablerep.h"
+#include "rocksdb/slice.h"
 #include "util/coding.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 namespace stl_wrappers {
 
 class Base {
@@ -29,5 +29,5 @@ struct Compare : private Base {
   }
 };
 
-}
-}  // namespace MIZAR_NAMESPACE
+}  // namespace stl_wrappers
+}  // namespace ROCKSDB_NAMESPACE

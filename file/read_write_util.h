@@ -9,11 +9,12 @@
 
 #pragma once
 #include <atomic>
-#include "file/sequence_file_reader.h"
-#include "mizar/env.h"
-#include "mizar/file_system.h"
 
-namespace MIZAR_NAMESPACE {
+#include "file/sequence_file_reader.h"
+#include "rocksdb/env.h"
+#include "rocksdb/file_system.h"
+
+namespace ROCKSDB_NAMESPACE {
 // Returns a WritableFile.
 //
 // env     : the Env.
@@ -27,4 +28,4 @@ extern IOStatus NewWritableFile(FileSystem* fs, const std::string& fname,
 #ifndef NDEBUG
 bool IsFileSectorAligned(const size_t off, size_t sector_size);
 #endif  // NDEBUG
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE

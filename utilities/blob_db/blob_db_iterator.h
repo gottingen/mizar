@@ -4,20 +4,20 @@
 //  (found in the LICENSE.Apache file in the root directory).
 
 #pragma once
-#ifndef MIZAR_LITE
+#ifndef ROCKSDB_LITE
 
 #include "db/arena_wrapped_db_iter.h"
-#include "mizar/iterator.h"
+#include "rocksdb/iterator.h"
 #include "util/stop_watch.h"
 #include "utilities/blob_db/blob_db_impl.h"
 
-namespace MIZAR_NAMESPACE {
+namespace ROCKSDB_NAMESPACE {
 class Statistics;
 class SystemClock;
 
 namespace blob_db {
 
-using MIZAR_NAMESPACE::ManagedSnapshot;
+using ROCKSDB_NAMESPACE::ManagedSnapshot;
 
 class BlobDBIterator : public Iterator {
  public:
@@ -146,5 +146,5 @@ class BlobDBIterator : public Iterator {
   PinnableSlice value_;
 };
 }  // namespace blob_db
-}  // namespace MIZAR_NAMESPACE
-#endif  // !MIZAR_LITE
+}  // namespace ROCKSDB_NAMESPACE
+#endif  // !ROCKSDB_LITE

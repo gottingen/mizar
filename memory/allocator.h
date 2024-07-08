@@ -13,9 +13,10 @@
 #pragma once
 #include <cerrno>
 #include <cstddef>
-#include "mizar/write_buffer_manager.h"
 
-namespace MIZAR_NAMESPACE {
+#include "rocksdb/write_buffer_manager.h"
+
+namespace ROCKSDB_NAMESPACE {
 
 class Logger;
 
@@ -54,4 +55,4 @@ class AllocTracker {
   bool freed_;
 };
 
-}  // namespace MIZAR_NAMESPACE
+}  // namespace ROCKSDB_NAMESPACE
